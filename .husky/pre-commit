@@ -1,0 +1,37 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Check if we're in frontend or backend directory
+if [[ $PWD == *"/frontend"* ]]; then
+  echo "📦 Frontend checks..."
+  npm run lint
+  npm run type-check
+  npm run format:check
+elif [[ $PWD == *"/backend"* ]]; then
+  echo "🖥️  Backend checks..."
+  npm run lint
+  npm run type-check
+  npm run format:check
+else
+  echo "🔍 Full project checks..."
+
+  # Frontend checks
+  echo "📦 Checking frontend..."
+  cd frontend
+  npm run lint
+  npm run type-check
+  npm run format:check
+  cd ..
+
+  # Backend checks
+  echo "🖥️  Checking backend..."
+  cd backend
+  npm run lint
+  npm run type-check
+  npm run format:check
+  cd ..
+fi
+
+echo "✅ All checks passed!"
