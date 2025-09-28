@@ -1,31 +1,35 @@
 # TCBA - Tennessee Coalition for Better Aging
 
 ## Project Overview
-Monorepo for a coalition management platform with:
+Monorepo for TCBA, a coalition management platform with:
 
-**backend/**: Node.js/Express REST API (TypeScript, PostgreSQL)
-**frontend/**: React app (TypeScript, Vite, Tailwind CSS)
+**backend/** : Node.js/Express REST API (TypeScript, PostgreSQL)
+**frontend/** : React app (TypeScript, Vite, Tailwind CSS)
 
 ## Code Structure
-**backend/controllers/, routes/, services/, middleware/, config/, prisma/**: API logic, endpoints, external services, middleware, configs, and database schema
+**backend/controllers/, routes/, services/, middleware/, config/, prisma/**: API logic, endpoints, external services, middleware, configs, and database schema definitions
 **frontend/src/pages/**: Main React pages/components with admin and user pages
 
 ## Local Setup
 
 ### Install dependencies
 ```bash
-cd backend && npm install
-cd frontend && npm install
+cd backend
+npm install
+cd frontend
+npm install
 ```
 
 ### Start backend
 ```bash
-cd backend && npm run dev
+cd backend
+npm run dev
 ```
 
 ### Start frontend
 ```bash
-cd frontend && npm run dev
+cd frontend
+npm run dev
 ```
 
 ## PostgreSQL Setup (Required for Backend)
@@ -44,7 +48,7 @@ npx prisma migrate dev
 npx prisma generate
 ```
 
-Default config works for local development. The backend connects to localhost:5432 by default.
+The backend connects to localhost:5432 by default.
 
 ## Notes
 
