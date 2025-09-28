@@ -8,11 +8,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "jest",
-    "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
-    "type-check": "tsc --noEmit"
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\""
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
