@@ -24,6 +24,5 @@ app.get('/api/db-test', async (req, res) => {
 });
 
 // API Routes
-app.use('/api/analytics', analyticsRoutes);
 
 export default app;
