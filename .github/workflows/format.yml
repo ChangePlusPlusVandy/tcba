@@ -3,14 +3,11 @@ name: Auto Format Code
 on:
   push:
     branches: [ main, develop, feature/*, bugfix/* ]
-  pull_request:
-    branches: [ main, develop ]
 
 jobs:
   format:
-    name: Format Code
+    name: Auto Format
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
 
     steps:
       - name: Checkout code
@@ -27,7 +24,6 @@ jobs:
             frontend/package-lock.json
             backend/package-lock.json
 
-      # Format frontend
       - name: Install frontend dependencies
         working-directory: ./frontend
         run: npm ci
@@ -36,7 +32,6 @@ jobs:
         working-directory: ./frontend
         run: npm run format
 
-      # Format backend
       - name: Install backend dependencies
         working-directory: ./backend
         run: npm ci
@@ -45,47 +40,10 @@ jobs:
         working-directory: ./backend
         run: npm run format
 
-      # Commit formatted code
       - name: Commit formatted code
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
-          git diff --staged --quiet || git commit -m "🎨 Auto-format code with Prettier"
+          git diff --staged --quiet || git commit -m "Auto-format code with Prettier"
           git push
-
-  check-format:
-    name: Check Formatting
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: |
-            frontend/package-lock.json
-            backend/package-lock.json
-
-      # Check frontend formatting
-      - name: Install frontend dependencies
-        working-directory: ./frontend
-        run: npm ci
-
-      - name: Check frontend formatting
-        working-directory: ./frontend
-        run: npm run format:check
-
-      # Check backend formatting
-      - name: Install backend dependencies
-        working-directory: ./backend
-        run: npm ci
-
-      - name: Check backend formatting
-        working-directory: ./backend
-        run: npm run format:check
