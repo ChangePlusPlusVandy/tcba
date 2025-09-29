@@ -1,4 +1,5 @@
 // Prisma schema for TCBA coalition management platform
+// Run `npx prisma generate` after changes to update types
 
 generator client {
   provider = "prisma-client-js"
@@ -9,66 +10,48 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Models below
-
-enum UserRole {
-  SUPER_ADMIN
-  ADMIN
-  MEMBER
+// Organization permission levels for coalition platform
+enum OrganizationRole {
+  SUPER_ADMIN  // Full system access (TCBA staff)
+  ADMIN        // Coalition management access
+  MEMBER       // Standard nonprofit member
 }
 
-enum UserStatus {
-  ACTIVE
-  INACTIVE
-  PENDING
-  SUSPENDED
+// Organization account states
+enum OrganizationStatus {
+  ACTIVE       // Can use platform
+  INACTIVE     // Temporarily disabled
+  PENDING      // Waiting for setup completion
+  SUSPENDED    // Admin blocked access
 }
 
+// The 45+ nonprofit organizations that are part of the Tennessee Coalition for Better Aging
 model Organization {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  website     String?
-  address     String?
-  city        String?
-  state       String?
-  zipCode     String?
-  phoneNumber String?
-  email       String?
-  isActive    Boolean  @default(true)
-  tags        String[] // For location, category tags
-  joinedAt    DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String             @id @default(cuid())
+  firebaseUid     String             @unique // Links to Firebase Auth - NO password stored here
+  name            String             @unique
+  email           String             @unique // Primary contact email for the organization
+  description     String?
+  website         String?
+  address         String?
+  city            String?
+  state           String?
+  zipCode         String?
+  phoneNumber     String?
+  contactPerson   String?            // Primary contact person name
+  contactTitle    String?            // Title of primary contact
+  role            OrganizationRole   @default(MEMBER)
+  status          OrganizationStatus @default(PENDING)
+  isActive        Boolean            @default(true)
+  tags            String[]           // Location/focus tags like ["Nashville", "Healthcare", "Senior Services"]
+  lastLoginAt     DateTime?
+  emailVerified   Boolean            @default(false)
+  joinedAt        DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
 
-  // Relations
-  users       User[]
+  // Tokens for invitation emails (temporary)
+  inviteToken     String?
+  inviteTokenExp  DateTime?
 
   @@map("organizations")
-}
-
-model User {
-  id             String     @id @default(cuid())
-  firebaseUid    String     @unique // Links to Firebase user
-  email          String     @unique
-  firstName      String
-  lastName       String
-  role           UserRole   @default(MEMBER)
-  status         UserStatus @default(PENDING)
-  title          String?    // Job title at organization
-  phoneNumber    String?
-  profilePicture String?    // URL to profile image
-  lastLoginAt    DateTime?
-  emailVerified  Boolean    @default(false)
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-
-  // Organization relationship
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id])
-
-  // Invitation tokens (for user setup)
-  inviteToken    String?
-  inviteTokenExp DateTime?
-
-  @@map("users")
 }
