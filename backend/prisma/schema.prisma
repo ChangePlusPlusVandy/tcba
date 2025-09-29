@@ -10,3 +10,65 @@ datasource db {
 }
 
 // Models below
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  MEMBER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+  SUSPENDED
+}
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  website     String?
+  address     String?
+  city        String?
+  state       String?
+  zipCode     String?
+  phoneNumber String?
+  email       String?
+  isActive    Boolean  @default(true)
+  tags        String[] // For location, category tags
+  joinedAt    DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users       User[]
+
+  @@map("organizations")
+}
+
+model User {
+  id             String     @id @default(cuid())
+  firebaseUid    String     @unique // Links to Firebase user
+  email          String     @unique
+  firstName      String
+  lastName       String
+  role           UserRole   @default(MEMBER)
+  status         UserStatus @default(PENDING)
+  title          String?    // Job title at organization
+  phoneNumber    String?
+  profilePicture String?    // URL to profile image
+  lastLoginAt    DateTime?
+  emailVerified  Boolean    @default(false)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  // Organization relationship
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  // Invitation tokens (for user setup)
+  inviteToken    String?
+  inviteTokenExp DateTime?
+
+  @@map("users")
+}
