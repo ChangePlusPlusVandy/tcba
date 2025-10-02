@@ -2,15 +2,6 @@ import { Request, Response } from 'express';
 import { PrismaClient, OrganizationRole, OrganizationStatus } from '@prisma/client';
 import crypto from 'crypto';
 import admin from 'firebase-admin';
-import {
-  CreateOrganizationInput,
-  UpdateOrganizationProfileInput,
-  UpdateOrganizationInput,
-  GetOrganizationsQuery,
-  OrganizationPublic,
-  PaginatedOrganizationsResponse,
-  OrganizationActivityResponse,
-} from '../types';
 
 const prisma = new PrismaClient();
 
@@ -25,73 +16,34 @@ interface AuthenticatedRequest extends Request {
 }
 
 /**
- * @desc    Get all organizations with pagination and filtering
+ * @desc    Get all organizations
  * @route   GET /api/organizations
  * @access  Admin/Super Admin only
  */
 export const getAllOrganizations = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { page = 1, limit = 10, role, status, city, state, search } = req.query;
-
-    const pageNum = parseInt(page as string);
-    const limitNum = parseInt(limit as string);
-    const skip = (pageNum - 1) * limitNum;
-
-    const where: any = {};
-
-    if (role) where.role = role;
-    if (status) where.status = status;
-    if (city) where.city = city;
-    if (state) where.state = state;
-    if (search) {
-      where.OR = [
-        { name: { contains: search as string, mode: 'insensitive' } },
-        { contactPerson: { contains: search as string, mode: 'insensitive' } },
-        { email: { contains: search as string, mode: 'insensitive' } },
-      ];
-    }
-
-    const [organizations, totalCount] = await Promise.all([
-      prisma.organization.findMany({
-        where,
-        skip,
-        take: limitNum,
-        orderBy: { joinedAt: 'desc' },
-      }),
-      prisma.organization.count({ where }),
-    ]);
-
-    const sanitizedOrgs: OrganizationPublic[] = organizations.map(org => ({
-      id: org.id,
-      name: org.name,
-      email: org.email,
-      description: org.description,
-      website: org.website,
-      address: org.address,
-      city: org.city,
-      state: org.state,
-      zipCode: org.zipCode,
-      phoneNumber: org.phoneNumber,
-      contactPerson: org.contactPerson,
-      contactTitle: org.contactTitle,
-      role: org.role,
-      status: org.status,
-      tags: org.tags,
-      joinedAt: org.joinedAt,
-      updatedAt: org.updatedAt,
-    }));
-
-    const response: PaginatedOrganizationsResponse = {
-      organizations: sanitizedOrgs,
-      pagination: {
-        page: pageNum,
-        limit: limitNum,
-        total: totalCount,
-        pages: Math.ceil(totalCount / limitNum),
+    const organizations = await prisma.organization.findMany({
+      orderBy: { name: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        description: true,
+        website: true,
+        address: true,
+        city: true,
+        state: true,
+        zipCode: true,
+        phoneNumber: true,
+        contactPerson: true,
+        contactTitle: true,
+        role: true,
+        status: true,
+        tags: true,
       },
-    };
+    });
 
-    res.json(response);
+    res.json(organizations);
   } catch (error) {
     console.error('Error fetching organizations:', error);
     res.status(500).json({ error: 'Failed to fetch organizations' });
@@ -118,15 +70,30 @@ export const getOrganizationById = async (req: AuthenticatedRequest, res: Respon
 
     const organization = await prisma.organization.findUnique({
       where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        description: true,
+        website: true,
+        address: true,
+        city: true,
+        state: true,
+        zipCode: true,
+        phoneNumber: true,
+        contactPerson: true,
+        contactTitle: true,
+        role: true,
+        status: true,
+        tags: true,
+      },
     });
 
     if (!organization) {
       return res.status(404).json({ error: 'Organization not found' });
     }
 
-    const { inviteToken, inviteTokenExp, ...safeOrg } = organization;
-
-    res.json(safeOrg);
+    res.json(organization);
   } catch (error) {
     console.error('Error fetching organization:', error);
     res.status(500).json({ error: 'Failed to fetch organization' });
@@ -148,15 +115,30 @@ export const getCurrentOrganizationProfile = async (req: AuthenticatedRequest, r
 
     const organization = await prisma.organization.findUnique({
       where: { id: orgId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        description: true,
+        website: true,
+        address: true,
+        city: true,
+        state: true,
+        zipCode: true,
+        phoneNumber: true,
+        contactPerson: true,
+        contactTitle: true,
+        role: true,
+        status: true,
+        tags: true,
+      },
     });
 
     if (!organization) {
       return res.status(404).json({ error: 'Organization not found' });
     }
 
-    const { inviteToken, inviteTokenExp, ...safeOrg } = organization;
-
-    res.json(safeOrg);
+    res.json(organization);
   } catch (error) {
     console.error('Error fetching current organization:', error);
     res.status(500).json({ error: 'Failed to fetch organization profile' });
@@ -164,14 +146,13 @@ export const getCurrentOrganizationProfile = async (req: AuthenticatedRequest, r
 };
 
 /**
- * @desc    Update organization's own profile (self-service)
+ * @desc    Update organization's own profile
  * @route   PUT /api/organizations/profile
  * @access  Private (own organization only)
  */
 export const updateOrganizationProfile = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const orgId = req.user?.id;
-    const input = req.body as UpdateOrganizationProfileInput;
     const {
       name,
       email,
@@ -185,7 +166,7 @@ export const updateOrganizationProfile = async (req: AuthenticatedRequest, res: 
       contactPerson,
       contactTitle,
       tags,
-    } = input;
+    } = req.body;
 
     if (!orgId) {
       return res.status(401).json({ error: 'Organization not authenticated' });
@@ -203,7 +184,6 @@ export const updateOrganizationProfile = async (req: AuthenticatedRequest, res: 
       contactPerson,
       contactTitle,
       tags,
-      updatedAt: new Date(),
     };
 
     if (email) {
@@ -220,7 +200,7 @@ export const updateOrganizationProfile = async (req: AuthenticatedRequest, res: 
 
       const currentOrg = await prisma.organization.findUnique({
         where: { id: orgId },
-        select: { firebaseUid: true, email: true },
+        select: { firebaseUid: true },
       });
 
       if (!currentOrg) {
@@ -246,11 +226,26 @@ export const updateOrganizationProfile = async (req: AuthenticatedRequest, res: 
     const updatedOrg = await prisma.organization.update({
       where: { id: orgId },
       data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        description: true,
+        website: true,
+        address: true,
+        city: true,
+        state: true,
+        zipCode: true,
+        phoneNumber: true,
+        contactPerson: true,
+        contactTitle: true,
+        role: true,
+        status: true,
+        tags: true,
+      },
     });
 
-    const { inviteToken, inviteTokenExp, ...safeOrg } = updatedOrg;
-
-    res.json(safeOrg);
+    res.json(updatedOrg);
   } catch (error) {
     console.error('Error updating organization profile:', error);
     res.status(500).json({ error: 'Failed to update organization profile' });
@@ -265,7 +260,6 @@ export const updateOrganizationProfile = async (req: AuthenticatedRequest, res: 
 export const updateOrganization = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const input = req.body as UpdateOrganizationInput;
     const {
       name,
       email,
@@ -282,7 +276,7 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
       role,
       status,
       isActive,
-    } = input;
+    } = req.body;
     const currentUser = req.user;
 
     if (currentUser?.role !== 'ADMIN' && currentUser?.role !== 'SUPER_ADMIN') {
@@ -308,7 +302,6 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
       role,
       status,
       isActive,
-      updatedAt: new Date(),
     };
 
     if (email) {
@@ -325,7 +318,7 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
 
       const currentOrg = await prisma.organization.findUnique({
         where: { id },
-        select: { firebaseUid: true, email: true },
+        select: { firebaseUid: true },
       });
 
       if (!currentOrg) {
@@ -351,11 +344,26 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
     const updatedOrg = await prisma.organization.update({
       where: { id },
       data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        description: true,
+        website: true,
+        address: true,
+        city: true,
+        state: true,
+        zipCode: true,
+        phoneNumber: true,
+        contactPerson: true,
+        contactTitle: true,
+        role: true,
+        status: true,
+        tags: true,
+      },
     });
 
-    const { inviteToken, inviteTokenExp, ...safeOrg } = updatedOrg;
-
-    res.json(safeOrg);
+    res.json(updatedOrg);
   } catch (error) {
     console.error('Error updating organization:', error);
     res.status(500).json({ error: 'Failed to update organization' });
@@ -365,7 +373,7 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
 /**
  * @desc    Delete organization by admin
  * @route   DELETE /api/organizations/:id
- * @access  Admin/Super Admin only (cannot delete own organization)
+ * @access  Admin/Super Admin only
  */
 export const deleteOrganization = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -404,13 +412,12 @@ export const deleteOrganization = async (req: AuthenticatedRequest, res: Respons
 };
 
 /**
- * @desc    Invite new organization to join the coalition
+ * @desc    Invite new organization
  * @route   POST /api/organizations/invite
  * @access  Admin/Super Admin only
  */
 export const inviteOrganization = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const input = req.body as CreateOrganizationInput;
     const {
       email,
       name,
@@ -425,7 +432,7 @@ export const inviteOrganization = async (req: AuthenticatedRequest, res: Respons
       phoneNumber,
       tags,
       role = 'MEMBER',
-    } = input;
+    } = req.body;
     const currentUser = req.user;
 
     if (currentUser?.role !== 'ADMIN' && currentUser?.role !== 'SUPER_ADMIN') {
@@ -477,16 +484,26 @@ export const inviteOrganization = async (req: AuthenticatedRequest, res: Respons
           inviteToken,
           inviteTokenExp: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          description: true,
+          website: true,
+          address: true,
+          city: true,
+          state: true,
+          zipCode: true,
+          phoneNumber: true,
+          contactPerson: true,
+          contactTitle: true,
+          role: true,
+          status: true,
+          tags: true,
+        },
       });
 
-
-      const { inviteToken: token, inviteTokenExp, ...safeOrg } = newOrg;
-
-      res.status(201).json({
-        ...safeOrg,
-        message:
-          'Organization invited successfully. They will receive setup instructions via email.',
-      });
+      res.status(201).json(newOrg);
     } catch (firebaseError) {
       console.error('Error creating Firebase user:', firebaseError);
       res.status(500).json({ error: 'Failed to create organization account' });
@@ -494,55 +511,5 @@ export const inviteOrganization = async (req: AuthenticatedRequest, res: Respons
   } catch (error) {
     console.error('Error inviting organization:', error);
     res.status(500).json({ error: 'Failed to invite organization' });
-  }
-};
-
-/**
- * @desc    Get organization activity and audit log
- * @route   GET /api/organizations/:id/activity
- * @access  Admin/Super Admin only
- */
-export const getOrganizationActivity = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { id } = req.params;
-    const currentUser = req.user;
-
-    if (currentUser?.role !== 'ADMIN' && currentUser?.role !== 'SUPER_ADMIN') {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-
-    const organization = await prisma.organization.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        contactPerson: true,
-        lastLoginAt: true,
-        joinedAt: true,
-        updatedAt: true,
-      },
-    });
-
-    if (!organization) {
-      return res.status(404).json({ error: 'Organization not found' });
-    }
-
-    const activity: OrganizationActivityResponse = {
-      organization: {
-        id: organization.id,
-        name: organization.name,
-        email: organization.email,
-        contactPerson: organization.contactPerson,
-      },
-      lastLogin: organization.lastLoginAt,
-      accountCreated: organization.joinedAt,
-      lastUpdated: organization.updatedAt,
-    };
-
-    res.json(activity);
-  } catch (error) {
-    console.error('Error fetching organization activity:', error);
-    res.status(500).json({ error: 'Failed to fetch organization activity' });
   }
 };
