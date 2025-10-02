@@ -53,7 +53,7 @@ export const getAllOrganizations = async (req: AuthenticatedRequest, res: Respon
 };
 
 /**
- * @desc    Register new organization (self-registration)
+ * @desc    Register new organization
  * @route   POST /api/organizations/register
  * @access  Public
  */
