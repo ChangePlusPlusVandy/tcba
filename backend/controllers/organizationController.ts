@@ -1,19 +1,9 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { PrismaClient, OrganizationRole, OrganizationStatus } from '@prisma/client';
-import crypto from 'crypto';
 import admin from 'firebase-admin';
+import { AuthenticatedRequest } from '../types/index.js';
 
 const prisma = new PrismaClient();
-
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    firebaseUid: string;
-    role: OrganizationRole;
-    email: string;
-    name: string;
-  };
-}
 
 /**
  * @desc    Get all organizations
@@ -411,105 +401,3 @@ export const deleteOrganization = async (req: AuthenticatedRequest, res: Respons
   }
 };
 
-/**
- * @desc    Invite new organization
- * @route   POST /api/organizations/invite
- * @access  Admin/Super Admin only
- */
-export const inviteOrganization = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const {
-      email,
-      name,
-      contactPerson,
-      contactTitle,
-      description,
-      website,
-      address,
-      city,
-      state,
-      zipCode,
-      phoneNumber,
-      tags,
-      role = 'MEMBER',
-    } = req.body;
-    const currentUser = req.user;
-
-    if (currentUser?.role !== 'ADMIN' && currentUser?.role !== 'SUPER_ADMIN') {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-
-    if (role === 'ADMIN' && currentUser.role !== 'SUPER_ADMIN') {
-      return res.status(403).json({ error: 'Only super admins can invite admin organizations' });
-    }
-
-    const existingOrg = await prisma.organization.findFirst({
-      where: {
-        OR: [{ email }, { name }],
-      },
-    });
-
-    if (existingOrg) {
-      return res.status(400).json({ error: 'Organization with this email or name already exists' });
-    }
-
-    const tempPassword = crypto.randomBytes(12).toString('hex');
-    const inviteToken = crypto.randomBytes(32).toString('hex');
-
-    try {
-      const firebaseUser = await admin.auth().createUser({
-        email,
-        password: tempPassword,
-        emailVerified: false,
-        displayName: name,
-      });
-
-      const newOrg = await prisma.organization.create({
-        data: {
-          email,
-          name,
-          contactPerson,
-          contactTitle,
-          description,
-          website,
-          address,
-          city,
-          state,
-          zipCode,
-          phoneNumber,
-          tags: tags || [],
-          firebaseUid: firebaseUser.uid,
-          role: role as OrganizationRole,
-          status: 'PENDING' as OrganizationStatus,
-          inviteToken,
-          inviteTokenExp: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          description: true,
-          website: true,
-          address: true,
-          city: true,
-          state: true,
-          zipCode: true,
-          phoneNumber: true,
-          contactPerson: true,
-          contactTitle: true,
-          role: true,
-          status: true,
-          tags: true,
-        },
-      });
-
-      res.status(201).json(newOrg);
-    } catch (firebaseError) {
-      console.error('Error creating Firebase user:', firebaseError);
-      res.status(500).json({ error: 'Failed to create organization account' });
-    }
-  } catch (error) {
-    console.error('Error inviting organization:', error);
-    res.status(500).json({ error: 'Failed to invite organization' });
-  }
-};

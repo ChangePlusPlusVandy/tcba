@@ -46,7 +46,6 @@ import {
   updateOrganizationProfile,
   updateOrganization,
   deleteOrganization,
-  inviteOrganization,
 } from '../../controllers/organizationController';
 
 const createMockRequest = (overrides: any = {}): any => ({
@@ -501,98 +500,4 @@ describe('OrganizationController', () => {
   });
 
 
-  describe('inviteOrganization', () => {
-    it('should create and invite new org - POST /api/organizations/invite', async () => {
-      const req = createMockRequest({
-        user: mockAdminOrg,
-        body: {
-          email: 'neworg@nonprofit.org',
-          name: 'New Nonprofit Organization',
-          contactPerson: 'Mary Johnson',
-          contactTitle: 'Director',
-          city: 'Memphis',
-          state: 'TN',
-        },
-      });
-      const res = createMockResponse();
-
-      prismaMock.organization.findFirst.mockResolvedValue(null);
-      prismaMock.organization.create.mockResolvedValue({
-        ...mockOrganization,
-        email: 'neworg@nonprofit.org',
-        name: 'New Nonprofit Organization',
-        contactPerson: 'Mary Johnson',
-      });
-
-      await inviteOrganization(req, res);
-
-      expect(prismaMock.organization.create).toHaveBeenCalledWith({
-        data: {
-          email: 'neworg@nonprofit.org',
-          name: 'New Nonprofit Organization',
-          contactPerson: 'Mary Johnson',
-          contactTitle: 'Director',
-          description: undefined,
-          website: undefined,
-          address: undefined,
-          city: 'Memphis',
-          state: 'TN',
-          zipCode: undefined,
-          phoneNumber: undefined,
-          tags: [],
-          firebaseUid: 'firebase-uid-123',
-          role: 'MEMBER' as OrganizationRole,
-          status: 'PENDING' as OrganizationStatus,
-          inviteToken: 'mockToken123',
-          inviteTokenExp: expect.any(Date),
-        },
-        select: expect.objectContaining({
-          id: true,
-          name: true,
-          email: true,
-        }),
-      });
-
-      expect(res.status).toHaveBeenCalledWith(201);
-    });
-
-    it('should prevent duplicate invitations - POST /api/organizations/invite', async () => {
-      const req = createMockRequest({
-        user: mockAdminOrg,
-        body: {
-          email: 'existing@nonprofit.org',
-          name: 'Existing Organization',
-        },
-      });
-      const res = createMockResponse();
-
-      prismaMock.organization.findFirst.mockResolvedValue(mockOrganization);
-
-      await inviteOrganization(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({
-        error: 'Organization with this email or name already exists',
-      });
-    });
-
-    it('should prevent non-super-admin inviting admins - POST /api/organizations/invite', async () => {
-      const req = createMockRequest({
-        user: mockAdminOrg,
-        body: {
-          email: 'admin@nonprofit.org',
-          name: 'Admin Organization',
-          role: 'ADMIN' as OrganizationRole,
-        },
-      });
-      const res = createMockResponse();
-
-      await inviteOrganization(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({
-        error: 'Only super admins can invite admin organizations',
-      });
-    });
-  });
 });
