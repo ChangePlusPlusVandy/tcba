@@ -1,26 +1,23 @@
-// Test suite for organizationController - covers all endpoints with Firebase Auth integration
-// Tests the CRUD operations for the 45+ nonprofit organizations in the coalition
 import { OrganizationRole, OrganizationStatus, PrismaClient } from '@prisma/client';
 import { mockDeep, mockReset } from 'jest-mock-extended';
+import admin from 'firebase-admin';
 
-// Create mock Prisma client for testing
 const prismaMock = mockDeep<PrismaClient>();
 
-// Mock Prisma client and enums for testing
 jest.mock('@prisma/client', () => ({
   __esModule: true,
   PrismaClient: jest.fn().mockImplementation(() => prismaMock),
   OrganizationRole: {
     SUPER_ADMIN: 'SUPER_ADMIN',
     ADMIN: 'ADMIN',
-    MEMBER: 'MEMBER'
+    MEMBER: 'MEMBER',
   },
   OrganizationStatus: {
     ACTIVE: 'ACTIVE',
     INACTIVE: 'INACTIVE',
     PENDING: 'PENDING',
-    SUSPENDED: 'SUSPENDED'
-  }
+    SUSPENDED: 'SUSPENDED',
+  },
 }));
 
 import {
@@ -31,42 +28,36 @@ import {
   updateOrganization,
   deleteOrganization,
   inviteOrganization,
-  getOrganizationActivity
+  getOrganizationActivity,
 } from '../../controllers/organizationController';
 
-// Mock Firebase Admin SDK for organization creation and updates
 jest.mock('firebase-admin', () => ({
   auth: jest.fn().mockReturnValue({
     createUser: jest.fn().mockResolvedValue({
       uid: 'firebase-uid-123',
-      email: 'test@nonprofit.org'
+      email: 'test@nonprofit.org',
     }),
     updateUser: jest.fn().mockResolvedValue({
-      uid: 'firebase-uid-123'
+      uid: 'firebase-uid-123',
     }),
-    verifyIdToken: jest.fn()
-  })
+    verifyIdToken: jest.fn(),
+  }),
 }));
 
-import admin from 'firebase-admin';
-
-// Mock crypto for generating invitation tokens
 jest.mock('crypto', () => ({
   randomBytes: jest.fn().mockReturnValue({
-    toString: jest.fn().mockReturnValue('mockToken123')
-  })
+    toString: jest.fn().mockReturnValue('mockToken123'),
+  }),
 }));
 
-// Helper to create mock Express request object
 const createMockRequest = (overrides: any = {}): any => ({
   params: {},
   query: {},
   body: {},
-  user: undefined, // Will be set by auth middleware in real app
-  ...overrides
+  user: undefined,
+  ...overrides,
 });
 
-// Helper to create mock Express response object
 const createMockResponse = (): any => {
   const res: any = {};
   res.status = jest.fn().mockReturnValue(res);
@@ -74,10 +65,9 @@ const createMockResponse = (): any => {
   return res;
 };
 
-// Sample organization data for testing - represents a nonprofit member of the coalition
 const mockOrganization = {
   id: 'org123',
-  firebaseUid: 'firebase-uid-123', // Links to Firebase Auth
+  firebaseUid: 'firebase-uid-123',
   email: 'contact@nonprofitorg.org',
   name: 'Community Senior Services',
   description: 'Providing services to seniors in the Nashville area',
@@ -98,37 +88,34 @@ const mockOrganization = {
   joinedAt: new Date(),
   updatedAt: new Date(),
   inviteToken: null,
-  inviteTokenExp: null
+  inviteTokenExp: null,
 };
 
-// Sample admin organization for testing permissions
 const mockAdminOrg = {
   id: 'admin123',
   role: 'ADMIN' as OrganizationRole,
   name: 'Tennessee Coalition for Better Aging',
   email: 'admin@tcba.org',
-  firebaseUid: 'firebase-admin-123'
+  firebaseUid: 'firebase-admin-123',
 };
 
 describe('OrganizationController', () => {
   beforeEach(() => {
-    jest.clearAllMocks(); // Clear all mock call history
-    mockReset(prismaMock); // Reset Prisma mock state
-
-    // Reset Firebase Auth mocks to default successful responses
+    jest.clearAllMocks();
+    mockReset(prismaMock);
     const mockAuth = admin.auth() as jest.Mocked<any>;
     mockAuth.updateUser.mockResolvedValue({ uid: 'firebase-uid-123' });
     mockAuth.createUser.mockResolvedValue({
       uid: 'firebase-uid-123',
-      email: 'test@nonprofit.org'
+      email: 'test@nonprofit.org',
     });
   });
 
   describe('getAllOrganizations', () => {
-    it('should return paginated organizations for admin', async () => {
+    it('should return paginated organizations - GET /api/organizations', async () => {
       const req = createMockRequest({
         user: mockAdminOrg,
-        query: { page: '1', limit: '10' }
+        query: { page: '1', limit: '10' },
       });
       const res = createMockResponse();
 
@@ -142,29 +129,29 @@ describe('OrganizationController', () => {
         where: {},
         skip: 0,
         take: 10,
-        orderBy: { joinedAt: 'desc' }
+        orderBy: { joinedAt: 'desc' },
       });
 
       expect(res.json).toHaveBeenCalledWith({
         organizations: expect.arrayContaining([
           expect.not.objectContaining({
             inviteToken: expect.anything(),
-            inviteTokenExp: expect.anything()
-          })
+            inviteTokenExp: expect.anything(),
+          }),
         ]),
         pagination: {
           page: 1,
           limit: 10,
           total: 1,
-          pages: 1
-        }
+          pages: 1,
+        },
       });
     });
 
-    it('should filter organizations by search term', async () => {
+    it('should filter organizations by search - GET /api/organizations?search=term', async () => {
       const req = createMockRequest({
         user: mockAdminOrg,
-        query: { search: 'senior' }
+        query: { search: 'senior' },
       });
       const res = createMockResponse();
 
@@ -179,14 +166,14 @@ describe('OrganizationController', () => {
             OR: [
               { name: { contains: 'senior', mode: 'insensitive' } },
               { contactPerson: { contains: 'senior', mode: 'insensitive' } },
-              { email: { contains: 'senior', mode: 'insensitive' } }
-            ]
-          }
+              { email: { contains: 'senior', mode: 'insensitive' } },
+            ],
+          },
         })
       );
     });
 
-    it('should handle database errors', async () => {
+    it('should handle database errors - GET /api/organizations', async () => {
       const req = createMockRequest({ user: mockAdminOrg });
       const res = createMockResponse();
 
@@ -200,10 +187,10 @@ describe('OrganizationController', () => {
   });
 
   describe('getOrganizationById', () => {
-    it('should return organization by ID for admin', async () => {
+    it('should return organization by ID - GET /api/organizations/:id', async () => {
       const req = createMockRequest({
         user: mockAdminOrg,
-        params: { id: 'org123' }
+        params: { id: 'org123' },
       });
       const res = createMockResponse();
 
@@ -212,21 +199,21 @@ describe('OrganizationController', () => {
       await getOrganizationById(req, res);
 
       expect(prismaMock.organization.findUnique).toHaveBeenCalledWith({
-        where: { id: 'org123' }
+        where: { id: 'org123' },
       });
 
       expect(res.json).toHaveBeenCalledWith(
         expect.not.objectContaining({
           inviteToken: expect.anything(),
-          inviteTokenExp: expect.anything()
+          inviteTokenExp: expect.anything(),
         })
       );
     });
 
-    it('should allow organization to access their own profile', async () => {
+    it('should allow org access to own profile - GET /api/organizations/:id', async () => {
       const req = createMockRequest({
         user: { id: 'org123', role: 'MEMBER' as OrganizationRole },
-        params: { id: 'org123' }
+        params: { id: 'org123' },
       });
       const res = createMockResponse();
 
@@ -237,10 +224,10 @@ describe('OrganizationController', () => {
       expect(res.json).toHaveBeenCalled();
     });
 
-    it('should deny access to other organizations profile for non-admin', async () => {
+    it('should deny access to other org profile - GET /api/organizations/:id', async () => {
       const req = createMockRequest({
         user: { id: 'org456', role: 'MEMBER' as OrganizationRole },
-        params: { id: 'org123' }
+        params: { id: 'org123' },
       });
       const res = createMockResponse();
 
@@ -250,10 +237,10 @@ describe('OrganizationController', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Access denied' });
     });
 
-    it('should return 404 for non-existent organization', async () => {
+    it('should return 404 for non-existent org - GET /api/organizations/:id', async () => {
       const req = createMockRequest({
         user: mockAdminOrg,
-        params: { id: 'nonexistent' }
+        params: { id: 'nonexistent' },
       });
       const res = createMockResponse();
 
@@ -267,9 +254,9 @@ describe('OrganizationController', () => {
   });
 
   describe('getCurrentOrganizationProfile', () => {
-    it('should return current organization profile', async () => {
+    it('should return current org profile - GET /api/organizations/profile', async () => {
       const req = createMockRequest({
-        user: { id: 'org123' }
+        user: { id: 'org123' },
       });
       const res = createMockResponse();
 
@@ -278,17 +265,17 @@ describe('OrganizationController', () => {
       await getCurrentOrganizationProfile(req, res);
 
       expect(prismaMock.organization.findUnique).toHaveBeenCalledWith({
-        where: { id: 'org123' }
+        where: { id: 'org123' },
       });
 
       expect(res.json).toHaveBeenCalledWith(
         expect.not.objectContaining({
-          inviteToken: expect.anything()
+          inviteToken: expect.anything(),
         })
       );
     });
 
-    it('should return 401 for unauthenticated organization', async () => {
+    it('should return 401 for unauthenticated - GET /api/organizations/profile', async () => {
       const req = createMockRequest();
       const res = createMockResponse();
 
@@ -300,19 +287,23 @@ describe('OrganizationController', () => {
   });
 
   describe('updateOrganizationProfile', () => {
-    it('should update organization profile successfully', async () => {
+    it('should update org profile - PUT /api/organizations/profile', async () => {
       const req = createMockRequest({
         user: { id: 'org123' },
         body: {
           name: 'Updated Senior Services',
           description: 'Updated description',
           contactPerson: 'John Doe',
-          contactTitle: 'New Director'
-        }
+          contactTitle: 'New Director',
+        },
       });
       const res = createMockResponse();
 
-      const updatedOrg = { ...mockOrganization, name: 'Updated Senior Services', contactPerson: 'John Doe' };
+      const updatedOrg = {
+        ...mockOrganization,
+        name: 'Updated Senior Services',
+        contactPerson: 'John Doe',
+      };
       prismaMock.organization.update.mockResolvedValue(updatedOrg);
 
       await updateOrganizationProfile(req, res);
@@ -324,115 +315,107 @@ describe('OrganizationController', () => {
           description: 'Updated description',
           contactPerson: 'John Doe',
           contactTitle: 'New Director',
-          updatedAt: expect.any(Date)
-        })
+          updatedAt: expect.any(Date),
+        }),
       });
 
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'Updated Senior Services',
-          contactPerson: 'John Doe'
+          contactPerson: 'John Doe',
         })
       );
     });
 
-    it('should update organization email and reset email verification', async () => {
+    it('should update org email and reset verification - PUT /api/organizations/profile', async () => {
       const req = createMockRequest({
         user: { id: 'org123' },
         body: {
           email: 'newemail@nonprofit.org',
-          name: 'Updated Senior Services'
-        }
+          name: 'Updated Senior Services',
+        },
       });
       const res = createMockResponse();
 
-      // Mock existing organization check (no conflicts)
       prismaMock.organization.findFirst.mockResolvedValue(null);
 
-      // Mock current organization lookup
       prismaMock.organization.findUnique.mockResolvedValueOnce({
         firebaseUid: 'firebase-uid-123',
-        email: 'oldemail@nonprofit.org'
+        email: 'oldemail@nonprofit.org',
       } as any);
 
       const updatedOrg = {
         ...mockOrganization,
         email: 'newemail@nonprofit.org',
-        emailVerified: false
+        emailVerified: false,
       };
       prismaMock.organization.update.mockResolvedValue(updatedOrg);
 
       await updateOrganizationProfile(req, res);
 
-      // Should check for email conflicts
       expect(prismaMock.organization.findFirst).toHaveBeenCalledWith({
         where: {
           email: 'newemail@nonprofit.org',
-          NOT: { id: 'org123' }
-        }
+          NOT: { id: 'org123' },
+        },
       });
 
-      // Should update Firebase Auth
       expect(admin.auth().updateUser).toHaveBeenCalledWith('firebase-uid-123', {
-        email: 'newemail@nonprofit.org'
+        email: 'newemail@nonprofit.org',
       });
 
-      // Should update database with email and reset verification
       expect(prismaMock.organization.update).toHaveBeenCalledWith({
         where: { id: 'org123' },
         data: expect.objectContaining({
           email: 'newemail@nonprofit.org',
           emailVerified: false,
-          updatedAt: expect.any(Date)
-        })
+          updatedAt: expect.any(Date),
+        }),
       });
 
       expect(res.json).toHaveBeenCalled();
     });
 
-    it('should reject email update if email already exists', async () => {
+    it('should reject duplicate email - PUT /api/organizations/profile', async () => {
       const req = createMockRequest({
         user: { id: 'org123' },
         body: {
-          email: 'existing@nonprofit.org'
-        }
+          email: 'existing@nonprofit.org',
+        },
       });
       const res = createMockResponse();
 
-      // Mock existing organization with same email
       prismaMock.organization.findFirst.mockResolvedValue({
         id: 'org456',
-        email: 'existing@nonprofit.org'
+        email: 'existing@nonprofit.org',
       } as any);
 
       await updateOrganizationProfile(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
-        error: 'Email is already in use by another organization'
+        error: 'Email is already in use by another organization',
       });
 
-      // Should not call Firebase or update database
       expect(admin.auth().updateUser).not.toHaveBeenCalled();
       expect(prismaMock.organization.update).not.toHaveBeenCalled();
     });
 
-    it('should handle Firebase Auth email update failure', async () => {
+    it('should handle Firebase email update failure - PUT /api/organizations/profile', async () => {
       const req = createMockRequest({
         user: { id: 'org123' },
         body: {
-          email: 'newemail@nonprofit.org'
-        }
+          email: 'newemail@nonprofit.org',
+        },
       });
       const res = createMockResponse();
 
       prismaMock.organization.findFirst.mockResolvedValue(null);
       prismaMock.organization.findUnique.mockResolvedValueOnce({
         firebaseUid: 'firebase-uid-123',
-        email: 'oldemail@nonprofit.org'
+        email: 'oldemail@nonprofit.org',
       } as any);
 
-      // Mock Firebase Auth failure
       const mockUpdateUser = admin.auth().updateUser as jest.Mock;
       mockUpdateUser.mockRejectedValue(new Error('Firebase error'));
 
@@ -441,23 +424,22 @@ describe('OrganizationController', () => {
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
         error: 'Failed to update email in authentication system',
-        details: 'Firebase error'
+        details: 'Firebase error',
       });
 
-      // Should not update database if Firebase fails
       expect(prismaMock.organization.update).not.toHaveBeenCalled();
     });
   });
 
   describe('updateOrganization', () => {
-    it('should allow admin to update organization', async () => {
+    it('should allow admin to update org - PUT /api/organizations/:id', async () => {
       const req = createMockRequest({
         user: mockAdminOrg,
         params: { id: 'org123' },
         body: {
           name: 'Updated Organization',
-          status: 'INACTIVE' as OrganizationStatus
-        }
+          status: 'INACTIVE' as OrganizationStatus,
+        },
       });
       const res = createMockResponse();
 
@@ -470,24 +452,26 @@ describe('OrganizationController', () => {
       expect(res.json).toHaveBeenCalled();
     });
 
-    it('should deny role changes for non-super-admin', async () => {
+    it('should deny role changes for non-super-admin - PUT /api/organizations/:id', async () => {
       const req = createMockRequest({
-        user: mockAdminOrg, // Regular admin, not super admin
+        user: mockAdminOrg,
         params: { id: 'org123' },
-        body: { role: 'ADMIN' as OrganizationRole }
+        body: { role: 'ADMIN' as OrganizationRole },
       });
       const res = createMockResponse();
 
       await updateOrganization(req, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Only super admins can change organization roles' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Only super admins can change organization roles',
+      });
     });
 
-    it('should deny access for non-admin organizations', async () => {
+    it('should deny access for non-admin - PUT /api/organizations/:id', async () => {
       const req = createMockRequest({
         user: { id: 'org123', role: 'MEMBER' as OrganizationRole },
-        params: { id: 'org456' }
+        params: { id: 'org456' },
       });
       const res = createMockResponse();
 
@@ -497,95 +481,88 @@ describe('OrganizationController', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Access denied' });
     });
 
-    it('should allow admin to update organization email', async () => {
+    it('should allow admin to update org email - PUT /api/organizations/:id', async () => {
       const req = createMockRequest({
         user: mockAdminOrg,
         params: { id: 'org123' },
         body: {
           email: 'admin-changed@nonprofit.org',
-          name: 'Admin Updated Organization'
-        }
+          name: 'Admin Updated Organization',
+        },
       });
       const res = createMockResponse();
 
-      // Mock existing organization check (no conflicts)
       prismaMock.organization.findFirst.mockResolvedValue(null);
 
-      // Mock current organization lookup
       prismaMock.organization.findUnique.mockResolvedValueOnce({
         firebaseUid: 'firebase-uid-123',
-        email: 'oldemail@nonprofit.org'
+        email: 'oldemail@nonprofit.org',
       } as any);
 
       const updatedOrg = {
         ...mockOrganization,
         email: 'admin-changed@nonprofit.org',
-        emailVerified: false
+        emailVerified: false,
       };
       prismaMock.organization.update.mockResolvedValue(updatedOrg);
 
       await updateOrganization(req, res);
 
-      // Should check for email conflicts
       expect(prismaMock.organization.findFirst).toHaveBeenCalledWith({
         where: {
           email: 'admin-changed@nonprofit.org',
-          NOT: { id: 'org123' }
-        }
+          NOT: { id: 'org123' },
+        },
       });
 
-      // Should update Firebase Auth
       expect(admin.auth().updateUser).toHaveBeenCalledWith('firebase-uid-123', {
-        email: 'admin-changed@nonprofit.org'
+        email: 'admin-changed@nonprofit.org',
       });
 
-      // Should update database with email and reset verification
       expect(prismaMock.organization.update).toHaveBeenCalledWith({
         where: { id: 'org123' },
         data: expect.objectContaining({
           email: 'admin-changed@nonprofit.org',
           emailVerified: false,
-          updatedAt: expect.any(Date)
-        })
+          updatedAt: expect.any(Date),
+        }),
       });
 
       expect(res.json).toHaveBeenCalled();
     });
 
-    it('should reject admin email update if email already exists', async () => {
+    it('should reject admin duplicate email update - PUT /api/organizations/:id', async () => {
       const req = createMockRequest({
         user: mockAdminOrg,
         params: { id: 'org123' },
         body: {
-          email: 'existing@nonprofit.org'
-        }
+          email: 'existing@nonprofit.org',
+        },
       });
       const res = createMockResponse();
 
-      // Mock existing organization with same email
       prismaMock.organization.findFirst.mockResolvedValue({
         id: 'org456',
-        email: 'existing@nonprofit.org'
+        email: 'existing@nonprofit.org',
       } as any);
 
       await updateOrganization(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
-        error: 'Email is already in use by another organization'
+        error: 'Email is already in use by another organization',
       });
 
-      // Should not call Firebase or update database
       expect(admin.auth().updateUser).not.toHaveBeenCalled();
       expect(prismaMock.organization.update).not.toHaveBeenCalled();
     });
   });
 
   describe('deleteOrganization', () => {
-    it('should allow admin to delete organization', async () => {
+    it('should allow admin to delete org - DELETE /api/organizations/:id', async () => {
       const req = createMockRequest({
         user: mockAdminOrg,
-        params: { id: 'org123' }
+        params: { id: 'org123' },
       });
       const res = createMockResponse();
 
@@ -595,16 +572,16 @@ describe('OrganizationController', () => {
       await deleteOrganization(req, res);
 
       expect(prismaMock.organization.delete).toHaveBeenCalledWith({
-        where: { id: 'org123' }
+        where: { id: 'org123' },
       });
 
       expect(res.json).toHaveBeenCalledWith({ message: 'Organization deleted successfully' });
     });
 
-    it('should prevent self-deletion', async () => {
+    it('should prevent self-deletion - DELETE /api/organizations/:id', async () => {
       const req = createMockRequest({
         user: { id: 'admin123', role: 'ADMIN' as OrganizationRole },
-        params: { id: 'admin123' }
+        params: { id: 'admin123' },
       });
       const res = createMockResponse();
 
@@ -614,10 +591,10 @@ describe('OrganizationController', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Cannot delete your own organization' });
     });
 
-    it('should return 404 for non-existent organization', async () => {
+    it('should return 404 for non-existent org - DELETE /api/organizations/:id', async () => {
       const req = createMockRequest({
         user: mockAdminOrg,
-        params: { id: 'nonexistent' }
+        params: { id: 'nonexistent' },
       });
       const res = createMockResponse();
 
@@ -631,7 +608,7 @@ describe('OrganizationController', () => {
   });
 
   describe('inviteOrganization', () => {
-    it('should create and invite new organization', async () => {
+    it('should create and invite new org - POST /api/organizations/invite', async () => {
       const req = createMockRequest({
         user: mockAdminOrg,
         body: {
@@ -640,17 +617,17 @@ describe('OrganizationController', () => {
           contactPerson: 'Mary Johnson',
           contactTitle: 'Director',
           city: 'Memphis',
-          state: 'TN'
-        }
+          state: 'TN',
+        },
       });
       const res = createMockResponse();
 
-      prismaMock.organization.findFirst.mockResolvedValue(null); // No existing org
+      prismaMock.organization.findFirst.mockResolvedValue(null);
       prismaMock.organization.create.mockResolvedValue({
         ...mockOrganization,
         email: 'neworg@nonprofit.org',
         name: 'New Nonprofit Organization',
-        contactPerson: 'Mary Johnson'
+        contactPerson: 'Mary Johnson',
       });
 
       await inviteOrganization(req, res);
@@ -673,59 +650,64 @@ describe('OrganizationController', () => {
           role: 'MEMBER' as OrganizationRole,
           status: 'PENDING' as OrganizationStatus,
           inviteToken: 'mockToken123',
-          inviteTokenExp: expect.any(Date)
-        }
+          inviteTokenExp: expect.any(Date),
+        },
       });
 
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: 'Organization invited successfully. They will receive setup instructions via email.'
+          message:
+            'Organization invited successfully. They will receive setup instructions via email.',
         })
       );
     });
 
-    it('should prevent duplicate organization invitations', async () => {
+    it('should prevent duplicate invitations - POST /api/organizations/invite', async () => {
       const req = createMockRequest({
         user: mockAdminOrg,
         body: {
           email: 'existing@nonprofit.org',
-          name: 'Existing Organization'
-        }
+          name: 'Existing Organization',
+        },
       });
       const res = createMockResponse();
 
-      prismaMock.organization.findFirst.mockResolvedValue(mockOrganization); // Org exists
+      prismaMock.organization.findFirst.mockResolvedValue(mockOrganization);
 
       await inviteOrganization(req, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Organization with this email or name already exists' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Organization with this email or name already exists',
+      });
     });
 
-    it('should prevent non-super-admin from inviting admin organizations', async () => {
+    it('should prevent non-super-admin inviting admins - POST /api/organizations/invite', async () => {
       const req = createMockRequest({
         user: mockAdminOrg,
         body: {
           email: 'admin@nonprofit.org',
           name: 'Admin Organization',
-          role: 'ADMIN' as OrganizationRole
-        }
+          role: 'ADMIN' as OrganizationRole,
+        },
       });
       const res = createMockResponse();
 
       await inviteOrganization(req, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Only super admins can invite admin organizations' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Only super admins can invite admin organizations',
+      });
     });
   });
 
   describe('getOrganizationActivity', () => {
-    it('should return organization activity for admin', async () => {
+    it('should return org activity for admin - GET /api/organizations/:id/activity', async () => {
       const req = createMockRequest({
         user: mockAdminOrg,
-        params: { id: 'org123' }
+        params: { id: 'org123' },
       });
       const res = createMockResponse();
 
@@ -752,7 +734,7 @@ describe('OrganizationController', () => {
         joinedAt: new Date(),
         updatedAt: new Date(),
         inviteToken: null,
-        inviteTokenExp: null
+        inviteTokenExp: null,
       });
 
       await getOrganizationActivity(req, res);
@@ -766,8 +748,8 @@ describe('OrganizationController', () => {
           contactPerson: true,
           lastLoginAt: true,
           joinedAt: true,
-          updatedAt: true
-        }
+          updatedAt: true,
+        },
       });
 
       expect(res.json).toHaveBeenCalledWith(
@@ -775,15 +757,15 @@ describe('OrganizationController', () => {
           organization: expect.any(Object),
           lastLogin: expect.any(Date),
           accountCreated: expect.any(Date),
-          lastUpdated: expect.any(Date)
+          lastUpdated: expect.any(Date),
         })
       );
     });
 
-    it('should deny access for non-admin organizations', async () => {
+    it('should deny access for non-admin - GET /api/organizations/:id/activity', async () => {
       const req = createMockRequest({
         user: { id: 'org123', role: 'MEMBER' as OrganizationRole },
-        params: { id: 'org456' }
+        params: { id: 'org456' },
       });
       const res = createMockResponse();
 
