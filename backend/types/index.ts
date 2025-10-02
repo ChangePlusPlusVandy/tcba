@@ -3,7 +3,6 @@
 import { Request } from 'express';
 import { OrganizationRole, OrganizationStatus } from '@prisma/client';
 
-// Express request extended with authenticated user data
 export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
@@ -14,7 +13,7 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
-// Full organization model (matches simplified Prisma schema)
+// Full organization model
 export interface Organization {
   id: string;
   firebaseUid: string;
@@ -31,17 +30,30 @@ export interface Organization {
   contactTitle?: string;
   role: OrganizationRole;
   status: OrganizationStatus;
-  isActive: boolean;
   tags: string[];
-  emailVerified: boolean;
 }
 
-// Input validation interfaces for API endpoints
+// For organization self-registration
+export interface RegisterOrganizationInput {
+  email: string;
+  password: string;
+  name: string;
+  contactPerson: string;
+  contactTitle?: string;
+  description?: string;
+  website?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  phoneNumber?: string;
+  tags?: string[];
+}
 
-// For updating organization profiles (self-service)
+// For updating organization profiles
 export interface UpdateOrganizationProfileInput {
   name?: string;
-  email?: string; // Requires email verification after change
+  email?: string;
   description?: string;
   website?: string;
   address?: string;
@@ -57,7 +69,7 @@ export interface UpdateOrganizationProfileInput {
 // For admin updates to organizations
 export interface UpdateOrganizationInput {
   name?: string;
-  email?: string; // Requires email verification after change
+  email?: string;
   description?: string;
   website?: string;
   address?: string;
@@ -68,7 +80,6 @@ export interface UpdateOrganizationInput {
   contactPerson?: string;
   contactTitle?: string;
   tags?: string[];
-  role?: OrganizationRole; // Only super admins
-  status?: OrganizationStatus; // Only admins
-  isActive?: boolean; // Only admins
+  role?: OrganizationRole; 
+  status?: OrganizationStatus;
 }

@@ -1,5 +1,5 @@
 // Prisma schema for TCBA coalition management platform
-// Run npx prisma generate after changes to update types
+// Run npx prisma generate after changes to update types and regenerate client and model
 
 generator client {
   provider = "prisma-client-js"
@@ -42,9 +42,7 @@ model Organization {
   contactTitle    String?            // Title of primary contact
   role            OrganizationRole   @default(MEMBER)
   status          OrganizationStatus @default(PENDING)
-  isActive        Boolean            @default(true)
   tags            String[]           // Location/focus tags like ["West Tennessee", "Healthcare", "Senior Services"]
-  emailVerified   Boolean            @default(false)
 
   @@map("organizations")
 }
