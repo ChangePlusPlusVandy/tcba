@@ -32,32 +32,61 @@ cd frontend
 npm run dev
 ```
 
-## PostgreSQL Setup (Required for Backend)
-PostgreSQL must be running locally for the backend to work.
+## PostgreSQL Database Setup
 
-Install and start PostgreSQL:
-- **On macOS**: `brew install postgresql && brew services start postgresql`
-- **On Linux**: `sudo apt-get install postgresql && sudo service postgresql start`
-- **On Windows**: Download from [postgresql.org](https://www.postgresql.org/download/windows/)
-
-Create database and set up Prisma:
+Set up Prisma:
 ```bash
-createdb tcba_db
 cd backend
-npx prisma migrate dev
+npx prisma db push
 npx prisma generate
 ```
 
-The backend connects to localhost:5432 by default.
+### Supabase Setup
+
+- **Docker Desktop** must be installed and running ([download here](https://docs.docker.com/desktop))
+  - Required for local Supabase instance to run PostgreSQL and other services
+
+1. **Install Supabase CLI**
+   ```bash
+   npm install -g supabase
+   ```
+
+2. **Initialize Supabase in project**
+   ```bash
+   cd backend
+   supabase init
+   ```
+
+3. **Start local Supabase**
+   ```bash
+   supabase start
+   ```
+   This creates a local database at `postgresql://postgres:postgres@localhost:54322/postgres`
+
+4. **Configure Environment Variables**
+   Create `backend/.env` file:
+   ```bash
+   DATABASE_URL="postgresql://postgres:postgres@localhost:54322/postgres"
+   DIRECT_URL="postgresql://postgres:postgres@localhost:54322/postgres"
+   ```
+
+   **For DB Updates:**
+   ```bash
+   cd backend
+   npx prisma db push
+   npx prisma generate
+   ```
 
 ## Notes
 
-Backend uses PostgreSQL, Prisma ORM, Firebase Auth, Stripe, SendGrid, and AWS S3. Before each push, run `npm run format` on both frontend and backend directories for code consistency for all devs
+Backend uses PostgreSQL/Supabase, Prisma ORM, Firebase Auth, Stripe, SendGrid, and AWS S3. Before each push, run `npm run format` on both frontend and backend directories for code consistency for all devs
 
 **Documentation Links For Reference:**
 - [PostgreSQL Docs](https://www.postgresql.org/docs/)
 - [Prisma Docs](https://www.prisma.io/docs/)
+- [Supabase Docs](https://supabase.com/docs)
 - [AWS S3 Docs](https://docs.aws.amazon.com/s3/)
 - [Firebase Auth Docs](https://firebase.google.com/docs/auth)
 - [Stripe API Docs](https://stripe.com/docs/api)
 - [SendGrid API Docs](https://docs.sendgrid.com/)
+- [Docker Desktop Docs](https://docs.docker.com/desktop/)
