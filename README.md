@@ -57,11 +57,13 @@ npx prisma generate
    supabase init
    ```
 
-3. **Start local Supabase**
+3. **Start and Stop local Supabase**
    ```bash
    supabase start
+   supabase stop
    ```
    This creates a local database at `postgresql://postgres:postgres@localhost:54322/postgres`
+   Can use Supabase Studio running locally on localhost:54323 to see your DB updates and test
 
 4. **Configure Environment Variables**
    Create `backend/.env` file:
@@ -69,6 +71,7 @@ npx prisma generate
    DATABASE_URL="postgresql://postgres:postgres@localhost:54322/postgres"
    DIRECT_URL="postgresql://postgres:postgres@localhost:54322/postgres"
    ```
+   Will be replaced with production DB URL when ready
 
    **For DB Updates:**
    ```bash
