@@ -8,6 +8,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   prettier-frontend:
     name: Prettier Frontend
@@ -19,6 +23,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -38,10 +43,11 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
-          git diff --staged --quiet || git commit -m "Auto-format frontend code with Prettier"
+          git diff --staged --quiet || git commit -m "Auto-format frontend code with Prettier 🤖"
 
       - name: Push changes
-        run: git push
+        run: |
+          git push origin main --force-with-lease
 
   prettier-backend:
     name: Prettier Backend
@@ -53,6 +59,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -72,7 +79,8 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
-          git diff --staged --quiet || git commit -m "Auto-format backend code with Prettier"
+          git diff --staged --quiet || git commit -m "Auto-format backend code with Prettier 🤖"
 
       - name: Push changes
-        run: git push
+        run: |
+          git push origin main --force-with-lease
