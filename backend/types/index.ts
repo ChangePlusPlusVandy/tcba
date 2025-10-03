@@ -80,6 +80,6 @@ export interface UpdateOrganizationInput {
   contactPerson?: string;
   contactTitle?: string;
   tags?: string[];
-  role?: OrganizationRole; 
+  role?: OrganizationRole;
   status?: OrganizationStatus;
 }

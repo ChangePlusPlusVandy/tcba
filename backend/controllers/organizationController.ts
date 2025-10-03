@@ -76,7 +76,9 @@ export const registerOrganization = async (req: Request, res: Response) => {
     } = req.body;
 
     if (!email || !password || !name || !contactPerson) {
-      return res.status(400).json({ error: 'Email, password, name, and contact person are required' });
+      return res
+        .status(400)
+        .json({ error: 'Email, password, name, and contact person are required' });
     }
     const existingOrg = await prisma.organization.findFirst({
       where: {
