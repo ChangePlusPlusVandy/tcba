@@ -1,7 +1,7 @@
 # TCBA - Tennessee Coalition for Better Aging
 
 ## Project Overview
-Monorepo for TCBA, a coalition management platform with:
+Repo for TCBA, a coalition management platform with:
 
 **backend/** : Node.js/Express REST API (TypeScript, PostgreSQL)
 **frontend/** : React app (TypeScript, Vite, Tailwind CSS)
@@ -52,7 +52,7 @@ The backend connects to localhost:5432 by default.
 
 ## Notes
 
-Backend uses PostgreSQL, Prisma ORM, Firebase Auth, Stripe, SendGrid, and AWS S3 (Or Cloudinary when decided on)
+Backend uses PostgreSQL, Prisma ORM, Firebase Auth, Stripe, SendGrid, and AWS S3. Before each push, run `npm run format` on both frontend and backend directories for code consistency for all devs
 
 **Documentation Links For Reference:**
 - [PostgreSQL Docs](https://www.postgresql.org/docs/)
