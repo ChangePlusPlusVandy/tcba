@@ -164,10 +164,7 @@ describe('OrganizationController', () => {
 
       expect(prismaMock.organization.findFirst).toHaveBeenCalledWith({
         where: {
-          OR: [
-            { email: 'neworg@nonprofit.org' },
-            { name: 'New Community Services' }
-          ],
+          OR: [{ email: 'neworg@nonprofit.org' }, { name: 'New Community Services' }],
         },
       });
 
@@ -199,11 +196,13 @@ describe('OrganizationController', () => {
       });
 
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-        email: 'neworg@nonprofit.org',
-        name: 'New Community Services',
-        status: 'PENDING',
-      }));
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: 'neworg@nonprofit.org',
+          name: 'New Community Services',
+          status: 'PENDING',
+        })
+      );
     });
 
     it('should reject registration with missing required fields - POST /api/organizations/register', async () => {
@@ -219,7 +218,7 @@ describe('OrganizationController', () => {
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
-        error: 'Email, password, name, and contact person are required'
+        error: 'Email, password, name, and contact person are required',
       });
     });
 
@@ -240,7 +239,7 @@ describe('OrganizationController', () => {
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
-        error: 'Organization with this email or name already exists'
+        error: 'Organization with this email or name already exists',
       });
     });
   });
@@ -413,7 +412,7 @@ describe('OrganizationController', () => {
         where: { id: 'org123' },
         data: expect.objectContaining({
           email: 'newemail@nonprofit.org',
-          }),
+        }),
       });
 
       expect(res.json).toHaveBeenCalled();
@@ -574,6 +573,4 @@ describe('OrganizationController', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Organization not found' });
     });
   });
-
-
 });
