@@ -92,6 +92,10 @@ export const registerOrganization = async (req: Request, res: Response) => {
       emailVerified: false,
       displayName: name,
     });
+    let organizationTags = [];
+    if (tags) {
+      organizationTags = tags;
+    }
     const newOrg = await prisma.organization.create({
       data: {
         email,
@@ -105,7 +109,7 @@ export const registerOrganization = async (req: Request, res: Response) => {
         state,
         zipCode,
         phoneNumber,
-        tags: tags || [],
+        tags: organizationTags,
         firebaseUid: firebaseUser.uid,
         role: 'MEMBER',
         status: 'PENDING',
@@ -127,7 +131,12 @@ export const getOrganizationById = async (req: AuthenticatedRequest, res: Respon
   try {
     const { id } = req.params;
     const currentUser = req.user;
-    const targetId = id === 'profile' ? currentUser?.id : id;
+    let targetId;
+    if (id === 'profile') {
+      targetId = currentUser?.id;
+    } else {
+      targetId = id;
+    }
     if (!targetId) {
       return res.status(401).json({ error: 'Organization not authenticated' });
     }
@@ -176,7 +185,12 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
       role,
       status,
     } = req.body;
-    const targetId = id === 'profile' ? currentUser?.id : id;
+    let targetId;
+    if (id === 'profile') {
+      targetId = currentUser?.id;
+    } else {
+      targetId = id;
+    }
 
     if (!targetId) {
       return res.status(401).json({ error: 'Organization not authenticated' });
