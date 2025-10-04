@@ -1,7 +1,12 @@
 import { useState } from 'react';
+import HomePage from './pages/Home';
 
 function App() {
-  return <div></div>;
+  
+  return (
+  <HomePage/>
+  )
+
 }
 
 export default App;
