@@ -15,16 +15,16 @@ import OrganizationManagement from '../pages/Admin/OrganizationManagement';
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/about" element={<AboutPage />} />
-      <Route path="/organizations" element={<OrganizationsPage />} />
-      <Route path="/resources" element={<ResourcesPage />} />
-      <Route path="/contact" element={<ContactPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      <Route path='/' element={<HomePage />} />
+      <Route path='/about' element={<AboutPage />} />
+      <Route path='/organizations' element={<OrganizationsPage />} />
+      <Route path='/resources' element={<ResourcesPage />} />
+      <Route path='/contact' element={<ContactPage />} />
+      <Route path='/login' element={<LoginPage />} />
+      <Route path='/register' element={<RegisterPage />} />
 
       <Route
-        path="/dashboard"
+        path='/dashboard'
         element={
           <ProtectedRoute>
             <DashboardPage />
@@ -32,7 +32,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/profile"
+        path='/profile'
         element={
           <ProtectedRoute>
             <ProfilePage />
@@ -40,7 +40,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/admin"
+        path='/admin'
         element={
           <ProtectedRoute>
             <AdminDashboard />
@@ -48,7 +48,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/admin/organizations"
+        path='/admin/organizations'
         element={
           <ProtectedRoute>
             <OrganizationManagement />
