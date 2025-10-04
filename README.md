@@ -54,13 +54,13 @@ npx prisma generate
 2. **Initialize Supabase in project**
    ```bash
    cd backend
-   supabase init
+   npx supabase init
    ```
 
 3. **Start and Stop local Supabase**
    ```bash
-   supabase start
-   supabase stop
+   npx supabase start
+   npx supabase stop
    ```
    This creates a local database at `postgresql://postgres:postgres@localhost:54322/postgres`
    Can use Supabase Studio running locally on localhost:54323 to see your DB updates and test
