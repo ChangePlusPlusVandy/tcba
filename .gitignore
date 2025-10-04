@@ -104,6 +104,9 @@ Thumbs.db
 *.sqlite
 *.db
 
+# Supabase local
+supabase/
+
 # Firebase
 .firebase/
 firebase-debug.log

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { PrismaClient, OrganizationRole, OrganizationStatus } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
-import admin from '../config/firebase.js';
+import admin from 'firebase-admin';
 
 const prisma = new PrismaClient();
 
