@@ -1,16 +1,16 @@
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from '../components/ProtectedRoute';
-import HomePage from '../pages/Home';
-import AboutPage from '../pages/About';
-import OrganizationsPage from '../pages/Organizations';
-import ResourcesPage from '../pages/Resources';
-import ContactPage from '../pages/Contact';
-import LoginPage from '../pages/Login';
-import RegisterPage from '../pages/Register';
-import DashboardPage from '../pages/Dashboard';
-import ProfilePage from '../pages/Profile';
-import AdminDashboard from '../pages/Admin/Dashboard';
-import OrganizationManagement from '../pages/Admin/OrganizationManagement';
+import HomePage from '../pages/HomePage/Home';
+import AboutPage from '../pages/AboutPage/About';
+import OrganizationsPage from '../pages/OrganizationsPage/Organizations';
+import ResourcesPage from '../pages/ResourcesPage/Resources';
+import ContactPage from '../pages/ContactPage/Contact';
+import LoginPage from '../pages/LoginPage/Login';
+import RegisterPage from '../pages/RegisterPage/Register';
+import DashboardPage from '../pages/DashboardPage/Dashboard';
+import ProfilePage from '../pages/ProfilePage/Profile';
+import AdminDashboard from '../pages/Admin/AdminDashboard/AdminDashboard';
+import OrganizationManagement from '../pages/Admin/OrganizationManagementPage/OrganizationManagement';
 
 const AppRoutes = () => {
   return (
