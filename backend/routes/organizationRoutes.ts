@@ -5,7 +5,7 @@ import {
   getOrganizationById,
   updateOrganization,
   deleteOrganization,
-} from '../controllers/organizationController';
+} from '../controllers/OrganizationController';
 
 const router = Router();
 
