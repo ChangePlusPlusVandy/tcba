@@ -27,6 +27,7 @@ enum OrganizationStatus {
 }
 
 // The 45+ nonprofit organizations that are part of the Tennessee Coalition for Better Aging
+// Can discuss splitting up this model into addresses table and org table for db normalization standards later
 model Organization {
   id              String             @id @default(cuid())
   firebaseUid     String             @unique // Links to Firebase Auth
