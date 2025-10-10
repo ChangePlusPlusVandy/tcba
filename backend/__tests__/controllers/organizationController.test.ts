@@ -1,4 +1,10 @@
-import { OrganizationRole, OrganizationStatus, PrismaClient } from '@prisma/client';
+import {
+  OrganizationRole,
+  OrganizationStatus,
+  TennesseeRegion,
+  OrganizationSize,
+  PrismaClient,
+} from '@prisma/client';
 import { mockDeep, mockReset } from 'jest-mock-extended';
 import admin from 'firebase-admin';
 
@@ -17,6 +23,17 @@ jest.mock('@prisma/client', () => ({
     INACTIVE: 'INACTIVE',
     PENDING: 'PENDING',
     SUSPENDED: 'SUSPENDED',
+  },
+  TennesseeRegion: {
+    EAST: 'EAST',
+    MIDDLE: 'MIDDLE',
+    WEST: 'WEST',
+  },
+  OrganizationSize: {
+    SMALL: 'SMALL',
+    MEDIUM: 'MEDIUM',
+    LARGE: 'LARGE',
+    EXTRA_LARGE: 'EXTRA_LARGE',
   },
 }));
 
@@ -67,12 +84,20 @@ const mockOrganization = {
   city: 'Nashville',
   state: 'TN',
   zipCode: '37201',
-  phoneNumber: '615-555-0123',
-  contactPerson: 'Jane Smith',
-  contactTitle: 'Executive Director',
+  primaryContactName: 'Jane Smith',
+  primaryContactEmail: 'jane.smith@nonprofitorg.org',
+  primaryContactPhone: '615-555-0123',
+  secondaryContactName: 'John Doe',
+  secondaryContactEmail: 'john.doe@nonprofitorg.org',
+  region: 'MIDDLE' as TennesseeRegion,
+  organizationType: 'Senior Services',
+  membershipActive: true,
+  membershipDate: new Date('2024-01-01'),
+  membershipRenewalDate: new Date('2025-01-01'),
+  organizationSize: 'MEDIUM' as OrganizationSize,
   role: 'MEMBER' as OrganizationRole,
   status: 'ACTIVE' as OrganizationStatus,
-  tags: ['Nashville', 'Senior Services', 'Healthcare'],
+  tags: ['Senior Services', 'Healthcare', 'Mental Health'],
 };
 
 const mockAdminOrg = {
@@ -119,11 +144,18 @@ describe('OrganizationController', () => {
           email: 'neworg@nonprofit.org',
           password: 'securePassword123',
           name: 'New Community Services',
-          contactPerson: 'John Smith',
-          contactTitle: 'Executive Director',
+          primaryContactName: 'John Smith',
+          primaryContactEmail: 'john@neworg.org',
+          primaryContactPhone: '901-555-0100',
+          secondaryContactName: 'Sarah Johnson',
+          secondaryContactEmail: 'sarah@neworg.org',
           city: 'Memphis',
           state: 'TN',
-          tags: ['Community', 'Services'],
+          region: 'WEST',
+          organizationType: 'Community Services',
+          membershipActive: true,
+          organizationSize: 'SMALL',
+          tags: ['Community Services', 'Education'],
         },
       });
       const res = createMockResponse();
@@ -132,7 +164,7 @@ describe('OrganizationController', () => {
         ...mockOrganization,
         email: 'neworg@nonprofit.org',
         name: 'New Community Services',
-        contactPerson: 'John Smith',
+        primaryContactName: 'John Smith',
         status: 'PENDING',
       });
       await registerOrganization(req, res);
@@ -151,16 +183,24 @@ describe('OrganizationController', () => {
         data: {
           email: 'neworg@nonprofit.org',
           name: 'New Community Services',
-          contactPerson: 'John Smith',
-          contactTitle: 'Executive Director',
+          primaryContactName: 'John Smith',
+          primaryContactEmail: 'john@neworg.org',
+          primaryContactPhone: '901-555-0100',
+          secondaryContactName: 'Sarah Johnson',
+          secondaryContactEmail: 'sarah@neworg.org',
           description: undefined,
           website: undefined,
           address: undefined,
           city: 'Memphis',
           state: 'TN',
           zipCode: undefined,
-          phoneNumber: undefined,
-          tags: ['Community', 'Services'],
+          region: 'WEST',
+          organizationType: 'Community Services',
+          membershipActive: true,
+          membershipDate: null,
+          membershipRenewalDate: null,
+          organizationSize: 'SMALL',
+          tags: ['Community Services', 'Education'],
           firebaseUid: 'firebase-uid-123',
           role: 'MEMBER',
           status: 'PENDING',
@@ -185,7 +225,8 @@ describe('OrganizationController', () => {
       await registerOrganization(req, res);
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
-        error: 'Email, password, name, and contact person are required',
+        error:
+          'Email, password, name, and primary contact information (name, email, phone) are required',
       });
     });
     it('should prevent duplicate registration - POST /api/organizations/register', async () => {
@@ -194,7 +235,9 @@ describe('OrganizationController', () => {
           email: 'existing@nonprofit.org',
           password: 'password123',
           name: 'Existing Organization',
-          contactPerson: 'Jane Doe',
+          primaryContactName: 'Jane Doe',
+          primaryContactEmail: 'jane@existing.org',
+          primaryContactPhone: '615-555-9999',
         },
       });
       const res = createMockResponse();
@@ -285,15 +328,19 @@ describe('OrganizationController', () => {
         body: {
           name: 'Updated Senior Services',
           description: 'Updated description',
-          contactPerson: 'John Doe',
-          contactTitle: 'New Director',
+          primaryContactName: 'John Doe',
+          primaryContactEmail: 'john.doe@updated.org',
+          primaryContactPhone: '615-555-9999',
+          region: 'EAST',
+          organizationType: 'Healthcare',
+          membershipActive: true,
         },
       });
       const res = createMockResponse();
       const updatedOrg = {
         ...mockOrganization,
         name: 'Updated Senior Services',
-        contactPerson: 'John Doe',
+        primaryContactName: 'John Doe',
       };
       prismaMock.organization.update.mockResolvedValue(updatedOrg);
       await updateOrganization(req, res);
@@ -302,8 +349,12 @@ describe('OrganizationController', () => {
         data: expect.objectContaining({
           name: 'Updated Senior Services',
           description: 'Updated description',
-          contactPerson: 'John Doe',
-          contactTitle: 'New Director',
+          primaryContactName: 'John Doe',
+          primaryContactEmail: 'john.doe@updated.org',
+          primaryContactPhone: '615-555-9999',
+          region: 'EAST',
+          organizationType: 'Healthcare',
+          membershipActive: true,
         }),
       });
       expect(res.json).toHaveBeenCalledWith(updatedOrg);

@@ -1,5 +1,11 @@
 import { Request, Response } from 'express';
-import { PrismaClient, OrganizationRole, OrganizationStatus } from '@prisma/client';
+import {
+  PrismaClient,
+  OrganizationRole,
+  OrganizationStatus,
+  TennesseeRegion,
+  OrganizationSize,
+} from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import admin from 'firebase-admin';
 
@@ -12,13 +18,15 @@ const prisma = new PrismaClient();
  */
 export const getAllOrganizations = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { search, status, role, city, state, tags } = req.query;
+    const { search, status, role, city, state, tags, region, membershipActive, organizationType } =
+      req.query;
     const where: any = {};
     if (search) {
       where.OR = [
         { name: { contains: search as string, mode: 'insensitive' } },
         { email: { contains: search as string, mode: 'insensitive' } },
-        { contactPerson: { contains: search as string, mode: 'insensitive' } },
+        { primaryContactName: { contains: search as string, mode: 'insensitive' } },
+        { primaryContactEmail: { contains: search as string, mode: 'insensitive' } },
       ];
     }
     if (status) {
@@ -32,6 +40,15 @@ export const getAllOrganizations = async (req: AuthenticatedRequest, res: Respon
     }
     if (state) {
       where.state = { contains: state as string, mode: 'insensitive' };
+    }
+    if (region) {
+      where.region = region as TennesseeRegion;
+    }
+    if (membershipActive !== undefined) {
+      where.membershipActive = membershipActive === 'true';
+    }
+    if (organizationType) {
+      where.organizationType = { contains: organizationType as string, mode: 'insensitive' };
     }
     if (tags) {
       const tagArray = (tags as string).split(',').map(tag => tag.trim());
@@ -63,22 +80,40 @@ export const registerOrganization = async (req: Request, res: Response) => {
       email,
       password,
       name,
-      contactPerson,
-      contactTitle,
+      primaryContactName,
+      primaryContactEmail,
+      primaryContactPhone,
+      secondaryContactName,
+      secondaryContactEmail,
       description,
       website,
       address,
       city,
       state,
       zipCode,
-      phoneNumber,
+      region,
+      organizationType,
+      membershipActive,
+      membershipDate,
+      membershipRenewalDate,
+      organizationSize,
       tags,
     } = req.body;
 
-    if (!email || !password || !name || !contactPerson) {
+    if (
+      !email ||
+      !password ||
+      !name ||
+      !primaryContactName ||
+      !primaryContactEmail ||
+      !primaryContactPhone
+    ) {
       return res
         .status(400)
-        .json({ error: 'Email, password, name, and contact person are required' });
+        .json({
+          error:
+            'Email, password, name, and primary contact information (name, email, phone) are required',
+        });
     }
     const existingOrg = await prisma.organization.findFirst({
       where: {
@@ -102,15 +137,23 @@ export const registerOrganization = async (req: Request, res: Response) => {
       data: {
         email,
         name,
-        contactPerson,
-        contactTitle,
+        primaryContactName,
+        primaryContactEmail,
+        primaryContactPhone,
+        secondaryContactName,
+        secondaryContactEmail,
         description,
         website,
         address,
         city,
         state,
         zipCode,
-        phoneNumber,
+        region,
+        organizationType,
+        membershipActive: membershipActive || false,
+        membershipDate: membershipDate ? new Date(membershipDate) : null,
+        membershipRenewalDate: membershipRenewalDate ? new Date(membershipRenewalDate) : null,
+        organizationSize,
         tags: organizationTags,
         firebaseUid: firebaseUser.uid,
         role: 'MEMBER',
@@ -180,9 +223,17 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
       city,
       state,
       zipCode,
-      phoneNumber,
-      contactPerson,
-      contactTitle,
+      primaryContactName,
+      primaryContactEmail,
+      primaryContactPhone,
+      secondaryContactName,
+      secondaryContactEmail,
+      region,
+      organizationType,
+      membershipActive,
+      membershipDate,
+      membershipRenewalDate,
+      organizationSize,
       tags,
       role,
       status,
@@ -217,9 +268,17 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
       city,
       state,
       zipCode,
-      phoneNumber,
-      contactPerson,
-      contactTitle,
+      primaryContactName,
+      primaryContactEmail,
+      primaryContactPhone,
+      secondaryContactName,
+      secondaryContactEmail,
+      region,
+      organizationType,
+      membershipActive,
+      membershipDate: membershipDate ? new Date(membershipDate) : undefined,
+      membershipRenewalDate: membershipRenewalDate ? new Date(membershipRenewalDate) : undefined,
+      organizationSize,
       tags,
     };
     if (isAdmin) {
