@@ -26,25 +26,49 @@ enum OrganizationStatus {
   SUSPENDED    // Admin blocked access
 }
 
+// Tennessee regions for member organizations
+enum TennesseeRegion {
+  EAST
+  MIDDLE
+  WEST
+}
+
+// Organization size categories for dues calculation
+enum OrganizationSize {
+  SMALL
+  MEDIUM
+  LARGE
+  EXTRA_LARGE
+}
+
 // The 45+ nonprofit organizations that are part of the Tennessee Coalition for Better Aging
 // Can discuss splitting up this model into addresses table and org table for db normalization standards later
 model Organization {
   id              String             @id @default(cuid())
   firebaseUid     String             @unique // Links to Firebase Auth
   name            String             @unique
-  email           String             @unique // Primary contact email
+  email           String             @unique // Organization email
   description     String?
   website         String?
   address         String?
   city            String?
   state           String?
   zipCode         String?
-  phoneNumber     String?
-  contactPerson   String?            // Primary contact name
-  contactTitle    String?            // Title of primary contact
+  primaryContactName        String
+  primaryContactEmail       String
+  primaryContactPhone       String
+  secondaryContactName      String?
+  secondaryContactEmail     String?
+  region                    TennesseeRegion?       // East, Middle, or West Tennessee
+  organizationType          String?                // Type of organization
+  membershipActive          Boolean                @default(false)
+  membershipDate            DateTime?              // Date when dues were paid/membership started
+  membershipRenewalDate     DateTime?              // Date when membership needs to be renewed
+  organizationSize          OrganizationSize?      // Size category for dues calculation
+
   role            OrganizationRole   @default(MEMBER)
   status          OrganizationStatus @default(PENDING)
-  tags            String[]           // Location/focus tags like ["West Tennessee", "Healthcare", "Senior Services"]
+  tags            String[]           // Focus area tags like ["Healthcare", "Senior Services", "Mental Health"]
 
   @@map("organizations")
 }
