@@ -108,12 +108,10 @@ export const registerOrganization = async (req: Request, res: Response) => {
       !primaryContactEmail ||
       !primaryContactPhone
     ) {
-      return res
-        .status(400)
-        .json({
-          error:
-            'Email, password, name, and primary contact information (name, email, phone) are required',
-        });
+      return res.status(400).json({
+        error:
+          'Email, password, name, and primary contact information (name, email, phone) are required',
+      });
     }
     const existingOrg = await prisma.organization.findFirst({
       where: {
