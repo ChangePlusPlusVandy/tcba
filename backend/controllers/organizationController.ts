@@ -1,5 +1,11 @@
 import { Request, Response } from 'express';
-import { PrismaClient, OrganizationRole, OrganizationStatus, TennesseeRegion, OrganizationSize } from '@prisma/client';
+import {
+  PrismaClient,
+  OrganizationRole,
+  OrganizationStatus,
+  TennesseeRegion,
+  OrganizationSize,
+} from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import admin from 'firebase-admin';
 
@@ -12,7 +18,8 @@ const prisma = new PrismaClient();
  */
 export const getAllOrganizations = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { search, status, role, city, state, tags, region, membershipActive, organizationType } = req.query;
+    const { search, status, role, city, state, tags, region, membershipActive, organizationType } =
+      req.query;
     const where: any = {};
     if (search) {
       where.OR = [
@@ -93,10 +100,20 @@ export const registerOrganization = async (req: Request, res: Response) => {
       tags,
     } = req.body;
 
-    if (!email || !password || !name || !primaryContactName || !primaryContactEmail || !primaryContactPhone) {
+    if (
+      !email ||
+      !password ||
+      !name ||
+      !primaryContactName ||
+      !primaryContactEmail ||
+      !primaryContactPhone
+    ) {
       return res
         .status(400)
-        .json({ error: 'Email, password, name, and primary contact information (name, email, phone) are required' });
+        .json({
+          error:
+            'Email, password, name, and primary contact information (name, email, phone) are required',
+        });
     }
     const existingOrg = await prisma.organization.findFirst({
       where: {

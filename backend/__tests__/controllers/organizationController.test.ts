@@ -1,4 +1,10 @@
-import { OrganizationRole, OrganizationStatus, TennesseeRegion, OrganizationSize, PrismaClient } from '@prisma/client';
+import {
+  OrganizationRole,
+  OrganizationStatus,
+  TennesseeRegion,
+  OrganizationSize,
+  PrismaClient,
+} from '@prisma/client';
 import { mockDeep, mockReset } from 'jest-mock-extended';
 import admin from 'firebase-admin';
 
@@ -219,7 +225,8 @@ describe('OrganizationController', () => {
       await registerOrganization(req, res);
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
-        error: 'Email, password, name, and primary contact information (name, email, phone) are required',
+        error:
+          'Email, password, name, and primary contact information (name, email, phone) are required',
       });
     });
     it('should prevent duplicate registration - POST /api/organizations/register', async () => {
