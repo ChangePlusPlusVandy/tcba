@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from '../components/ProtectedRoute';
+import AdminRoute from '../components/AdminRoute';
 import HomePage from '../pages/HomePage/Home';
 import AboutPage from '../pages/AboutPage/About';
 import OrganizationsPage from '../pages/OrganizationsPage/Organizations';
@@ -42,17 +43,17 @@ const AppRoutes = () => {
       <Route
         path='/admin'
         element={
-          <ProtectedRoute>
+          <AdminRoute>
             <AdminDashboard />
-          </ProtectedRoute>
+          </AdminRoute>
         }
       />
       <Route
         path='/admin/organizations'
         element={
-          <ProtectedRoute>
+          <AdminRoute>
             <OrganizationManagement />
-          </ProtectedRoute>
+          </AdminRoute>
         }
       />
     </Routes>

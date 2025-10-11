@@ -8,6 +8,10 @@ jest.mock('@prisma/client', () => ({
   PrismaClient: jest.fn().mockImplementation(() => prismaMock),
 }));
 
+jest.mock('../../config/prisma', () => ({
+  prisma: prismaMock,
+}));
+
 beforeEach(() => {
   mockReset(prismaMock);
 });
