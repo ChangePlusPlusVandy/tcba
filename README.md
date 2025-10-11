@@ -1,6 +1,6 @@
 # TCBA - Tennessee Coalition for Better Aging
 
-## Project Overview - hallo
+## Project Overview
 Repo for TCBA, a coalition management platform with:
 
 **backend/** : Node.js/Express REST API (TypeScript, PostgreSQL)
