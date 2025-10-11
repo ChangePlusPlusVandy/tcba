@@ -50,6 +50,10 @@ jest.mock('firebase-admin', () => ({
   }),
 }));
 
+jest.mock('../../config/prisma', () => ({
+  prisma: prismaMock,
+}));
+
 import {
   getAllOrganizations,
   registerOrganization,

@@ -1,10 +1,9 @@
 import express from 'express';
 import cors from 'cors';
-import { PrismaClient } from '@prisma/client';
 import organizationRoutes from './routes/organizationRoutes';
+import { prisma } from './config/prisma';
 
 const app = express();
-const prisma = new PrismaClient();
 
 app.use(cors());
 app.use(express.json());

@@ -12,7 +12,7 @@ export default {
       },
     ],
   },
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   setupFilesAfterEnv: ['<rootDir>/__tests__/setup/prisma-mock.ts'],

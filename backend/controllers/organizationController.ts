@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import {
-  PrismaClient,
   OrganizationRole,
   OrganizationStatus,
   TennesseeRegion,
@@ -8,8 +7,7 @@ import {
 } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import admin from 'firebase-admin';
-
-const prisma = new PrismaClient();
+import { prisma } from '../config/prisma.js';
 
 /**
  * @desc    Get all organizations with optional search/filter
