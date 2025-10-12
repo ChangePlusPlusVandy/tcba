@@ -4,9 +4,13 @@ import { Request } from 'express';
 import { OrganizationRole, OrganizationStatus } from '@prisma/client';
 
 export interface AuthenticatedRequest extends Request {
+  auth?: {
+    userId: string;
+    sessionId?: string;
+  };
   user?: {
     id: string;
-    firebaseUid: string;
+    clerkId: string;
     role: OrganizationRole;
     email: string;
     name: string;
@@ -16,7 +20,7 @@ export interface AuthenticatedRequest extends Request {
 // Full organization model
 export interface Organization {
   id: string;
-  firebaseUid: string;
+  clerkId: string;
   name: string;
   email: string;
   description?: string;
