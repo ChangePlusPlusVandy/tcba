@@ -82,7 +82,7 @@ npx prisma generate
 
 ## Notes
 
-Backend uses PostgreSQL/Supabase, Prisma ORM, Clerk Auth, Stripe, SendGrid, and AWS S3. Before each push, run `npm run format` on both frontend and backend directories for code consistency for all devs. Strapi will be implemented later for total customization on admin side of user content
+Backend uses PostgreSQL/Supabase, Prisma ORM, Clerk Auth, Stripe, AWS SES, and AWS S3. Before each push, run `npm run format` on both frontend and backend directories for code consistency for all devs. Strapi will be implemented later for total customization on admin side of user content
 
 **Documentation Links For Reference:**
 - [PostgreSQL Docs](https://www.postgresql.org/docs/)
