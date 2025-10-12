@@ -45,7 +45,7 @@ enum OrganizationSize {
 // Can discuss splitting up this model into addresses table and org table for db normalization standards later
 model Organization {
   id              String             @id @default(cuid())
-  firebaseUid     String             @unique // Links to Firebase Auth
+  clerkId         String             @unique // Links to Clerk Auth
   name            String             @unique
   email           String             @unique // Organization email
   description     String?

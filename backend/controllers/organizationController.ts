@@ -6,7 +6,7 @@ import {
   OrganizationSize,
 } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
-import admin from 'firebase-admin';
+import { clerkClient } from '../config/clerk.js';
 import { prisma } from '../config/prisma.js';
 
 /**
@@ -119,12 +119,18 @@ export const registerOrganization = async (req: Request, res: Response) => {
     if (existingOrg) {
       return res.status(400).json({ error: 'Organization with this email or name already exists' });
     }
-    const firebaseUser = await admin.auth().createUser({
-      email,
+
+    const clerkUser = await clerkClient.users.createUser({
+      emailAddress: [email],
       password,
-      emailVerified: false,
-      displayName: name,
+      firstName: name.split(' ')[0] || name,
+      lastName: name.split(' ').slice(1).join(' ') || '',
+      publicMetadata: {
+        organizationName: name,
+        role: 'MEMBER',
+      },
     });
+
     let organizationTags = [];
     if (tags) {
       organizationTags = tags;
@@ -151,7 +157,7 @@ export const registerOrganization = async (req: Request, res: Response) => {
         membershipRenewalDate: membershipRenewalDate ? new Date(membershipRenewalDate) : null,
         organizationSize,
         tags: organizationTags,
-        firebaseUid: firebaseUser.uid,
+        clerkId: clerkUser.id,
         role: 'MEMBER',
         status: 'PENDING',
       },
@@ -298,14 +304,14 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
         return res.status(404).json({ error: 'Organization not found' });
       }
       try {
-        await admin.auth().updateUser(currentOrg.firebaseUid, {
-          email: email,
+        await clerkClient.users.updateUser(currentOrg.clerkId, {
+          externalId: email,
         });
-      } catch (firebaseError: any) {
-        console.error('Firebase email update failed:', firebaseError);
+      } catch (clerkError: any) {
+        console.error('Clerk email update failed:', clerkError);
         return res.status(400).json({
           error: 'Failed to update email in authentication system',
-          details: firebaseError.message,
+          details: clerkError.message,
         });
       }
       updateData.email = email;

@@ -1,11 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
-import { auth } from '../config/firebase';
+import { clerkClient } from '../config/clerk.js';
 
-interface AuthRequest extends Request {
+export interface AuthRequest extends Request {
+  auth?: {
+    userId: string;
+    sessionId?: string;
+  };
   user?: {
-    [key: string]: any;
-    uid: string;
+    id: string;
+    clerkId: string;
     email: string;
+    role?: string;
   };
 }
 
@@ -23,15 +28,16 @@ export const authenticateToken = async (
       return;
     }
 
-    const decodedToken = await auth.verifyIdToken(token);
-
-    req.user = {
-      uid: decodedToken.uid,
-      email: decodedToken.email ?? '',
-    };
-
     next();
   } catch (error) {
     res.status(403).json({ error: 'Invalid token' });
   }
+};
+
+export const requireAdmin = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  next();
 };

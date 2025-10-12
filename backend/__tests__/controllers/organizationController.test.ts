@@ -6,7 +6,6 @@ import {
   PrismaClient,
 } from '@prisma/client';
 import { mockDeep, mockReset } from 'jest-mock-extended';
-import admin from 'firebase-admin';
 
 const prismaMock = mockDeep<PrismaClient>();
 
@@ -37,17 +36,21 @@ jest.mock('@prisma/client', () => ({
   },
 }));
 
-jest.mock('firebase-admin', () => ({
-  auth: jest.fn().mockReturnValue({
+const mockClerkClient = {
+  users: {
     createUser: jest.fn().mockResolvedValue({
-      uid: 'firebase-uid-123',
-      email: 'test@nonprofit.org',
+      id: 'clerk-user-123',
+      emailAddresses: [{ emailAddress: 'test@nonprofit.org' }],
     }),
     updateUser: jest.fn().mockResolvedValue({
-      uid: 'firebase-uid-123',
+      id: 'clerk-user-123',
     }),
-    verifyIdToken: jest.fn(),
-  }),
+  },
+  verifyToken: jest.fn(),
+};
+
+jest.mock('../../config/clerk', () => ({
+  clerkClient: mockClerkClient,
 }));
 
 jest.mock('../../config/prisma', () => ({
@@ -79,7 +82,7 @@ const createMockResponse = (): any => {
 
 const mockOrganization = {
   id: 'org123',
-  firebaseUid: 'firebase-uid-123',
+  clerkId: 'clerk-user-123',
   email: 'contact@nonprofitorg.org',
   name: 'Community Senior Services',
   description: 'Providing services to seniors in the Nashville area',
@@ -109,19 +112,18 @@ const mockAdminOrg = {
   role: 'ADMIN' as OrganizationRole,
   name: 'Tennessee Coalition for Better Aging',
   email: 'admin@tcba.org',
-  firebaseUid: 'firebase-admin-123',
+  clerkId: 'clerk-admin-123',
 };
 
 describe('OrganizationController', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockReset(prismaMock);
-    const mockAuth = admin.auth() as jest.Mocked<any>;
-    mockAuth.updateUser.mockResolvedValue({ uid: 'firebase-uid-123' });
-    mockAuth.createUser.mockResolvedValue({
-      uid: 'firebase-uid-123',
-      email: 'test@nonprofit.org',
-    });
+    mockClerkClient.users.updateUser.mockResolvedValue({ id: 'clerk-user-123' } as any);
+    mockClerkClient.users.createUser.mockResolvedValue({
+      id: 'clerk-user-123',
+      emailAddresses: [{ emailAddress: 'test@nonprofit.org' }],
+    } as any);
   });
 
   describe('getAllOrganizations', () => {
@@ -177,11 +179,12 @@ describe('OrganizationController', () => {
           OR: [{ email: 'neworg@nonprofit.org' }, { name: 'New Community Services' }],
         },
       });
-      expect(admin.auth().createUser).toHaveBeenCalledWith({
-        email: 'neworg@nonprofit.org',
+      expect(mockClerkClient.users.createUser).toHaveBeenCalledWith({
+        emailAddress: ['neworg@nonprofit.org'],
         password: 'securePassword123',
-        emailVerified: false,
-        displayName: 'New Community Services',
+        firstName: 'New',
+        lastName: 'Community Services',
+        publicMetadata: { organizationName: 'New Community Services', role: 'MEMBER' },
       });
       expect(prismaMock.organization.create).toHaveBeenCalledWith({
         data: {
@@ -205,7 +208,7 @@ describe('OrganizationController', () => {
           membershipRenewalDate: null,
           organizationSize: 'SMALL',
           tags: ['Community Services', 'Education'],
-          firebaseUid: 'firebase-uid-123',
+          clerkId: 'clerk-user-123',
           role: 'MEMBER',
           status: 'PENDING',
         },
@@ -375,7 +378,7 @@ describe('OrganizationController', () => {
       const res = createMockResponse();
       prismaMock.organization.findFirst.mockResolvedValue(null);
       prismaMock.organization.findUnique.mockResolvedValueOnce({
-        firebaseUid: 'firebase-uid-123',
+        clerkId: 'clerk-user-123',
       } as any);
       const updatedOrg = {
         ...mockOrganization,
@@ -389,8 +392,8 @@ describe('OrganizationController', () => {
           NOT: { id: 'org123' },
         },
       });
-      expect(admin.auth().updateUser).toHaveBeenCalledWith('firebase-uid-123', {
-        email: 'newemail@nonprofit.org',
+      expect(mockClerkClient.users.updateUser).toHaveBeenCalledWith('clerk-user-123', {
+        externalId: 'newemail@nonprofit.org',
       });
       expect(prismaMock.organization.update).toHaveBeenCalledWith({
         where: { id: 'org123' },
