@@ -6,15 +6,13 @@ import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-reac
 function App() {
   return (
     <header>
-      
       <SignedOut>
         <SignInButton />
       </SignedOut>
       <SignedIn>
         <UserButton />
       </SignedIn>
-      <HomePage/>
-      
+      <HomePage />
     </header>
   );
 }
