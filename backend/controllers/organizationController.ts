@@ -73,12 +73,10 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
       !primaryContactEmail ||
       !primaryContactPhone
     ) {
-      return res
-        .status(400)
-        .json({
-          error:
-            'Email, password, name, and primary contact information (name, email, phone) are required',
-        });
+      return res.status(400).json({
+        error:
+          'Email, password, name, and primary contact information (name, email, phone) are required',
+      });
     }
     const existingOrg = await prisma.organization.findFirst({
       where: { OR: [{ email }, { name }] },
@@ -176,12 +174,10 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
         await clerkClient.users.updateUser(currentOrg.clerkId, { externalId: email });
       } catch (clerkError: any) {
         console.error('Clerk email update failed:', clerkError);
-        return res
-          .status(400)
-          .json({
-            error: 'Failed to update email in authentication system',
-            details: clerkError.message,
-          });
+        return res.status(400).json({
+          error: 'Failed to update email in authentication system',
+          details: clerkError.message,
+        });
       }
       updateData.email = email;
     }
