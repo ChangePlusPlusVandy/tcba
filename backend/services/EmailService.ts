@@ -1,2 +1,2 @@
-// Twilio SendGrid email service
-// TODO: Implement SendGrid integration
+// AWS SES email service
+// TODO: Implement SES integration
