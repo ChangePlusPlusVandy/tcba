@@ -1,43 +1,50 @@
-import { Request, Response, NextFunction } from 'express';
-import { clerkClient } from '../config/clerk.js';
+import { Response, NextFunction } from 'express';
+import { AuthenticatedRequest } from '../types/index.js';
 
-export interface AuthRequest extends Request {
-  auth?: {
-    userId: string;
-    sessionId?: string;
-  };
-  user?: {
-    id: string;
-    clerkId: string;
-    email: string;
-    role?: string;
-  };
-}
+// Helper
+const isAdmin = (role?: string) => role === 'ADMIN' || role === 'SUPER_ADMIN';
 
+/**
+ * TODO: Replace with Clerk's requireAuth() middleware
+ * This should verify that a valid Clerk session exists
+ */
 export const authenticateToken = async (
-  req: AuthRequest,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-      res.status(401).json({ error: 'Access token required' });
-      return;
-    }
-
-    next();
-  } catch (error) {
-    res.status(403).json({ error: 'Invalid token' });
-  }
+  // Placeholder - implement Clerk's requireAuth()
+  next();
 };
 
+/**
+ * TODO: Implement role-based authorization
+ * Check if req.user.role is ADMIN or SUPER_ADMIN
+ */
 export const requireAdmin = async (
-  req: AuthRequest,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
+  if (!isAdmin(req.user?.role)) {
+    res.status(403).json({ error: 'Admin access required' });
+    return;
+  }
+  next();
+};
+
+/**
+ * TODO: Implement super admin authorization
+ * Check if req.user.role is SUPER_ADMIN
+ */
+export const requireSuperAdmin = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  if (req.user?.role !== 'SUPER_ADMIN') {
+    res.status(403).json({ error: 'Super admin access required' });
+    return;
+  }
   next();
 };
