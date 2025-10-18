@@ -46,9 +46,9 @@ npx prisma generate
 - **Docker Desktop** must be installed and running ([download here](https://docs.docker.com/desktop))
   - Required for local Supabase instance to run PostgreSQL and other services
 
-1. **Install Supabase CLI**
+1. **Install Supabase CLI (Homebrew)**
    ```bash
-   npm install -g supabase
+   brew install supabase/tap/supabase
    ```
 
 2. **Initialize Supabase in project**
