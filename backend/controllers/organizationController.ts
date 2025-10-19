@@ -1,9 +1,13 @@
-import { Request, Response } from 'express';
-import { PrismaClient, OrganizationRole, OrganizationStatus } from '@prisma/client';
+import { Response } from 'express';
+import { OrganizationRole, OrganizationStatus, TennesseeRegion } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
-import admin from 'firebase-admin';
+import { clerkClient } from '../config/clerk.js';
+import { prisma } from '../config/prisma.js';
 
-const prisma = new PrismaClient();
+// Helper: Check if user is admin
+const isAdmin = (role?: OrganizationRole) => role === 'ADMIN' || role === 'SUPER_ADMIN';
+// Helper: Resolve target ID (profile or explicit ID)
+const resolveTargetId = (id: string, userId?: string) => (id === 'profile' ? userId : id);
 
 /**
  * @desc    Get all organizations with optional search/filter
@@ -12,39 +16,29 @@ const prisma = new PrismaClient();
  */
 export const getAllOrganizations = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { search, status, role, city, state, tags } = req.query;
-    const where: any = {};
-    if (search) {
-      where.OR = [
-        { name: { contains: search as string, mode: 'insensitive' } },
-        { email: { contains: search as string, mode: 'insensitive' } },
-        { contactPerson: { contains: search as string, mode: 'insensitive' } },
-      ];
-    }
-    if (status) {
-      where.status = status as OrganizationStatus;
-    }
-    if (role) {
-      where.role = role as OrganizationRole;
-    }
-    if (city) {
-      where.city = { contains: city as string, mode: 'insensitive' };
-    }
-    if (state) {
-      where.state = { contains: state as string, mode: 'insensitive' };
-    }
-    if (tags) {
-      const tagArray = (tags as string).split(',').map(tag => tag.trim());
-      where.tags = {
-        hasSome: tagArray,
-      };
-    }
-
-    const organizations = await prisma.organization.findMany({
-      where,
-      orderBy: { name: 'asc' },
-    });
-
+    const { search, status, role, city, state, tags, region, membershipActive, organizationType } =
+      req.query;
+    const where: any = {
+      ...(status && { status: status as OrganizationStatus }),
+      ...(role && { role: role as OrganizationRole }),
+      ...(city && { city: { contains: city as string, mode: 'insensitive' } }),
+      ...(state && { state: { contains: state as string, mode: 'insensitive' } }),
+      ...(region && { region: region as TennesseeRegion }),
+      ...(membershipActive !== undefined && { membershipActive: membershipActive === 'true' }),
+      ...(organizationType && {
+        organizationType: { contains: organizationType as string, mode: 'insensitive' },
+      }),
+      ...(search && {
+        OR: [
+          { name: { contains: search as string, mode: 'insensitive' } },
+          { email: { contains: search as string, mode: 'insensitive' } },
+          { primaryContactName: { contains: search as string, mode: 'insensitive' } },
+          { primaryContactEmail: { contains: search as string, mode: 'insensitive' } },
+        ],
+      }),
+      ...(tags && { tags: { hasSome: (tags as string).split(',').map(tag => tag.trim()) } }),
+    };
+    const organizations = await prisma.organization.findMany({ where, orderBy: { name: 'asc' } });
     res.json(organizations);
   } catch (error) {
     console.error('Error fetching organizations:', error);
@@ -57,62 +51,53 @@ export const getAllOrganizations = async (req: AuthenticatedRequest, res: Respon
  * @route   POST /api/organizations/register
  * @access  Public
  */
-export const registerOrganization = async (req: Request, res: Response) => {
+export const registerOrganization = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const {
       email,
       password,
       name,
-      contactPerson,
-      contactTitle,
-      description,
-      website,
-      address,
-      city,
-      state,
-      zipCode,
-      phoneNumber,
+      primaryContactName,
+      primaryContactEmail,
+      primaryContactPhone,
+      membershipDate,
+      membershipRenewalDate,
+      membershipActive,
       tags,
     } = req.body;
-
-    if (!email || !password || !name || !contactPerson) {
-      return res
-        .status(400)
-        .json({ error: 'Email, password, name, and contact person are required' });
+    if (
+      !email ||
+      !password ||
+      !name ||
+      !primaryContactName ||
+      !primaryContactEmail ||
+      !primaryContactPhone
+    ) {
+      return res.status(400).json({
+        error:
+          'Email, password, name, and primary contact information (name, email, phone) are required',
+      });
     }
     const existingOrg = await prisma.organization.findFirst({
-      where: {
-        OR: [{ email }, { name }],
-      },
+      where: { OR: [{ email }, { name }] },
     });
-    if (existingOrg) {
+    if (existingOrg)
       return res.status(400).json({ error: 'Organization with this email or name already exists' });
-    }
-    const firebaseUser = await admin.auth().createUser({
-      email,
+    const clerkUser = await clerkClient.users.createUser({
+      emailAddress: [email],
       password,
-      emailVerified: false,
-      displayName: name,
+      firstName: name.split(' ')[0] || name,
+      lastName: name.split(' ').slice(1).join(' ') || '',
+      publicMetadata: { organizationName: name, role: 'MEMBER' },
     });
-    let organizationTags = [];
-    if (tags) {
-      organizationTags = tags;
-    }
     const newOrg = await prisma.organization.create({
       data: {
-        email,
-        name,
-        contactPerson,
-        contactTitle,
-        description,
-        website,
-        address,
-        city,
-        state,
-        zipCode,
-        phoneNumber,
-        tags: organizationTags,
-        firebaseUid: firebaseUser.uid,
+        ...req.body,
+        membershipActive: membershipActive || false,
+        membershipDate: membershipDate ? new Date(membershipDate) : null,
+        membershipRenewalDate: membershipRenewalDate ? new Date(membershipRenewalDate) : null,
+        tags: tags || [],
+        clerkId: clerkUser.id,
         role: 'MEMBER',
         status: 'PENDING',
       },
@@ -125,36 +110,19 @@ export const registerOrganization = async (req: Request, res: Response) => {
 };
 
 /**
- * @desc    Get organization by ID or current user's profile
- * @route   GET /api/organizations/:id  or  GET /api/organizations/profile
- * @access  Admin/Super Admin or own organization only
+ * @desc    Get organization by ID or profile
+ * @route   GET /api/organizations/:id
+ * @access  Admin/Super Admin or own organization
  */
 export const getOrganizationById = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { id } = req.params;
-    const currentUser = req.user;
-    let targetId;
-    if (id === 'profile') {
-      targetId = currentUser?.id;
-    } else {
-      targetId = id;
-    }
-    if (!targetId) {
-      return res.status(401).json({ error: 'Organization not authenticated' });
-    }
-    if (
-      currentUser?.role !== 'ADMIN' &&
-      currentUser?.role !== 'SUPER_ADMIN' &&
-      currentUser?.id !== targetId
-    ) {
+    const targetId = resolveTargetId(req.params.id, req.user?.id);
+    if (!targetId) return res.status(401).json({ error: 'Organization not authenticated' });
+    if (!isAdmin(req.user?.role) && req.user?.id !== targetId) {
       return res.status(403).json({ error: 'Access denied' });
     }
-    const organization = await prisma.organization.findUnique({
-      where: { id: targetId },
-    });
-    if (!organization) {
-      return res.status(404).json({ error: 'Organization not found' });
-    }
+    const organization = await prisma.organization.findUnique({ where: { id: targetId } });
+    if (!organization) return res.status(404).json({ error: 'Organization not found' });
     res.json(organization);
   } catch (error) {
     console.error('Error fetching organization:', error);
@@ -164,93 +132,51 @@ export const getOrganizationById = async (req: AuthenticatedRequest, res: Respon
 
 /**
  * @desc    Update organization
- * @route   PUT /api/organizations/:id  or  PUT /api/organizations/profile
- * @access  Admin/Super Admin for any org, or own organization only
+ * @route   PUT /api/organizations/:id
+ * @access  Admin/Super Admin or own organization
  */
 export const updateOrganization = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { id } = req.params;
-    const currentUser = req.user;
     const {
-      name,
       email,
-      description,
-      website,
-      address,
-      city,
-      state,
-      zipCode,
-      phoneNumber,
-      contactPerson,
-      contactTitle,
-      tags,
       role,
       status,
+      membershipDate,
+      membershipRenewalDate,
+      password,
+      ...updateFields
     } = req.body;
-    let targetId;
-    if (id === 'profile') {
-      targetId = currentUser?.id;
-    } else {
-      targetId = id;
-    }
-
-    if (!targetId) {
-      return res.status(401).json({ error: 'Organization not authenticated' });
-    }
-    const isOwnOrg = currentUser?.id === targetId;
-    const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'SUPER_ADMIN';
-    if (!isOwnOrg && !isAdmin) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-    if (role && currentUser?.role !== 'SUPER_ADMIN') {
+    const targetId = resolveTargetId(req.params.id, req.user?.id);
+    if (!targetId) return res.status(401).json({ error: 'Organization not authenticated' });
+    const isOwnOrg = req.user?.id === targetId;
+    const userIsAdmin = isAdmin(req.user?.role);
+    if (!isOwnOrg && !userIsAdmin) return res.status(403).json({ error: 'Access denied' });
+    if (role && req.user?.role !== 'SUPER_ADMIN')
       return res.status(403).json({ error: 'Only super admins can change organization roles' });
-    }
-
-    if (status && !isAdmin) {
+    if (status && !userIsAdmin)
       return res.status(403).json({ error: 'Only admins can change organization status' });
-    }
-    let updateData: any = {
-      name,
-      description,
-      website,
-      address,
-      city,
-      state,
-      zipCode,
-      phoneNumber,
-      contactPerson,
-      contactTitle,
-      tags,
+    const updateData: any = {
+      ...updateFields,
+      ...(membershipDate && { membershipDate: new Date(membershipDate) }),
+      ...(membershipRenewalDate && { membershipRenewalDate: new Date(membershipRenewalDate) }),
+      ...(userIsAdmin && role && { role }),
+      ...(userIsAdmin && status && { status }),
     };
-    if (isAdmin) {
-      updateData.role = role;
-      updateData.status = status;
-    }
     if (email) {
       const existingOrg = await prisma.organization.findFirst({
-        where: {
-          email: email,
-          NOT: { id: targetId },
-        },
+        where: { email, NOT: { id: targetId } },
       });
-      if (existingOrg) {
+      if (existingOrg)
         return res.status(400).json({ error: 'Email is already in use by another organization' });
-      }
-      const currentOrg = await prisma.organization.findUnique({
-        where: { id: targetId },
-      });
-      if (!currentOrg) {
-        return res.status(404).json({ error: 'Organization not found' });
-      }
+      const currentOrg = await prisma.organization.findUnique({ where: { id: targetId } });
+      if (!currentOrg) return res.status(404).json({ error: 'Organization not found' });
       try {
-        await admin.auth().updateUser(currentOrg.firebaseUid, {
-          email: email,
-        });
-      } catch (firebaseError: any) {
-        console.error('Firebase email update failed:', firebaseError);
+        await clerkClient.users.updateUser(currentOrg.clerkId, { externalId: email });
+      } catch (clerkError: any) {
+        console.error('Clerk email update failed:', clerkError);
         return res.status(400).json({
           error: 'Failed to update email in authentication system',
-          details: firebaseError.message,
+          details: clerkError.message,
         });
       }
       updateData.email = email;
@@ -267,32 +193,22 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
 };
 
 /**
- * @desc    Delete organization by admin
+ * @desc    Delete organization
  * @route   DELETE /api/organizations/:id
  * @access  Admin/Super Admin only
  */
 export const deleteOrganization = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const currentUser = req.user;
-    if (currentUser?.role !== 'ADMIN' && currentUser?.role !== 'SUPER_ADMIN') {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-    if (currentUser?.id === id) {
+    if (!isAdmin(req.user?.role)) return res.status(403).json({ error: 'Access denied' });
+    if (req.user?.id === id)
       return res.status(400).json({ error: 'Cannot delete your own organization' });
-    }
-    const orgToDelete = await prisma.organization.findUnique({
-      where: { id },
-    });
-    if (!orgToDelete) {
-      return res.status(404).json({ error: 'Organization not found' });
-    }
-    if (orgToDelete.role === 'ADMIN' && currentUser?.role !== 'SUPER_ADMIN') {
+    const orgToDelete = await prisma.organization.findUnique({ where: { id } });
+    if (!orgToDelete) return res.status(404).json({ error: 'Organization not found' });
+    if (orgToDelete.role === 'ADMIN' && req.user?.role !== 'SUPER_ADMIN') {
       return res.status(403).json({ error: 'Only super admins can delete admin organizations' });
     }
-    await prisma.organization.delete({
-      where: { id },
-    });
+    await prisma.organization.delete({ where: { id } });
     res.json({ message: 'Organization deleted successfully' });
   } catch (error) {
     console.error('Error deleting organization:', error);

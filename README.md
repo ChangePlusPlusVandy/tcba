@@ -46,9 +46,9 @@ npx prisma generate
 - **Docker Desktop** must be installed and running ([download here](https://docs.docker.com/desktop))
   - Required for local Supabase instance to run PostgreSQL and other services
 
-1. **Install Supabase CLI**
+1. **Install Supabase CLI (Homebrew)**
    ```bash
-   npm install -g supabase
+   brew install supabase/tap/supabase
    ```
 
 2. **Initialize Supabase in project**
@@ -82,14 +82,15 @@ npx prisma generate
 
 ## Notes
 
-Backend uses PostgreSQL/Supabase, Prisma ORM, Firebase Auth, Stripe, SendGrid, and AWS S3. Before each push, run `npm run format` on both frontend and backend directories for code consistency for all devs
+Backend uses PostgreSQL/Supabase, Prisma ORM, Clerk Auth, Stripe, AWS SES, and AWS S3. Before each push, run `npm run format` on both frontend and backend directories for code consistency for all devs. Strapi will be implemented later for total customization on admin side of user content
 
 **Documentation Links For Reference:**
 - [PostgreSQL Docs](https://www.postgresql.org/docs/)
 - [Prisma Docs](https://www.prisma.io/docs/)
 - [Supabase Docs](https://supabase.com/docs)
 - [AWS S3 Docs](https://docs.aws.amazon.com/s3/)
-- [Firebase Auth Docs](https://firebase.google.com/docs/auth)
+- [Clerk Auth Docs](https://clerk.com/docs/index)
+- [AWS SES Docs](https://docs.aws.amazon.com/ses/)
 - [Stripe API Docs](https://stripe.com/docs/api)
-- [SendGrid API Docs](https://docs.sendgrid.com/)
 - [Docker Desktop Docs](https://docs.docker.com/desktop/)
+- [Strapi CMS Docs](https://docs.strapi.io/cms/quick-start)

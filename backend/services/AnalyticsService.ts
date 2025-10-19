@@ -1,3 +1,2 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+// Analytics service for tracking usage and metrics
+// TODO: Implement analytics integration
