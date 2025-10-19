@@ -4,7 +4,7 @@ import {
   createIndividualSubscription,
   getIndividualSubscriptionById,
   updateIndividualSubscription,
-  deleteIndividualSubscription
+  deleteIndividualSubscription,
 } from '../controllers/subscriptionIndividualController.js';
 
 const router = Router();
