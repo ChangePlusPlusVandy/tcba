@@ -15,33 +15,32 @@ export const getAllAdmins = async (req: AuthenticatedRequest, res: Response) => 
     // Check if the current user is a super admin
     // First, we need to get the admin user from the database using the clerkId
     const currentAdmin = await (prisma as any).adminUser.findUnique({
-      where: { clerkId: req.user?.clerkId || '' }
+      where: { clerkId: req.user?.clerkId || '' },
     });
 
     if (!currentAdmin || !currentAdmin.isSuperAdmin) {
       return res.status(403).json({ error: 'Access denied. Super admin privileges required.' });
     }
 
-    const {email, name, isSuperAdmin, isActive} = req.query;
+    const { email, name, isSuperAdmin, isActive } = req.query;
     const where: any = {
       ...(email && { email: { contains: email as string, mode: 'insensitive' } }),
       ...(name && { name: { contains: name as string, mode: 'insensitive' } }),
       ...(isSuperAdmin !== undefined && { isSuperAdmin: isSuperAdmin === 'true' }),
       ...(isActive !== undefined && { isActive: isActive === 'true' }),
     };
-    
+
     const admins = await (prisma as any).adminUser.findMany({
       where,
       orderBy: { name: 'asc' },
     });
-    
-    res.json(admins);
 
+    res.json(admins);
   } catch (error) {
     console.error('Error fetching admins:', error);
     res.status(500).json({ error: 'Failed to fetch admins' });
   }
-}  
+};
 
 /**
  * @desc    Get an admin by id
@@ -52,25 +51,24 @@ export const getAdminById = async (req: AuthenticatedRequest, res: Response) => 
   try {
     // Check if the current user is a super admin
     const currentAdmin = await (prisma as any).adminUser.findUnique({
-      where: { clerkId: req.user?.clerkId || '' }
+      where: { clerkId: req.user?.clerkId || '' },
     });
 
     if (!currentAdmin || !currentAdmin.isSuperAdmin) {
       return res.status(403).json({ error: 'Access denied. Super admin privileges required.' });
     }
 
-    const { id } = req.params;  
+    const { id } = req.params;
 
     const admin = await (prisma as any).adminUser.findUnique({
-      where: {id}
+      where: { id },
     });
 
     if (!admin) {
       return res.status(404).json({ error: 'Admin not found' });
     }
-    
-    res.json(admin);
 
+    res.json(admin);
   } catch (error) {
     console.error('Error fetching admin by id:', error);
     res.status(500).json({ error: 'Failed to fetch admin by id' });
@@ -85,7 +83,7 @@ export const createAdmin = async (req: AuthenticatedRequest, res: Response) => {
   try {
     // Check if the current user is a super admin
     const currentAdmin = await (prisma as any).adminUser.findUnique({
-      where: { clerkId: req.user?.clerkId || '' }
+      where: { clerkId: req.user?.clerkId || '' },
     });
 
     if (!currentAdmin || !currentAdmin.isSuperAdmin) {
@@ -126,7 +124,7 @@ export const updateAdmin = async (req: AuthenticatedRequest, res: Response) => {
   try {
     // Check if the current user is a super admin
     const currentAdmin = await (prisma as any).adminUser.findUnique({
-      where: { clerkId: req.user?.clerkId || '' }
+      where: { clerkId: req.user?.clerkId || '' },
     });
     if (!currentAdmin || !currentAdmin.isSuperAdmin) {
       return res.status(403).json({ error: 'Access denied. Super admin privileges required.' });
@@ -145,7 +143,7 @@ export const updateAdmin = async (req: AuthenticatedRequest, res: Response) => {
     console.error('Error updating admin:', error);
     res.status(500).json({ error: 'Failed to update admin' });
   }
-}
+};
 
 /**
  * @desc    Delete an admin
@@ -153,20 +151,20 @@ export const updateAdmin = async (req: AuthenticatedRequest, res: Response) => {
  * @access  Super Admin only
  */
 export const deleteAdmin = async (req: AuthenticatedRequest, res: Response) => {
-    try{
+  try {
     // Check if the current user is a super admin
     const currentAdmin = await (prisma as any).adminUser.findUnique({
-      where: { clerkId: req.user?.clerkId || '' }
+      where: { clerkId: req.user?.clerkId || '' },
     });
 
     if (!currentAdmin || !currentAdmin.isSuperAdmin) {
-        return res.status(403).json({ error: 'Access denied. Super admin privileges required.' });
+      return res.status(403).json({ error: 'Access denied. Super admin privileges required.' });
     }
 
     const { id } = req.params;
 
     await (prisma as any).adminUser.delete({
-        where: { id }
+      where: { id },
     });
 
     res.json({ message: 'Admin deleted successfully' });
@@ -174,4 +172,4 @@ export const deleteAdmin = async (req: AuthenticatedRequest, res: Response) => {
     console.error('Error deleting admin:', error);
     res.status(500).json({ error: 'Failed to delete admin' });
   }
-}
+};
