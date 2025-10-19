@@ -72,3 +72,15 @@ model Organization {
 
   @@map("organizations")
 }
+
+// The subscriptions sent to a specific individual
+model SubscriptionIndividual {
+  id                        String    @id @default(cuid())
+  subscription              String
+  individual                String
+  sentDate                  DateTime
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime?  @updatedAt
+
+  @@map("subscriptionIndividual")
+}
