@@ -72,3 +72,17 @@ model Organization {
 
   @@map("organizations")
 }
+
+model Individual {
+  id                      String            @id @default(cuid())
+  email                   String            @unique // Individual email 
+  name                    String            // Name of Individual
+  phone                   String            @unique // Individual's phone number
+  isSubscribed            Boolean           // Subscription status
+  subscriptionDate        DateTime          // Date when first subscribed
+  createdAt               DateTime          // Date when individual was created
+  updatedAt               DateTime          // Date when individual was last updated
+
+
+  @@map("individuals")
+}
