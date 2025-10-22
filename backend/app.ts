@@ -14,4 +14,14 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/organizations', organizationRoutes);
 
+app.get('/api/announcements', async (req, res) => {
+  try {
+    const announcements = await prisma.announcements.findMany();
+    res.json(announcements);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch announcements' });
+  }
+});
+
 export default app;

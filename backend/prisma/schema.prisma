@@ -41,6 +41,21 @@ enum OrganizationSize {
   EXTRA_LARGE
 }
 
+model Announcements {
+  id              String   @id @default(cuid())
+  title           String
+  content         String
+  publishedDate   DateTime?
+  isPublished     Boolean  @default(false)
+  attachmentUrls  String[]
+  tags            String[]
+  createdByAdminId String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("announcements")
+}
+
 // The 45+ nonprofit organizations that are part of the Tennessee Coalition for Better Aging
 // Can discuss splitting up this model into addresses table and org table for db normalization standards later
 model Organization {
