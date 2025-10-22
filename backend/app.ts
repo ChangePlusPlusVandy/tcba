@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import organizationRoutes from './routes/organizationRoutes';
+import announcementRoutes from './routes/announcementRoutes';
 import { prisma } from './config/prisma';
 
 const app = express();
@@ -13,5 +14,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/organizations', organizationRoutes);
+
+app.use('/api/announcements', announcementRoutes);
 
 export default app;
