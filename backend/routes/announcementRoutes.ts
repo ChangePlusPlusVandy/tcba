@@ -1,4 +1,4 @@
-import express from 'express';
+import { Router } from 'express';
 import {
   getAnnouncements,
   createAnnouncement,
@@ -6,7 +6,7 @@ import {
   deleteAnnouncement,
 } from '../controllers/announcementController';
 
-const router = express.Router();
+const router = Router();
 
 router.get('/', getAnnouncements);
 router.post('/', createAnnouncement);
