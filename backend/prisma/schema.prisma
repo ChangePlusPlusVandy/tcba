@@ -86,3 +86,15 @@ model Individual {
 
   @@map("individuals")
 }
+
+model EmailSubscription {
+  id                  String    @id @default(cuid())
+  email               String    @unique
+  name                String?
+  subscriptionTypes   String[]
+  isActive            Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@map("emailSubscriptions")
+}
