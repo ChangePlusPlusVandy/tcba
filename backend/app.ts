@@ -14,7 +14,6 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/organizations', organizationRoutes);
-
 app.use('/api/announcements', announcementRoutes);
 
 export default app;
