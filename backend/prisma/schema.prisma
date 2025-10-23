@@ -41,13 +41,26 @@ enum OrganizationSize {
   EXTRA_LARGE
 }
 
-// The 45+ nonprofit organizations that are part of the Tennessee Coalition for Better Aging
-// Can discuss splitting up this model into addresses table and org table for db normalization standards later
+model Announcements {
+  id              String   @id @default(cuid())
+  title           String
+  content         String
+  publishedDate   DateTime?
+  isPublished     Boolean  @default(false)
+  attachmentUrls  String[]
+  tags            String[]
+  createdByAdminId String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("announcements")
+}
+
 model Organization {
   id              String             @id @default(cuid())
-  clerkId         String             @unique // Links to Clerk Auth
+  clerkId         String             @unique 
   name            String             @unique
-  email           String             @unique // Organization email
+  email           String             @unique 
   description     String?
   website         String?
   address         String?
@@ -59,16 +72,16 @@ model Organization {
   primaryContactPhone       String
   secondaryContactName      String?
   secondaryContactEmail     String?
-  region                    TennesseeRegion?       // East, Middle, or West Tennessee
-  organizationType          String?                // Type of organization
+  region                    TennesseeRegion?       
+  organizationType          String?                
   membershipActive          Boolean                @default(false)
-  membershipDate            DateTime?              // Date when dues were paid/membership started
-  membershipRenewalDate     DateTime?              // Date when membership needs to be renewed
-  organizationSize          OrganizationSize?      // Size category for dues calculation
+  membershipDate            DateTime?              
+  membershipRenewalDate     DateTime?              
+  organizationSize          OrganizationSize?      
 
   role            OrganizationRole   @default(MEMBER)
   status          OrganizationStatus @default(PENDING)
-  tags            String[]           // Focus area tags like ["Healthcare", "Senior Services", "Mental Health"]
+  tags            String[]         
 
   @@map("organizations")
 }
@@ -87,4 +100,15 @@ model AdminUser {
 // Admin accounts
 enum Admin {
     ADMINUSER
+}
+model EmailSubscription {
+  id                  String    @id @default(cuid())
+  email               String    @unique
+  name                String?
+  subscriptionTypes   String[]
+  isActive            Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@map("emailSubscriptions")
 }

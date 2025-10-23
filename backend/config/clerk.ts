@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { createClerkClient } from '@clerk/express';
 
 if (!process.env.CLERK_SECRET_KEY) {

@@ -1,6 +1,7 @@
 // example of how clerk login can be used. Clerk made login components automatically
 
 import HomePage from './pages/HomePage/Home';
+import { useEffect, useState } from 'react';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
       <SignedIn>
         <UserButton />
       </SignedIn>
+
       <HomePage />
     </header>
   );
