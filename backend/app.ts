@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import organizationRoutes from './routes/organizationRoutes';
 import announcementRoutes from './routes/announcementRoutes';
-import emailSubscriptionRoutes from './routes/emailSubscriptionRoutes'
+import emailSubscriptionRoutes from './routes/emailSubscriptionRoutes';
 import { prisma } from './config/prisma';
 
 const app = express();
