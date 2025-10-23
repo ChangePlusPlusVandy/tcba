@@ -86,6 +86,21 @@ model Organization {
   @@map("organizations")
 }
 
+// Model for admins
+model AdminUser {
+    id              String             @id @default(cuid())
+    clerkId         String             @unique
+    email           String             
+    name            String
+    isSuperAdmin    Boolean            @default(false)
+    isActive        Boolean
+    @@map("AdminUser")
+}
+
+// Admin accounts
+enum Admin {
+    ADMINUSER
+}
 model EmailSubscription {
   id                  String    @id @default(cuid())
   email               String    @unique
