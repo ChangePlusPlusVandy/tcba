@@ -86,6 +86,16 @@ model Organization {
   @@map("organizations")
 }
 
+model Survey {
+  id                String             @id @default(cuid())
+  title             String             
+  description       String?
+  questions         Json?
+  createdDate       DateTime           @default(now())
+  dueDate           DateTime?
+  isActive          Boolean
+  isPublished       Boolean
+}
 // Model for admins
 model AdminUser {
     id              String             @id @default(cuid())
