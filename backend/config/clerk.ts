@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { createClerkClient } from '@clerk/express';
 import dotenv from 'dotenv';
 dotenv.config();
