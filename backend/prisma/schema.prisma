@@ -95,6 +95,7 @@ model Survey {
   dueDate           DateTime?
   isActive          Boolean
   isPublished       Boolean
+  @@map("survey")
 }
 // Model for admins
 model AdminUser {
