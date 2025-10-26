@@ -12,6 +12,42 @@ export const getAnnouncements = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to fetch announcements' });
   }
 };
+
+export const getAnnouncementsByPublishedDate = async (req: Request, res: Response) => {
+  try {
+    const { publishedDate } = req.params;
+    if (!publishedDate) {
+      return res.status(400).json({ error: 'publishedDate path parameter is required' });
+    }
+
+    const parsedDate = new Date(publishedDate);
+    if (Number.isNaN(parsedDate.getTime())) {
+      return res.status(400).json({
+        error: 'Invalid publishedDate. Provide a valid ISO 8601 date, e.g. 2024-05-01',
+      });
+    }
+
+    const startOfDay = new Date(parsedDate);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    const endOfDay = new Date(parsedDate);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    const announcements = await prisma.announcements.findMany({
+      where: {
+        publishedDate: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.status(200).json(announcements);
+  } catch (error) {
+    console.error('Error fetching announcements by published date:', error);
+    res.status(500).json({ error: 'Failed to fetch announcements by published date' });
+  }
+};
 export const createAnnouncement = async (req: Request, res: Response) => {
   try {
     const { title, content, publishedDate, isPublished, attachmentUrls, tags, createdByAdminId } =
