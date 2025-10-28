@@ -12,14 +12,14 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\""
   },
   "dependencies": {
-    "@clerk/express": "^1.0.0",
+    "@clerk/express": "^1.7.42",
     "@prisma/client": "^6.16.2",
     "@sendgrid/mail": "^8.1.4",
     "aws-sdk": "^2.1691.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.0",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
     "pg": "^8.12.0",

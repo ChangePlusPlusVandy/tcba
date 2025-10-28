@@ -73,11 +73,24 @@ model Organization {
   @@map("organizations")
 }
 
+enum SubscriptionType {
+  GENERAL
+  LEGISLATIVE
+}
+
+enum EmailStatus {
+  PENDING
+  SENT 
+  FAILED
+  UNSEND
+}
+
 model SubscriptionEmails{
   id String @id @default(cuid())
   subject String 
   body String
-  status String 
+  type SubscriptionType 
+  status EmailStatus @default(UNSEND)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
