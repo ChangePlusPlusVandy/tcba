@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import tncbaLogo from '../assets/tcba.jpg';
+import { IoPersonSharp } from "react-icons/io5";
 
 const Navbar = () => {
   return (
@@ -42,9 +43,9 @@ const Navbar = () => {
             </Link>
             <Link
               to='/login'
-              className='text-gray-700 hover:text-red-700 font-medium transition-colors duration-200'
+              className='text-gray-700 hover:text-red-700 font-medium transition-colors duration-200 flex items-center gap-2'
             >
-              Login
+              <IoPersonSharp className='text-xl' />
             </Link>
           </div>
 
