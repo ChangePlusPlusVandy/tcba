@@ -17,8 +17,8 @@ const Footer = () => {
                 to='/about'
                 className='text-sm transition-colors duration-200'
                 style={{ color: '#3C3C3C' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#88242C'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#3C3C3C'}
+                onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
               >
                 About Us
               </Link>
@@ -26,8 +26,8 @@ const Footer = () => {
                 to='/announcements'
                 className='text-sm transition-colors duration-200'
                 style={{ color: '#3C3C3C' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#88242C'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#3C3C3C'}
+                onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
               >
                 Announcements
               </Link>
@@ -35,8 +35,8 @@ const Footer = () => {
                 to='/blog'
                 className='text-sm transition-colors duration-200'
                 style={{ color: '#3C3C3C' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#88242C'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#3C3C3C'}
+                onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
               >
                 Blogs
               </Link>
@@ -50,8 +50,8 @@ const Footer = () => {
                 to='/register'
                 className='text-sm transition-colors duration-200'
                 style={{ color: '#3C3C3C' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#88242C'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#3C3C3C'}
+                onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
               >
                 Organization Signup
               </Link>
@@ -59,8 +59,8 @@ const Footer = () => {
                 to='/email-signup'
                 className='text-sm transition-colors duration-200'
                 style={{ color: '#3C3C3C' }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#88242C'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#3C3C3C'}
+                onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
               >
                 Email Signup
               </Link>
