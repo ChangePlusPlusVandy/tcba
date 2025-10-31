@@ -41,8 +41,21 @@ enum OrganizationSize {
   EXTRA_LARGE
 }
 
-// The 45+ nonprofit organizations that are part of the Tennessee Coalition for Better Aging
-// Can discuss splitting up this model into addresses table and org table for db normalization standards later
+model Announcements {
+  id              String   @id @default(cuid())
+  title           String
+  content         String
+  publishedDate   DateTime?
+  isPublished     Boolean  @default(false)
+  attachmentUrls  String[]
+  tags            String[]
+  createdByAdminId String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("announcements")
+}
+
 model Organization {
   id                    String            @id @default(cuid())
   clerkId               String            @unique // Links to Clerk Auth
@@ -69,6 +82,31 @@ model Organization {
   role   OrganizationRole   @default(MEMBER)
   status OrganizationStatus @default(PENDING)
   tags   String[] // Focus area tags like ["Healthcare", "Senior Services", "Mental Health"]
+  id              String             @id @default(cuid())
+  clerkId         String             @unique 
+  name            String             @unique
+  email           String             @unique 
+  description     String?
+  website         String?
+  address         String?
+  city            String?
+  state           String?
+  zipCode         String?
+  primaryContactName        String
+  primaryContactEmail       String
+  primaryContactPhone       String
+  secondaryContactName      String?
+  secondaryContactEmail     String?
+  region                    TennesseeRegion?       
+  organizationType          String?                
+  membershipActive          Boolean                @default(false)
+  membershipDate            DateTime?              
+  membershipRenewalDate     DateTime?              
+  organizationSize          OrganizationSize?      
+
+  role            OrganizationRole   @default(MEMBER)
+  status          OrganizationStatus @default(PENDING)
+  tags            String[]         
 
   @@map("organizations")
 }
@@ -83,4 +121,40 @@ model SurveyResponse {
   updatedAt      DateTime  @updatedAt
 
   @@map("surveyResponse")
+model Survey {
+  id                String             @id @default(cuid())
+  title             String             
+  description       String?
+  questions         Json?
+  createdDate       DateTime           @default(now())
+  dueDate           DateTime?
+  isActive          Boolean
+  isPublished       Boolean
+  @@map("survey")
+}
+// Model for admins
+model AdminUser {
+    id              String             @id @default(cuid())
+    clerkId         String             @unique
+    email           String             
+    name            String
+    isSuperAdmin    Boolean            @default(false)
+    isActive        Boolean
+    @@map("AdminUser")
+}
+
+// Admin accounts
+enum Admin {
+    ADMINUSER
+}
+model EmailSubscription {
+  id                  String    @id @default(cuid())
+  email               String    @unique
+  name                String?
+  subscriptionTypes   String[]
+  isActive            Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@map("emailSubscriptions")
 }
