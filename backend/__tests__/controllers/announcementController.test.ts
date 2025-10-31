@@ -91,9 +91,7 @@ describe('Announcement Routes', () => {
 
     prismaMock.announcements.findMany.mockResolvedValue(mockAnnouncements);
 
-    const res = await request(app).get(
-      `/api/announcements/published-date/${publishedDate}`
-    );
+    const res = await request(app).get(`/api/announcements/published-date/${publishedDate}`);
 
     expect(res.statusCode).toBe(200);
     expect(res.body).toEqual(JSON.parse(JSON.stringify(mockAnnouncements)));

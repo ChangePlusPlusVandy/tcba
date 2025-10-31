@@ -60,7 +60,7 @@ const HomePage = () => {
         if (!response.ok) throw new Error(`Failed to fetch announcements: ${response.statusText}`);
         const data: Announcement[] = await response.json();
         const publishedFirst =
-          data.find((item) => item.isPublished) ?? (data.length ? data[0] : null);
+          data.find(item => item.isPublished) ?? (data.length ? data[0] : null);
         if (isMounted) {
           setAnnouncement(publishedFirst ?? null);
         }
@@ -99,9 +99,7 @@ const HomePage = () => {
               </div>
               <div className='space-y-2'>
                 <h2 className='text-xl font-semibold text-rose-950'>{announcement.title}</h2>
-                <p className='text-base text-rose-900/90 leading-relaxed'>
-                  {announcement.content}
-                </p>
+                <p className='text-base text-rose-900/90 leading-relaxed'>{announcement.content}</p>
               </div>
             </div>
             <Link
@@ -143,7 +141,9 @@ const HomePage = () => {
         <div className='grid grid-cols-1 sm:grid-cols-2 grid-rows-4 sm:grid-rows-2 gap-0'>
           <div className='bg-white border border-transparent shadow-lg px-8 sm:px-12 py-12 space-y-6 min-h-[220px] flex flex-col justify-center'>
             <div className='space-y-3'>
-              <h2 className='text-3xl font-semibold text-slate-900 mb-6'>Working Towards a Better Tomorrow</h2>
+              <h2 className='text-3xl font-semibold text-slate-900 mb-6'>
+                Working Towards a Better Tomorrow
+              </h2>
               <p className='text-base text-slate-600 leading-relaxed max-w-[80%]'>
                 Given that older adults are the fastest growing segment of Tennessee's population
                 and the most significant increase will be among those 85 and older, and given that
@@ -154,11 +154,11 @@ const HomePage = () => {
             <p className='text-base text-slate-600 leading-relaxed max-w-[80%]'>
               The Coalition for Better Aging takes collective action to ensure that older adults can
               age with dignity and family caregivers have the support they need. The COVID-19
-              pandemic highlighted the shortcomings of our current systems and the need to prioritize
-              the health and well-being of older Tennesseans and their families.
+              pandemic highlighted the shortcomings of our current systems and the need to
+              prioritize the health and well-being of older Tennesseans and their families.
             </p>
           </div>
-          {[1, 2, 3].map((item) => (
+          {[1, 2, 3].map(item => (
             <div
               key={item}
               className='min-h-[220px] bg-slate-200 border border-transparent shadow-inner'
@@ -171,11 +171,12 @@ const HomePage = () => {
         <div className='space-y-5'>
           <h2 className='text-3xl font-semibold text-slate-900'>How We Work</h2>
           <p className='text-lg text-slate-600 italic max-w-3xl mx-auto leading-relaxed'>
-            "We have to do the work of imagining what could be possible, and then do our part to make it real" - Tallu Quinn, Former Director Nashville Food Project
+            "We have to do the work of imagining what could be possible, and then do our part to
+            make it real" - Tallu Quinn, Former Director Nashville Food Project
           </p>
         </div>
         <div className='grid gap-12 md:grid-cols-3 justify-items-center'>
-          {howWeWorkItems.map((item) => (
+          {howWeWorkItems.map(item => (
             <div
               key={item.title}
               className='flex flex-col items-center text-center space-y-4 max-w-sm'
@@ -193,12 +194,10 @@ const HomePage = () => {
       <section className='max-w-6xl mx-auto px-4 sm:px-6 space-y-12 text-center'>
         <div className='space-y-3'>
           <h2 className='text-3xl font-semibold text-slate-900'>Why We Work Together</h2>
-          <p className='text-base text-slate-600'>
-            Our voices are stronger together.
-          </p>
+          <p className='text-base text-slate-600'>Our voices are stronger together.</p>
         </div>
         <div className='grid gap-12 md:grid-cols-3 justify-items-center'>
-          {whyWeWorkItems.map((item) => (
+          {whyWeWorkItems.map(item => (
             <div
               key={item.title}
               className='flex flex-col items-center text-center space-y-4 max-w-sm'
@@ -212,7 +211,6 @@ const HomePage = () => {
           ))}
         </div>
       </section>
-
     </div>
   );
 };
