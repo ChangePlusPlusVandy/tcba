@@ -4,12 +4,15 @@ import organizationRoutes from './routes/organizationRoutes';
 import announcementRoutes from './routes/announcementRoutes';
 import emailSubscriptionRoutes from './routes/emailSubscriptionRoutes';
 import adminRoutes from './routes/adminRoutes';
+import homeRoutes from './routes/homeRoutes';
 import { prisma } from './config/prisma';
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+app.use('/', homeRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ message: 'Server is running!' });
