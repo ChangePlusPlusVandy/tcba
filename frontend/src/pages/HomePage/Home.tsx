@@ -106,7 +106,8 @@ const HomePage = () => {
             </div>
             <Link
               to='/announcements'
-              className='self-start lg:self-auto bg-rose-500 text-white px-5 py-2 rounded-full text-sm font-semibold shadow hover:bg-rose-600 transition'
+              className='self-start lg:self-auto text-white px-5 py-2 rounded-full text-sm font-semibold shadow transition'
+              style={{ backgroundColor: '#D54242' }}
             >
               Read More
             </Link>
@@ -123,19 +124,16 @@ const HomePage = () => {
         <div className='absolute inset-0 bg-slate-950/60' />
         <div className='relative max-w-6xl mx-auto px-6 sm:px-10 pt-24 pb-24 lg:pt-32 lg:pb-28'>
           <div className='max-w-2xl text-white space-y-6'>
-            <div className='space-y-3'>
-              <p className='uppercase tracking-[0.4em] text-sm text-white/70'>Together For Better</p>
-              <h1 className='text-3xl sm:text-4xl lg:text-5xl font-semibold leading-tight'>
-                Tennessee Coalition for Better Aging
-              </h1>
-            </div>
-            <p className='text-base sm:text-lg text-white/90 leading-relaxed'>
-              Advocating for policies and programs that support older Tennesseans and their
-              families. Together we can build a future where every Tennessean has access to
-              dignified, high-quality care and the resources they need to thrive.
+            <h1 className='text-3xl sm:text-4xl lg:text-5xl font-semibold leading-tight max-w-[70%]'>
+              Tennessee Coalition for Better Aging
+            </h1>
+            <p className='text-base sm:text-lg text-white/90 leading-relaxed max-w-[80%]'>
+              The Tennessee Coalition for Better Aging (TCBA) exists to promote the general welfare
+              of older Tennesseans and their families; through partnerships that mobilize resources
+              to educate and advocate for important policies and programs.
             </p>
-            <button className='bg-white/90 text-slate-900 px-6 py-3 rounded-full text-sm sm:text-base font-semibold shadow-lg hover:bg-white transition'>
-              Get Connected
+            <button className='bg-[#cc4444] text-white px-6 py-3 rounded-[18px] text-sm sm:text-base font-semibold shadow-lg hover:bg-[#b53a3a] transition'>
+              Stay Connected
             </button>
           </div>
         </div>
@@ -145,20 +143,19 @@ const HomePage = () => {
         <div className='grid grid-cols-1 sm:grid-cols-2 grid-rows-4 sm:grid-rows-2 gap-0'>
           <div className='bg-white border border-transparent shadow-lg px-8 sm:px-12 py-12 space-y-6 min-h-[220px] flex flex-col justify-center'>
             <div className='space-y-3'>
-              <h2 className='text-3xl font-semibold text-slate-900'>Working Towards a Better Tomorrow</h2>
-              <p className='text-base text-slate-600 leading-relaxed'>
-                Older adults are among the most vulnerable members of our communities. We exist to
-                make sure every Tennessean can age with dignity, independence, and access to the
-                services they deserve.
+              <h2 className='text-3xl font-semibold text-slate-900 mb-6'>Working Towards a Better Tomorrow</h2>
+              <p className='text-base text-slate-600 leading-relaxed max-w-[80%]'>
+                Given that older adults are the fastest growing segment of Tennessee's population
+                and the most significant increase will be among those 85 and older, and given that
+                family caregivers provide over 80% of long-term care, we are committed to advocating
+                for and with older adults and their families.
               </p>
             </div>
-            <p className='text-base text-slate-600 leading-relaxed'>
-              By building coalitions, sharing research, and supporting caregivers, we help create a
-              united voice that advances real solutions for the aging population across our state.
-            </p>
-            <p className='text-base text-slate-600 leading-relaxed'>
-              Our team monitors emerging needs, connects partners, and ensures Tennesseans have the
-              information and resources required to plan for the future.
+            <p className='text-base text-slate-600 leading-relaxed max-w-[80%]'>
+              The Coalition for Better Aging takes collective action to ensure that older adults can
+              age with dignity and family caregivers have the support they need. The COVID-19
+              pandemic highlighted the shortcomings of our current systems and the need to prioritize
+              the health and well-being of older Tennesseans and their families.
             </p>
           </div>
           {[1, 2, 3].map((item) => (
