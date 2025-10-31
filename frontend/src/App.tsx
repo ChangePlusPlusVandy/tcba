@@ -4,9 +4,9 @@ import AppRoutes from './routes/AppRoutes';
 
 function App() {
   return (
-    <div className='min-h-screen flex flex-col'>
+    <div className='min-h-screen flex flex-col bg-white'>
       <Navbar />
-      <main className='flex-grow w-full px-4 py-4'>
+      <main className='flex-grow w-full'>
         <AppRoutes />
       </main>
       <Footer />
