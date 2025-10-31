@@ -13,17 +13,17 @@ datasource db {
 
 // Organization permission levels for coalition platform
 enum OrganizationRole {
-  SUPER_ADMIN  // Full system access (TCBA staff)
-  ADMIN        // Coalition management access
-  MEMBER       // Standard nonprofit member
+  SUPER_ADMIN // Full system access (TCBA staff)
+  ADMIN // Coalition management access
+  MEMBER // Standard nonprofit member
 }
 
 // Organization account states
 enum OrganizationStatus {
-  ACTIVE       // Can use platform
-  INACTIVE     // Temporarily disabled
-  PENDING      // Waiting for setup completion
-  SUSPENDED    // Admin blocked access
+  ACTIVE // Can use platform
+  INACTIVE // Temporarily disabled
+  PENDING // Waiting for setup completion
+  SUSPENDED // Admin blocked access
 }
 
 // Tennessee regions for member organizations
@@ -44,31 +44,43 @@ enum OrganizationSize {
 // The 45+ nonprofit organizations that are part of the Tennessee Coalition for Better Aging
 // Can discuss splitting up this model into addresses table and org table for db normalization standards later
 model Organization {
-  id              String             @id @default(cuid())
-  clerkId         String             @unique // Links to Clerk Auth
-  name            String             @unique
-  email           String             @unique // Organization email
-  description     String?
-  website         String?
-  address         String?
-  city            String?
-  state           String?
-  zipCode         String?
-  primaryContactName        String
-  primaryContactEmail       String
-  primaryContactPhone       String
-  secondaryContactName      String?
-  secondaryContactEmail     String?
-  region                    TennesseeRegion?       // East, Middle, or West Tennessee
-  organizationType          String?                // Type of organization
-  membershipActive          Boolean                @default(false)
-  membershipDate            DateTime?              // Date when dues were paid/membership started
-  membershipRenewalDate     DateTime?              // Date when membership needs to be renewed
-  organizationSize          OrganizationSize?      // Size category for dues calculation
+  id                    String            @id @default(cuid())
+  clerkId               String            @unique // Links to Clerk Auth
+  name                  String            @unique
+  email                 String            @unique // Organization email
+  description           String?
+  website               String?
+  address               String?
+  city                  String?
+  state                 String?
+  zipCode               String?
+  primaryContactName    String
+  primaryContactEmail   String
+  primaryContactPhone   String
+  secondaryContactName  String?
+  secondaryContactEmail String?
+  region                TennesseeRegion? // East, Middle, or West Tennessee
+  organizationType      String? // Type of organization
+  membershipActive      Boolean           @default(false)
+  membershipDate        DateTime? // Date when dues were paid/membership started
+  membershipRenewalDate DateTime? // Date when membership needs to be renewed
+  organizationSize      OrganizationSize? // Size category for dues calculation
 
-  role            OrganizationRole   @default(MEMBER)
-  status          OrganizationStatus @default(PENDING)
-  tags            String[]           // Focus area tags like ["Healthcare", "Senior Services", "Mental Health"]
+  role   OrganizationRole   @default(MEMBER)
+  status OrganizationStatus @default(PENDING)
+  tags   String[] // Focus area tags like ["Healthcare", "Senior Services", "Mental Health"]
 
   @@map("organizations")
+}
+
+model SurveyResponse {
+  id             String    @id @default(cuid())
+  responses      Json?
+  submittedDate  DateTime?
+  surveyId       String
+  organizationId String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@map("surveyResponse")
 }
