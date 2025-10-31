@@ -44,7 +44,7 @@ enum OrganizationSize {
 model Announcements {
   id              String   @id @default(cuid())
   title           String
-  content         String
+  content         String   @db.Text
   publishedDate   DateTime?
   isPublished     Boolean  @default(false)
   attachmentUrls  String[]
@@ -57,79 +57,69 @@ model Announcements {
 }
 
 model Organization {
-  id                    String            @id @default(cuid())
-  clerkId               String            @unique // Links to Clerk Auth
-  name                  String            @unique
-  email                 String            @unique // Organization email
-  description           String?
-  website               String?
-  address               String?
-  city                  String?
-  state                 String?
-  zipCode               String?
-  primaryContactName    String
-  primaryContactEmail   String
-  primaryContactPhone   String
-  secondaryContactName  String?
-  secondaryContactEmail String?
-  region                TennesseeRegion? // East, Middle, or West Tennessee
-  organizationType      String? // Type of organization
-  membershipActive      Boolean           @default(false)
-  membershipDate        DateTime? // Date when dues were paid/membership started
-  membershipRenewalDate DateTime? // Date when membership needs to be renewed
-  organizationSize      OrganizationSize? // Size category for dues calculation
-
-  role   OrganizationRole   @default(MEMBER)
-  status OrganizationStatus @default(PENDING)
-  tags   String[] // Focus area tags like ["Healthcare", "Senior Services", "Mental Health"]
-  id              String             @id @default(cuid())
-  clerkId         String             @unique 
-  name            String             @unique
-  email           String             @unique 
-  description     String?
-  website         String?
-  address         String?
-  city            String?
-  state           String?
-  zipCode         String?
+  id                        String             @id @default(cuid())
+  clerkId                   String             @unique
+  name                      String             @unique
+  email                     String             @unique
+  description               String?
+  website                   String?
+  address                   String?
+  city                      String?
+  state                     String?
+  zipCode                   String?
+  latitude                  Float?
+  longitude                 Float?
   primaryContactName        String
   primaryContactEmail       String
   primaryContactPhone       String
   secondaryContactName      String?
   secondaryContactEmail     String?
-  region                    TennesseeRegion?       
-  organizationType          String?                
-  membershipActive          Boolean                @default(false)
-  membershipDate            DateTime?              
-  membershipRenewalDate     DateTime?              
-  organizationSize          OrganizationSize?      
+  region                    TennesseeRegion?
+  organizationType          String?
+  membershipActive          Boolean            @default(false)
+  membershipDate            DateTime?
+  membershipRenewalDate     DateTime?
+  organizationSize          OrganizationSize?
+  role                      OrganizationRole   @default(MEMBER)
+  status                    OrganizationStatus @default(PENDING)
+  tags                      String[]
 
-  role            OrganizationRole   @default(MEMBER)
-  status          OrganizationStatus @default(PENDING)
-  tags            String[]         
+  createdAt                 DateTime           @default(now())
+  updatedAt                 DateTime           @updatedAt
+
+  surveyResponses           SurveyResponse[]
 
   @@map("organizations")
 }
 
 model SurveyResponse {
-  id             String    @id @default(cuid())
+  id             String       @id @default(cuid())
   responses      Json?
   submittedDate  DateTime?
   surveyId       String
   organizationId String
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
+  survey         Survey       @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([surveyId, organizationId])
   @@map("surveyResponse")
+}
+
 model Survey {
   id                String             @id @default(cuid())
-  title             String             
+  title             String
   description       String?
   questions         Json?
   createdDate       DateTime           @default(now())
   dueDate           DateTime?
   isActive          Boolean
   isPublished       Boolean
+
+  surveyResponses   SurveyResponse[]
+
   @@map("survey")
 }
 // Model for admins
@@ -140,13 +130,10 @@ model AdminUser {
     name            String
     isSuperAdmin    Boolean            @default(false)
     isActive        Boolean
+    
     @@map("AdminUser")
 }
 
-// Admin accounts
-enum Admin {
-    ADMINUSER
-}
 model EmailSubscription {
   id                  String    @id @default(cuid())
   email               String    @unique
