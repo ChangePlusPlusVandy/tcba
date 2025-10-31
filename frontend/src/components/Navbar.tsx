@@ -15,8 +15,8 @@ const Navbar = () => {
               to='/'
               className='font-medium transition-colors duration-200'
               style={{ color: '#3C3C3C' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#88242C'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#3C3C3C'}
+              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
             >
               Home
             </Link>
@@ -24,8 +24,8 @@ const Navbar = () => {
               to='/about'
               className='font-medium transition-colors duration-200'
               style={{ color: '#3C3C3C' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#88242C'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#3C3C3C'}
+              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
             >
               About Us
             </Link>
@@ -33,8 +33,8 @@ const Navbar = () => {
               to='/announcements'
               className='font-medium transition-colors duration-200'
               style={{ color: '#3C3C3C' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#88242C'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#3C3C3C'}
+              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
             >
               Announcements
             </Link>
@@ -42,8 +42,8 @@ const Navbar = () => {
               to='/blog'
               className='font-medium transition-colors duration-200'
               style={{ color: '#3C3C3C' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#88242C'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#3C3C3C'}
+              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
             >
               Blog
             </Link>
@@ -51,8 +51,8 @@ const Navbar = () => {
               to='/contact'
               className='font-medium transition-colors duration-200'
               style={{ color: '#3C3C3C' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#88242C'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#3C3C3C'}
+              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
             >
               Contact Us
             </Link>
@@ -60,8 +60,8 @@ const Navbar = () => {
               to='/login'
               className='font-medium transition-colors duration-200 flex items-center gap-2'
               style={{ color: '#3C3C3C' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#88242C'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#3C3C3C'}
+              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
             >
               <IoPersonSharp className='text-xl' />
             </Link>
@@ -72,8 +72,8 @@ const Navbar = () => {
               type='button'
               className='focus:outline-none focus:ring-2 focus:ring-[#88242C] rounded-md p-2 transition-colors duration-200'
               style={{ color: '#3C3C3C' }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#88242C'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#3C3C3C'}
+              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
               aria-label='Open menu'
             >
               <svg
