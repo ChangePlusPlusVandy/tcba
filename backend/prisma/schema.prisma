@@ -13,17 +13,16 @@ datasource db {
 
 // Organization permission levels for coalition platform
 enum OrganizationRole {
-  SUPER_ADMIN  // Full system access (TCBA staff)
-  ADMIN        // Coalition management access
-  MEMBER       // Standard nonprofit member
+  ADMIN // Full system access (TCBA staff)
+  MEMBER // Standard nonprofit member
 }
 
 // Organization account states
 enum OrganizationStatus {
-  ACTIVE       // Can use platform
-  INACTIVE     // Temporarily disabled
-  PENDING      // Waiting for setup completion
-  SUSPENDED    // Admin blocked access
+  ACTIVE // Can use platform
+  INACTIVE // Temporarily disabled
+  PENDING // Waiting for setup completion
+  SUSPENDED // Admin blocked access
 }
 
 // Tennessee regions for member organizations
@@ -41,10 +40,17 @@ enum OrganizationSize {
   EXTRA_LARGE
 }
 
+enum SurveyStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+  ARCHIVED
+}
+
 model Announcements {
   id              String   @id @default(cuid())
   title           String
-  content         String
+  content         String   @db.Text
   publishedDate   DateTime?
   isPublished     Boolean  @default(false)
   attachmentUrls  String[]
@@ -57,46 +63,73 @@ model Announcements {
 }
 
 model Organization {
-  id              String             @id @default(cuid())
-  clerkId         String             @unique 
-  name            String             @unique
-  email           String             @unique 
-  description     String?
-  website         String?
-  address         String?
-  city            String?
-  state           String?
-  zipCode         String?
+  id                        String             @id @default(cuid())
+  clerkId                   String             @unique
+  name                      String             @unique
+  email                     String             @unique
+  description               String?
+  website                   String?
+  address                   String?
+  city                      String?
+  state                     String?
+  zipCode                   String?
+  latitude                  Float?
+  longitude                 Float?
   primaryContactName        String
   primaryContactEmail       String
   primaryContactPhone       String
   secondaryContactName      String?
   secondaryContactEmail     String?
-  region                    TennesseeRegion?       
-  organizationType          String?                
-  membershipActive          Boolean                @default(false)
-  membershipDate            DateTime?              
-  membershipRenewalDate     DateTime?              
-  organizationSize          OrganizationSize?      
+  region                    TennesseeRegion?
+  organizationType          String?
+  membershipActive          Boolean            @default(false)
+  membershipDate            DateTime?
+  membershipRenewalDate     DateTime?
+  organizationSize          OrganizationSize?
+  role                      OrganizationRole   @default(MEMBER)
+  status                    OrganizationStatus @default(PENDING)
+  tags                      String[]
 
-  role            OrganizationRole   @default(MEMBER)
-  status          OrganizationStatus @default(PENDING)
-  tags            String[]         
+  createdAt                 DateTime           @default(now())
+  updatedAt                 DateTime           @updatedAt
+
+  surveyResponses           SurveyResponse[]
 
   @@map("organizations")
 }
 
+model SurveyResponse {
+  id             String       @id @default(cuid())
+  responses      Json?
+  submittedDate  DateTime?
+  surveyId       String
+  organizationId String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  survey         Survey       @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([surveyId, organizationId])
+  @@map("surveyResponse")
+}
+
 model Survey {
   id                String             @id @default(cuid())
-  title             String             
+  title             String
   description       String?
   questions         Json?
   createdDate       DateTime           @default(now())
   dueDate           DateTime?
   isActive          Boolean
-  isPublished       Boolean
+  isPublished       Boolean 
+  status            SurveyStatus       @default(DRAFT)
+
+  surveyResponses   SurveyResponse[]
+
   @@map("survey")
 }
+
 // Model for admins
 model AdminUser {
     id              String             @id @default(cuid())
@@ -105,13 +138,10 @@ model AdminUser {
     name            String
     isSuperAdmin    Boolean            @default(false)
     isActive        Boolean
+
     @@map("AdminUser")
 }
 
-// Admin accounts
-enum Admin {
-    ADMINUSER
-}
 model EmailSubscription {
   id                  String    @id @default(cuid())
   email               String    @unique
@@ -122,4 +152,19 @@ model EmailSubscription {
   updatedAt           DateTime  @updatedAt
 
   @@map("emailSubscriptions")
+}
+
+model Blog {
+  id                String    @id @default(cuid())
+  title             String
+  content           String    @db.Text
+  author            String
+  tags              String[]
+  featuredImageUrl  String?
+  isPublished       Boolean   @default(false)
+  publishedDate     DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("blogs")
 }

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import tncbaLogo from '../assets/tcba.jpg';
+import { IoPersonSharp } from 'react-icons/io5';
 
 const Navbar = () => {
   return (
@@ -12,46 +13,67 @@ const Navbar = () => {
           <div className='hidden md:flex items-center space-x-8'>
             <Link
               to='/'
-              className='text-gray-700 hover:text-red-700 font-medium transition-colors duration-200'
+              className='font-medium transition-colors duration-200'
+              style={{ color: '#3C3C3C' }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
             >
               Home
             </Link>
             <Link
               to='/about'
-              className='text-gray-700 hover:text-red-700 font-medium transition-colors duration-200'
+              className='font-medium transition-colors duration-200'
+              style={{ color: '#3C3C3C' }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
             >
               About Us
             </Link>
             <Link
               to='/announcements'
-              className='text-gray-700 hover:text-red-700 font-medium transition-colors duration-200'
+              className='font-medium transition-colors duration-200'
+              style={{ color: '#3C3C3C' }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
             >
               Announcements
             </Link>
             <Link
               to='/blog'
-              className='text-gray-700 hover:text-red-700 font-medium transition-colors duration-200'
+              className='font-medium transition-colors duration-200'
+              style={{ color: '#3C3C3C' }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
             >
               Blog
             </Link>
             <Link
               to='/contact'
-              className='text-gray-700 hover:text-red-700 font-medium transition-colors duration-200'
+              className='font-medium transition-colors duration-200'
+              style={{ color: '#3C3C3C' }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
             >
               Contact Us
             </Link>
             <Link
               to='/login'
-              className='text-gray-700 hover:text-red-700 font-medium transition-colors duration-200'
+              className='font-medium transition-colors duration-200 flex items-center gap-2'
+              style={{ color: '#3C3C3C' }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
             >
-              Login
+              <IoPersonSharp className='text-xl' />
             </Link>
           </div>
 
           <div className='md:hidden'>
             <button
               type='button'
-              className='text-gray-700 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 rounded-md p-2'
+              className='focus:outline-none focus:ring-2 focus:ring-[#88242C] rounded-md p-2 transition-colors duration-200'
+              style={{ color: '#3C3C3C' }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
               aria-label='Open menu'
             >
               <svg

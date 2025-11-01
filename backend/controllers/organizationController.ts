@@ -1,11 +1,16 @@
 import { Response } from 'express';
-import { OrganizationRole, OrganizationStatus, TennesseeRegion } from '@prisma/client';
+import {
+  OrganizationRole,
+  OrganizationStatus,
+  TennesseeRegion,
+  OrganizationSize,
+} from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import { clerkClient } from '../config/clerk.js';
 import { prisma } from '../config/prisma.js';
 
 // Helper: Check if user is admin
-const isAdmin = (role?: OrganizationRole) => role === 'ADMIN' || role === 'SUPER_ADMIN';
+const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 // Helper: Resolve target ID (profile or explicit ID)
 const resolveTargetId = (id: string, userId?: string) => (id === 'profile' ? userId : id);
 
@@ -16,14 +21,25 @@ const resolveTargetId = (id: string, userId?: string) => (id === 'profile' ? use
  */
 export const getAllOrganizations = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { search, status, role, city, state, tags, region, membershipActive, organizationType } =
-      req.query;
+    const {
+      search,
+      status,
+      role,
+      city,
+      state,
+      tags,
+      region,
+      membershipActive,
+      organizationType,
+      organizationSize,
+    } = req.query;
     const where: any = {
       ...(status && { status: status as OrganizationStatus }),
       ...(role && { role: role as OrganizationRole }),
       ...(city && { city: { contains: city as string, mode: 'insensitive' } }),
       ...(state && { state: { contains: state as string, mode: 'insensitive' } }),
       ...(region && { region: region as TennesseeRegion }),
+      ...(organizationSize && { organizationSize: organizationSize as OrganizationSize }),
       ...(membershipActive !== undefined && { membershipActive: membershipActive === 'true' }),
       ...(organizationType && {
         organizationType: { contains: organizationType as string, mode: 'insensitive' },
@@ -32,8 +48,11 @@ export const getAllOrganizations = async (req: AuthenticatedRequest, res: Respon
         OR: [
           { name: { contains: search as string, mode: 'insensitive' } },
           { email: { contains: search as string, mode: 'insensitive' } },
+          { description: { contains: search as string, mode: 'insensitive' } },
           { primaryContactName: { contains: search as string, mode: 'insensitive' } },
           { primaryContactEmail: { contains: search as string, mode: 'insensitive' } },
+          { secondaryContactName: { contains: search as string, mode: 'insensitive' } },
+          { secondaryContactEmail: { contains: search as string, mode: 'insensitive' } },
         ],
       }),
       ...(tags && { tags: { hasSome: (tags as string).split(',').map(tag => tag.trim()) } }),
@@ -57,9 +76,22 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
       email,
       password,
       name,
+      description,
+      website,
+      address,
+      city,
+      state,
+      zipCode,
+      latitude,
+      longitude,
       primaryContactName,
       primaryContactEmail,
       primaryContactPhone,
+      secondaryContactName,
+      secondaryContactEmail,
+      region,
+      organizationType,
+      organizationSize,
       membershipDate,
       membershipRenewalDate,
       membershipActive,
@@ -92,12 +124,29 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
     });
     const newOrg = await prisma.organization.create({
       data: {
-        ...req.body,
+        clerkId: clerkUser.id,
+        email,
+        name,
+        description: description || null,
+        website: website || null,
+        address: address || null,
+        city: city || null,
+        state: state || null,
+        zipCode: zipCode || null,
+        latitude: latitude ? parseFloat(latitude) : null,
+        longitude: longitude ? parseFloat(longitude) : null,
+        primaryContactName,
+        primaryContactEmail,
+        primaryContactPhone,
+        secondaryContactName: secondaryContactName || null,
+        secondaryContactEmail: secondaryContactEmail || null,
+        region: region || null,
+        organizationType: organizationType || null,
+        organizationSize: organizationSize || null,
         membershipActive: membershipActive || false,
         membershipDate: membershipDate ? new Date(membershipDate) : null,
         membershipRenewalDate: membershipRenewalDate ? new Date(membershipRenewalDate) : null,
         tags: tags || [],
-        clerkId: clerkUser.id,
         role: 'MEMBER',
         status: 'PENDING',
       },
@@ -151,8 +200,8 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
     const isOwnOrg = req.user?.id === targetId;
     const userIsAdmin = isAdmin(req.user?.role);
     if (!isOwnOrg && !userIsAdmin) return res.status(403).json({ error: 'Access denied' });
-    if (role && req.user?.role !== 'SUPER_ADMIN')
-      return res.status(403).json({ error: 'Only super admins can change organization roles' });
+    if (role && !userIsAdmin)
+      return res.status(403).json({ error: 'Only admins can change organization roles' });
     if (status && !userIsAdmin)
       return res.status(403).json({ error: 'Only admins can change organization status' });
     const updateData: any = {
@@ -205,9 +254,6 @@ export const deleteOrganization = async (req: AuthenticatedRequest, res: Respons
       return res.status(400).json({ error: 'Cannot delete your own organization' });
     const orgToDelete = await prisma.organization.findUnique({ where: { id } });
     if (!orgToDelete) return res.status(404).json({ error: 'Organization not found' });
-    if (orgToDelete.role === 'ADMIN' && req.user?.role !== 'SUPER_ADMIN') {
-      return res.status(403).json({ error: 'Only super admins can delete admin organizations' });
-    }
     await prisma.organization.delete({ where: { id } });
     res.json({ message: 'Organization deleted successfully' });
   } catch (error) {

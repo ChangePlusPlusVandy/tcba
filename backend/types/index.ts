@@ -9,7 +9,6 @@ export interface AuthenticatedRequest extends Request {
     sessionId?: string | null;
     orgId?: string | null;
     orgRole?: string;
-    orgSlug?: string;
     has?: (params: any) => boolean;
   };
   user?: {
