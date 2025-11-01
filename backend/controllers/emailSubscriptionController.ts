@@ -4,7 +4,7 @@ import { AuthenticatedRequest } from '../types/index.js';
 import { prisma } from '../config/prisma.js';
 
 // Helper: Check if user is admin
-const isAdmin = (role?: OrganizationRole) => role === 'ADMIN' || role === 'SUPER_ADMIN';
+const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 // Helper: Resolve target ID (profile or explicit ID)
 const resolveTargetId = (id: string, userId?: string) => (id === 'profile' ? userId : id);
 

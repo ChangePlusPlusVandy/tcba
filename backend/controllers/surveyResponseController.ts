@@ -3,7 +3,7 @@ import { OrganizationRole } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import { prisma } from '../config/prisma.js';
 
-const isAdmin = (role?: OrganizationRole) => role === 'ADMIN' || role === 'SUPER_ADMIN';
+const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 
 const resolveTargetId = (id: string, userId?: string) => (id === 'profile' ? userId : id);
 

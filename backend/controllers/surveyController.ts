@@ -1,7 +1,9 @@
 import { Response } from 'express';
+import { OrganizationRole } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import { prisma } from '../config/prisma.js';
 
+const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 const resolveTargetId = (id: string, userId?: string) => (id === 'profile' ? userId : id);
 
 export const getAllSurveys = async (req: AuthenticatedRequest, res: Response) => {
@@ -41,7 +43,7 @@ export const createSurvey = async (req: AuthenticatedRequest, res: Response) => 
         error: 'Title, isActive, and isPublished are required',
       });
     }
-    if (req.user?.role !== 'ADMIN' && req.user?.role !== 'SUPER_ADMIN') {
+    if (!isAdmin(req.user?.role)) {
       return res.status(403).json({ error: 'Forbidden Access' });
     }
     const survey = await prisma.survey.create({
@@ -58,7 +60,7 @@ export const createSurvey = async (req: AuthenticatedRequest, res: Response) => 
 
 export const updateSurvey = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    if (req.user?.role !== 'ADMIN' && req.user?.role !== 'SUPER_ADMIN') {
+    if (!isAdmin(req.user?.role)) {
       return res.status(403).json({ error: 'Forbidden Access' });
     }
 
