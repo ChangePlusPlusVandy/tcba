@@ -7,6 +7,7 @@ import adminRoutes from './routes/adminRoutes';
 import surveyRoutes from './routes/surveyRoutes';
 import surveyResponseRoutes from './routes/surveyResponseRoutes';
 import homeRoutes from './routes/homeRoutes';
+import alertRoutes from './routes/alertRoutes';
 import { prisma } from './config/prisma';
 
 const app = express();
@@ -24,5 +25,6 @@ app.use('/api/subscriptions', emailSubscriptionRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/surveys', surveyRoutes);
 app.use('/api/survey-responses', surveyResponseRoutes);
+app.use('/api/alerts', alertRoutes);
 
 export default app;

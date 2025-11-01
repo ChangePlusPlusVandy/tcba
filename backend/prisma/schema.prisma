@@ -41,6 +41,13 @@ enum OrganizationSize {
   EXTRA_LARGE
 }
 
+// Alert priority levels
+enum AlertPriority {
+  URGENT
+  LOW
+  MEDIUM
+}
+
 model Announcements {
   id              String   @id @default(cuid())
   title           String
@@ -54,6 +61,22 @@ model Announcements {
   updatedAt       DateTime @updatedAt
 
   @@map("announcements")
+}
+
+model Alert {
+  id                String        @id @default(cuid())
+  title             String
+  content           String
+  priority          AlertPriority @default(MEDIUM)
+  publishedDate     DateTime?
+  isPublished       Boolean       @default(false)
+  attachmentUrls    String[]
+  tags              String[]
+  createdByAdminId  String
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@map("alerts")
 }
 
 model Organization {
@@ -122,7 +145,7 @@ model Survey {
 
   @@map("survey")
 }
-// Model for admins
+
 model AdminUser {
     id              String             @id @default(cuid())
     clerkId         String             @unique
