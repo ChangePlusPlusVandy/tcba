@@ -41,6 +41,13 @@ enum OrganizationSize {
   EXTRA_LARGE
 }
 
+enum SurveyStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+  ARCHIVED
+}
+
 model Announcements {
   id              String   @id @default(cuid())
   title           String
@@ -116,12 +123,15 @@ model Survey {
   createdDate       DateTime           @default(now())
   dueDate           DateTime?
   isActive          Boolean
+  isPublished       Boolean 
+  status            SurveyStatus       @default(DRAFT)
   isPublished       Boolean
 
   surveyResponses   SurveyResponse[]
 
   @@map("survey")
 }
+
 // Model for admins
 model AdminUser {
     id              String             @id @default(cuid())
