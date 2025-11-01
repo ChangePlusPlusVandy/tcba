@@ -103,10 +103,10 @@ export const getAlertById = async (req: AuthenticatedRequest, res: Response) => 
 
       // If alert has tags, check if organization has matching tags
       if (alert.tags && alert.tags.length > 0 && userOrganization) {
-        const hasMatchingTag = alert.tags.some(alertTag => 
+        const hasMatchingTag = alert.tags.some(alertTag =>
           userOrganization.tags.includes(alertTag)
         );
-        
+
         if (!hasMatchingTag) {
           return res.status(403).json({ error: 'Access denied' });
         }
@@ -192,8 +192,7 @@ export const createAlert = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    const { title, content, priority, publishedDate, isPublished, attachmentUrls, tags } =
-      req.body;
+    const { title, content, priority, publishedDate, isPublished, attachmentUrls, tags } = req.body;
 
     if (!title || !content) {
       return res.status(400).json({ error: 'Title and content are required' });
@@ -369,7 +368,7 @@ async function sendAlertEmails(alert: any): Promise<void> {
 
     // Filter organizations by matching tags
     let targetOrganizations = activeOrganizations;
-    
+
     // If alert has tags, only send to organizations with matching tags
     if (alert.tags && alert.tags.length > 0) {
       targetOrganizations = activeOrganizations.filter(org => {
@@ -381,9 +380,9 @@ async function sendAlertEmails(alert: any): Promise<void> {
 
     console.log(
       `Sending alert "${alert.title}" to ${targetOrganizations.length} organizations` +
-      (alert.tags && alert.tags.length > 0 
-        ? ` with matching tags: [${alert.tags.join(', ')}]` 
-        : ' (broadcast to all)')
+        (alert.tags && alert.tags.length > 0
+          ? ` with matching tags: [${alert.tags.join(', ')}]`
+          : ' (broadcast to all)')
     );
 
     // Send email to each targeted organization
@@ -406,4 +405,3 @@ async function sendAlertEmails(alert: any): Promise<void> {
     console.error('Error sending alert emails:', error);
   }
 }
-

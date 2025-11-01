@@ -304,12 +304,14 @@ describe('Alert Routes', () => {
       };
       prismaMock.alert.create.mockResolvedValue(newAlert);
 
-      const res = await request(app).post('/api/alerts').send({
-        title: 'New Alert',
-        content: 'This is a new test alert',
-        priority: 'MEDIUM',
-        tags: ['healthcare'],
-      });
+      const res = await request(app)
+        .post('/api/alerts')
+        .send({
+          title: 'New Alert',
+          content: 'This is a new test alert',
+          priority: 'MEDIUM',
+          tags: ['healthcare'],
+        });
 
       expect(res.statusCode).toBe(201);
       expect(res.body.title).toBe('New Alert');
@@ -365,12 +367,14 @@ describe('Alert Routes', () => {
         } as any,
       ]);
 
-      const res = await request(app).post('/api/alerts').send({
-        title: 'Healthcare Alert',
-        content: 'Healthcare specific alert',
-        tags: ['healthcare'],
-        isPublished: true,
-      });
+      const res = await request(app)
+        .post('/api/alerts')
+        .send({
+          title: 'Healthcare Alert',
+          content: 'Healthcare specific alert',
+          tags: ['healthcare'],
+          isPublished: true,
+        });
 
       expect(res.statusCode).toBe(201);
       expect(EmailService.sendAlertEmail).toHaveBeenCalledTimes(1);
@@ -547,4 +551,3 @@ describe('Alert Routes', () => {
     });
   });
 });
-

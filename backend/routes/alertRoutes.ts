@@ -24,4 +24,3 @@ router.delete('/:id', authenticateToken, requireAdmin, deleteAlert);
 router.post('/:id/publish', authenticateToken, requireAdmin, publishAlert);
 
 export default router;
-
