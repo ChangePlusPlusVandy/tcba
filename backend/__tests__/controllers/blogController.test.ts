@@ -12,7 +12,6 @@ import {
   unpublishBlog,
 } from '../../controllers/blogController.js';
 
-// Mock Prisma
 jest.mock('../../config/prisma.js', () => ({
   prisma: {
     blog: {
@@ -68,7 +67,7 @@ describe('Blog Controller', () => {
       ];
 
       (prisma.blog.findMany as jest.Mock).mockResolvedValue(mockBlogs);
-      req.user = undefined; // Public user
+      req.user = undefined;
 
       await getAllBlogs(req as AuthenticatedRequest, res as Response);
 
