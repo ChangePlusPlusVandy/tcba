@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   getAnnouncements,
+  getAnnouncementsByPublishedDate,
   createAnnouncement,
   updateAnnouncement,
   deleteAnnouncement,
@@ -8,6 +9,7 @@ import {
 
 const router = Router();
 
+router.get('/published-date/:publishedDate', getAnnouncementsByPublishedDate);
 router.get('/', getAnnouncements);
 router.post('/', createAnnouncement);
 router.put('/:id', updateAnnouncement);
