@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
 import tncbaLogo from '../assets/tcba.jpg';
 import { IoPersonSharp } from 'react-icons/io5';
 
@@ -48,23 +49,47 @@ const Navbar = () => {
               Blog
             </Link>
             <Link
-              to='/contact'
+              to='/register'
               className='font-medium transition-colors duration-200'
               style={{ color: '#3C3C3C' }}
               onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
               onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
             >
-              Contact Us
+              Get Involved
             </Link>
-            <Link
-              to='/login'
-              className='font-medium transition-colors duration-200 flex items-center gap-2'
-              style={{ color: '#3C3C3C' }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
-            >
-              <IoPersonSharp className='text-xl' />
-            </Link>
+            <SignedIn>
+              <Link
+                to='/dashboard'
+                className='font-medium transition-colors duration-200'
+                style={{ color: '#3C3C3C' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+              >
+                Dashboard
+              </Link>
+            </SignedIn>
+
+            <SignedOut>
+              <Link
+                to='/login'
+                className='font-medium transition-colors duration-200 flex items-center gap-2'
+                style={{ color: '#3C3C3C' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+              >
+                <IoPersonSharp className='text-xl' />
+              </Link>
+            </SignedOut>
+            <SignedIn>
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: 'w-9 h-9',
+                  },
+                }}
+                afterSignOutUrl='/login'
+              />
+            </SignedIn>
           </div>
 
           <div className='md:hidden'>

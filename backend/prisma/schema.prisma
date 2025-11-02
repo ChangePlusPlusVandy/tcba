@@ -13,8 +13,7 @@ datasource db {
 
 // Organization permission levels for coalition platform
 enum OrganizationRole {
-  SUPER_ADMIN // Full system access (TCBA staff)
-  ADMIN // Coalition management access
+  ADMIN // Full system access (TCBA staff)
   MEMBER // Standard nonprofit member
 }
 
@@ -41,6 +40,13 @@ enum OrganizationSize {
   EXTRA_LARGE
 }
 
+// Alert priority levels
+enum AlertPriority {
+  URGENT
+  LOW
+  MEDIUM
+}
+
 enum SurveyStatus {
   DRAFT
   ACTIVE
@@ -61,6 +67,22 @@ model Announcements {
   updatedAt       DateTime @updatedAt
 
   @@map("announcements")
+}
+
+model Alert {
+  id                String        @id @default(cuid())
+  title             String
+  content           String
+  priority          AlertPriority @default(MEDIUM)
+  publishedDate     DateTime?
+  isPublished       Boolean       @default(false)
+  attachmentUrls    String[]
+  tags              String[]
+  createdByAdminId  String
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@map("alerts")
 }
 
 model Organization {
@@ -125,7 +147,6 @@ model Survey {
   isActive          Boolean
   isPublished       Boolean 
   status            SurveyStatus       @default(DRAFT)
-  isPublished       Boolean
 
   surveyResponses   SurveyResponse[]
 
@@ -140,7 +161,7 @@ model AdminUser {
     name            String
     isSuperAdmin    Boolean            @default(false)
     isActive        Boolean
-    
+
     @@map("AdminUser")
 }
 
@@ -154,4 +175,19 @@ model EmailSubscription {
   updatedAt           DateTime  @updatedAt
 
   @@map("emailSubscriptions")
+}
+
+model Blog {
+  id                String    @id @default(cuid())
+  title             String
+  content           String    @db.Text
+  author            String
+  tags              String[]
+  featuredImageUrl  String?
+  isPublished       Boolean   @default(false)
+  publishedDate     DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("blogs")
 }

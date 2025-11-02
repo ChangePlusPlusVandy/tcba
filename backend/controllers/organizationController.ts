@@ -10,7 +10,7 @@ import { clerkClient } from '../config/clerk.js';
 import { prisma } from '../config/prisma.js';
 
 // Helper: Check if user is admin
-const isAdmin = (role?: OrganizationRole) => role === 'ADMIN' || role === 'SUPER_ADMIN';
+const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 // Helper: Resolve target ID (profile or explicit ID)
 const resolveTargetId = (id: string, userId?: string) => (id === 'profile' ? userId : id);
 
@@ -200,8 +200,8 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
     const isOwnOrg = req.user?.id === targetId;
     const userIsAdmin = isAdmin(req.user?.role);
     if (!isOwnOrg && !userIsAdmin) return res.status(403).json({ error: 'Access denied' });
-    if (role && req.user?.role !== 'SUPER_ADMIN')
-      return res.status(403).json({ error: 'Only super admins can change organization roles' });
+    if (role && !userIsAdmin)
+      return res.status(403).json({ error: 'Only admins can change organization roles' });
     if (status && !userIsAdmin)
       return res.status(403).json({ error: 'Only admins can change organization status' });
     const updateData: any = {
@@ -254,9 +254,6 @@ export const deleteOrganization = async (req: AuthenticatedRequest, res: Respons
       return res.status(400).json({ error: 'Cannot delete your own organization' });
     const orgToDelete = await prisma.organization.findUnique({ where: { id } });
     if (!orgToDelete) return res.status(404).json({ error: 'Organization not found' });
-    if (orgToDelete.role === 'ADMIN' && req.user?.role !== 'SUPER_ADMIN') {
-      return res.status(403).json({ error: 'Only super admins can delete admin organizations' });
-    }
     await prisma.organization.delete({ where: { id } });
     res.json({ message: 'Organization deleted successfully' });
   } catch (error) {
