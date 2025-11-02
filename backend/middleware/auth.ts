@@ -1,8 +1,12 @@
 import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../types/index.js';
+import { clerkMiddleware, getAuth } from '@clerk/express';
 
 // Helper
 const isAdmin = (role?: string) => role === 'ADMIN';
+
+//Hyk dunno if this is needed here but leaving for now
+export default clerkMiddleware();
 
 /**
  * TODO: Replace with Clerk's requireAuth() middleware
@@ -13,7 +17,14 @@ export const authenticateToken = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  // Placeholder - implement Clerk's requireAuth()
+  const auth = getAuth(req);
+
+  //requireAuth() cant be used here
+  if (!auth.userId || !auth.sessionId) {
+    res.status(401).json({ error: 'Unauthenticated' });
+    return;
+  }
+
   next();
 };
 
