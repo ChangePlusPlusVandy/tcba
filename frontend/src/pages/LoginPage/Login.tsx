@@ -61,7 +61,7 @@ const LoginPage = () => {
               type='email'
               id='email'
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               required
               disabled={loading}
               className='w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D54242] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed'
@@ -76,7 +76,7 @@ const LoginPage = () => {
               type='password'
               id='password'
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               required
               disabled={loading}
               className='w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D54242] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed'

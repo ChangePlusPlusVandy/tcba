@@ -130,7 +130,10 @@ const HomePage = () => {
               of older Tennesseans and their families; through partnerships that mobilize resources
               to educate and advocate for important policies and programs.
             </p>
-            <Link to='/register' className='bg-[#cc4444] text-white px-6 py-3 rounded-[18px] text-sm sm:text-base font-semibold shadow-lg hover:bg-[#b53a3a] transition inline-block'>
+            <Link
+              to='/register'
+              className='bg-[#cc4444] text-white px-6 py-3 rounded-[18px] text-sm sm:text-base font-semibold shadow-lg hover:bg-[#b53a3a] transition inline-block'
+            >
               Stay Connected
             </Link>
           </div>

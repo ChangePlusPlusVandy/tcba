@@ -24,8 +24,7 @@ const RegisterForm = () => {
     e.preventDefault();
 
     try {
-    } catch (err) {
-    }
+    } catch (err) {}
   };
 
   const scrollToMembershipSection = () => {
@@ -43,8 +42,12 @@ const RegisterForm = () => {
           <h1 className='text-4xl font-bold text-gray-800 mb-6'>Get Involved</h1>
           <ul className='space-y-2 text-gray-700 mb-6'>
             <li className='list-disc ml-6'>Opt in to the mail list to stay up to date with TCBA</li>
-            <li className='list-disc ml-6'>Share your story as an older adult or family caregiver</li>
-            <li className='list-disc ml-6'>Receive help reaching out to and advocating to public officials</li>
+            <li className='list-disc ml-6'>
+              Share your story as an older adult or family caregiver
+            </li>
+            <li className='list-disc ml-6'>
+              Receive help reaching out to and advocating to public officials
+            </li>
           </ul>
 
           <div className='flex flex-col sm:flex-row gap-4 mt-8'>
@@ -75,30 +78,31 @@ const RegisterForm = () => {
           <div>
             <h3 className='text-xl font-semibold text-gray-800 mb-4'>Eligibility</h3>
             <p className='text-gray-700 leading-relaxed'>
-              Membership in the Coalition is open to any organization, agency or department, private or public,
-              profit or non-profit, or individual which subscribes to and actively supports the mission and vision
-              of the Coalition.
+              Membership in the Coalition is open to any organization, agency or department, private
+              or public, profit or non-profit, or individual which subscribes to and actively
+              supports the mission and vision of the Coalition.
             </p>
           </div>
 
           <div>
             <h3 className='text-xl font-semibold text-gray-800 mb-4'>Membership Requirements</h3>
             <p className='text-gray-700 leading-relaxed mb-4'>
-              Organizational applicants must complete and sign a Coalition membership application, including the
-              commitment to the Coalition's mission, goals, and conflict of interest statement. The Steering Committee
-              must approve all applications for membership.
+              Organizational applicants must complete and sign a Coalition membership application,
+              including the commitment to the Coalition's mission, goals, and conflict of interest
+              statement. The Steering Committee must approve all applications for membership.
             </p>
             <p className='text-gray-700 leading-relaxed'>
-              Individuals may actively participate on the Coalition. They do not have a vote because only incorporated
-              organizations have a vote on Coalition matters. Individuals must complete a membership application and
-              agree to act in the best interest of the Coalition's vision, mission, and goals.
+              Individuals may actively participate on the Coalition. They do not have a vote because
+              only incorporated organizations have a vote on Coalition matters. Individuals must
+              complete a membership application and agree to act in the best interest of the
+              Coalition's vision, mission, and goals.
             </p>
           </div>
         </div>
 
         <p className='text-center text-gray-500 mb-12'>
-          Please complete the form below if you are interested in joining the coalition. A TCBA steering committee
-          member will be in touch after receiving your application.
+          Please complete the form below if you are interested in joining the coalition. A TCBA
+          steering committee member will be in touch after receiving your application.
         </p>
       </div>
 
