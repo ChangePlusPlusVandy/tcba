@@ -12,12 +12,6 @@ const RegisterPage = () => {
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
 const RegisterForm = () => {
-  const labels = [
-    'Organization Name',
-    'Address (street, city, state, zip)',
-    'Main Phone Number',
-    'Website URL',
-  ];
   const regions = ['East', 'Middle', 'West'];
   const membershipSectionRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
