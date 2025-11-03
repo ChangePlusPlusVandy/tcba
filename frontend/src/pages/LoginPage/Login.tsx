@@ -28,7 +28,7 @@ const LoginPage = () => {
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId });
         await clerk.user?.reload();
-        
+
         const userRole = clerk.user?.publicMetadata?.role as string | undefined;
         console.log('User role after login:', userRole);
 

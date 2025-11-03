@@ -146,7 +146,7 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
 
     res.status(201).json({
       message: 'Application submitted successfully. A TCBA administrator will review your request.',
-      organization: newOrg
+      organization: newOrg,
     });
   } catch (error) {
     console.error('Error registering organization:', error);
@@ -278,7 +278,7 @@ export const approveOrganization = async (req: AuthenticatedRequest, res: Respon
       publicMetadata: {
         organizationName: org.name,
         role: org.role || 'MEMBER',
-        organizationId: org.id
+        organizationId: org.id,
       },
     });
 

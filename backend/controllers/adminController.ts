@@ -193,7 +193,8 @@ export const promoteToAdmin = async (req: AuthenticatedRequest, res: Response) =
     if (isOrganization) {
       if (!targetUser.clerkId) {
         return res.status(400).json({
-          error: 'Organization must be approved and have an active account before being promoted to admin'
+          error:
+            'Organization must be approved and have an active account before being promoted to admin',
         });
       }
 

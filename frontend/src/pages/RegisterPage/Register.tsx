@@ -169,7 +169,11 @@ const RegisterForm = () => {
         </p>
       </div>
 
-      <form ref={formRef} onSubmit={handleSubmit} className='flex flex-col space-y-8 w-full mx-auto'>
+      <form
+        ref={formRef}
+        onSubmit={handleSubmit}
+        className='flex flex-col space-y-8 w-full mx-auto'
+      >
         {success && (
           <div className='bg-green-50 border border-green-200 text-green-700 px-6 py-4 rounded-lg'>
             <p className='font-semibold'>Application Submitted Successfully!</p>

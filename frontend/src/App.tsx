@@ -16,7 +16,7 @@ function App() {
       try {
         await getToken({
           skipCache: true,
-          template: 'jwt-template-tcba'
+          template: 'jwt-template-tcba',
         });
         console.log('Token refreshed in background');
       } catch (error) {
@@ -26,7 +26,7 @@ function App() {
 
     getToken({
       skipCache: true,
-      template: 'jwt-template-tcba'
+      template: 'jwt-template-tcba',
     });
 
     return () => clearInterval(interval);

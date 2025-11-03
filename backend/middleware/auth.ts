@@ -18,27 +18,27 @@ export const authenticateToken = async (
     }
 
     const token = authHeader.substring(7);
-  
+
     const verifiedToken = await verifyToken(token, {
       secretKey: process.env.CLERK_SECRET_KEY!,
-      clockSkewInMs: 5000
+      clockSkewInMs: 5000,
     });
 
     console.log('Token verification result:', {
       userId: verifiedToken.sub,
       sessionId: verifiedToken.sid,
       path: req.path,
-      method: req.method
+      method: req.method,
     });
 
     const adminUser = await prisma.adminUser.findUnique({
-      where: { clerkId: verifiedToken.sub }
+      where: { clerkId: verifiedToken.sub },
     });
 
     if (adminUser) {
       console.log('Admin user lookup:', {
         clerkId: verifiedToken.sub,
-        found: true
+        found: true,
       });
 
       req.user = {
@@ -46,17 +46,17 @@ export const authenticateToken = async (
         clerkId: adminUser.clerkId,
         role: 'ADMIN',
         email: adminUser.email,
-        name: adminUser.name
+        name: adminUser.name,
       };
     } else {
       const organization = await prisma.organization.findUnique({
-        where: { clerkId: verifiedToken.sub }
+        where: { clerkId: verifiedToken.sub },
       });
 
       console.log('Organization lookup:', {
         clerkId: verifiedToken.sub,
         found: !!organization,
-        role: organization?.role
+        role: organization?.role,
       });
 
       if (organization) {
@@ -65,7 +65,7 @@ export const authenticateToken = async (
           clerkId: organization.clerkId,
           role: organization.role,
           email: organization.email,
-          name: organization.name
+          name: organization.name,
         };
       }
     }

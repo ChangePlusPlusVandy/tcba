@@ -37,7 +37,7 @@ const OrganizationManagement = () => {
   const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
     let token = await getToken({
       skipCache: true,
-      template: 'jwt-template-tcba'
+      template: 'jwt-template-tcba',
     });
 
     if (!token) {
@@ -107,7 +107,11 @@ const OrganizationManagement = () => {
   }, []);
 
   const handleApprove = async (orgId: string, orgName: string) => {
-    if (!confirm(`Are you sure you want to approve ${orgName}? This will create their account and send them login credentials via email.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to approve ${orgName}? This will create their account and send them login credentials via email.`
+      )
+    ) {
       return;
     }
 
@@ -143,9 +147,7 @@ const OrganizationManagement = () => {
   const activeOrgs = organizations.filter(org => org.status === 'ACTIVE');
 
   const filteredOrganizations =
-    filter === 'PENDING' ? pendingOrgs :
-    filter === 'ACTIVE' ? activeOrgs :
-    organizations;
+    filter === 'PENDING' ? pendingOrgs : filter === 'ACTIVE' ? activeOrgs : organizations;
 
   return (
     <div className='min-h-screen bg-gray-50 p-8'>
@@ -241,8 +243,8 @@ const OrganizationManagement = () => {
                           org.status === 'PENDING'
                             ? 'bg-yellow-100 text-yellow-800'
                             : org.status === 'ACTIVE'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-gray-100 text-gray-800'
                         }`}
                       >
                         {org.status}
@@ -258,9 +260,7 @@ const OrganizationManagement = () => {
                           {approving === org.id ? 'Approving...' : 'Approve'}
                         </button>
                       )}
-                      {org.status === 'ACTIVE' && (
-                        <span className='text-gray-500'>No actions</span>
-                      )}
+                      {org.status === 'ACTIVE' && <span className='text-gray-500'>No actions</span>}
                     </td>
                   </tr>
                 ))}
