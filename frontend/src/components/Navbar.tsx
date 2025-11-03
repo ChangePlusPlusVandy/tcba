@@ -1,9 +1,12 @@
 import { Link } from 'react-router-dom';
-import { SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, UserButton, useUser } from '@clerk/clerk-react';
 import tncbaLogo from '../assets/tcba.jpg';
 import { IoPersonSharp } from 'react-icons/io5';
 
 const Navbar = () => {
+  const { user } = useUser();
+  const isAdmin = user?.publicMetadata?.role === 'ADMIN';
+
   return (
     <nav className='w-full bg-white border-b border-gray-200'>
       <div className='w-full px-4 sm:px-6 lg:px-8'>
@@ -58,15 +61,27 @@ const Navbar = () => {
               Get Involved
             </Link>
             <SignedIn>
-              <Link
-                to='/dashboard'
-                className='font-medium transition-colors duration-200'
-                style={{ color: '#3C3C3C' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
-              >
-                Dashboard
-              </Link>
+              {isAdmin ? (
+                <Link
+                  to='/admin/organizations'
+                  className='font-medium transition-colors duration-200'
+                  style={{ color: '#3C3C3C' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+                  onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+                >
+                  Admin Panel
+                </Link>
+              ) : (
+                <Link
+                  to='/dashboard'
+                  className='font-medium transition-colors duration-200'
+                  style={{ color: '#3C3C3C' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+                  onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+                >
+                  Dashboard
+                </Link>
+              )}
             </SignedIn>
 
             <SignedOut>

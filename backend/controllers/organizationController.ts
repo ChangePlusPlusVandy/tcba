@@ -8,6 +8,7 @@ import {
 import { AuthenticatedRequest } from '../types/index.js';
 import { clerkClient } from '../config/clerk.js';
 import { prisma } from '../config/prisma.js';
+import { sendWelcomeEmail } from './notificationController.js';
 
 // Helper: Check if user is admin
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
@@ -66,7 +67,7 @@ export const getAllOrganizations = async (req: AuthenticatedRequest, res: Respon
 };
 
 /**
- * @desc    Register new organization
+ * @desc    Register new organization (creates PENDING org, no Clerk user yet)
  * @route   POST /api/organizations/register
  * @access  Public
  */
@@ -74,7 +75,6 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
   try {
     const {
       email,
-      password,
       name,
       description,
       website,
@@ -92,42 +92,34 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
       region,
       organizationType,
       organizationSize,
-      membershipDate,
-      membershipRenewalDate,
-      membershipActive,
       tags,
+      additionalNotes,
     } = req.body;
-    if (
-      !email ||
-      !password ||
-      !name ||
-      !primaryContactName ||
-      !primaryContactEmail ||
-      !primaryContactPhone
-    ) {
+
+    // Validate required fields (no password needed at registration)
+    if (!name || !address || !primaryContactPhone || !primaryContactEmail) {
       return res.status(400).json({
-        error:
-          'Email, password, name, and primary contact information (name, email, phone) are required',
+        error: 'Organization name, address, phone number, and email are required',
       });
     }
+
+    // Check for existing organization
     const existingOrg = await prisma.organization.findFirst({
-      where: { OR: [{ email }, { name }] },
+      where: { OR: [{ name }] },
     });
-    if (existingOrg)
-      return res.status(400).json({ error: 'Organization with this email or name already exists' });
-    const clerkUser = await clerkClient.users.createUser({
-      emailAddress: [email],
-      password,
-      firstName: name.split(' ')[0] || name,
-      lastName: name.split(' ').slice(1).join(' ') || '',
-      publicMetadata: { organizationName: name, role: 'MEMBER' },
-    });
+    if (existingOrg) {
+      return res.status(400).json({ error: 'Organization with this name already exists' });
+    }
+
+    // Create organization as PENDING (no Clerk user yet, use temp unique clerkId)
+    const tempClerkId = `pending_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
     const newOrg = await prisma.organization.create({
       data: {
-        clerkId: clerkUser.id,
-        email,
+        clerkId: tempClerkId, // Temporary unique ID, will be replaced when admin approves
+        email: primaryContactEmail, // Use primary contact email as org email
         name,
-        description: description || null,
+        description: additionalNotes || description || null,
         website: website || null,
         address: address || null,
         city: city || null,
@@ -143,15 +135,19 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
         region: region || null,
         organizationType: organizationType || null,
         organizationSize: organizationSize || null,
-        membershipActive: membershipActive || false,
-        membershipDate: membershipDate ? new Date(membershipDate) : null,
-        membershipRenewalDate: membershipRenewalDate ? new Date(membershipRenewalDate) : null,
+        membershipActive: false,
+        membershipDate: null,
+        membershipRenewalDate: null,
         tags: tags || [],
         role: 'MEMBER',
         status: 'PENDING',
       },
     });
-    res.status(201).json(newOrg);
+
+    res.status(201).json({
+      message: 'Application submitted successfully. A TCBA administrator will review your request.',
+      organization: newOrg
+    });
   } catch (error) {
     console.error('Error registering organization:', error);
     res.status(500).json({ error: 'Failed to register organization' });
@@ -238,6 +234,76 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
   } catch (error) {
     console.error('Error updating organization:', error);
     res.status(500).json({ error: 'Failed to update organization' });
+  }
+};
+
+/**
+ * @desc    Approve pending organization (creates Clerk user with generated password)
+ * @route   PUT /api/organizations/:id/approve
+ * @access  Admin only
+ */
+export const approveOrganization = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!isAdmin(req.user?.role)) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const org = await prisma.organization.findUnique({ where: { id } });
+    if (!org) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    if (org.status !== 'PENDING') {
+      return res.status(400).json({ error: 'Organization is not in pending status' });
+    }
+
+    const generatePassword = () => {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%^&*';
+      let password = '';
+      for (let i = 0; i < 12; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return password;
+    };
+
+    const generatedPassword = generatePassword();
+
+    const clerkUser = await clerkClient.users.createUser({
+      emailAddress: [org.email],
+      password: generatedPassword,
+      firstName: org.name.split(' ')[0] || org.name,
+      lastName: org.name.split(' ').slice(1).join(' ') || '',
+      publicMetadata: {
+        organizationName: org.name,
+        role: org.role || 'MEMBER',
+        organizationId: org.id
+      },
+    });
+
+    const updatedOrg = await prisma.organization.update({
+      where: { id },
+      data: {
+        clerkId: clerkUser.id,
+        status: 'ACTIVE',
+        membershipActive: true,
+        membershipDate: new Date(),
+      },
+    });
+    try {
+      await sendWelcomeEmail(org.email, org.name, generatedPassword);
+    } catch (emailError) {
+      console.error('Error sending welcome email:', emailError);
+    }
+
+    res.json({
+      message: 'Organization approved successfully and welcome email sent',
+      organization: updatedOrg,
+    });
+  } catch (error) {
+    console.error('Error approving organization:', error);
+    res.status(500).json({ error: 'Failed to approve organization' });
   }
 };
 
