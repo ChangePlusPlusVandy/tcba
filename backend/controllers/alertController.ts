@@ -5,7 +5,7 @@ import { prisma } from '../config/prisma.js';
 import { EmailService } from '../services/EmailService.js';
 
 // Helper: Check if user is admin
-const isAdmin = (role?: OrganizationRole) => role === 'ADMIN' || role === 'SUPER_ADMIN';
+const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 
 /**
  * @desc    Get all alerts (only published ones for non-admins, filtered by matching tags)

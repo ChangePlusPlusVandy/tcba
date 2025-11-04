@@ -20,6 +20,8 @@ const RegisterForm = () => {
   const [formData, setFormData] = useState({
     name: '',
     address: '',
+    city: '',
+    zipCode: '',
     email: '',
     phone: '',
     website: '',
@@ -48,13 +50,14 @@ const RegisterForm = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
+          email: formData.email,
           address: formData.address,
+          city: formData.city,
+          zipCode: formData.zipCode,
           primaryContactPhone: formData.phone,
-          primaryContactEmail: formData.email,
           website: formData.website,
           region: formData.region,
           additionalNotes: formData.additionalNotes,
-          primaryContactName: formData.name,
         }),
       });
 
@@ -67,6 +70,8 @@ const RegisterForm = () => {
       setFormData({
         name: '',
         address: '',
+        city: '',
+        zipCode: '',
         email: '',
         phone: '',
         website: '',
@@ -197,7 +202,7 @@ const RegisterForm = () => {
         </div>
 
         <div className='flex flex-col space-y-2'>
-          <label>Address (street, city, state, zip)</label>
+          <label>Street Address</label>
           <input
             type='text'
             name='address'
@@ -207,6 +212,34 @@ const RegisterForm = () => {
             disabled={loading}
             className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
           />
+        </div>
+
+        <div className='grid grid-cols-2 gap-4'>
+          <div className='flex flex-col space-y-2'>
+            <label>City</label>
+            <input
+              type='text'
+              name='city'
+              value={formData.city}
+              onChange={handleInputChange}
+              required
+              disabled={loading}
+              className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
+            />
+          </div>
+
+          <div className='flex flex-col space-y-2'>
+            <label>Zip Code</label>
+            <input
+              type='text'
+              name='zipCode'
+              value={formData.zipCode}
+              onChange={handleInputChange}
+              required
+              disabled={loading}
+              className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
+            />
+          </div>
         </div>
 
         <div className='flex flex-col space-y-2'>
@@ -282,7 +315,7 @@ const RegisterForm = () => {
         </div>
 
         <div className='flex flex-col space-y-2'>
-          <label>Additional Notes</label>
+          <label>Description</label>
           <textarea
             name='additionalNotes'
             value={formData.additionalNotes}

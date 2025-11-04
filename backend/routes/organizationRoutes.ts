@@ -5,6 +5,9 @@ import {
   getOrganizationById,
   updateOrganization,
   approveOrganization,
+  declineOrganization,
+  archiveOrganization,
+  unarchiveOrganization,
   deleteOrganization,
 } from '../controllers/organizationController.js';
 import { authenticateToken } from '../middleware/auth.js';
@@ -16,6 +19,9 @@ router.post('/register', registerOrganization);
 router.get('/:id', authenticateToken, getOrganizationById);
 router.put('/:id', authenticateToken, updateOrganization);
 router.put('/:id/approve', authenticateToken, approveOrganization);
+router.put('/:id/decline', authenticateToken, declineOrganization);
+router.put('/:id/archive', authenticateToken, archiveOrganization);
+router.put('/:id/unarchive', authenticateToken, unarchiveOrganization);
 router.delete('/:id', authenticateToken, deleteOrganization);
 
 export default router;

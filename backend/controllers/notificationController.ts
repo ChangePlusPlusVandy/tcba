@@ -79,7 +79,7 @@ Temporary Password: ${generatedPassword}
 
 You can now log in at ${loginUrl} to access your dashboard and participate in coalition activities.
 
-Important: For security, we recommend changing your password after your first login. You can do this by clicking "Forgot your password?" on the login page.
+Important: For security, we recommend changing your password after your first login. You can do this by navigating to your account profile after logging in, clicking manage account, privacy, and update password. We also recommend navigating to the organization panel, your organization profile, and inputting fields like primary and secondary contact, your organization tags for receiving specialized notifications and updates relating to your organization's focuses, and the size range of your organization.
 
 If you have any questions, please reach out to us at ${sesConfig.replyToEmail}.
 
@@ -98,7 +98,7 @@ Tennessee Coalition for Better Aging
     },
     Message: {
       Subject: {
-        Data: 'Welcome to TCBA - Your Login Credentials',
+        Data: 'Welcome to TCBA! - Your Login Credentials',
         Charset: 'UTF-8',
       },
       Body: {
