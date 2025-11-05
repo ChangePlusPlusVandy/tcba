@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import Toast from '../../../components/Toast';
 import ConfirmModal from '../../../components/ConfirmModal';
+import AdminSidebar from '../../../components/AdminSidebar';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -42,6 +43,7 @@ const OrganizationManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'ACTIVE' | 'INACTIVE'>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
   const [actioningOrg, setActioningOrg] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(
     null
@@ -52,13 +54,13 @@ const OrganizationManagement = () => {
     orgName: string;
   } | null>(null);
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
+
   const isTokenExpiringSoon = (token: string): boolean => {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       const expirationTime = payload.exp * 1000;
       const now = Date.now();
       const timeUntilExpiry = expirationTime - now;
-
       return timeUntilExpiry < 5 * 60 * 1000;
     } catch (e) {
       return true;
@@ -206,179 +208,272 @@ const OrganizationManagement = () => {
           ? inactiveOrgs
           : organizations;
 
+  const searchedOrganizations = filteredOrganizations.filter(org => {
+    const query = searchQuery.toLowerCase();
+    return (
+      org.name.toLowerCase().includes(query) ||
+      org.email.toLowerCase().includes(query) ||
+      org.primaryContactName?.toLowerCase().includes(query) ||
+      org.primaryContactEmail?.toLowerCase().includes(query) ||
+      org.primaryContactPhone?.toLowerCase().includes(query)
+    );
+  });
+
+  const currentFilterCount =
+    filter === 'ALL'
+      ? organizations.length
+      : filter === 'PENDING'
+        ? pendingOrgs.length
+        : filter === 'ACTIVE'
+          ? activeOrgs.length
+          : inactiveOrgs.length;
+
   return (
-    <div className='min-h-screen bg-gray-50 p-8'>
-      <div className='max-w-7xl mx-auto'>
-        <h1 className='text-3xl font-bold text-gray-800 mb-8'>Organization Management</h1>
+    <div className='flex min-h-screen bg-gray-50'>
+      <AdminSidebar />
 
-        <div className='flex gap-4 mb-6 border-b border-gray-200'>
-          <button
-            onClick={() => setFilter('ALL')}
-            className={`px-4 py-2 font-medium transition ${
-              filter === 'ALL'
-                ? 'text-[#D54242] border-b-2 border-[#D54242]'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            All Organizations ({organizations.length})
-          </button>
-          <button
-            onClick={() => setFilter('PENDING')}
-            className={`px-4 py-2 font-medium transition ${
-              filter === 'PENDING'
-                ? 'text-[#D54242] border-b-2 border-[#D54242]'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            Pending Requests ({pendingOrgs.length})
-          </button>
-          <button
-            onClick={() => setFilter('ACTIVE')}
-            className={`px-4 py-2 font-medium transition ${
-              filter === 'ACTIVE'
-                ? 'text-[#D54242] border-b-2 border-[#D54242]'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            Active Members ({activeOrgs.length})
-          </button>
-          <button
-            onClick={() => setFilter('INACTIVE')}
-            className={`px-4 py-2 font-medium transition ${
-              filter === 'INACTIVE'
-                ? 'text-[#D54242] border-b-2 border-[#D54242]'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            Archived ({inactiveOrgs.length})
-          </button>
-        </div>
+      <div className='flex-1'>
+        <div className='p-8'>
+          <h1 className='text-3xl font-bold text-gray-800 mb-6'>
+            {filter === 'ALL' && `All Organizations (${currentFilterCount})`}
+            {filter === 'PENDING' && `Pending (${currentFilterCount})`}
+            {filter === 'ACTIVE' && `Active (${currentFilterCount})`}
+            {filter === 'INACTIVE' && `Inactive (${currentFilterCount})`}
+          </h1>
 
-        {error && (
-          <div className='bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg mb-6'>
-            {error}
-          </div>
-        )}
+          <div className='flex items-center gap-4 mb-6'>
+            <div className='flex gap-2'>
+              <button
+                onClick={() => setFilter('ALL')}
+                className={`px-6 py-2.5 rounded-[10px] font-medium transition ${
+                  filter === 'ALL'
+                    ? 'bg-[#EBF3FF] text-[#194B90] border border-[#194B90]'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setFilter('PENDING')}
+                className={`px-6 py-2.5 rounded-[10px] font-medium transition ${
+                  filter === 'PENDING'
+                    ? 'bg-[#EBF3FF] text-[#194B90] border border-[#194B90]'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                Pending
+              </button>
+              <button
+                onClick={() => setFilter('ACTIVE')}
+                className={`px-6 py-2.5 rounded-[10px] font-medium transition ${
+                  filter === 'ACTIVE'
+                    ? 'bg-[#EBF3FF] text-[#194B90] border border-[#194B90]'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                Active
+              </button>
+              <button
+                onClick={() => setFilter('INACTIVE')}
+                className={`px-6 py-2.5 rounded-[10px] font-medium transition ${
+                  filter === 'INACTIVE'
+                    ? 'bg-[#EBF3FF] text-[#194B90] border border-[#194B90]'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                Inactive
+              </button>
+            </div>
 
-        {loading ? (
-          <div className='text-center py-12'>
-            <p className='text-gray-600'>Loading organizations...</p>
+            <div className='flex-1 max-w-xl ml-auto'>
+              <div className='relative'>
+                <input
+                  type='text'
+                  placeholder='Search organization, contact, or email'
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className='w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#194B90] focus:border-transparent'
+                />
+                <svg
+                  className='absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
+                  />
+                </svg>
+              </div>
+            </div>
           </div>
-        ) : filteredOrganizations.length === 0 ? (
-          <div className='text-center py-12'>
-            <p className='text-gray-600'>No organizations found.</p>
-          </div>
-        ) : (
-          <div className='bg-white rounded-lg shadow-sm overflow-hidden'>
-            <table className='min-w-full divide-y divide-gray-200'>
-              <thead className='bg-gray-50'>
-                <tr>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Organization
-                  </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Contact
-                  </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Region
-                  </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Status
-                  </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className='bg-white divide-y divide-gray-200'>
-                {filteredOrganizations.map(org => (
-                  <tr key={org.id} className='hover:bg-gray-50 cursor-pointer' onClick={() => setSelectedOrg(org)}>
-                    <td className='px-6 py-4 whitespace-nowrap'>
-                      <div className='text-sm font-medium text-gray-900'>{org.name}</div>
-                      <div className='text-sm text-gray-500'>{org.email}</div>
-                    </td>
-                    <td className='px-6 py-4 whitespace-nowrap'>
-                      <div className='text-sm text-gray-900'>{org.primaryContactName}</div>
-                      <div className='text-sm text-gray-500'>{org.primaryContactPhone}</div>
-                    </td>
-                    <td className='px-6 py-4 whitespace-nowrap'>
-                      <div className='text-sm text-gray-900'>{org.region || 'N/A'}</div>
-                    </td>
-                    <td className='px-6 py-4 whitespace-nowrap'>
-                      <span
-                        className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          org.status === 'PENDING'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : org.status === 'ACTIVE'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
-                        {org.status}
-                      </span>
-                    </td>
-                    <td className='px-6 py-4 whitespace-nowrap text-sm' onClick={(e) => e.stopPropagation()}>
-                      <select
-                        value=''
-                        onChange={e => {
-                          const action = e.target.value as
-                            | 'approve'
-                            | 'decline'
-                            | 'archive'
-                            | 'unarchive'
-                            | 'delete';
-                          if (action) {
-                            handleActionClick(action, org.id, org.name);
-                            e.target.value = ''; // Reset dropdown
-                          }
-                        }}
-                        disabled={actioningOrg === org.id}
-                        className='bg-[#D54242] text-white px-4 py-2 pr-8 rounded-lg hover:bg-[#b53a3a] transition disabled:bg-gray-400 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#D54242] appearance-none bg-[length:1.5em] bg-[right_0.5rem_center] bg-no-repeat'
-                        style={{
-                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                        }}
-                      >
-                        <option value='' className='bg-white text-gray-900'>
-                          {actioningOrg === org.id ? 'Processing...' : 'Actions'}
-                        </option>
-                        {org.status === 'PENDING' && (
-                          <>
-                            <option value='approve' className='bg-white text-gray-900'>
-                              Approve
-                            </option>
-                            <option value='decline' className='bg-white text-gray-900'>
-                              Decline
-                            </option>
-                          </>
-                        )}
-                        {org.status === 'ACTIVE' && (
-                          <>
-                            <option value='archive' className='bg-white text-gray-900'>
-                              Archive
-                            </option>
-                            <option value='delete' className='bg-white text-gray-900'>
-                              Delete
-                            </option>
-                          </>
-                        )}
-                        {org.status === 'INACTIVE' && (
-                          <>
-                            <option value='unarchive' className='bg-white text-gray-900'>
-                              Unarchive
-                            </option>
-                            <option value='delete' className='bg-white text-gray-900'>
-                              Delete
-                            </option>
-                          </>
-                        )}
-                      </select>
-                    </td>
+
+          {error && (
+            <div className='bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg mb-6'>
+              {error}
+            </div>
+          )}
+
+          {loading ? (
+            <div className='text-center py-12'>
+              <p className='text-gray-600'>Loading organizations...</p>
+            </div>
+          ) : searchedOrganizations.length === 0 ? (
+            <div className='text-center py-12'>
+              <p className='text-gray-600'>No organizations found.</p>
+            </div>
+          ) : (
+            <div className='bg-white rounded-lg border border-gray-200 overflow-hidden'>
+              <table className='min-w-full'>
+                <thead className='bg-gray-50 border-b border-gray-200'>
+                  <tr>
+                    <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
+                      <div className='flex items-center gap-1'>
+                        Name
+                        <svg className='w-4 h-4 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+                        </svg>
+                      </div>
+                    </th>
+                    <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
+                      <div className='flex items-center gap-1'>
+                        Region
+                        <svg className='w-4 h-4 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+                        </svg>
+                      </div>
+                    </th>
+                    <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
+                      <div className='flex items-center gap-1'>
+                        Contact
+                        <svg className='w-4 h-4 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+                        </svg>
+                      </div>
+                    </th>
+                    <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
+                      <div className='flex items-center gap-1'>
+                        Status
+                        <svg className='w-4 h-4 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+                        </svg>
+                      </div>
+                    </th>
+                    <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
+                      <div className='flex items-center gap-1'>
+                        Action
+                        <svg className='w-4 h-4 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+                        </svg>
+                      </div>
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody className='divide-y divide-gray-200'>
+                  {searchedOrganizations.map(org => (
+                    <tr key={org.id} className='hover:bg-gray-50 cursor-pointer' onClick={() => setSelectedOrg(org)}>
+                      <td className='px-6 py-4'>
+                        <div className='text-sm font-medium text-[#194B90] hover:underline'>{org.name}</div>
+                      </td>
+                      <td className='px-6 py-4'>
+                        <div className='text-sm text-gray-900'>{org.region || 'N/A'}</div>
+                      </td>
+                      <td className='px-6 py-4'>
+                        <div className='text-sm text-gray-900'>
+                          {org.primaryContactPhone ? (
+                            <>
+                              <div>Phone</div>
+                              <div className='text-gray-600'>{org.primaryContactPhone}</div>
+                            </>
+                          ) : org.primaryContactEmail ? (
+                            <>
+                              <div>Email</div>
+                              <div className='text-[#194B90]'>{org.primaryContactEmail}</div>
+                            </>
+                          ) : org.email ? (
+                            <>
+                              <div>Email</div>
+                              <div className='text-[#194B90]'>{org.email}</div>
+                            </>
+                          ) : (
+                            'N/A'
+                          )}
+                        </div>
+                      </td>
+                      <td className='px-6 py-4'>
+                        <span
+                          className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            org.status === 'PENDING'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : org.status === 'ACTIVE'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {org.status}
+                        </span>
+                      </td>
+                      <td className='px-6 py-4 text-sm' onClick={(e) => e.stopPropagation()}>
+                        <div className='relative inline-block'>
+                          <select
+                            value=''
+                            onChange={e => {
+                              const action = e.target.value as
+                                | 'approve'
+                                | 'decline'
+                                | 'archive'
+                                | 'unarchive'
+                                | 'delete';
+                              if (action) {
+                                handleActionClick(action, org.id, org.name);
+                                e.target.value = '';
+                              }
+                            }}
+                            disabled={actioningOrg === org.id}
+                            className='appearance-none bg-white border border-gray-300 text-gray-700 px-4 py-2 pr-8 rounded-[10px] hover:bg-gray-50 transition disabled:bg-gray-100 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                          >
+                            <option value=''>
+                              {actioningOrg === org.id ? 'Processing...' : 'Actions'}
+                            </option>
+                            {org.status === 'PENDING' && (
+                              <>
+                                <option value='approve'>Approve</option>
+                                <option value='decline'>Decline</option>
+                              </>
+                            )}
+                            {org.status === 'ACTIVE' && (
+                              <>
+                                <option value='archive'>Archive</option>
+                                <option value='delete'>Delete</option>
+                              </>
+                            )}
+                            {org.status === 'INACTIVE' && (
+                              <>
+                                <option value='unarchive'>Unarchive</option>
+                                <option value='delete'>Delete</option>
+                              </>
+                            )}
+                          </select>
+                          <svg
+                            className='absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none'
+                            fill='none'
+                            stroke='currentColor'
+                            viewBox='0 0 24 24'
+                          >
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+                          </svg>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
       {toast && (
@@ -471,9 +566,9 @@ const OrganizationManagement = () => {
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <span className="text-sm font-bold text-gray-600">Primary Contact:</span>
-                      <p className="text-sm text-gray-900">{selectedOrg.primaryContactName}</p>
-                      <p className="text-sm text-gray-600">{selectedOrg.primaryContactEmail}</p>
-                      <p className="text-sm text-gray-600">{selectedOrg.primaryContactPhone}</p>
+                      <p className="text-sm text-gray-900">{selectedOrg.primaryContactName || 'N/A'}</p>
+                      <p className="text-sm text-gray-600">{selectedOrg.primaryContactEmail || 'N/A'}</p>
+                      <p className="text-sm text-gray-600">{selectedOrg.primaryContactPhone || 'N/A'}</p>
                     </div>
                     <div>
                       <span className="text-sm font-bold text-gray-600">Secondary Contact:</span>
@@ -493,10 +588,6 @@ const OrganizationManagement = () => {
                     <div>
                       <span className="text-sm font-bold text-gray-600">City:</span>
                       <p className="text-sm text-gray-900">{selectedOrg.city || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-bold text-gray-600">State:</span>
-                      <p className="text-sm text-gray-900">{selectedOrg.state || 'N/A'}</p>
                     </div>
                     <div>
                       <span className="text-sm font-bold text-gray-600">Zip Code:</span>
@@ -566,7 +657,7 @@ const OrganizationManagement = () => {
               </div>
 
               <div className="modal-action">
-                <button onClick={() => setSelectedOrg(null)} className="btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none">
+                <button onClick={() => setSelectedOrg(null)} className="btn bg-[#194B90] hover:bg-[#133a72] text-white border-none">
                   Close
                 </button>
               </div>

@@ -63,7 +63,7 @@ const Navbar = () => {
             <SignedIn>
               {isAdmin ? (
                 <Link
-                  to='/admin/organizations'
+                  to='/admin/dashboard'
                   className='font-medium transition-colors duration-200'
                   style={{ color: '#3C3C3C' }}
                   onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
@@ -79,7 +79,7 @@ const Navbar = () => {
                   onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
                   onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
                 >
-                  Dashboard
+                  Org Panel
                 </Link>
               )}
             </SignedIn>
