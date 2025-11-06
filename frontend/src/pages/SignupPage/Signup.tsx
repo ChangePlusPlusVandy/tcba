@@ -2,7 +2,7 @@ import { type FormEvent, useState } from 'react';
 
 const SignupPage = () => {
   return (
-    <div>
+    <div className='min-h-screen flex'>
       <RegisterForm />
     </div>
   );
@@ -16,16 +16,25 @@ const RegisterForm = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
-    try {
-      setIsSubmitted(true);
-      if (isSubmitted) {
-        return <div>Form submitted successfully!</div>;
-      }
-    } catch (err) {
-      console.error('Error submitting form:', err);
-    }
+    setIsSubmitted(true);
+    console.log('Form submitted!');
   };
+
+  if (isSubmitted) {
+    return (
+      <div className='w-full flex flex-col items-center justify-center text-center min-h-screen p-8 md:px-52'>
+        <div className='bg-gray-300 h-40 w-40 flex items-center justify-center mb-6'>
+          <span className='text-gray-500'></span>
+        </div>
+        <h1 className='text-3xl text-gray-700 mb-6'>Form submitted!</h1>
+        <p className='text-center text-gray-700 max-w-2xl mb-6'>
+          The Tennessee Coalition for Better Aging exists to promote the general welfare of older
+          Tennesseans and their families through partnerships that mobilize resources to educate and
+          advocate for important policies and programs.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className='w-full p-8 md:px-52 '>
