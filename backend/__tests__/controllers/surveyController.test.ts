@@ -16,7 +16,7 @@ import {
   deleteSurvey,
   getActiveSurveys,
   publishSurvey,
-  closeSurvey
+  closeSurvey,
 } from '../../controllers/surveyController.js';
 
 const mockReq = (overrides: any = {}): any => ({
@@ -37,8 +37,7 @@ const mockRes = (): any => {
 const mockSurvey = {
   title: 'Minimal Survey',
   isActive: true,
-  isPublished: false
+  isPublished: false,
 };
 
 const mockAdmin = { id: 'admin1', role: 'ADMIN' as OrganizationRole };
-
