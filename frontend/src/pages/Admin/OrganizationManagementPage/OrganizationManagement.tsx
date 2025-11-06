@@ -45,9 +45,10 @@ const OrganizationManagement = () => {
   const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'ACTIVE' | 'INACTIVE'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [actioningOrg, setActioningOrg] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(
-    null
-  );
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info';
+  } | null>(null);
   const [confirmModal, setConfirmModal] = useState<{
     action: 'approve' | 'decline' | 'archive' | 'unarchive' | 'delete';
     orgId: string;
@@ -291,7 +292,7 @@ const OrganizationManagement = () => {
                   type='text'
                   placeholder='Search organization, contact, or email'
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={e => setSearchQuery(e.target.value)}
                   className='w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#194B90] focus:border-transparent'
                 />
                 <svg
@@ -333,40 +334,90 @@ const OrganizationManagement = () => {
                     <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
                       <div className='flex items-center gap-1'>
                         Name
-                        <svg className='w-4 h-4 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+                        <svg
+                          className='w-4 h-4 text-gray-400'
+                          fill='none'
+                          stroke='currentColor'
+                          viewBox='0 0 24 24'
+                        >
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth={2}
+                            d='M19 9l-7 7-7-7'
+                          />
                         </svg>
                       </div>
                     </th>
                     <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
                       <div className='flex items-center gap-1'>
                         Region
-                        <svg className='w-4 h-4 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+                        <svg
+                          className='w-4 h-4 text-gray-400'
+                          fill='none'
+                          stroke='currentColor'
+                          viewBox='0 0 24 24'
+                        >
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth={2}
+                            d='M19 9l-7 7-7-7'
+                          />
                         </svg>
                       </div>
                     </th>
                     <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
                       <div className='flex items-center gap-1'>
                         Contact
-                        <svg className='w-4 h-4 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+                        <svg
+                          className='w-4 h-4 text-gray-400'
+                          fill='none'
+                          stroke='currentColor'
+                          viewBox='0 0 24 24'
+                        >
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth={2}
+                            d='M19 9l-7 7-7-7'
+                          />
                         </svg>
                       </div>
                     </th>
                     <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
                       <div className='flex items-center gap-1'>
                         Status
-                        <svg className='w-4 h-4 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+                        <svg
+                          className='w-4 h-4 text-gray-400'
+                          fill='none'
+                          stroke='currentColor'
+                          viewBox='0 0 24 24'
+                        >
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth={2}
+                            d='M19 9l-7 7-7-7'
+                          />
                         </svg>
                       </div>
                     </th>
                     <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
                       <div className='flex items-center gap-1'>
                         Action
-                        <svg className='w-4 h-4 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+                        <svg
+                          className='w-4 h-4 text-gray-400'
+                          fill='none'
+                          stroke='currentColor'
+                          viewBox='0 0 24 24'
+                        >
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth={2}
+                            d='M19 9l-7 7-7-7'
+                          />
                         </svg>
                       </div>
                     </th>
@@ -374,9 +425,15 @@ const OrganizationManagement = () => {
                 </thead>
                 <tbody className='divide-y divide-gray-200'>
                   {searchedOrganizations.map(org => (
-                    <tr key={org.id} className='hover:bg-gray-50 cursor-pointer' onClick={() => setSelectedOrg(org)}>
+                    <tr
+                      key={org.id}
+                      className='hover:bg-gray-50 cursor-pointer'
+                      onClick={() => setSelectedOrg(org)}
+                    >
                       <td className='px-6 py-4'>
-                        <div className='text-sm font-medium text-[#194B90] hover:underline'>{org.name}</div>
+                        <div className='text-sm font-medium text-[#194B90] hover:underline'>
+                          {org.name}
+                        </div>
                       </td>
                       <td className='px-6 py-4'>
                         <div className='text-sm text-gray-900'>{org.region || 'N/A'}</div>
@@ -416,7 +473,7 @@ const OrganizationManagement = () => {
                           {org.status}
                         </span>
                       </td>
-                      <td className='px-6 py-4 text-sm' onClick={(e) => e.stopPropagation()}>
+                      <td className='px-6 py-4 text-sm' onClick={e => e.stopPropagation()}>
                         <div className='relative inline-block'>
                           <select
                             value=''
@@ -463,7 +520,12 @@ const OrganizationManagement = () => {
                             stroke='currentColor'
                             viewBox='0 0 24 24'
                           >
-                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+                            <path
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                              strokeWidth={2}
+                              d='M19 9l-7 7-7-7'
+                            />
                           </svg>
                         </div>
                       </td>
@@ -476,9 +538,7 @@ const OrganizationManagement = () => {
         </div>
       </div>
 
-      {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       {confirmModal && (
         <ConfirmModal
@@ -509,160 +569,200 @@ const OrganizationManagement = () => {
 
       {selectedOrg && (
         <>
-          <input type="checkbox" checked={true} readOnly className="modal-toggle" />
-          <div className="modal modal-open">
-            <div className="modal-box max-w-2xl max-h-[80vh] bg-white overflow-y-auto m-8">
-              <h3 className="font-bold text-xl text-gray-900 mb-3">{selectedOrg.name}</h3>
+          <input type='checkbox' checked={true} readOnly className='modal-toggle' />
+          <div className='modal modal-open'>
+            <div className='modal-box max-w-2xl max-h-[80vh] bg-white overflow-y-auto m-8'>
+              <h3 className='font-bold text-xl text-gray-900 mb-3'>{selectedOrg.name}</h3>
 
-              <div className="space-y-3">
+              <div className='space-y-3'>
                 <div>
-                  <h4 className="font-semibold text-base text-gray-800 mb-1.5">Basic Information</h4>
-                  <div className="grid grid-cols-2 gap-2">
+                  <h4 className='font-semibold text-base text-gray-800 mb-1.5'>
+                    Basic Information
+                  </h4>
+                  <div className='grid grid-cols-2 gap-2'>
                     <div>
-                      <span className="text-sm font-bold text-gray-600">Email:</span>
-                      <p className="text-sm text-gray-900">{selectedOrg.email}</p>
+                      <span className='text-sm font-bold text-gray-600'>Email:</span>
+                      <p className='text-sm text-gray-900'>{selectedOrg.email}</p>
                     </div>
                     <div>
-                      <span className="text-sm font-bold text-gray-600">Status:</span>
-                      <p className="text-sm">
-                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          selectedOrg.status === 'PENDING'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : selectedOrg.status === 'ACTIVE'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-800'
-                        }`}>
+                      <span className='text-sm font-bold text-gray-600'>Status:</span>
+                      <p className='text-sm'>
+                        <span
+                          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            selectedOrg.status === 'PENDING'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : selectedOrg.status === 'ACTIVE'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
                           {selectedOrg.status}
                         </span>
                       </p>
                     </div>
                     <div>
-                      <span className="text-sm font-bold text-gray-600">Role:</span>
-                      <p className="text-sm text-gray-900">{selectedOrg.role}</p>
+                      <span className='text-sm font-bold text-gray-600'>Role:</span>
+                      <p className='text-sm text-gray-900'>{selectedOrg.role}</p>
                     </div>
                     <div>
-                      <span className="text-sm font-bold text-gray-600">Membership Active:</span>
-                      <p className="text-sm text-gray-900">{selectedOrg.membershipActive ? 'Yes' : 'No'}</p>
+                      <span className='text-sm font-bold text-gray-600'>Membership Active:</span>
+                      <p className='text-sm text-gray-900'>
+                        {selectedOrg.membershipActive ? 'Yes' : 'No'}
+                      </p>
                     </div>
-                    <div className="col-span-2">
-                      <span className="text-sm font-bold text-gray-600">Website:</span>
+                    <div className='col-span-2'>
+                      <span className='text-sm font-bold text-gray-600'>Website:</span>
                       {selectedOrg.website ? (
-                        <p className="text-sm text-blue-600 hover:underline">
-                          <a href={selectedOrg.website} target="_blank" rel="noopener noreferrer">{selectedOrg.website}</a>
+                        <p className='text-sm text-blue-600 hover:underline'>
+                          <a href={selectedOrg.website} target='_blank' rel='noopener noreferrer'>
+                            {selectedOrg.website}
+                          </a>
                         </p>
                       ) : (
-                        <p className="text-sm text-gray-500">N/A</p>
+                        <p className='text-sm text-gray-500'>N/A</p>
                       )}
                     </div>
-                    <div className="col-span-2">
-                      <span className="text-sm font-bold text-gray-600">Description:</span>
-                      <p className="text-sm text-gray-900">{selectedOrg.description || 'N/A'}</p>
+                    <div className='col-span-2'>
+                      <span className='text-sm font-bold text-gray-600'>Description:</span>
+                      <p className='text-sm text-gray-900'>{selectedOrg.description || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-base text-gray-800 mb-1.5">Contact Information</h4>
-                  <div className="grid grid-cols-2 gap-2">
+                  <h4 className='font-semibold text-base text-gray-800 mb-1.5'>
+                    Contact Information
+                  </h4>
+                  <div className='grid grid-cols-2 gap-2'>
                     <div>
-                      <span className="text-sm font-bold text-gray-600">Primary Contact:</span>
-                      <p className="text-sm text-gray-900">{selectedOrg.primaryContactName || 'N/A'}</p>
-                      <p className="text-sm text-gray-600">{selectedOrg.primaryContactEmail || 'N/A'}</p>
-                      <p className="text-sm text-gray-600">{selectedOrg.primaryContactPhone || 'N/A'}</p>
+                      <span className='text-sm font-bold text-gray-600'>Primary Contact:</span>
+                      <p className='text-sm text-gray-900'>
+                        {selectedOrg.primaryContactName || 'N/A'}
+                      </p>
+                      <p className='text-sm text-gray-600'>
+                        {selectedOrg.primaryContactEmail || 'N/A'}
+                      </p>
+                      <p className='text-sm text-gray-600'>
+                        {selectedOrg.primaryContactPhone || 'N/A'}
+                      </p>
                     </div>
                     <div>
-                      <span className="text-sm font-bold text-gray-600">Secondary Contact:</span>
-                      <p className="text-sm text-gray-900">{selectedOrg.secondaryContactName || 'N/A'}</p>
-                      <p className="text-sm text-gray-600">{selectedOrg.secondaryContactEmail || 'N/A'}</p>
+                      <span className='text-sm font-bold text-gray-600'>Secondary Contact:</span>
+                      <p className='text-sm text-gray-900'>
+                        {selectedOrg.secondaryContactName || 'N/A'}
+                      </p>
+                      <p className='text-sm text-gray-600'>
+                        {selectedOrg.secondaryContactEmail || 'N/A'}
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-base text-gray-800 mb-1.5">Location</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="col-span-2">
-                      <span className="text-sm font-bold text-gray-600">Address:</span>
-                      <p className="text-sm text-gray-900">{selectedOrg.address || 'N/A'}</p>
+                  <h4 className='font-semibold text-base text-gray-800 mb-1.5'>Location</h4>
+                  <div className='grid grid-cols-2 gap-2'>
+                    <div className='col-span-2'>
+                      <span className='text-sm font-bold text-gray-600'>Address:</span>
+                      <p className='text-sm text-gray-900'>{selectedOrg.address || 'N/A'}</p>
                     </div>
                     <div>
-                      <span className="text-sm font-bold text-gray-600">City:</span>
-                      <p className="text-sm text-gray-900">{selectedOrg.city || 'N/A'}</p>
+                      <span className='text-sm font-bold text-gray-600'>City:</span>
+                      <p className='text-sm text-gray-900'>{selectedOrg.city || 'N/A'}</p>
                     </div>
                     <div>
-                      <span className="text-sm font-bold text-gray-600">Zip Code:</span>
-                      <p className="text-sm text-gray-900">{selectedOrg.zipCode || 'N/A'}</p>
+                      <span className='text-sm font-bold text-gray-600'>Zip Code:</span>
+                      <p className='text-sm text-gray-900'>{selectedOrg.zipCode || 'N/A'}</p>
                     </div>
                     <div>
-                      <span className="text-sm font-bold text-gray-600">Region:</span>
-                      <p className="text-sm text-gray-900">{selectedOrg.region || 'N/A'}</p>
+                      <span className='text-sm font-bold text-gray-600'>Region:</span>
+                      <p className='text-sm text-gray-900'>{selectedOrg.region || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-base text-gray-800 mb-1.5">Organization Details</h4>
-                  <div className="grid grid-cols-2 gap-2">
+                  <h4 className='font-semibold text-base text-gray-800 mb-1.5'>
+                    Organization Details
+                  </h4>
+                  <div className='grid grid-cols-2 gap-2'>
                     <div>
-                      <span className="text-sm font-bold text-gray-600">Type:</span>
-                      <p className="text-sm text-gray-900">{selectedOrg.organizationType || 'N/A'}</p>
+                      <span className='text-sm font-bold text-gray-600'>Type:</span>
+                      <p className='text-sm text-gray-900'>
+                        {selectedOrg.organizationType || 'N/A'}
+                      </p>
                     </div>
                     <div>
-                      <span className="text-sm font-bold text-gray-600">Size:</span>
-                      <p className="text-sm text-gray-900">{selectedOrg.organizationSize || 'N/A'}</p>
+                      <span className='text-sm font-bold text-gray-600'>Size:</span>
+                      <p className='text-sm text-gray-900'>
+                        {selectedOrg.organizationSize || 'N/A'}
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-base text-gray-800 mb-1.5">Tags</h4>
+                  <h4 className='font-semibold text-base text-gray-800 mb-1.5'>Tags</h4>
                   {selectedOrg.tags && selectedOrg.tags.length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className='flex flex-wrap gap-1.5'>
                       {selectedOrg.tags.map((tag, index) => (
-                        <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                        <span
+                          key={index}
+                          className='px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full'
+                        >
                           {tag}
                         </span>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-900">N/A</p>
+                    <p className='text-sm text-gray-900'>N/A</p>
                   )}
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-base text-gray-800 mb-1.5">Dates</h4>
-                  <div className="grid grid-cols-3 gap-2">
+                  <h4 className='font-semibold text-base text-gray-800 mb-1.5'>Dates</h4>
+                  <div className='grid grid-cols-3 gap-2'>
                     <div>
-                      <span className="text-sm font-bold text-gray-600">Created:</span>
-                      <p className="text-sm text-gray-900">{new Date(selectedOrg.createdAt).toLocaleDateString()}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-bold text-gray-600">Updated:</span>
-                      <p className="text-sm text-gray-900">{new Date(selectedOrg.updatedAt).toLocaleDateString()}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm font-bold text-gray-600">Membership Date:</span>
-                      <p className="text-sm text-gray-900">
-                        {selectedOrg.membershipDate ? new Date(selectedOrg.membershipDate).toLocaleDateString() : 'N/A'}
+                      <span className='text-sm font-bold text-gray-600'>Created:</span>
+                      <p className='text-sm text-gray-900'>
+                        {new Date(selectedOrg.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                     <div>
-                      <span className="text-sm font-bold text-gray-600">Renewal Date:</span>
-                      <p className="text-sm text-gray-900">
-                        {selectedOrg.membershipRenewalDate ? new Date(selectedOrg.membershipRenewalDate).toLocaleDateString() : 'N/A'}
+                      <span className='text-sm font-bold text-gray-600'>Updated:</span>
+                      <p className='text-sm text-gray-900'>
+                        {new Date(selectedOrg.updatedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div>
+                      <span className='text-sm font-bold text-gray-600'>Membership Date:</span>
+                      <p className='text-sm text-gray-900'>
+                        {selectedOrg.membershipDate
+                          ? new Date(selectedOrg.membershipDate).toLocaleDateString()
+                          : 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <span className='text-sm font-bold text-gray-600'>Renewal Date:</span>
+                      <p className='text-sm text-gray-900'>
+                        {selectedOrg.membershipRenewalDate
+                          ? new Date(selectedOrg.membershipRenewalDate).toLocaleDateString()
+                          : 'N/A'}
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="modal-action">
-                <button onClick={() => setSelectedOrg(null)} className="btn bg-[#194B90] hover:bg-[#133a72] text-white border-none">
+              <div className='modal-action'>
+                <button
+                  onClick={() => setSelectedOrg(null)}
+                  className='btn bg-[#194B90] hover:bg-[#133a72] text-white border-none'
+                >
                   Close
                 </button>
               </div>
             </div>
-            <div className="modal-backdrop bg-black/30" onClick={() => setSelectedOrg(null)}></div>
+            <div className='modal-backdrop bg-black/30' onClick={() => setSelectedOrg(null)}></div>
           </div>
         </>
       )}

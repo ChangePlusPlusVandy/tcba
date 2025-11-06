@@ -14,6 +14,9 @@ import DashboardPage from '../pages/OrganizationView/DashboardPage/Dashboard';
 import ProfilePage from '../pages/OrganizationView/ProfilePage/Profile';
 import OrgAlertsPage from '../pages/OrganizationView/AlertsPage/Alerts';
 import OrgSurveysPage from '../pages/OrganizationView/SurveysPage/Surveys';
+import OrgAnnouncementsPage from '../pages/OrganizationView/AnnouncementsPage/Announcements';
+import OrgBlogsPage from '../pages/OrganizationView/BlogsPage/Blogs';
+import OrgSettingsPage from '../pages/OrganizationView/SettingsPage/Settings';
 import AdminDashboard from '../pages/Admin/AdminDashboard/AdminDashboard';
 import OrganizationManagement from '../pages/Admin/OrganizationManagementPage/OrganizationManagement';
 import AdminAnnouncements from '../pages/Admin/AnnouncementsPage/Announcements';
@@ -66,6 +69,30 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <OrgSurveysPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/settings'
+        element={
+          <ProtectedRoute>
+            <OrgSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/org-announcements'
+        element={
+          <ProtectedRoute>
+            <OrgAnnouncementsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/org-blogs'
+        element={
+          <ProtectedRoute>
+            <OrgBlogsPage />
           </ProtectedRoute>
         }
       />

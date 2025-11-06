@@ -93,7 +93,6 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
       additionalNotes,
     } = req.body;
 
-
     if (!name || !email) {
       return res.status(400).json({
         error: 'Organization name and email are required',
@@ -355,7 +354,9 @@ export const archiveOrganization = async (req: AuthenticatedRequest, res: Respon
     }
 
     if (org.status === 'PENDING') {
-      return res.status(400).json({ error: 'Cannot archive pending organizations. Use decline instead.' });
+      return res
+        .status(400)
+        .json({ error: 'Cannot archive pending organizations. Use decline instead.' });
     }
 
     const updatedOrg = await prisma.organization.update({
@@ -439,7 +440,7 @@ export const deleteOrganization = async (req: AuthenticatedRequest, res: Respons
           clerkId: orgToDelete.clerkId,
           error: clerkError.message,
           status: clerkError.status,
-          details: clerkError
+          details: clerkError,
         });
       }
     } else {
