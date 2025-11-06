@@ -3,12 +3,12 @@ import { type FormEvent, useState } from 'react';
 const SignupPage = () => {
   return (
     <div className='min-h-screen flex'>
-      <RegisterForm />
+      <SignupForm />
     </div>
   );
 };
 
-const RegisterForm = () => {
+const SignupForm = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const labels = ['Email Address', 'Phone Number'];
   const regions = ['East', 'Middle', 'West'];
