@@ -44,7 +44,8 @@ const SignupForm = () => {
           </h1>
 
           <p className='text-gray-700 mb-6'>
-            Please fill out this form to be notified of our latest posts and service updates. The Tennessee Coalition for Better Aging exists to promote the general welfare of older
+            Please fill out this form to be notified of our latest posts and service updates. The
+            Tennessee Coalition for Better Aging exists to promote the general welfare of older
             Tennesseans and their families through partnerships that mobilize resources to educate
             and advocate for important policies and programs.
           </p>
@@ -86,7 +87,7 @@ const SignupForm = () => {
               type='checkbox'
               id='announcements'
               checked={announcements}
-              onChange={(e) => setAnnouncements(e.target.checked)}
+              onChange={e => setAnnouncements(e.target.checked)}
               className='w-5 h-5 text-[#D54242] border-gray-500 rounded focus:ring-[#D54242]'
             />
             <label htmlFor='announcements' className='cursor-pointer'>
@@ -98,7 +99,7 @@ const SignupForm = () => {
               type='checkbox'
               id='blogs'
               checked={blogs}
-              onChange={(e) => setBlogs(e.target.checked)}
+              onChange={e => setBlogs(e.target.checked)}
               className='w-5 h-5 text-[#D54242] border-gray-500 rounded focus:ring-[#D54242]'
             />
             <label htmlFor='blogs' className='cursor-pointer'>

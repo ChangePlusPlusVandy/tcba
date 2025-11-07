@@ -219,15 +219,9 @@ const HomePage = () => {
               key={item.title}
               className='flex flex-col items-center text-center space-y-4 max-w-sm'
             >
-              {item.title === 'Partnership' && (
-                <FaHandshake className="w-14 h-14 text-slate-700" />
-              )}
-              {item.title === 'Advocacy' && (
-                <FaBullhorn className="w-14 h-14 text-slate-700" />
-              )}
-              {item.title === 'Outreach' && (
-                <FaPeopleArrows className="w-14 h-14 text-slate-700" />
-              )}
+              {item.title === 'Partnership' && <FaHandshake className='w-14 h-14 text-slate-700' />}
+              {item.title === 'Advocacy' && <FaBullhorn className='w-14 h-14 text-slate-700' />}
+              {item.title === 'Outreach' && <FaPeopleArrows className='w-14 h-14 text-slate-700' />}
               <div className='space-y-3 px-2'>
                 <h3 className='text-xl font-semibold text-slate-900'>{item.title}</h3>
                 <p className='text-sm text-slate-600 leading-relaxed'>{item.description}</p>
@@ -251,13 +245,13 @@ const HomePage = () => {
               className='flex flex-col items-center text-center space-y-4 max-w-sm'
             >
               {item.title === 'Fastest Growing Age Group' && (
-                <FaChartLine className="w-14 h-14 text-slate-700" />
+                <FaChartLine className='w-14 h-14 text-slate-700' />
               )}
               {item.title === 'Inadequate LTSS in Tennessee' && (
-                <MdHealthAndSafety className="w-14 h-14 text-slate-700" />
+                <MdHealthAndSafety className='w-14 h-14 text-slate-700' />
               )}
               {item.title === 'Lack of Family Caregiver Support' && (
-                <MdFamilyRestroom className="w-14 h-14 text-slate-700" />
+                <MdFamilyRestroom className='w-14 h-14 text-slate-700' />
               )}
               <div className='space-y-3 px-2'>
                 <h3 className='text-xl font-semibold text-slate-900'>{item.title}</h3>
