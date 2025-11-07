@@ -93,6 +93,14 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
       additionalNotes,
     } = req.body;
 
+    console.log('[Registration] Received data:', {
+      primaryContactName,
+      primaryContactEmail,
+      primaryContactPhone,
+      secondaryContactName,
+      secondaryContactEmail,
+    });
+
     if (!name || !email) {
       return res.status(400).json({
         error: 'Organization name and email are required',
@@ -120,11 +128,11 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
         zipCode: zipCode || null,
         latitude: latitude ? parseFloat(latitude) : null,
         longitude: longitude ? parseFloat(longitude) : null,
-        primaryContactName: '',
-        primaryContactEmail: '',
+        primaryContactName: primaryContactName || '',
+        primaryContactEmail: primaryContactEmail || '',
         primaryContactPhone: primaryContactPhone || '',
-        secondaryContactName: null,
-        secondaryContactEmail: null,
+        secondaryContactName: secondaryContactName || null,
+        secondaryContactEmail: secondaryContactEmail || null,
         region: region || null,
         organizationType: organizationType || null,
         organizationSize: organizationSize || null,

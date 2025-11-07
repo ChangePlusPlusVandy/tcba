@@ -23,7 +23,11 @@ const RegisterForm = () => {
     city: '',
     zipCode: '',
     email: '',
-    phone: '',
+    primaryContactName: '',
+    primaryContactEmail: '',
+    primaryContactPhone: '',
+    secondaryContactName: '',
+    secondaryContactEmail: '',
     website: '',
     region: '',
     additionalNotes: '',
@@ -54,7 +58,11 @@ const RegisterForm = () => {
           address: formData.address,
           city: formData.city,
           zipCode: formData.zipCode,
-          primaryContactPhone: formData.phone,
+          primaryContactName: formData.primaryContactName,
+          primaryContactEmail: formData.primaryContactEmail,
+          primaryContactPhone: formData.primaryContactPhone,
+          secondaryContactName: formData.secondaryContactName || undefined,
+          secondaryContactEmail: formData.secondaryContactEmail || undefined,
           website: formData.website,
           region: formData.region,
           additionalNotes: formData.additionalNotes,
@@ -73,7 +81,11 @@ const RegisterForm = () => {
         city: '',
         zipCode: '',
         email: '',
-        phone: '',
+        primaryContactName: '',
+        primaryContactEmail: '',
+        primaryContactPhone: '',
+        secondaryContactName: '',
+        secondaryContactEmail: '',
         website: '',
         region: '',
         additionalNotes: '',
@@ -253,7 +265,7 @@ const RegisterForm = () => {
         </div>
 
         <div className='flex flex-col space-y-2'>
-          <label>Contact Email</label>
+          <label>Organization Contact Email</label>
           <input
             type='email'
             name='email'
@@ -266,11 +278,11 @@ const RegisterForm = () => {
         </div>
 
         <div className='flex flex-col space-y-2'>
-          <label>Main Phone Number</label>
+          <label>Primary Contact Name</label>
           <input
-            type='tel'
-            name='phone'
-            value={formData.phone}
+            type='text'
+            name='primaryContactName'
+            value={formData.primaryContactName}
             onChange={handleInputChange}
             required
             disabled={loading}
@@ -279,7 +291,57 @@ const RegisterForm = () => {
         </div>
 
         <div className='flex flex-col space-y-2'>
-          <label>Website URL</label>
+          <label>Primary Contact Email</label>
+          <input
+            type='email'
+            name='primaryContactEmail'
+            value={formData.primaryContactEmail}
+            onChange={handleInputChange}
+            required
+            disabled={loading}
+            className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
+          />
+        </div>
+
+        <div className='flex flex-col space-y-2'>
+          <label>Primary Contact Phone Number</label>
+          <input
+            type='tel'
+            name='primaryContactPhone'
+            value={formData.primaryContactPhone}
+            onChange={handleInputChange}
+            required
+            disabled={loading}
+            className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
+          />
+        </div>
+
+        <div className='flex flex-col space-y-2'>
+          <label>Secondary Contact Name (optional)</label>
+          <input
+            type='text'
+            name='secondaryContactName'
+            value={formData.secondaryContactName}
+            onChange={handleInputChange}
+            disabled={loading}
+            className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
+          />
+        </div>
+
+        <div className='flex flex-col space-y-2'>
+          <label>Secondary Contact Email (optional)</label>
+          <input
+            type='email'
+            name='secondaryContactEmail'
+            value={formData.secondaryContactEmail}
+            onChange={handleInputChange}
+            disabled={loading}
+            className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
+          />
+        </div>
+
+        <div className='flex flex-col space-y-2'>
+          <label>Website URL (optional)</label>
           <input
             type='url'
             name='website'
@@ -325,7 +387,7 @@ const RegisterForm = () => {
         </div>
 
         <div className='flex flex-col space-y-2'>
-          <label>Description</label>
+          <label>Description (optional)</label>
           <textarea
             name='additionalNotes'
             value={formData.additionalNotes}
