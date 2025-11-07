@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import heroImage from '../../assets/home.jpg';
+import { FaHandshake, FaBullhorn, FaPeopleArrows, FaChartLine } from 'react-icons/fa';
+import { MdHealthAndSafety, MdFamilyRestroom } from 'react-icons/md';
 
 type Announcement = {
   id: string;
@@ -217,7 +219,15 @@ const HomePage = () => {
               key={item.title}
               className='flex flex-col items-center text-center space-y-4 max-w-sm'
             >
-              <div className='w-14 h-14 rounded-md bg-slate-200' />
+              {item.title === 'Partnership' && (
+                <FaHandshake className="w-14 h-14 text-slate-700" />
+              )}
+              {item.title === 'Advocacy' && (
+                <FaBullhorn className="w-14 h-14 text-slate-700" />
+              )}
+              {item.title === 'Outreach' && (
+                <FaPeopleArrows className="w-14 h-14 text-slate-700" />
+              )}
               <div className='space-y-3 px-2'>
                 <h3 className='text-xl font-semibold text-slate-900'>{item.title}</h3>
                 <p className='text-sm text-slate-600 leading-relaxed'>{item.description}</p>
@@ -230,7 +240,9 @@ const HomePage = () => {
       <section className='max-w-6xl mx-auto px-4 sm:px-6 space-y-12 text-center'>
         <div className='space-y-3'>
           <h2 className='text-3xl font-semibold text-slate-900'>Why We Work Together</h2>
-          <p className='text-base text-slate-600'>Our voices are stronger together.</p>
+          <p className='text-lg text-slate-600 italic max-w-3xl mx-auto leading-relaxed'>
+            Our voices are stronger together.
+          </p>
         </div>
         <div className='grid gap-12 md:grid-cols-3 justify-items-center'>
           {whyWeWorkItems.map(item => (
@@ -238,7 +250,15 @@ const HomePage = () => {
               key={item.title}
               className='flex flex-col items-center text-center space-y-4 max-w-sm'
             >
-              <div className='w-14 h-14 rounded-md bg-slate-200' />
+              {item.title === 'Fastest Growing Age Group' && (
+                <FaChartLine className="w-14 h-14 text-slate-700" />
+              )}
+              {item.title === 'Inadequate LTSS in Tennessee' && (
+                <MdHealthAndSafety className="w-14 h-14 text-slate-700" />
+              )}
+              {item.title === 'Lack of Family Caregiver Support' && (
+                <MdFamilyRestroom className="w-14 h-14 text-slate-700" />
+              )}
               <div className='space-y-3 px-2'>
                 <h3 className='text-xl font-semibold text-slate-900'>{item.title}</h3>
                 <p className='text-sm text-slate-600 leading-relaxed'>{item.description}</p>
