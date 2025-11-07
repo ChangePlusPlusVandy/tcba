@@ -1,4 +1,4 @@
-import { OrganizationRole } from '.prisma/client';
+import { OrganizationRole } from '@prisma/client';
 import { prisma } from '../config/prisma.js';
 
 //keep track the emails that would send out

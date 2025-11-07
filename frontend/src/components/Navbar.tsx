@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { SignedIn, SignedOut, UserButton, useUser } from '@clerk/clerk-react';
 import tncbaLogo from '../assets/tcba.jpg';
 import { IoPersonSharp, IoNotifications } from 'react-icons/io5';
@@ -9,6 +9,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 
 const Navbar = () => {
   const { user } = useUser();
+  const location = useLocation();
   const isAdmin = user?.publicMetadata?.role === 'ADMIN';
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -50,7 +51,7 @@ const Navbar = () => {
           <div className='hidden md:flex items-center space-x-8'>
             <Link
               to='/'
-              className='font-medium transition-colors duration-200'
+              className={`transition-colors duration-200 ${location.pathname === '/' ? 'font-bold' : 'font-medium'}`}
               style={{ color: '#3C3C3C' }}
               onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
               onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
@@ -59,7 +60,7 @@ const Navbar = () => {
             </Link>
             <Link
               to='/about'
-              className='font-medium transition-colors duration-200'
+              className={`transition-colors duration-200 ${location.pathname === '/about' ? 'font-bold' : 'font-medium'}`}
               style={{ color: '#3C3C3C' }}
               onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
               onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
@@ -68,7 +69,7 @@ const Navbar = () => {
             </Link>
             <Link
               to='/announcements'
-              className='font-medium transition-colors duration-200'
+              className={`transition-colors duration-200 ${location.pathname === '/announcements' ? 'font-bold' : 'font-medium'}`}
               style={{ color: '#3C3C3C' }}
               onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
               onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
@@ -77,7 +78,7 @@ const Navbar = () => {
             </Link>
             <Link
               to='/blog'
-              className='font-medium transition-colors duration-200'
+              className={`transition-colors duration-200 ${location.pathname === '/blog' ? 'font-bold' : 'font-medium'}`}
               style={{ color: '#3C3C3C' }}
               onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
               onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
@@ -86,7 +87,7 @@ const Navbar = () => {
             </Link>
             <Link
               to='/register'
-              className='font-medium transition-colors duration-200'
+              className={`transition-colors duration-200 ${location.pathname === '/register' ? 'font-bold' : 'font-medium'}`}
               style={{ color: '#3C3C3C' }}
               onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
               onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
@@ -97,7 +98,7 @@ const Navbar = () => {
               {isAdmin ? (
                 <Link
                   to='/admin/dashboard'
-                  className='font-medium transition-colors duration-200'
+                  className={`transition-colors duration-200 ${location.pathname.startsWith('/admin') ? 'font-bold' : 'font-medium'}`}
                   style={{ color: '#3C3C3C' }}
                   onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
                   onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
@@ -107,7 +108,7 @@ const Navbar = () => {
               ) : (
                 <Link
                   to='/dashboard'
-                  className='font-medium transition-colors duration-200'
+                  className={`transition-colors duration-200 ${location.pathname === '/dashboard' ? 'font-bold' : 'font-medium'}`}
                   style={{ color: '#3C3C3C' }}
                   onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
                   onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
