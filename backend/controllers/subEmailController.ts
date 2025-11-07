@@ -1,8 +1,8 @@
-import { OrganizationRole } from '.prisma/client';
+import { OrganizationRole } from '@prisma/client';
 import { prisma } from '../config/prisma.js';
 
 //keep track the emails that would send out
-const isAdmin = (role?: OrganizationRole) => role === 'ADMIN' || role === 'SUPER_ADMIN';
+const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 
 export const createSubEmail = async () => {
   try {
