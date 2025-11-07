@@ -191,3 +191,21 @@ model Blog {
 
   @@map("blogs")
 }
+
+enum NotificationType {
+  BLOG
+  ANNOUNCEMENT
+  ALERT
+  SURVEY
+}
+
+model Notification {
+  id              String           @id @default(cuid())
+  type            NotificationType
+  title           String
+  contentId       String           // ID of the blog/announcement/alert/survey
+  createdAt       DateTime         @default(now())
+  lastCheckedAt   DateTime?        // When user last opened notifications panel
+
+  @@map("notifications")
+}

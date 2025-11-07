@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { OrganizationRole } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import { prisma } from '../config/prisma.js';
+import { createNotification } from './inAppNotificationController.js';
 
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 const resolveTargetId = (id: string, userId?: string) => (id === 'profile' ? userId : id);
@@ -51,6 +52,15 @@ export const createSurvey = async (req: AuthenticatedRequest, res: Response) => 
         ...req.body,
       },
     });
+
+    if (survey.isPublished) {
+      try {
+        await createNotification('SURVEY', survey.title, survey.id);
+      } catch (notifError) {
+        console.error('Failed to create notification:', notifError);
+      }
+    }
+
     res.status(201).json(survey);
   } catch (error) {
     console.error('Error creating survey:', error);

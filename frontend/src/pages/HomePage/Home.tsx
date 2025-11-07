@@ -50,6 +50,7 @@ const whyWeWorkItems = [
 
 const HomePage = () => {
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
+  const [isAnnouncementClosed, setIsAnnouncementClosed] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -63,6 +64,11 @@ const HomePage = () => {
           data.find(item => item.isPublished) ?? (data.length ? data[0] : null);
         if (isMounted) {
           setAnnouncement(publishedFirst ?? null);
+          
+          if (publishedFirst) {
+            const closedAnnouncements = JSON.parse(localStorage.getItem('closedAnnouncements') || '[]');
+            setIsAnnouncementClosed(closedAnnouncements.includes(publishedFirst.id));
+          }
         }
       } catch (error) {
         console.error('Error loading announcements banner:', error);
@@ -77,42 +83,19 @@ const HomePage = () => {
     };
   }, []);
 
+  const handleCloseAnnouncement = () => {
+    if (announcement) {
+      const closedAnnouncements = JSON.parse(localStorage.getItem('closedAnnouncements') || '[]');
+      if (!closedAnnouncements.includes(announcement.id)) {
+        closedAnnouncements.push(announcement.id);
+        localStorage.setItem('closedAnnouncements', JSON.stringify(closedAnnouncements));
+      }
+      setIsAnnouncementClosed(true);
+    }
+  };
+
   return (
     <div className='flex flex-col gap-16 pb-20'>
-      {announcement && (
-        <section className='bg-rose-100 border border-rose-200/80 shadow-sm rounded-3xl px-6 sm:px-10 py-6'>
-          <div className='max-w-6xl mx-auto flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-8'>
-            <div className='flex-1 space-y-3'>
-              <div>
-                <p className='text-sm font-semibold uppercase tracking-wide text-rose-900'>
-                  Announcements
-                </p>
-                {announcement.publishedDate && (
-                  <p className='text-xs text-rose-900/70'>
-                    {new Date(announcement.publishedDate).toLocaleDateString(undefined, {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </p>
-                )}
-              </div>
-              <div className='space-y-2'>
-                <h2 className='text-xl font-semibold text-rose-950'>{announcement.title}</h2>
-                <p className='text-base text-rose-900/90 leading-relaxed'>{announcement.content}</p>
-              </div>
-            </div>
-            <Link
-              to='/announcements'
-              className='self-start lg:self-auto text-white px-5 py-2 rounded-full text-sm font-semibold shadow transition'
-              style={{ backgroundColor: '#D54242' }}
-            >
-              Read More
-            </Link>
-          </div>
-        </section>
-      )}
-
       <section className='relative min-h-[420px] w-screen left-1/2 -translate-x-1/2 overflow-hidden'>
         <img
           src={heroImage}
@@ -120,6 +103,49 @@ const HomePage = () => {
           className='absolute inset-0 w-full h-full object-cover'
         />
         <div className='absolute inset-0 bg-slate-950/60' />
+
+        {announcement && !isAnnouncementClosed && (
+          <div className='absolute top-1 left-0 right-0 z-10 px-2'>
+            <div className='bg-rose-100/90 border border-rose-200/80 shadow-lg rounded-3xl px-6 sm:px-10 py-3 relative backdrop-blur-sm'>
+              <div className='max-w-6xl mx-auto'>
+                <button
+                  onClick={handleCloseAnnouncement}
+                  className='absolute top-3 right-6 sm:right-10 text-rose-900 hover:text-rose-950 transition z-10'
+                  aria-label='Close announcement'
+                >
+                  <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                  </svg>
+                </button>
+                <Link
+                  to='/announcements'
+                  className='absolute bottom-3 right-6 sm:right-10 text-white px-4 py-2 rounded-full text-sm font-semibold shadow transition whitespace-nowrap'
+                  style={{ backgroundColor: '#D54242' }}
+                >
+                  Read More
+                </Link>
+                <div className='pr-32'>
+                  <div className='mb-1'>
+                    <p className='text-sm font-semibold uppercase tracking-wide text-rose-900'>
+                      Announcements
+                    </p>
+                    {announcement.publishedDate && (
+                      <p className='text-xs text-rose-900/70'>
+                        {new Date(announcement.publishedDate).toLocaleDateString(undefined, {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </p>
+                    )}
+                  </div>
+                  <h2 className='text-lg font-semibold text-rose-950'>{announcement.title}</h2>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className='relative max-w-6xl mx-auto px-6 sm:px-10 pt-24 pb-24 lg:pt-32 lg:pb-28'>
           <div className='max-w-2xl text-white space-y-6'>
             <h1 className='text-3xl sm:text-4xl lg:text-5xl font-semibold leading-tight max-w-[70%]'>
