@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { IoClose, IoNotifications} from 'react-icons/io5';
+import { IoClose, IoNotifications } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
 
 interface Notification {
@@ -87,10 +87,7 @@ const NotificationsSidebar = ({ isOpen, onClose }: NotificationsSidebarProps) =>
   return (
     <>
       {isOpen && (
-        <div
-          className='fixed inset-0 bg-black/20 z-40 transition-opacity'
-          onClick={onClose}
-        />
+        <div className='fixed inset-0 bg-black/20 z-40 transition-opacity' onClick={onClose} />
       )}
 
       <div
@@ -132,20 +129,21 @@ const NotificationsSidebar = ({ isOpen, onClose }: NotificationsSidebarProps) =>
                     className='block p-4 hover:bg-gray-50 transition'
                   >
                     <div className='flex-1 min-w-0'>
-                      <p className='text-sm font-medium text-gray-900 mb-1'>
-                        {notification.title}
-                      </p>
+                      <p className='text-sm font-medium text-gray-900 mb-1'>{notification.title}</p>
                       <div className='flex items-center gap-2'>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                          notification.type === 'ANNOUNCEMENT'
-                            ? 'bg-rose-100 text-rose-700'
-                            : notification.type === 'ALERT'
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : notification.type === 'SURVEY'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-purple-100 text-purple-700'
-                        }`}>
-                          {notification.type.charAt(0).toUpperCase() + notification.type.slice(1).toLowerCase()}
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            notification.type === 'ANNOUNCEMENT'
+                              ? 'bg-rose-100 text-rose-700'
+                              : notification.type === 'ALERT'
+                                ? 'bg-yellow-100 text-yellow-700'
+                                : notification.type === 'SURVEY'
+                                  ? 'bg-blue-100 text-blue-700'
+                                  : 'bg-purple-100 text-purple-700'
+                          }`}
+                        >
+                          {notification.type.charAt(0).toUpperCase() +
+                            notification.type.slice(1).toLowerCase()}
                         </span>
                         <span className='text-xs text-gray-500'>
                           {formatDate(notification.createdAt)}

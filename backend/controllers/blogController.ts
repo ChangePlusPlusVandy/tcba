@@ -171,7 +171,7 @@ export const publishBlog = async (req: AuthenticatedRequest, res: Response) => {
         publishedDate: new Date(),
       },
     });
-    
+
     try {
       await createNotification('BLOG', publishedBlog.title, publishedBlog.id);
     } catch (notifError) {

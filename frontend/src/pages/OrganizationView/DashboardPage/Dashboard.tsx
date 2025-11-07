@@ -88,13 +88,33 @@ const DashboardPage = () => {
   const getAlertColor = (priority: string) => {
     switch (priority) {
       case 'HIGH':
-        return { bg: 'bg-red-100/90', border: 'border-red-200/80', text: 'text-red-900', button: '#D54242' };
+        return {
+          bg: 'bg-red-100/90',
+          border: 'border-red-200/80',
+          text: 'text-red-900',
+          button: '#D54242',
+        };
       case 'MEDIUM':
-        return { bg: 'bg-orange-100/90', border: 'border-orange-200/80', text: 'text-orange-900', button: '#E67E22' };
+        return {
+          bg: 'bg-orange-100/90',
+          border: 'border-orange-200/80',
+          text: 'text-orange-900',
+          button: '#E67E22',
+        };
       case 'LOW':
-        return { bg: 'bg-yellow-100/90', border: 'border-yellow-200/80', text: 'text-yellow-900', button: '#F39C12' };
+        return {
+          bg: 'bg-yellow-100/90',
+          border: 'border-yellow-200/80',
+          text: 'text-yellow-900',
+          button: '#F39C12',
+        };
       default:
-        return { bg: 'bg-blue-100/90', border: 'border-blue-200/80', text: 'text-blue-900', button: '#3498DB' };
+        return {
+          bg: 'bg-blue-100/90',
+          border: 'border-blue-200/80',
+          text: 'text-blue-900',
+          button: '#3498DB',
+        };
     }
   };
 
@@ -106,26 +126,39 @@ const DashboardPage = () => {
 
         {alert && !isAlertClosed && (
           <div className='mb-6'>
-            <div className={`${getAlertColor(alert.priority).bg} border ${getAlertColor(alert.priority).border} shadow-lg rounded-3xl px-6 sm:px-10 py-5 relative backdrop-blur-sm`}>
+            <div
+              className={`${getAlertColor(alert.priority).bg} border ${getAlertColor(alert.priority).border} shadow-lg rounded-3xl px-6 sm:px-10 py-5 relative backdrop-blur-sm`}
+            >
               <button
                 onClick={handleCloseAlert}
                 className={`absolute top-4 right-6 sm:right-10 ${getAlertColor(alert.priority).text} hover:opacity-75 transition`}
               >
                 <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M6 18L18 6M6 6l12 12'
+                  />
                 </svg>
               </button>
               <div className='flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-6 pr-12'>
                 <div className='flex-1 space-y-2'>
                   <div className='flex items-center gap-2'>
-                    <p className={`text-sm font-semibold uppercase tracking-wide ${getAlertColor(alert.priority).text}`}>
+                    <p
+                      className={`text-sm font-semibold uppercase tracking-wide ${getAlertColor(alert.priority).text}`}
+                    >
                       Alert
                     </p>
-                    <span className={`text-xs px-2 py-0.5 rounded-full bg-white/50 ${getAlertColor(alert.priority).text} font-medium`}>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full bg-white/50 ${getAlertColor(alert.priority).text} font-medium`}
+                    >
                       {alert.priority}
                     </span>
                   </div>
-                  <h2 className={`text-lg font-semibold ${getAlertColor(alert.priority).text}`}>{alert.title}</h2>
+                  <h2 className={`text-lg font-semibold ${getAlertColor(alert.priority).text}`}>
+                    {alert.title}
+                  </h2>
                 </div>
                 <Link
                   to='/alerts'
@@ -147,12 +180,19 @@ const DashboardPage = () => {
                 className='absolute top-4 right-6 sm:right-10 text-blue-900 hover:text-blue-950 transition'
               >
                 <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M6 18L18 6M6 6l12 12'
+                  />
                 </svg>
               </button>
               <div className='flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-6 pr-12'>
                 <div className='flex-1 space-y-2'>
-                  <p className='text-sm font-semibold uppercase tracking-wide text-blue-900'>Survey</p>
+                  <p className='text-sm font-semibold uppercase tracking-wide text-blue-900'>
+                    Survey
+                  </p>
                   <h2 className='text-lg font-semibold text-blue-950'>{survey.title}</h2>
                 </div>
                 <Link

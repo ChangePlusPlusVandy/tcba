@@ -19,9 +19,7 @@ export const getUnreadCount = async (req: Request, res: Response) => {
   try {
     const { lastChecked } = req.query;
 
-    const where = lastChecked
-      ? { createdAt: { gt: new Date(lastChecked as string) } }
-      : {};
+    const where = lastChecked ? { createdAt: { gt: new Date(lastChecked as string) } } : {};
 
     const count = await prisma.notification.count({ where });
     res.status(200).json({ count });
