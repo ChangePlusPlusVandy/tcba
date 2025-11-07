@@ -12,6 +12,7 @@ import DashboardPage from '../pages/OrganizationView/DashboardPage/Dashboard';
 import ProfilePage from '../pages/OrganizationView/ProfilePage/Profile';
 import AdminDashboard from '../pages/Admin/AdminDashboard/AdminDashboard';
 import OrganizationManagement from '../pages/Admin/OrganizationManagementPage/OrganizationManagement';
+import Announcement from '../pages/AnnouncementPage/Announcement';
 
 const AppRoutes = () => {
   return (
@@ -20,6 +21,7 @@ const AppRoutes = () => {
       <Route path='/home' element={<HomePage />} />
       <Route path='/about' element={<AboutPage />} />
       <Route path='/announcements' element={<AnnouncementsPage />} />
+      <Route path='/announcement/:id' element={<Announcement />} />
       <Route path='/resources' element={<ResourcesPage />} />
       <Route path='/contact' element={<ContactPage />} />
       <Route path='/login' element={<LoginPage />} />
