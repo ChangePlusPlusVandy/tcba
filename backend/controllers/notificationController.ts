@@ -187,3 +187,89 @@ export const sendAlertNotification = async (req: AuthenticatedRequest, res: Resp
     res.status(500).json({ error: 'Failed to send alert notification' });
   }
 };
+
+export const sendContactFormEmail = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { title, message } = req.body;
+
+    if (!title || !message) {
+      return res.status(400).json({
+        error: 'Title and message are required',
+      });
+    }
+
+    const htmlBody = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background-color: #D54242; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+          .message-box { background-color: white; padding: 20px; border-left: 4px solid #D54242; margin: 20px 0; }
+          .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Contact Form Submission</h1>
+          </div>
+          <div class="content">
+            <h2>Subject: ${title}</h2>
+            <div class="message-box">
+              <p>${message.replace(/\n/g, '<br>')}</p>
+            </div>
+            <p class="footer">Submitted at ${new Date().toLocaleString()}</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const textBody = `
+Contact Form Submission
+
+Subject: ${title}
+
+Message:
+${message}
+
+Submitted at ${new Date().toLocaleString()}
+    `;
+
+    const command = new SendEmailCommand({
+      Source: `${sesConfig.fromEmail}`,
+      Destination: {
+        ToAddresses: ['tcbadevs@gmail.com'],
+      },
+      Message: {
+        Subject: {
+          Data: `Contact Form: ${title}`,
+          Charset: 'UTF-8',
+        },
+        Body: {
+          Html: {
+            Data: htmlBody,
+            Charset: 'UTF-8',
+          },
+          Text: {
+            Data: textBody,
+            Charset: 'UTF-8',
+          },
+        },
+      },
+      ReplyToAddresses: [sesConfig.replyToEmail],
+    });
+
+    await sesClient.send(command);
+
+    res.status(200).json({
+      message: 'Contact form submitted successfully',
+    });
+  } catch (error) {
+    console.error('Error sending contact form email:', error);
+    res.status(500).json({ error: 'Failed to send message' });
+  }
+};

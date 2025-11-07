@@ -10,14 +10,13 @@ const SignupPage = () => {
 
 const SignupForm = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const labels = ['Email Address', 'Phone Number'];
-  const regions = ['East', 'Middle', 'West'];
-  const placeholders = ['example@example.com', '(000) 000-0000'];
+  const [announcements, setAnnouncements] = useState(false);
+  const [blogs, setBlogs] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitted(true);
-    console.log('Form submitted!');
+    console.log('Form submitted!', { announcements, blogs });
   };
 
   if (isSubmitted) {
@@ -41,11 +40,11 @@ const SignupForm = () => {
       <div className='grid md:grid-cols-2 gap-8 mb-12'>
         <div>
           <h1 className='text-3xl font-bold text-gray-700 mb-6  leading-10'>
-            Please fill out this form for General Information, Questions or Media Inquiries 
+            Subscribe to Email Notifications
           </h1>
 
           <p className='text-gray-700 mb-6'>
-            The Tennessee Coalition for Better Aging exists to promote the general welfare of older
+            Please fill out this form to be notified of our latest posts and service updates. The Tennessee Coalition for Better Aging exists to promote the general welfare of older
             Tennesseans and their families through partnerships that mobilize resources to educate
             and advocate for important policies and programs.
           </p>
@@ -70,42 +69,42 @@ const SignupForm = () => {
           />
         </div>
 
-        {labels.map((label, index) => (
-          <div key={index} className='flex flex-col space-y-2'>
-            <label>{label}</label>
-            <input
-              type='text'
-              required
-              placeholder={placeholders[index]}
-              className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px]'
-            />
-          </div>
-        ))}
-
         <div className='flex flex-col space-y-2'>
-          <label>Organization / Affiliation name (optional)</label>
-          <div className='relative inline-block'>
-            <input className='text-gray-900 appearance-none box-border w-full h-auto px-4 py-4 bg-white border-[1px] border-gray rounded-[10px]'></input>
-          </div>
-        </div>
-
-        <div className='flex flex-col space-y-2'>
-          <label>Organization / Affiliation region (optional)</label>
-          <div className='relative inline-block'>
-            <input
-              className='text-gray-900 appearance-none box-border w-full h-auto px-4 py-4 bg-white border-[1px] border-gray rounded-[10px]'
-              placeholder={regions.map(region => region).join(' / ') + ' Tennessee'}
-            ></input>
-          </div>
-        </div>
-
-        <div className='flex flex-col space-y-2'>
-          <label>Your question or interview request:</label>
-          <textarea
+          <label>Email Address</label>
+          <input
+            type='email'
             required
-            rows={6}
-            className='box-border w-full px-4 py-4 bg-white border-[1px] border-[#848482] rounded-[10px] resize-none'
+            placeholder='example@example.com'
+            className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px]'
           />
+        </div>
+
+        <div className='flex flex-col space-y-4'>
+          <label className='font-semibold'>Subscribe to:</label>
+          <div className='flex items-center space-x-3'>
+            <input
+              type='checkbox'
+              id='announcements'
+              checked={announcements}
+              onChange={(e) => setAnnouncements(e.target.checked)}
+              className='w-5 h-5 text-[#D54242] border-gray-500 rounded focus:ring-[#D54242]'
+            />
+            <label htmlFor='announcements' className='cursor-pointer'>
+              Announcements
+            </label>
+          </div>
+          <div className='flex items-center space-x-3'>
+            <input
+              type='checkbox'
+              id='blogs'
+              checked={blogs}
+              onChange={(e) => setBlogs(e.target.checked)}
+              className='w-5 h-5 text-[#D54242] border-gray-500 rounded focus:ring-[#D54242]'
+            />
+            <label htmlFor='blogs' className='cursor-pointer'>
+              Blogs
+            </label>
+          </div>
         </div>
 
         <div className='flex flex-col items-center'>

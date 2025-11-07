@@ -11,6 +11,7 @@ import blogRoutes from './routes/blogRoutes';
 import homeRoutes from './routes/homeRoutes';
 import alertRoutes from './routes/alertRoutes';
 import inAppNotificationRoutes from './routes/inAppNotificationRoutes';
+import contactRoutes from './routes/contactRoutes';
 import { prisma } from './config/prisma';
 import { clerkClient, clerkMiddleware } from '@clerk/express';
 
@@ -39,5 +40,6 @@ app.use('/api/survey-responses', surveyResponseRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/notifications', inAppNotificationRoutes);
+app.use('/api/contact', contactRoutes);
 
 export default app;

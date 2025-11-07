@@ -97,6 +97,10 @@ const RegisterForm = () => {
     navigate('/email-signup');
   };
 
+  const handleContactInquiry = () => {
+    navigate('/contact');
+  };
+
   return (
     <div className='w-full p-8 md:px-52 '>
       <div className='grid md:grid-cols-2 gap-8 mb-12'>
@@ -117,13 +121,19 @@ const RegisterForm = () => {
               onClick={scrollToMembershipSection}
               className='bg-[#D54242] text-white px-6 py-3 rounded-[18px] text-sm font-semibold shadow-lg hover:bg-[#b53a3a] transition'
             >
-              Join as an Organization
+              Join the Coalition
             </button>
             <button
               onClick={handleEmailSignup}
               className='bg-[#D54242] text-white px-6 py-3 rounded-[18px] text-sm font-semibold shadow-lg hover:bg-[#b53a3a] transition'
             >
-              Register for Email Subscriptions
+              Subscribe to Emails
+            </button>
+            <button
+              onClick={handleContactInquiry}
+              className='bg-[#D54242] text-white px-6 py-3 rounded-[18px] text-sm font-semibold shadow-lg hover:bg-[#b53a3a] transition'
+            >
+              Contact Us
             </button>
           </div>
         </div>
