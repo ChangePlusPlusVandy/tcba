@@ -211,7 +211,9 @@ const BlogsPage = () => {
                   <IoFunnelOutline className='w-5 h-5' />
                 </button>
                 {isFilterOpen && (
-                  <div className={`${selectedTags.length > 0 ? 'max-h-70' : 'max-h-60'} absolute overflow-y-auto left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-10`}>
+                  <div
+                    className={`${selectedTags.length > 0 ? 'max-h-70' : 'max-h-60'} absolute overflow-y-auto left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-10`}
+                  >
                     {allTags.length === 0 && (
                       <button className='w-full text-left px-4 py-2 hover:bg-[#EBF3FF] text-[#3C3C3C] font-[Open_Sans]'>
                         No Tags Available
@@ -252,7 +254,7 @@ const BlogsPage = () => {
                 type='text'
                 placeholder='Search...'
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 className='px-4 py-3 pl-10 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#194B90] focus:border-transparent'
               />
               <IoSearchOutline className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5' />

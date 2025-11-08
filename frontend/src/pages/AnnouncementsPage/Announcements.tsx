@@ -135,10 +135,7 @@ const AnnouncementsPage = () => {
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      return (
-        a.title.toLowerCase().includes(query) ||
-        a.content.toLowerCase().includes(query)
-      );
+      return a.title.toLowerCase().includes(query) || a.content.toLowerCase().includes(query);
     }
 
     return true;
@@ -263,7 +260,7 @@ const AnnouncementsPage = () => {
                 type='text'
                 placeholder='Search...'
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 className='px-4 py-3 pl-10 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#194B90] focus:border-transparent'
               />
               <IoSearchOutline className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5' />
