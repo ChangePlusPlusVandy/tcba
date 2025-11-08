@@ -109,8 +109,7 @@ const BlogPage = () => {
       </section>
 
       <section className='max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pb-16'>
-        <div className='bg-white flex-col justify-center py-0'>
-        </div>
+        <div className='bg-white flex-col justify-center py-0'></div>
         <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
           <div className='flex items-center gap-4 text-sm text-slate-600'>
             <span className='font-semibold text-slate-900 whitespace-nowrap'>
