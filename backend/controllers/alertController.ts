@@ -3,9 +3,10 @@ import { AlertPriority, OrganizationRole } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import { prisma } from '../config/prisma.js';
 import { EmailService } from '../services/EmailService.js';
+import { createNotification } from './inAppNotificationController.js';
 
 // Helper: Check if user is admin
-const isAdmin = (role?: OrganizationRole) => role === 'ADMIN' || role === 'SUPER_ADMIN';
+const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 
 /**
  * @desc    Get all alerts (only published ones for non-admins, filtered by matching tags)
@@ -211,9 +212,14 @@ export const createAlert = async (req: AuthenticatedRequest, res: Response) => {
       },
     });
 
-    // If published immediately, send email notifications
     if (newAlert.isPublished) {
       await sendAlertEmails(newAlert);
+
+      try {
+        await createNotification('ALERT', newAlert.title, newAlert.id);
+      } catch (notifError) {
+        console.error('Failed to create notification:', notifError);
+      }
     }
 
     res.status(201).json(newAlert);

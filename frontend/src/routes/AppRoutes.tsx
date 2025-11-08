@@ -12,8 +12,17 @@ import RegisterPage from '../pages/RegisterPage/Register';
 import SignupPage from '../pages/SignupPage/Signup';
 import DashboardPage from '../pages/OrganizationView/DashboardPage/Dashboard';
 import ProfilePage from '../pages/OrganizationView/ProfilePage/Profile';
+import OrgAlertsPage from '../pages/OrganizationView/AlertsPage/Alerts';
+import OrgSurveysPage from '../pages/OrganizationView/SurveysPage/Surveys';
+import OrgAnnouncementsPage from '../pages/OrganizationView/AnnouncementsPage/Announcements';
+import OrgBlogsPage from '../pages/OrganizationView/BlogsPage/Blogs';
+import OrgSettingsPage from '../pages/OrganizationView/SettingsPage/Settings';
 import AdminDashboard from '../pages/Admin/AdminDashboard/AdminDashboard';
 import OrganizationManagement from '../pages/Admin/OrganizationManagementPage/OrganizationManagement';
+import AdminAnnouncements from '../pages/Admin/AnnouncementsPage/Announcements';
+import AdminBlogs from '../pages/Admin/BlogsPage/Blogs';
+import AdminAlerts from '../pages/Admin/AlertsPage/Alerts';
+import AdminSurveys from '../pages/Admin/SurveysPage/Surveys';
 import BlogPage from '../pages/BlogPage/Blog';
 
 const AppRoutes = () => {
@@ -48,7 +57,55 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path='/alerts'
+        element={
+          <ProtectedRoute>
+            <OrgAlertsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/surveys'
+        element={
+          <ProtectedRoute>
+            <OrgSurveysPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/settings'
+        element={
+          <ProtectedRoute>
+            <OrgSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/org-announcements'
+        element={
+          <ProtectedRoute>
+            <OrgAnnouncementsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/org-blogs'
+        element={
+          <ProtectedRoute>
+            <OrgBlogsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path='/admin'
+        element={
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/dashboard'
         element={
           <AdminRoute>
             <AdminDashboard />
@@ -60,6 +117,38 @@ const AppRoutes = () => {
         element={
           <AdminRoute>
             <OrganizationManagement />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/announcements'
+        element={
+          <AdminRoute>
+            <AdminAnnouncements />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/blogs'
+        element={
+          <AdminRoute>
+            <AdminBlogs />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/alerts'
+        element={
+          <AdminRoute>
+            <AdminAlerts />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/surveys'
+        element={
+          <AdminRoute>
+            <AdminSurveys />
           </AdminRoute>
         }
       />
