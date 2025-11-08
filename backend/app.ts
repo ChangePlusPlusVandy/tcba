@@ -13,6 +13,7 @@ import homeRoutes from './routes/homeRoutes';
 import alertRoutes from './routes/alertRoutes';
 import inAppNotificationRoutes from './routes/inAppNotificationRoutes';
 import contactRoutes from './routes/contactRoutes';
+import fileUploadRoutes from './routes/fileUploadRoutes';
 import { prisma } from './config/prisma';
 import { clerkClient, clerkMiddleware } from '@clerk/express';
 
@@ -43,5 +44,6 @@ app.use('/api/alerts', alertRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/notifications', inAppNotificationRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/uploads', fileUploadRoutes);
 
 export default app;
