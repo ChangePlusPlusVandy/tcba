@@ -1,10 +1,11 @@
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoFunnelOutline } from 'react-icons/io5';
 
 type Announcement = {
   id: string;
+  slug: string;
   title: string;
   content: string;
   publishedDate?: string;
@@ -34,6 +35,7 @@ const AnnouncementsPage = () => {
   const [timeFilter, setTimeFilter] = useState<'24h' | 'week' | 'month' | 'year' | null>(null);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
 
   const navigate = useNavigate();
 
@@ -71,6 +73,22 @@ const AnnouncementsPage = () => {
     getAnnouncements();
     getTags();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+        setIsFilterOpen(false);
+      }
+    };
+
+    if (isFilterOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isFilterOpen]);
 
   // FORMAT TIME AGO
   const getTimeAgo = (dateString: string) => {
@@ -119,7 +137,7 @@ const AnnouncementsPage = () => {
   });
 
   return (
-    <div>
+    <div className='mt-8'>
       <section>
         <div className='grid grid-cols-2 gap-0'>
           <div className='bg-white px-8 sm:px-12 py-20 flex items-center'>
@@ -134,59 +152,59 @@ const AnnouncementsPage = () => {
               </p>
             </div>
           </div>
-          <div className='min-h-[220px] bg-slate-200' />
+          <div className='min-h-[220px] bg-slate-200 mr-12' />
         </div>
       </section>
-      <section>
+      <section className='mt-8'>
         <div className='grid grid-cols-2 gap-0'>
-          <div className='bg-white p-20 flex-col justify-center text-[#3C3C3C] py-6'>
+          <div className='bg-white px-20 flex items-center text-[#3C3C3C] py-4'>
             <p className='font-[Open_Sans] text-[18px] font-normal'>
               {filterAnnouncements.length}{' '}
               {filterAnnouncements.length === 1 ? 'Announcement' : 'Announcements'}
             </p>
           </div>
-          <div className='flex gap-3 items-center justify-end bg-white p-20 py-6'>
+          <div className='flex gap-2 items-center justify-end bg-white px-20 py-4'>
             <button
-              className={`px-6 py-3 rounded-lg shadow-sm border border-gray-200 transition-colors ${
+              className={`px-8 py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap ${
                 timeFilter === '24h'
                   ? 'bg-[#EBF3FF] text-[#194B90]'
                   : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
               }`}
               onClick={() => setTimeFilter(prev => (prev === '24h' ? null : '24h'))}
             >
-              Last 24 hours
+              Last Day
             </button>
             <button
-              className={`px-6 py-3 rounded-lg shadow-sm border border-gray-200 transition-colors ${
+              className={`px-8 py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap ${
                 timeFilter === 'week'
                   ? 'bg-[#EBF3FF] text-[#194B90]'
                   : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
               }`}
               onClick={() => setTimeFilter(prev => (prev === 'week' ? null : 'week'))}
             >
-              Last week
+              Last Week
             </button>
             <button
-              className={`px-6 py-3 rounded-lg shadow-sm border border-gray-200 transition-colors ${
+              className={`px-8 py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap ${
                 timeFilter === 'month'
                   ? 'bg-[#EBF3FF] text-[#194B90]'
                   : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
               }`}
               onClick={() => setTimeFilter(prev => (prev === 'month' ? null : 'month'))}
             >
-              Last month
+              Last Month
             </button>
             <button
-              className={`px-6 py-3 rounded-lg shadow-sm border border-gray-200 transition-colors ${
+              className={`px-8 py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap ${
                 timeFilter === 'year'
                   ? 'bg-[#EBF3FF] text-[#194B90]'
                   : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
               }`}
               onClick={() => setTimeFilter(prev => (prev === 'year' ? null : 'year'))}
             >
-              Last year
+              Last Year
             </button>
-            <div className='relative'>
+            <div className='relative' ref={filterRef}>
               <button
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
                 className={`px-6 py-3 ${isFilterOpen ? 'bg-[#C6D9F2]' : 'bg-[#EBF3FF]'} text-[#194B90] rounded-lg shadow-sm hover:bg-[#C6D9F2] transition-colors flex items-center gap-2`}
@@ -196,17 +214,17 @@ const AnnouncementsPage = () => {
               </button>
               {isFilterOpen && (
                 <div
-                  className={`${selectedTags.length > 0 ? 'max-h-70' : 'max-h-60'} absolute overflow-y-auto right-0 mt-2 w-56 bg-[#EBF3FF] border border-gray-200 rounded-lg shadow-lg`}
+                  className={`${selectedTags.length > 0 ? 'max-h-70' : 'max-h-60'} absolute overflow-y-auto right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg`}
                 >
                   {tags.length === 0 && (
-                    <button className='w-full text-left px-4 py-2 hover:bg-[#C6D9F2] text-[#3C3C3C] font-[Open_Sans] font-semibold'>
+                    <button className='w-full text-left px-4 py-2 hover:bg-[#EBF3FF] text-[#3C3C3C] font-[Open_Sans]'>
                       No Tags Available
                     </button>
                   )}
                   {selectedTags.length > 0 && (
                     <button
                       onClick={() => setSelectedTags([])}
-                      className='w-full text-left px-4 py-2 border-b hover:bg-[#C6D9F2] text-red-600 font-[Open_Sans] font-semibold'
+                      className='w-full text-left px-4 py-2 border-b hover:bg-[#EBF3FF] text-[#3C3C3C] font-[Open_Sans]'
                     >
                       Clear All
                     </button>
@@ -221,8 +239,8 @@ const AnnouncementsPage = () => {
                             : [...prev, tag]
                         );
                       }}
-                      className={`w-full text-left px-4 py-2 hover:bg-[#C6D9F2] text-[#194B90] font-[Open_Sans] ${
-                        selectedTags.some(t => t.id === tag.id) && 'bg-[#C6D9F2] font-semibold'
+                      className={`w-full text-left px-4 py-2 hover:bg-[#EBF3FF] text-[#3C3C3C] font-[Open_Sans] ${
+                        selectedTags.some(t => t.id === tag.id) && 'bg-[#EBF3FF] font-semibold'
                       }`}
                     >
                       {tag.name}
@@ -234,7 +252,7 @@ const AnnouncementsPage = () => {
           </div>
         </div>
       </section>
-      <div className='p-8'>
+      <div className='px-8 pb-8'>
         {loading && <p>Loading announcements...</p>}
 
         {error && <p>{error}</p>}
@@ -256,16 +274,33 @@ const AnnouncementsPage = () => {
               return (
                 <div
                   key={a.id}
-                  onClick={() => navigate(`/announcement/${a.id}`)}
+                  onClick={() => navigate(`/announcement/${a.slug}`)}
                   className='flex gap-0 p-6 border border-gray-200 rounded-2xl transition-shadow duration-300 hover:shadow-[0_4px_12px_10px_#EBF3FFE5] cursor-pointer m-4'
                 >
-                  <div>
+                  <div className='w-full'>
                     <h2 className='font-[Open_Sans] text-[24px] font-semibold leading-[150%] text-[#3C3C3C] mb-2'>
                       {a.title}
                     </h2>
-                    <h3 className='font-[Open_Sans] text-[14px] font-normal leading-[150%] text-[#717171] mb-4'>
-                      {getTimeAgo(a.createdAt)}
-                    </h3>
+                    <div className='flex items-center gap-3 mb-4'>
+                      <h3 className='font-[Open_Sans] text-[14px] font-normal leading-[150%] text-[#717171]'>
+                        {getTimeAgo(a.createdAt)}
+                      </h3>
+                      {a.tags.length > 0 && (
+                        <>
+                          <span className='text-[#717171]'>•</span>
+                          <div className='flex gap-2 flex-wrap'>
+                            {a.tags.map(tag => (
+                              <span
+                                key={tag.id}
+                                className='px-3 py-1 bg-[#EBF3FF] text-[#194B90] rounded-full text-[12px] font-medium'
+                              >
+                                {tag.name}
+                              </span>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
                     <p className='font-[Open_Sans] text-[14px] font-normal leading-[150%] text-[#3C3C3C] mb-2'>
                       {displayedContent}
                     </p>

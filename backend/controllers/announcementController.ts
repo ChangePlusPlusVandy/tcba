@@ -2,6 +2,14 @@ import { prisma } from '../config/prisma.js';
 import { Request, Response } from 'express';
 import { createNotification } from './inAppNotificationController.js';
 
+const generateSlug = async (title: string, id: string): Promise<string> => {
+  const baseSlug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return `${baseSlug}-${id.substring(0, 8)}`;
+};
+
 /**
  * @desc    Get all announcements
  * @route   GET /api/announcements
@@ -38,6 +46,28 @@ export const getAnnouncementById = async (req: Request, res: Response) => {
     res.status(200).json(announcement);
   } catch (error) {
     console.error('Error fetching announcement by ID:', error);
+    res.status(500).json({ error: 'Failed to fetch announcement' });
+  }
+};
+
+/**
+ * @desc    Get announcement by slug
+ * @route   GET /api/announcements/slug/:slug
+ * @access  Public
+ */
+export const getAnnouncementBySlug = async (req: Request, res: Response) => {
+  try {
+    const { slug } = req.params;
+    const announcement = await prisma.announcements.findUnique({
+      where: { slug },
+      include: { tags: true },
+    });
+    if (!announcement) {
+      return res.status(404).json({ error: 'Announcement not found' });
+    }
+    res.status(200).json(announcement);
+  } catch (error) {
+    console.error('Error fetching announcement by slug:', error);
     res.status(500).json({ error: 'Failed to fetch announcement' });
   }
 };
@@ -87,24 +117,38 @@ export const getAnnouncementsByPublishedDate = async (req: Request, res: Respons
  */
 export const createAnnouncement = async (req: Request, res: Response) => {
   try {
-    const { title, content, publishedDate, isPublished, attachmentUrls, tags, createdByAdminId } =
+    const { title, content, publishedDate, isPublished, attachmentUrls, tagIds, createdByAdminId } =
       req.body;
-    const newAnnouncement = await prisma.announcements.create({
+
+    const tempAnnouncement = await prisma.announcements.create({
       data: {
         title,
         content,
+        slug: 'temp',
         publishedDate: publishedDate ? new Date(publishedDate) : null,
         isPublished: isPublished ?? false,
         attachmentUrls: attachmentUrls ?? [],
-        tags: tags ?? [],
         createdByAdminId: createdByAdminId ?? 'system',
       },
+    });
+
+    const slug = await generateSlug(title, tempAnnouncement.id);
+    const updateData: any = { slug };
+    if (tagIds && Array.isArray(tagIds) && tagIds.length > 0) {
+      updateData.tags = {
+        connect: tagIds.map((id: string) => ({ id })),
+      };
+    }
+
+    const newAnnouncement = await prisma.announcements.update({
+      where: { id: tempAnnouncement.id },
+      data: updateData,
       include: { tags: true },
     });
 
     if (newAnnouncement.isPublished) {
       try {
-        await createNotification('ANNOUNCEMENT', newAnnouncement.title, newAnnouncement.id);
+        await createNotification('ANNOUNCEMENT', newAnnouncement.title, newAnnouncement.slug);
       } catch (notifError) {
         console.error('Failed to create notification:', notifError);
       }

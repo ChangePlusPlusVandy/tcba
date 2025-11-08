@@ -6,6 +6,7 @@ import { MdHealthAndSafety, MdFamilyRestroom } from 'react-icons/md';
 
 type Announcement = {
   id: string;
+  slug: string;
   title: string;
   content: string;
   publishedDate?: string | null;
@@ -127,7 +128,7 @@ const HomePage = () => {
                   </svg>
                 </button>
                 <Link
-                  to='/announcements'
+                  to={`/announcement/${announcement.slug}`}
                   className='absolute bottom-3 right-6 sm:right-10 text-white px-4 py-2 rounded-full text-sm font-semibold shadow transition whitespace-nowrap'
                   style={{ backgroundColor: '#D54242' }}
                 >

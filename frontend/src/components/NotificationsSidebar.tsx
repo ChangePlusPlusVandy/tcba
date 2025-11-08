@@ -59,7 +59,7 @@ const NotificationsSidebar = ({ isOpen, onClose }: NotificationsSidebarProps) =>
       case 'BLOG':
         return `/blog/${notification.contentId}`;
       case 'ANNOUNCEMENT':
-        return `/announcements/${notification.contentId}`;
+        return `/announcement/${notification.contentId}`;
       case 'ALERT':
         return `/alerts`;
       case 'SURVEY':
