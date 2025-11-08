@@ -55,7 +55,8 @@ const AboutPage = () => {
       title: 'Expanding Home-Community Based Services and Supports for Aging in Community',
     },
     {
-      title: 'Collaborating with TN Dept of Disability and Aging (TDDA) on a Multisector Plan for Aging in TN',
+      title:
+        'Collaborating with TN Dept of Disability and Aging (TDDA) on a Multisector Plan for Aging in TN',
     },
   ];
 
@@ -65,52 +66,108 @@ const AboutPage = () => {
     [
       { name: 'AARP', logo: aarpLogo, website: 'https://states.aarp.org/tennessee/' },
       { name: 'AgeWell', logo: agewellLogo, website: 'https://agewelltn.org/' },
-      { name: 'Aging Commission of Mid South', logo: agingcommissionLogo, website: 'https://shelbycountytn.gov/3433/Aging-Commission-of-the-Mid-South' },
-      { name: "Alzheimer's Association", logo: alzheimersassocLogo, website: 'https://www.alz.org' },
+      {
+        name: 'Aging Commission of Mid South',
+        logo: agingcommissionLogo,
+        website: 'https://shelbycountytn.gov/3433/Aging-Commission-of-the-Mid-South',
+      },
+      {
+        name: "Alzheimer's Association",
+        logo: alzheimersassocLogo,
+        website: 'https://www.alz.org',
+      },
     ],
-    // Row 2 
+    // Row 2
     [
-      { name: "Alzheimer's Tennessee", logo: alzheimerstnLogo, website: 'https://www.alztennessee.org' },
-      { name: 'Centennial Adultcare Center', logo: centennialadultLogo, website: 'https://www.centennialadultcare.com' },
-      { name: 'ethra', logo: ethraLogo, website: 'https://www.ethra.org/programs/45/area-agency-on-aging-and-disability/' },
-      { name: 'ENCORE Ministry Foundation', logo: encoreLogo, website: 'https://www.encoreministry.org' },
+      {
+        name: "Alzheimer's Tennessee",
+        logo: alzheimerstnLogo,
+        website: 'https://www.alztennessee.org',
+      },
+      {
+        name: 'Centennial Adultcare Center',
+        logo: centennialadultLogo,
+        website: 'https://www.centennialadultcare.com',
+      },
+      {
+        name: 'ethra',
+        logo: ethraLogo,
+        website: 'https://www.ethra.org/programs/45/area-agency-on-aging-and-disability/',
+      },
+      {
+        name: 'ENCORE Ministry Foundation',
+        logo: encoreLogo,
+        website: 'https://www.encoreministry.org',
+      },
     ],
     // Row 3
     [
       { name: 'Fifty Forward', logo: fiftyforwardLogo, website: 'https://www.fiftyforward.org' },
       { name: 'First TN AAAD', logo: firsttnaaadLogo, website: 'https://www.ftaaad.org/' },
       { name: 'GNRC', logo: gnrcLogo, website: 'https://www.gnrc.org' },
-      { name: 'Interfaith Dental', logo: ifdentalLogo, website: 'https://www.interfaithdental.com' },
+      {
+        name: 'Interfaith Dental',
+        logo: ifdentalLogo,
+        website: 'https://www.interfaithdental.com',
+      },
       { name: 'Mental Health America', logo: mhamidsouthLogo, website: 'https://mhamidsouth.org/' },
       { name: 'Mid-Cumberland HRA', logo: mchraLogo, website: 'https://www.mchra.com/' },
     ],
-    // Row 4 
+    // Row 4
     [
       { name: 'NASW Tennessee', logo: naswtnLogo, website: 'https://naswtn.socialworkers.org/' },
       { name: 'NWTDD', logo: nwtddLogo, website: 'https://www.nwtdd.org' },
-      { name: 'AAAD Southeast Tennessee', logo: sctnaaadLogo, website: 'https://www.sctdd.org/aging-and-disability/' },
+      {
+        name: 'AAAD Southeast Tennessee',
+        logo: sctnaaadLogo,
+        website: 'https://www.sctdd.org/aging-and-disability/',
+      },
       { name: 'SWTDD', logo: swtddLogo, website: 'https://swtdd.org/aging-disability/' },
       { name: 'TALS', logo: talsLogo, website: 'https://www.tals.org/' },
     ],
-    // Row 5 
+    // Row 5
     [
       { name: 'SCTNDD', logo: sctnddLogo, website: 'https://www.sctdd.org/aging-and-disability/' },
       { name: 'TAADS', logo: taadsLogo, website: 'https://www.taads.net/' },
-      { name: 'Tennessee Caregiver Coalition', logo: tnccLogo, website: 'https://tncaregiver.org/' },
-      { name: 'Tennessee Disability Coalition', logo: tndcLogo, website: 'https://www.tndisability.org' },
-      { name: 'Tennessee Federation for the Aging', logo: tnfdaLogo, website: 'http://www.tnfederationfortheaging.org/' },
+      {
+        name: 'Tennessee Caregiver Coalition',
+        logo: tnccLogo,
+        website: 'https://tncaregiver.org/',
+      },
+      {
+        name: 'Tennessee Disability Coalition',
+        logo: tndcLogo,
+        website: 'https://www.tndisability.org',
+      },
+      {
+        name: 'Tennessee Federation for the Aging',
+        logo: tnfdaLogo,
+        website: 'http://www.tnfederationfortheaging.org/',
+      },
     ],
-    // Row 6 
+    // Row 6
     [
-      { name: 'Tennessee Health Care Campaign', logo: tnhccLogo, website: 'https://www.tnhealthcarecampaign.org' },
+      {
+        name: 'Tennessee Health Care Campaign',
+        logo: tnhccLogo,
+        website: 'https://www.tnhealthcarecampaign.org',
+      },
       { name: 'Tennessee Justice Center', logo: tnjcLogo, website: 'https://www.tnjustice.org' },
       { name: 'Upper Cumberland DD', logo: ucddLogo, website: 'https://www.ucdd.org' },
-      { name: 'West End Home Foundation', logo: wehfLogo, website: 'https://www.westendhomefoundation.org/' },
+      {
+        name: 'West End Home Foundation',
+        logo: wehfLogo,
+        website: 'https://www.westendhomefoundation.org/',
+      },
     ],
     // Row 7
     [
       { name: 'UTK CSW', logo: utkcswLogo, website: 'https://csw.utk.edu/' },
-      { name: 'Vanderbilt University Medical Center', logo: vumcLogo, website: 'https://www.vumc.org' },
+      {
+        name: 'Vanderbilt University Medical Center',
+        logo: vumcLogo,
+        website: 'https://www.vumc.org',
+      },
     ],
   ];
 
@@ -125,9 +182,9 @@ const AboutPage = () => {
             <div className='max-w-xl space-y-6'>
               <h2 className='text-4xl font-semibold text-slate-900'>The Mission</h2>
               <p className='text-base text-slate-700 leading-relaxed'>
-              The Tennessee Coalition for Better Aging exists to promote the general welfare of older Tennesseans 
-              and their families through partnerships that mobilize resources to educate and advocate for important 
-              policies and programs.
+                The Tennessee Coalition for Better Aging exists to promote the general welfare of
+                older Tennesseans and their families through partnerships that mobilize resources to
+                educate and advocate for important policies and programs.
               </p>
             </div>
           </div>
@@ -174,10 +231,16 @@ const AboutPage = () => {
         {/* grid of org logos */}
         <div className='space-y-8 mb-10'>
           {visibleRows.map((row, rowIndex) => {
-            const gridCols = row.length === 6 ? 'lg:grid-cols-6' :
-                           row.length === 5 ? 'lg:grid-cols-5' :
-                           row.length === 4 ? 'lg:grid-cols-4' :
-                           row.length === 2 ? 'lg:grid-cols-2' : 'lg:grid-cols-4';
+            const gridCols =
+              row.length === 6
+                ? 'lg:grid-cols-6'
+                : row.length === 5
+                  ? 'lg:grid-cols-5'
+                  : row.length === 4
+                    ? 'lg:grid-cols-4'
+                    : row.length === 2
+                      ? 'lg:grid-cols-2'
+                      : 'lg:grid-cols-4';
 
             return (
               <div key={rowIndex} className={`grid grid-cols-2 sm:grid-cols-3 ${gridCols} gap-8`}>
@@ -214,7 +277,12 @@ const AboutPage = () => {
               stroke='currentColor'
               viewBox='0 0 24 24'
             >
-              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M19 9l-7 7-7-7'
+              />
             </svg>
           </button>
         </div>
@@ -229,8 +297,8 @@ const AboutPage = () => {
             Medical Center
           </p>
           <p>
-            <span className='font-semibold'>Co-chair:</span> Grace Sutherland Smith, LMSW -
-            AgeWell Middle TN
+            <span className='font-semibold'>Co-chair:</span> Grace Sutherland Smith, LMSW - AgeWell
+            Middle TN
           </p>
           <p>
             <span className='font-semibold'>Secretary:</span> Donna DeStefano - TN Disability
