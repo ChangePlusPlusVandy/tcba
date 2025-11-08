@@ -40,6 +40,13 @@ enum OrganizationSize {
   EXTRA_LARGE
 }
 
+// Alert priority levels
+enum AlertPriority {
+  URGENT
+  LOW
+  MEDIUM
+}
+
 enum SurveyStatus {
   DRAFT
   ACTIVE
@@ -85,6 +92,20 @@ model AnnouncementTag {
 
   @@id([announcementId, tagId])
   @@map("_announcement_tags")
+model Alert {
+  id                String        @id @default(cuid())
+  title             String
+  content           String
+  priority          AlertPriority @default(MEDIUM)
+  publishedDate     DateTime?
+  isPublished       Boolean       @default(false)
+  attachmentUrls    String[]
+  tags              String[]
+  createdByAdminId  String
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@map("alerts")
 }
 
 model Organization {
@@ -192,4 +213,22 @@ model Blog {
   updatedAt        DateTime  @updatedAt
 
   @@map("blogs")
+}
+
+enum NotificationType {
+  BLOG
+  ANNOUNCEMENT
+  ALERT
+  SURVEY
+}
+
+model Notification {
+  id              String           @id @default(cuid())
+  type            NotificationType
+  title           String
+  contentId       String           // ID of the blog/announcement/alert/survey
+  createdAt       DateTime         @default(now())
+  lastCheckedAt   DateTime?        // When user last opened notifications panel
+
+  @@map("notifications")
 }

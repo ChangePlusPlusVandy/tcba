@@ -1,5 +1,6 @@
 import { prisma } from '../config/prisma.js';
 import { Request, Response } from 'express';
+import { createNotification } from './inAppNotificationController.js';
 
 /**
  * @desc    Get all announcements
@@ -92,26 +93,27 @@ export const createAnnouncement = async (req: Request, res: Response) => {
       data: {
         title,
         content,
-        publishedDate,
-        isPublished,
-        attachmentUrls,
-        createdByAdminId,
-        tags:
-          tags?.length > 0
-            ? {
-                connectOrCreate: tags.map((tagName: string) => ({
-                  where: { name: tagName },
-                  create: { name: tagName },
-                })),
-              }
-            : undefined,
+        publishedDate: publishedDate ? new Date(publishedDate) : null,
+        isPublished: isPublished ?? false,
+        attachmentUrls: attachmentUrls ?? [],
+        tags: tags ?? [],
+        createdByAdminId: createdByAdminId ?? 'system',
       },
       include: { tags: true },
     });
+
+    if (newAnnouncement.isPublished) {
+      try {
+        await createNotification('ANNOUNCEMENT', newAnnouncement.title, newAnnouncement.id);
+      } catch (notifError) {
+        console.error('Failed to create notification:', notifError);
+      }
+    }
+
     res.status(201).json(newAnnouncement);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to create announcement' });
+    console.error('Error creating announcement:', error);
+    res.status(500).json({ error: 'Failed to create announcement', details: error });
   }
 };
 

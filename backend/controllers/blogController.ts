@@ -2,15 +2,10 @@ import { Response } from 'express';
 import { OrganizationRole } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import { prisma } from '../config/prisma.js';
+import { createNotification } from './inAppNotificationController.js';
 
-// Helper: Check if user is admin
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 
-/**
- * @desc    Get all blogs with optional filters
- * @route   GET /api/blogs
- * @access  Public (published only) or Admin (all)
- */
 export const getAllBlogs = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { published, startDate, endDate, tags, search, sortBy, sortOrder, limit, offset } =
@@ -52,11 +47,6 @@ export const getAllBlogs = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
-/**
- * @desc    Get blog by ID
- * @route   GET /api/blogs/:id
- * @access  Admin only
- */
 export const getBlogById = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
@@ -73,11 +63,6 @@ export const getBlogById = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
-/**
- * @desc    Get all unique tags used in blogs
- * @route   GET /api/blogs/tags
- * @access  Public
- */
 export const getBlogTags = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const blogs = await prisma.blog.findMany({
@@ -94,11 +79,6 @@ export const getBlogTags = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
-/**
- * @desc    Create new blog post
- * @route   POST /api/blogs
- * @access  Admin only
- */
 export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
@@ -129,11 +109,6 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
-/**
- * @desc    Update existing blog
- * @route   PUT /api/blogs/:id
- * @access  Admin only
- */
 export const updateBlog = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
@@ -163,11 +138,6 @@ export const updateBlog = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
-/**
- * @desc    Delete blog post
- * @route   DELETE /api/blogs/:id
- * @access  Admin only
- */
 export const deleteBlog = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
@@ -185,11 +155,6 @@ export const deleteBlog = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
-/**
- * @desc    Publish blog
- * @route   PUT /api/blogs/:id/publish
- * @access  Admin only
- */
 export const publishBlog = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
@@ -207,6 +172,12 @@ export const publishBlog = async (req: AuthenticatedRequest, res: Response) => {
       },
     });
 
+    try {
+      await createNotification('BLOG', publishedBlog.title, publishedBlog.id);
+    } catch (notifError) {
+      console.error('Failed to create notification:', notifError);
+    }
+
     res.json(publishedBlog);
   } catch (error) {
     console.error('Error publishing blog:', error);
@@ -214,11 +185,6 @@ export const publishBlog = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
-/**
- * @desc    Unpublish blog
- * @route   PUT /api/blogs/:id/unpublish
- * @access  Admin only
- */
 export const unpublishBlog = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;

@@ -1,0 +1,413 @@
+import { Response } from 'express';
+import { AlertPriority, OrganizationRole } from '@prisma/client';
+import { AuthenticatedRequest } from '../types/index.js';
+import { prisma } from '../config/prisma.js';
+import { EmailService } from '../services/EmailService.js';
+import { createNotification } from './inAppNotificationController.js';
+
+// Helper: Check if user is admin
+const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
+
+/**
+ * @desc    Get all alerts (only published ones for non-admins, filtered by matching tags)
+ * @route   GET /api/alerts?priority
+ * @access  Authenticated organizations and admins only
+ */
+export const getAlerts = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    // Ensure user is authenticated
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const { priority, isPublished } = req.query;
+    const userIsAdmin = isAdmin(req.user?.role);
+
+    // Get the current organization's tags (for non-admins)
+    let userOrganization;
+    if (!userIsAdmin) {
+      userOrganization = await prisma.organization.findUnique({
+        where: { id: req.user.id },
+        select: { tags: true },
+      });
+    }
+
+    const where: any = {
+      ...(priority && { priority: priority as AlertPriority }),
+      // Non-admins can only see published alerts
+      ...(!userIsAdmin && { isPublished: true }),
+      // Admins can filter by isPublished
+      ...(userIsAdmin && isPublished !== undefined && { isPublished: isPublished === 'true' }),
+    };
+
+    let alerts = await prisma.alert.findMany({
+      where,
+      orderBy: [
+        { priority: 'asc' }, // URGENT first (assuming enum order)
+        { createdAt: 'desc' },
+      ],
+    });
+
+    // Filter alerts by matching tags for non-admins
+    if (!userIsAdmin && userOrganization) {
+      alerts = alerts.filter(alert => {
+        // If alert has no tags, it's a broadcast alert visible to all
+        if (!alert.tags || alert.tags.length === 0) {
+          return true;
+        }
+        // Check if organization has any matching tags with the alert
+        return alert.tags.some(alertTag => userOrganization.tags.includes(alertTag));
+      });
+    }
+
+    res.status(200).json(alerts);
+  } catch (error) {
+    console.error('Error fetching alerts:', error);
+    res.status(500).json({ error: 'Failed to fetch alerts' });
+  }
+};
+
+/**
+ * @desc    Get alert by ID (filtered by matching tags for non-admins)
+ * @route   GET /api/alerts/:id
+ * @access  Authenticated organizations and admins only
+ */
+export const getAlertById = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    // Ensure user is authenticated
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const { id } = req.params;
+    const userIsAdmin = isAdmin(req.user?.role);
+
+    const alert = await prisma.alert.findUnique({
+      where: { id },
+    });
+
+    if (!alert) {
+      return res.status(404).json({ error: 'Alert not found' });
+    }
+
+    // Non-admins can only see published alerts
+    if (!userIsAdmin && !alert.isPublished) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Check tag matching for non-admins
+    if (!userIsAdmin) {
+      const userOrganization = await prisma.organization.findUnique({
+        where: { id: req.user.id },
+        select: { tags: true },
+      });
+
+      // If alert has tags, check if organization has matching tags
+      if (alert.tags && alert.tags.length > 0 && userOrganization) {
+        const hasMatchingTag = alert.tags.some(alertTag =>
+          userOrganization.tags.includes(alertTag)
+        );
+
+        if (!hasMatchingTag) {
+          return res.status(403).json({ error: 'Access denied' });
+        }
+      }
+    }
+
+    res.status(200).json(alert);
+  } catch (error) {
+    console.error('Error fetching alert:', error);
+    res.status(500).json({ error: 'Failed to fetch alert' });
+  }
+};
+
+/**
+ * @desc    Get alerts by priority (filtered by matching tags for non-admins)
+ * @route   GET /api/alerts/priority/:priority
+ * @access  Authenticated organizations and admins only
+ */
+export const getAlertsByPriority = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    // Ensure user is authenticated
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const { priority } = req.params;
+    const userIsAdmin = isAdmin(req.user?.role);
+
+    if (!['URGENT', 'MEDIUM', 'LOW'].includes(priority.toUpperCase())) {
+      return res.status(400).json({ error: 'Invalid priority. Must be URGENT, MEDIUM, or LOW' });
+    }
+
+    // Get the current organization's tags (for non-admins)
+    let userOrganization;
+    if (!userIsAdmin) {
+      userOrganization = await prisma.organization.findUnique({
+        where: { id: req.user.id },
+        select: { tags: true },
+      });
+    }
+
+    let alerts = await prisma.alert.findMany({
+      where: {
+        priority: priority.toUpperCase() as AlertPriority,
+        // Non-admins can only see published alerts
+        ...(!userIsAdmin && { isPublished: true }),
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Filter alerts by matching tags for non-admins
+    if (!userIsAdmin && userOrganization) {
+      alerts = alerts.filter(alert => {
+        // If alert has no tags, it's a broadcast alert visible to all
+        if (!alert.tags || alert.tags.length === 0) {
+          return true;
+        }
+        // Check if organization has any matching tags with the alert
+        return alert.tags.some(alertTag => userOrganization.tags.includes(alertTag));
+      });
+    }
+
+    res.status(200).json(alerts);
+  } catch (error) {
+    console.error('Error fetching alerts by priority:', error);
+    res.status(500).json({ error: 'Failed to fetch alerts by priority' });
+  }
+};
+
+/**
+ * @desc    Create new alert
+ * @route   POST /api/alerts
+ * @access  Admin/Super Admin only
+ */
+export const createAlert = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    // Ensure user is authenticated
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!isAdmin(req.user?.role)) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { title, content, priority, publishedDate, isPublished, attachmentUrls, tags } = req.body;
+
+    if (!title || !content) {
+      return res.status(400).json({ error: 'Title and content are required' });
+    }
+
+    const newAlert = await prisma.alert.create({
+      data: {
+        title,
+        content,
+        priority: priority || 'MEDIUM',
+        publishedDate: publishedDate ? new Date(publishedDate) : null,
+        isPublished: isPublished || false,
+        attachmentUrls: attachmentUrls || [],
+        tags: tags || [],
+        createdByAdminId: req.user?.id || 'system',
+      },
+    });
+
+    if (newAlert.isPublished) {
+      await sendAlertEmails(newAlert);
+
+      try {
+        await createNotification('ALERT', newAlert.title, newAlert.id);
+      } catch (notifError) {
+        console.error('Failed to create notification:', notifError);
+      }
+    }
+
+    res.status(201).json(newAlert);
+  } catch (error) {
+    console.error('Error creating alert:', error);
+    res.status(500).json({ error: 'Failed to create alert' });
+  }
+};
+
+/**
+ * @desc    Update alert
+ * @route   PUT /api/alerts/:id
+ * @access  Admin/Super Admin only
+ */
+export const updateAlert = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    // Ensure user is authenticated
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!isAdmin(req.user?.role)) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+    const { publishedDate, ...updateData } = req.body;
+
+    const existingAlert = await prisma.alert.findUnique({ where: { id } });
+    if (!existingAlert) {
+      return res.status(404).json({ error: 'Alert not found' });
+    }
+
+    const updatedAlert = await prisma.alert.update({
+      where: { id },
+      data: {
+        ...updateData,
+        ...(publishedDate && { publishedDate: new Date(publishedDate) }),
+      },
+    });
+
+    // If alert is being published for the first time, send email notifications
+    if (updatedAlert.isPublished && !existingAlert.isPublished) {
+      await sendAlertEmails(updatedAlert);
+    }
+
+    res.status(200).json(updatedAlert);
+  } catch (error) {
+    console.error('Error updating alert:', error);
+    res.status(500).json({ error: 'Failed to update alert' });
+  }
+};
+
+/**
+ * @desc    Delete alert
+ * @route   DELETE /api/alerts/:id
+ * @access  Admin/Super Admin only
+ */
+export const deleteAlert = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    // Ensure user is authenticated
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!isAdmin(req.user?.role)) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+
+    const alertToDelete = await prisma.alert.findUnique({ where: { id } });
+    if (!alertToDelete) {
+      return res.status(404).json({ error: 'Alert not found' });
+    }
+
+    await prisma.alert.delete({ where: { id } });
+    res.status(204).end();
+  } catch (error) {
+    console.error('Error deleting alert:', error);
+    res.status(500).json({ error: 'Failed to delete alert' });
+  }
+};
+
+/**
+ * @desc    Publish alert and send notifications
+ * @route   POST /api/alerts/:id/publish
+ * @access  Admin/Super Admin only
+ */
+export const publishAlert = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    // Ensure user is authenticated
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!isAdmin(req.user?.role)) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+
+    const alert = await prisma.alert.findUnique({ where: { id } });
+    if (!alert) {
+      return res.status(404).json({ error: 'Alert not found' });
+    }
+
+    if (alert.isPublished) {
+      return res.status(400).json({ error: 'Alert is already published' });
+    }
+
+    const publishedAlert = await prisma.alert.update({
+      where: { id },
+      data: {
+        isPublished: true,
+        publishedDate: new Date(),
+      },
+    });
+
+    // Send email notifications to all active organizations
+    await sendAlertEmails(publishedAlert);
+
+    res.status(200).json(publishedAlert);
+  } catch (error) {
+    console.error('Error publishing alert:', error);
+    res.status(500).json({ error: 'Failed to publish alert' });
+  }
+};
+
+/**
+ * Helper function to send alert emails to organizations with matching tags
+ * This will be connected to the automated email system. It isn't currently fully developed and needs to
+ * be developed later.
+ */
+async function sendAlertEmails(alert: any): Promise<void> {
+  try {
+    // Get all active organizations with membershipActive = true
+    const activeOrganizations = await prisma.organization.findMany({
+      where: {
+        membershipActive: true,
+        status: 'ACTIVE',
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        primaryContactEmail: true,
+        primaryContactName: true,
+        tags: true,
+      },
+    });
+
+    // Filter organizations by matching tags
+    let targetOrganizations = activeOrganizations;
+
+    // If alert has tags, only send to organizations with matching tags
+    if (alert.tags && alert.tags.length > 0) {
+      targetOrganizations = activeOrganizations.filter(org => {
+        // Check if organization has any matching tags with the alert
+        return alert.tags.some((alertTag: string) => org.tags.includes(alertTag));
+      });
+    }
+    // If alert has no tags, it's a broadcast alert sent to all active organizations
+
+    console.log(
+      `Sending alert "${alert.title}" to ${targetOrganizations.length} organizations` +
+        (alert.tags && alert.tags.length > 0
+          ? ` with matching tags: [${alert.tags.join(', ')}]`
+          : ' (broadcast to all)')
+    );
+
+    // Send email to each targeted organization
+    for (const org of targetOrganizations) {
+      try {
+        await EmailService.sendAlertEmail({
+          to: org.primaryContactEmail,
+          organizationName: org.name,
+          alertTitle: alert.title,
+          alertContent: alert.content,
+          alertPriority: alert.priority,
+          attachmentUrls: alert.attachmentUrls,
+        });
+      } catch (emailError) {
+        console.error(`Failed to send alert email to ${org.name}:`, emailError);
+        // Continue sending to other organizations even if one fails
+      }
+    }
+  } catch (error) {
+    console.error('Error sending alert emails:', error);
+  }
+}
