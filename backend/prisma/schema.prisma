@@ -31,7 +31,9 @@ model Tag {
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   AnnouncementTag AnnouncementTag[]
+  BlogTag         BlogTag[]
   announcements   Announcements[]   @relation("AnnouncementsToTag")
+  blogs           Blog[]            @relation("BlogsToTag")
 
   @@map("tags")
 }
@@ -44,6 +46,16 @@ model AnnouncementTag {
 
   @@id([announcementId, tagId])
   @@map("_announcement_tags")
+}
+
+model BlogTag {
+  blogId String
+  tagId  String
+  blog   Blog   @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([blogId, tagId])
+  @@map("_blog_tags")
 }
 
 model Alert {
@@ -151,15 +163,17 @@ model EmailSubscription {
 
 model Blog {
   id               String    @id @default(cuid())
+  slug             String    @unique
   title            String
   content          String
   author           String
-  tags             String[]
   featuredImageUrl String?
   isPublished      Boolean   @default(false)
   publishedDate    DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+  BlogTag          BlogTag[]
+  tags             Tag[]     @relation("BlogsToTag")
 
   @@map("blogs")
 }

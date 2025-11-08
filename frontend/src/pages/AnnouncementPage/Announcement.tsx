@@ -4,7 +4,7 @@ import { IoArrowBack } from 'react-icons/io5';
 import axios from 'axios';
 
 export default function Announcement() {
-  const { id: slug } = useParams();
+  const { slug } = useParams<{ slug: string }>();
   const [announcement, setAnnouncement] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

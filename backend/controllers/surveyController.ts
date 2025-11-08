@@ -38,14 +38,14 @@ export const getSurveyById = async (req: AuthenticatedRequest, res: Response) =>
 
 export const createSurvey = async (req: AuthenticatedRequest, res: Response) => {
   try {
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+    if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
+
     const { title, isActive, isPublished } = req.body;
     if (!title || isActive === undefined || isPublished === undefined) {
       return res.status(400).json({
         error: 'Title, isActive, and isPublished are required',
       });
-    }
-    if (!isAdmin(req.user?.role)) {
-      return res.status(403).json({ error: 'Forbidden Access' });
     }
     const survey = await prisma.survey.create({
       data: {
@@ -70,9 +70,8 @@ export const createSurvey = async (req: AuthenticatedRequest, res: Response) => 
 
 export const updateSurvey = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    if (!isAdmin(req.user?.role)) {
-      return res.status(403).json({ error: 'Forbidden Access' });
-    }
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+    if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
     const { id } = req.params;
 
@@ -162,6 +161,9 @@ export const getActiveSurveys = async (req: AuthenticatedRequest, res: Response)
 
 export const publishSurvey = async (req: AuthenticatedRequest, res: Response) => {
   try {
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+    if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
+
     const { id } = req.params;
     const survey = await prisma.survey.update({
       where: { id },
@@ -176,6 +178,9 @@ export const publishSurvey = async (req: AuthenticatedRequest, res: Response) =>
 
 export const closeSurvey = async (req: AuthenticatedRequest, res: Response) => {
   try {
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+    if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
+
     const { id } = req.params;
     const survey = await prisma.survey.update({
       where: { id },
@@ -190,6 +195,9 @@ export const closeSurvey = async (req: AuthenticatedRequest, res: Response) => {
 
 export const deleteSurvey = async (req: AuthenticatedRequest, res: Response) => {
   try {
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+    if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
+
     const targetId = resolveTargetId(req.params.id, req.user?.id);
     if (!targetId) return res.status(401).json({ error: 'Survey not authenticated' });
     const survey = await prisma.survey.findUnique({ where: { id: targetId } });

@@ -1,6 +1,10 @@
 import { prisma } from '../config/prisma.js';
 import { Request, Response } from 'express';
+import { OrganizationRole } from '@prisma/client';
+import { AuthenticatedRequest } from '../types/index.js';
 import { createNotification } from './inAppNotificationController.js';
+
+const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 
 const generateSlug = async (title: string, id: string): Promise<string> => {
   const baseSlug = title
@@ -115,8 +119,11 @@ export const getAnnouncementsByPublishedDate = async (req: Request, res: Respons
  * @route   POST /api/announcements
  * @access  Admin/Super Admin
  */
-export const createAnnouncement = async (req: Request, res: Response) => {
+export const createAnnouncement = async (req: AuthenticatedRequest, res: Response) => {
   try {
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+    if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
+
     const { title, content, publishedDate, isPublished, attachmentUrls, tagIds, createdByAdminId } =
       req.body;
 
@@ -166,9 +173,12 @@ export const createAnnouncement = async (req: Request, res: Response) => {
  * @route   PUT /api/announcements/:id
  * @access  Admin/Super Admin
  */
-export const updateAnnouncement = async (req: Request, res: Response) => {
+export const updateAnnouncement = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+    if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
+
     const { tags, ...otherData } = req.body;
     const updateData: any = { ...otherData };
     if (tags !== undefined) {
@@ -201,9 +211,12 @@ export const updateAnnouncement = async (req: Request, res: Response) => {
  * @route   DELETE /api/announcements/:id
  * @access  Admin/Super Admin
  */
-export const deleteAnnouncement = async (req: Request, res: Response) => {
+export const deleteAnnouncement = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+    if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
+
     await prisma.announcements.delete({ where: { id } });
     await prisma.tag.deleteMany({
       where: {

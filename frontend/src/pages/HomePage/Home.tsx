@@ -129,6 +129,7 @@ const HomePage = () => {
                 </button>
                 <Link
                   to={`/announcement/${announcement.slug}`}
+                  onClick={handleCloseAnnouncement}
                   className='absolute bottom-3 right-6 sm:right-10 text-white px-4 py-2 rounded-full text-sm font-semibold shadow transition whitespace-nowrap'
                   style={{ backgroundColor: '#D54242' }}
                 >
