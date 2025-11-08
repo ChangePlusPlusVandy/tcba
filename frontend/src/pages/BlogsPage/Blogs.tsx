@@ -3,20 +3,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoFunnelOutline, IoSearchOutline } from 'react-icons/io5';
 
-type Announcement = {
-  id: string;
-  slug: string;
-  title: string;
-  content: string;
-  publishedDate?: string;
-  isPublished: boolean;
-  attachmentUrls: string[];
-  tags: Tag[];
-  createdByAdminId: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
 type Tag = {
   id: string;
   name: string;
@@ -24,54 +10,58 @@ type Tag = {
   updatedAt: string;
 };
 
-const AnnouncementsPage = () => {
-  // ALL ANNOUNCEMENTS AND TAGS STATES
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
-  // LOADING AND ERROR STATES
+type Blog = {
+  id: string;
+  slug: string;
+  title: string;
+  content: string;
+  author: string;
+  tags: Tag[];
+  featuredImageUrl?: string;
+  isPublished: boolean;
+  publishedDate?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+const BlogsPage = () => {
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // FILTER STATES
   const [timeFilter, setTimeFilter] = useState<'24h' | 'week' | 'month' | 'year' | null>(null);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const filterRef = useRef<HTMLDivElement>(null);
 
+  const filterRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  const MAX_LENGTH = 200; // MAX POST LENGTH BEFORE TRUNCATION
+  const MAX_LENGTH = 200;
 
-  // GET ALL ANNOUNCEMENTS
-  const getAnnouncements = async () => {
+  const getBlogs = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/announcements');
-      console.log('API Response:', response.data);
-      setAnnouncements(response.data);
+      const response = await axios.get('http://localhost:8000/api/blogs');
+      setBlogs(response.data);
       setError(null);
     } catch (error) {
-      console.error('Error fetching announcements:', error);
+      console.error('Error fetching blogs:', error);
       setError('An unexpected error occurred');
     }
     setLoading(false);
   };
 
-  // GET ALL TAGS
   const getTags = async () => {
     try {
-      const tags = await axios.get('http://localhost:8000/api/tags');
-      console.log('API Response:', tags.data);
-      setTags(tags.data);
-      setError(null);
+      const response = await axios.get('http://localhost:8000/api/blogs/tags');
+      setAllTags(response.data);
     } catch (error) {
       console.error('Error fetching tags:', error);
-      setError('An unexpected error occurred');
     }
-    setLoading(false);
   };
 
   useEffect(() => {
-    getAnnouncements();
+    getBlogs();
     getTags();
   }, []);
 
@@ -91,7 +81,6 @@ const AnnouncementsPage = () => {
     };
   }, [isFilterOpen]);
 
-  // FORMAT TIME AGO
   const getTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -102,17 +91,18 @@ const AnnouncementsPage = () => {
     }
 
     if (diffInMinutes < 1440) {
-      return `${Math.floor(diffInMinutes / 60)} ${Math.floor(diffInMinutes / 60) === 1 ? 'hour' : 'hours'} ago`;
+      const hours = Math.floor(diffInMinutes / 60);
+      return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
     }
-    return `${Math.floor(diffInMinutes / 1440)} ${Math.floor(diffInMinutes / 1440) === 1 ? 'day' : 'days'} ago`;
+    const days = Math.floor(diffInMinutes / 1440);
+    return `${days} ${days === 1 ? 'day' : 'days'} ago`;
   };
 
-  const filterAnnouncements = announcements.filter(a => {
+  const filteredBlogs = blogs.filter(blog => {
     const now = new Date();
 
-    // TIME FILTER
     if (timeFilter) {
-      const createdAt = new Date(a.createdAt);
+      const createdAt = new Date(blog.createdAt);
       const diffInHours = (now.getTime() - createdAt.getTime()) / 1000 / 3600;
       if (
         (timeFilter === '24h' && diffInHours > 24) ||
@@ -124,18 +114,21 @@ const AnnouncementsPage = () => {
       }
     }
 
-    // TAG FILTER
     if (selectedTags.length > 0) {
       const selectedTagNames = selectedTags.map(t => t.name);
-      const announcementTagNames = a.tags.map(t => t.name);
-      if (!announcementTagNames.some(tag => selectedTagNames.includes(tag))) {
+      const blogTagNames = blog.tags.map(t => t.name);
+      if (!blogTagNames.some(tag => selectedTagNames.includes(tag))) {
         return false;
       }
     }
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      return a.title.toLowerCase().includes(query) || a.content.toLowerCase().includes(query);
+      return (
+        blog.title.toLowerCase().includes(query) ||
+        blog.content.toLowerCase().includes(query) ||
+        blog.author.toLowerCase().includes(query)
+      );
     }
 
     return true;
@@ -148,23 +141,23 @@ const AnnouncementsPage = () => {
           <div className='bg-white px-8 sm:px-12 py-20 flex items-center'>
             <div className='p-8'>
               <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-[#3C3C3C] mb-6'>
-                Announcements
+                Blogs
               </h2>
               <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-[#3C3C3C]'>
-                The Tennessee Coalition for Better Aging exists to promote the general welfare of
-                older Tennesseans and their families through partnerships that mobilize resources to
-                educate and advocate for important policies and programs.
+                Read the latest insights, stories, and updates from the Tennessee Coalition for
+                Better Aging. Our blog features expert perspectives on senior wellness, policy
+                updates, and community highlights.
               </p>
             </div>
           </div>
           <div className='min-h-[220px] bg-slate-200 mr-12' />
         </div>
       </section>
+
       <section className='mt-8'>
         <div className='bg-white px-20 py-4'>
           <p className='font-[Open_Sans] text-[18px] font-bold text-[#3C3C3C] mb-4'>
-            {filterAnnouncements.length}{' '}
-            {filterAnnouncements.length === 1 ? 'Announcement' : 'Announcements'}
+            {filteredBlogs.length} {filteredBlogs.length === 1 ? 'Blog' : 'Blogs'}
           </p>
           <div className='flex items-center justify-between'>
             <div className='flex gap-2 items-center'>
@@ -208,6 +201,7 @@ const AnnouncementsPage = () => {
               >
                 Last Year
               </button>
+
               <div className='relative' ref={filterRef}>
                 <button
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
@@ -220,7 +214,7 @@ const AnnouncementsPage = () => {
                   <div
                     className={`${selectedTags.length > 0 ? 'max-h-70' : 'max-h-60'} absolute overflow-y-auto left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-10`}
                   >
-                    {tags.length === 0 && (
+                    {allTags.length === 0 && (
                       <button className='w-full text-left px-4 py-2 hover:bg-[#EBF3FF] text-[#3C3C3C] font-[Open_Sans]'>
                         No Tags Available
                       </button>
@@ -233,7 +227,7 @@ const AnnouncementsPage = () => {
                         Clear All
                       </button>
                     )}
-                    {tags.map(tag => (
+                    {allTags.map(tag => (
                       <button
                         key={tag.id}
                         onClick={() => {
@@ -268,44 +262,42 @@ const AnnouncementsPage = () => {
           </div>
         </div>
       </section>
+
       <div className='px-8 pb-8'>
-        {loading && <p>Loading announcements...</p>}
-
+        {loading && <p>Loading blogs...</p>}
         {error && <p>{error}</p>}
-
-        {!loading && !error && announcements.length === 0 && (
+        {!loading && !error && blogs.length === 0 && (
           <p className='font-[Open_Sans] text-[32px] font-bold leading-[100%] text-[#AAAAAA] mb-6'>
-            No announcements available.
+            No blogs available.
           </p>
         )}
-
-        {!loading && !error && announcements.length > 0 && (
+        {!loading && !error && blogs.length > 0 && (
           <div className='space-y-8'>
-            {filterAnnouncements.map(a => {
-              const shouldTruncate = a.content.length > MAX_LENGTH;
+            {filteredBlogs.map(blog => {
+              const shouldTruncate = blog.content.length > MAX_LENGTH;
               const displayedContent = !shouldTruncate
-                ? a.content
-                : `${a.content.slice(0, MAX_LENGTH)}...`;
+                ? blog.content
+                : `${blog.content.slice(0, MAX_LENGTH)}...`;
 
               return (
                 <div
-                  key={a.id}
-                  onClick={() => navigate(`/announcement/${a.slug}`)}
+                  key={blog.id}
+                  onClick={() => navigate(`/blog/${blog.slug}`)}
                   className='flex gap-0 p-6 border border-gray-200 rounded-2xl transition-shadow duration-300 hover:shadow-[0_4px_12px_10px_#EBF3FFE5] cursor-pointer m-4'
                 >
                   <div className='w-full'>
                     <h2 className='font-[Open_Sans] text-[24px] font-semibold leading-[150%] text-[#3C3C3C] mb-2'>
-                      {a.title}
+                      {blog.title}
                     </h2>
                     <div className='flex items-center gap-3 mb-4'>
                       <h3 className='font-[Open_Sans] text-[14px] font-normal leading-[150%] text-[#717171]'>
-                        {getTimeAgo(a.createdAt)}
+                        By {blog.author} • {getTimeAgo(blog.createdAt)}
                       </h3>
-                      {a.tags.length > 0 && (
+                      {blog.tags.length > 0 && (
                         <>
                           <span className='text-[#717171]'>•</span>
                           <div className='flex gap-2 flex-wrap'>
-                            {a.tags.map(tag => (
+                            {blog.tags.map(tag => (
                               <span
                                 key={tag.id}
                                 className='px-3 py-1 bg-[#EBF3FF] text-[#194B90] rounded-full text-[12px] font-medium'
@@ -331,4 +323,4 @@ const AnnouncementsPage = () => {
   );
 };
 
-export default AnnouncementsPage;
+export default BlogsPage;

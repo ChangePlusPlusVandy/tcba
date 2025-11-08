@@ -24,7 +24,8 @@ import AdminAnnouncements from '../pages/Admin/AnnouncementsPage/Announcements';
 import AdminBlogs from '../pages/Admin/BlogsPage/Blogs';
 import AdminAlerts from '../pages/Admin/AlertsPage/Alerts';
 import AdminSurveys from '../pages/Admin/SurveysPage/Surveys';
-import BlogPage from '../pages/BlogPage/Blog';
+import Blog from '../pages/BlogPage/Blog';
+import BlogsPage from '../pages/BlogsPage/Blogs';
 
 const AppRoutes = () => {
   return (
@@ -33,8 +34,9 @@ const AppRoutes = () => {
       <Route path='/home' element={<HomePage />} />
       <Route path='/about' element={<AboutPage />} />
       <Route path='/announcements' element={<AnnouncementsPage />} />
-      <Route path='/announcement/:id' element={<Announcement />} />
-      <Route path='/blog' element={<BlogPage />} />
+      <Route path='/announcement/:slug' element={<Announcement />} />
+      <Route path='/blogs' element={<BlogsPage />} />
+      <Route path='/blog/:slug' element={<Blog />} />
       <Route path='/resources' element={<ResourcesPage />} />
       <Route path='/contact' element={<ContactPage />} />
       <Route path='/login' element={<LoginPage />} />

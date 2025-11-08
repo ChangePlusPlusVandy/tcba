@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   getAllBlogs,
   getBlogById,
+  getBlogBySlug,
   getBlogTags,
   createBlog,
   updateBlog,
@@ -12,11 +13,10 @@ import {
 
 const router = Router();
 
-// Public routes
 router.get('/', getAllBlogs);
 router.get('/tags', getBlogTags);
+router.get('/slug/:slug', getBlogBySlug);
 
-// Admin routes
 router.get('/:id', getBlogById);
 router.post('/', createBlog);
 router.put('/:id', updateBlog);

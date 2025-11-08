@@ -59,7 +59,7 @@ const NotificationsSidebar = ({ isOpen, onClose }: NotificationsSidebarProps) =>
       case 'BLOG':
         return `/blog/${notification.contentId}`;
       case 'ANNOUNCEMENT':
-        return `/announcements/${notification.contentId}`;
+        return `/announcement/${notification.contentId}`;
       case 'ALERT':
         return `/alerts`;
       case 'SURVEY':
@@ -139,7 +139,7 @@ const NotificationsSidebar = ({ isOpen, onClose }: NotificationsSidebarProps) =>
                                 ? 'bg-yellow-100 text-yellow-700'
                                 : notification.type === 'SURVEY'
                                   ? 'bg-blue-100 text-blue-700'
-                                  : 'bg-purple-100 text-purple-700'
+                                  : 'bg-[#EBF3FF] text-[#194B90]'
                           }`}
                         >
                           {notification.type.charAt(0).toUpperCase() +

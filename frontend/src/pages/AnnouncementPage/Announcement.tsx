@@ -1,26 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
 import axios from 'axios';
 
 export default function Announcement() {
-  const { id } = useParams();
+  const { slug } = useParams<{ slug: string }>();
   const [announcement, setAnnouncement] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAnnouncement = async () => {
       try {
-        const res = await axios.get(`http://localhost:8000/api/announcements/${id}`);
+        const res = await axios.get(`http://localhost:8000/api/announcements/slug/${slug}`);
         setAnnouncement(res.data);
       } catch (error) {
         console.error('Error fetching announcement:', error);
+        setAnnouncement(null);
       }
       setLoading(false);
     };
 
     fetchAnnouncement();
-  }, [id]);
+  }, [slug]);
 
   if (loading) return <p>Loading...</p>;
   if (!announcement) return <p>Announcement not found.</p>;
@@ -51,10 +52,27 @@ export default function Announcement() {
         Back to Announcements
       </Link>
       <div className='px-8 py-10'>
-        <h1 className='font-[Open_Sans] text-[40px] font-bold mb-4'>{announcement.title}</h1>{' '}
-        <h3 className='font-[Open_Sans] text-[16px] font-normal leading-[150%] text-[#717171] mb-4'>
-          {getTimeAgo(announcement.createdAt)}
-        </h3>
+        <h1 className='font-[Open_Sans] text-[40px] font-bold mb-4'>{announcement.title}</h1>
+        <div className='flex items-center gap-3 mb-4'>
+          <h3 className='font-[Open_Sans] text-[16px] font-normal leading-[150%] text-[#717171]'>
+            {getTimeAgo(announcement.createdAt)}
+          </h3>
+          {announcement.tags && announcement.tags.length > 0 && (
+            <>
+              <span className='text-[#717171]'>•</span>
+              <div className='flex gap-2 flex-wrap'>
+                {announcement.tags.map((tag: any) => (
+                  <span
+                    key={tag.id}
+                    className='px-3 py-1 bg-[#EBF3FF] text-[#194B90] rounded-full text-[12px] font-medium'
+                  >
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
         <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-[#3C3C3C] py-8'>
           {announcement.content}
         </p>

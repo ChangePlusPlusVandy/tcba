@@ -64,6 +64,15 @@ const Footer = () => {
               >
                 Email Signup
               </Link>
+              <Link
+                to='/contact'
+                className='text-sm transition-colors duration-200'
+                style={{ color: '#3C3C3C' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+                onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+              >
+                Contact Us
+              </Link>
             </div>
           </div>
         </div>

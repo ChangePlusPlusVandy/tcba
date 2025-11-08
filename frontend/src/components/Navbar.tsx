@@ -77,13 +77,13 @@ const Navbar = () => {
               Announcements
             </Link>
             <Link
-              to='/blog'
-              className={`transition-colors duration-200 ${location.pathname === '/blog' ? 'font-bold' : 'font-medium'}`}
+              to='/blogs'
+              className={`transition-colors duration-200 ${location.pathname === '/blogs' ? 'font-bold' : 'font-medium'}`}
               style={{ color: '#3C3C3C' }}
               onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
               onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
             >
-              Blog
+              Blogs
             </Link>
             <Link
               to='/register'
@@ -113,7 +113,7 @@ const Navbar = () => {
                   onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
                   onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
                 >
-                  Org Panel
+                  Organization Panel
                 </Link>
               )}
             </SignedIn>
