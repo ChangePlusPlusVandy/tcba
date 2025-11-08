@@ -11,9 +11,9 @@ const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 // client uploads file then saves key to DB (like Announcements.attachmentUrls)
 export const getPresignedUploadUrl = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // if (!req.user) {
-    //   return res.status(401).json({ error: 'Not authenticated' });
-    // }
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
     const { fileName, fileType } = req.query;
 
     // Validate fileName
