@@ -3,30 +3,23 @@ import { AuthenticatedRequest } from '../types/index.js';
 import { clerkClient } from '../config/clerk.js';
 import { prisma } from '../config/prisma.js';
 
-const isSuperAdmin = (isSuperAdmin?: boolean) => isSuperAdmin === true;
+const isAdmin = (role?: string) => role === 'ADMIN';
 
 /**
  * @desc    Get all admins
  * @route   GET /api/admins
- * @access  Super Admin only
+ * @access  Admin only
  */
 export const getAllAdmins = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // Check if the current user is a super admin
-    // First, we need to get the admin user from the database using the clerkId
-    const currentAdmin = await (prisma as any).adminUser.findUnique({
-      where: { clerkId: req.user?.clerkId || '' },
-    });
-
-    if (!currentAdmin || !currentAdmin.isSuperAdmin) {
-      return res.status(403).json({ error: 'Access denied. Super admin privileges required.' });
+    if (!isAdmin(req.user?.role)) {
+      return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
     }
 
-    const { email, name, isSuperAdmin, isActive } = req.query;
+    const { email, name, isActive } = req.query;
     const where: any = {
       ...(email && { email: { contains: email as string, mode: 'insensitive' } }),
       ...(name && { name: { contains: name as string, mode: 'insensitive' } }),
-      ...(isSuperAdmin !== undefined && { isSuperAdmin: isSuperAdmin === 'true' }),
       ...(isActive !== undefined && { isActive: isActive === 'true' }),
     };
 
@@ -45,17 +38,12 @@ export const getAllAdmins = async (req: AuthenticatedRequest, res: Response) => 
 /**
  * @desc    Get an admin by id
  * @route   GET /api/admins/:id
- * @access  Super Admin only
+ * @access  Admin only
  */
 export const getAdminById = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // Check if the current user is a super admin
-    const currentAdmin = await (prisma as any).adminUser.findUnique({
-      where: { clerkId: req.user?.clerkId || '' },
-    });
-
-    if (!currentAdmin || !currentAdmin.isSuperAdmin) {
-      return res.status(403).json({ error: 'Access denied. Super admin privileges required.' });
+    if (!isAdmin(req.user?.role)) {
+      return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
     }
 
     const { id } = req.params;
@@ -77,33 +65,23 @@ export const getAdminById = async (req: AuthenticatedRequest, res: Response) => 
 /**
  * @desc    Create a new admin
  * @route   POST /api/admins
- * @access  Super Admin only
+ * @access  Admin only
  */
 export const createAdmin = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // Check if the current user is a super admin
-    const currentAdmin = await (prisma as any).adminUser.findUnique({
-      where: { clerkId: req.user?.clerkId || '' },
-    });
-
-    if (!currentAdmin || !currentAdmin.isSuperAdmin) {
-      return res.status(403).json({ error: 'Access denied. Super admin privileges required.' });
+    if (!isAdmin(req.user?.role)) {
+      return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
     }
 
-    const { email, name, isSuperAdmin, clerkId } = req.body;
-
-    // Validate required fields
+    const { email, name, clerkId } = req.body;
     if (!email || !name || !clerkId) {
       return res.status(400).json({ error: 'Email, name, and clerkId are required' });
     }
-
-    // Create the new admin user
     const newAdmin = await (prisma as any).adminUser.create({
       data: {
         clerkId,
         email,
         name,
-        isSuperAdmin: isSuperAdmin || false,
         isActive: true,
       },
     });
@@ -118,24 +96,20 @@ export const createAdmin = async (req: AuthenticatedRequest, res: Response) => {
 /**
  * @desc    Update an admin
  * @route   PUT /api/admins/:id
- * @access  Super Admin only
+ * @access  Admin only
  */
 export const updateAdmin = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // Check if the current user is a super admin
-    const currentAdmin = await (prisma as any).adminUser.findUnique({
-      where: { clerkId: req.user?.clerkId || '' },
-    });
-    if (!currentAdmin || !currentAdmin.isSuperAdmin) {
-      return res.status(403).json({ error: 'Access denied. Super admin privileges required.' });
+    if (!isAdmin(req.user?.role)) {
+      return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
     }
 
     const { id } = req.params;
-    const { email, name, isSuperAdmin } = req.body;
+    const { email, name } = req.body;
 
     const updatedAdmin = await (prisma as any).adminUser.update({
       where: { id },
-      data: { email, name, isSuperAdmin: isSuperAdmin || false, isActive: true },
+      data: { email, name, isActive: true },
     });
 
     res.json(updatedAdmin);
@@ -148,17 +122,12 @@ export const updateAdmin = async (req: AuthenticatedRequest, res: Response) => {
 /**
  * @desc    Delete an admin
  * @route   DELETE /api/admins/:id
- * @access  Super Admin only
+ * @access  Admin only
  */
 export const deleteAdmin = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // Check if the current user is a super admin
-    const currentAdmin = await (prisma as any).adminUser.findUnique({
-      where: { clerkId: req.user?.clerkId || '' },
-    });
-
-    if (!currentAdmin || !currentAdmin.isSuperAdmin) {
-      return res.status(403).json({ error: 'Access denied. Super admin privileges required.' });
+    if (!isAdmin(req.user?.role)) {
+      return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
     }
 
     const { id } = req.params;
@@ -171,5 +140,90 @@ export const deleteAdmin = async (req: AuthenticatedRequest, res: Response) => {
   } catch (error) {
     console.error('Error deleting admin:', error);
     res.status(500).json({ error: 'Failed to delete admin' });
+  }
+};
+
+/**
+ * @desc    Promote a user or organization to admin
+ * @route   POST /api/admins/promote
+ * @access  Admin only
+ */
+export const promoteToAdmin = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!isAdmin(req.user?.role)) {
+      return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
+    }
+
+    const { email, organizationId } = req.body;
+
+    if (!email && !organizationId) {
+      return res.status(400).json({ error: 'Either email or organizationId is required' });
+    }
+
+    let targetUser;
+    let isOrganization = false;
+
+    if (organizationId) {
+      targetUser = await (prisma as any).organization.findUnique({
+        where: { id: organizationId },
+      });
+      isOrganization = true;
+    } else if (email) {
+      targetUser = await (prisma as any).organization.findUnique({
+        where: { email },
+      });
+
+      if (targetUser) {
+        isOrganization = true;
+      } else {
+        targetUser = await (prisma as any).adminUser.findUnique({
+          where: { email },
+        });
+
+        if (targetUser) {
+          return res.status(400).json({ error: 'User is already an admin' });
+        }
+      }
+    }
+
+    if (!targetUser) {
+      return res.status(404).json({ error: 'User or organization not found' });
+    }
+
+    if (isOrganization) {
+      if (!targetUser.clerkId) {
+        return res.status(400).json({
+          error:
+            'Organization must be approved and have an active account before being promoted to admin',
+        });
+      }
+
+      const newAdmin = await (prisma as any).adminUser.create({
+        data: {
+          clerkId: targetUser.clerkId,
+          email: targetUser.email,
+          name: targetUser.name,
+          isActive: true,
+        },
+      });
+      await clerkClient.users.updateUser(targetUser.clerkId, {
+        publicMetadata: {
+          role: 'ADMIN',
+          adminUserId: newAdmin.id,
+        },
+      });
+      await (prisma as any).organization.delete({
+        where: { id: targetUser.id },
+      });
+
+      return res.json({
+        message: 'Organization successfully promoted to admin',
+        admin: newAdmin,
+      });
+    }
+    return res.status(400).json({ error: 'Unable to promote user' });
+  } catch (error) {
+    console.error('Error promoting user to admin:', error);
+    res.status(500).json({ error: 'Failed to promote user to admin' });
   }
 };

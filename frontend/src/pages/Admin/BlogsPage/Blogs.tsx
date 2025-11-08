@@ -1,15 +1,14 @@
 import AdminSidebar from '../../../components/AdminSidebar';
 
-const AdminDashboard = () => {
+const AdminBlogs = () => {
   return (
     <div className='flex min-h-screen bg-gray-50'>
       <AdminSidebar />
       <div className='flex-1 p-8'>
-        <h1 className='text-3xl font-bold text-gray-800 mb-6'>Dashboard</h1>
-        <p className='text-gray-600'>Welcome to the admin dashboard.</p>
+        <h1 className='text-3xl font-bold text-gray-800 mb-6'>Blogs</h1>
       </div>
     </div>
   );
 };
 
-export default AdminDashboard;
+export default AdminBlogs;

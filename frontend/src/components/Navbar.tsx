@@ -1,9 +1,46 @@
-import { Link } from 'react-router-dom';
-import { SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
+import { Link, useLocation } from 'react-router-dom';
+import { SignedIn, SignedOut, UserButton, useUser } from '@clerk/clerk-react';
 import tncbaLogo from '../assets/tcba.jpg';
-import { IoPersonSharp } from 'react-icons/io5';
+import { IoPersonSharp, IoNotifications } from 'react-icons/io5';
+import { useState, useEffect } from 'react';
+import NotificationsSidebar from './NotificationsSidebar';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 const Navbar = () => {
+  const { user } = useUser();
+  const location = useLocation();
+  const isAdmin = user?.publicMetadata?.role === 'ADMIN';
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (user && !isAdmin) {
+      fetchUnreadCount();
+      const interval = setInterval(fetchUnreadCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user, isAdmin]);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const lastChecked = localStorage.getItem('lastCheckedNotifications');
+      const url = lastChecked
+        ? `${API_BASE_URL}/api/notifications/unread-count?lastChecked=${lastChecked}`
+        : `${API_BASE_URL}/api/notifications/unread-count`;
+      const response = await fetch(url);
+      const data = await response.json();
+      setUnreadCount(data.count);
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+    }
+  };
+
+  const handleNotificationsOpen = () => {
+    setIsNotificationsOpen(true);
+    setUnreadCount(0);
+  };
+
   return (
     <nav className='w-full bg-white border-b border-gray-200'>
       <div className='w-full px-4 sm:px-6 lg:px-8'>
@@ -14,7 +51,7 @@ const Navbar = () => {
           <div className='hidden md:flex items-center space-x-8'>
             <Link
               to='/'
-              className='font-medium transition-colors duration-200'
+              className={`transition-colors duration-200 ${location.pathname === '/' ? 'font-bold' : 'font-medium'}`}
               style={{ color: '#3C3C3C' }}
               onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
               onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
@@ -23,7 +60,7 @@ const Navbar = () => {
             </Link>
             <Link
               to='/about'
-              className='font-medium transition-colors duration-200'
+              className={`transition-colors duration-200 ${location.pathname === '/about' ? 'font-bold' : 'font-medium'}`}
               style={{ color: '#3C3C3C' }}
               onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
               onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
@@ -32,7 +69,7 @@ const Navbar = () => {
             </Link>
             <Link
               to='/announcements'
-              className='font-medium transition-colors duration-200'
+              className={`transition-colors duration-200 ${location.pathname === '/announcements' ? 'font-bold' : 'font-medium'}`}
               style={{ color: '#3C3C3C' }}
               onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
               onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
@@ -41,7 +78,7 @@ const Navbar = () => {
             </Link>
             <Link
               to='/blog'
-              className='font-medium transition-colors duration-200'
+              className={`transition-colors duration-200 ${location.pathname === '/blog' ? 'font-bold' : 'font-medium'}`}
               style={{ color: '#3C3C3C' }}
               onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
               onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
@@ -50,7 +87,7 @@ const Navbar = () => {
             </Link>
             <Link
               to='/register'
-              className='font-medium transition-colors duration-200'
+              className={`transition-colors duration-200 ${location.pathname === '/register' ? 'font-bold' : 'font-medium'}`}
               style={{ color: '#3C3C3C' }}
               onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
               onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
@@ -58,15 +95,27 @@ const Navbar = () => {
               Get Involved
             </Link>
             <SignedIn>
-              <Link
-                to='/dashboard'
-                className='font-medium transition-colors duration-200'
-                style={{ color: '#3C3C3C' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
-              >
-                Dashboard
-              </Link>
+              {isAdmin ? (
+                <Link
+                  to='/admin/dashboard'
+                  className={`transition-colors duration-200 ${location.pathname.startsWith('/admin') ? 'font-bold' : 'font-medium'}`}
+                  style={{ color: '#3C3C3C' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+                  onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+                >
+                  Admin Panel
+                </Link>
+              ) : (
+                <Link
+                  to='/dashboard'
+                  className={`transition-colors duration-200 ${location.pathname === '/dashboard' ? 'font-bold' : 'font-medium'}`}
+                  style={{ color: '#3C3C3C' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
+                  onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+                >
+                  Org Panel
+                </Link>
+              )}
             </SignedIn>
 
             <SignedOut>
@@ -81,6 +130,20 @@ const Navbar = () => {
               </Link>
             </SignedOut>
             <SignedIn>
+              {!isAdmin && (
+                <button
+                  onClick={handleNotificationsOpen}
+                  className='relative p-2 hover:bg-gray-100 rounded-full transition'
+                  aria-label='Notifications'
+                >
+                  <IoNotifications className='text-2xl' style={{ color: '#3C3C3C' }} />
+                  {unreadCount > 0 && (
+                    <span className='absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center'>
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+              )}
               <UserButton
                 appearance={{
                   elements: {
@@ -116,6 +179,11 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+
+      <NotificationsSidebar
+        isOpen={isNotificationsOpen}
+        onClose={() => setIsNotificationsOpen(false)}
+      />
     </nav>
   );
 };

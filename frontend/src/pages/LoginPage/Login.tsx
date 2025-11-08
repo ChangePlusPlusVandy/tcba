@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useSignIn } from '@clerk/clerk-react';
+import { useSignIn, useClerk } from '@clerk/clerk-react';
 
 const LoginPage = () => {
   const { isLoaded, signIn, setActive } = useSignIn();
+  const clerk = useClerk();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -26,7 +27,16 @@ const LoginPage = () => {
 
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId });
-        navigate('/dashboard');
+        await clerk.user?.reload();
+
+        const userRole = clerk.user?.publicMetadata?.role as string | undefined;
+        console.log('User role after login:', userRole);
+
+        if (userRole === 'ADMIN') {
+          navigate('/admin/organizations');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         console.log('Sign in status:', result.status);
         setError('Additional authentication required');
