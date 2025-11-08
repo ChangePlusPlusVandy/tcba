@@ -3,6 +3,7 @@ import cors from 'cors';
 import 'dotenv/config';
 import organizationRoutes from './routes/organizationRoutes';
 import announcementRoutes from './routes/announcementRoutes';
+import tagRoutes from './routes/tagRoutes';
 import emailSubscriptionRoutes from './routes/emailSubscriptionRoutes';
 import adminRoutes from './routes/adminRoutes';
 import surveyRoutes from './routes/surveyRoutes';
@@ -33,6 +34,7 @@ app.get('/api/health', (req, res) => {
 app.use('/', homeRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/announcements', announcementRoutes);
+app.use('/api/tags', tagRoutes);
 app.use('/api/subscriptions', emailSubscriptionRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/surveys', surveyRoutes);

@@ -55,20 +55,43 @@ enum SurveyStatus {
 }
 
 model Announcements {
-  id              String   @id @default(cuid())
-  title           String
-  content         String   @db.Text
-  publishedDate   DateTime?
-  isPublished     Boolean  @default(false)
-  attachmentUrls  String[]
-  tags            String[]
+  id               String    @id @default(cuid())
+  title            String
+  content          String    @db.Text
+  publishedDate    DateTime?
+  isPublished      Boolean   @default(false)
+  attachmentUrls   String[]
   createdByAdminId String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  tags            Tag[]
+  AnnouncementTag AnnouncementTag[]
 
   @@map("announcements")
 }
 
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  announcements   Announcements[]
+  AnnouncementTag AnnouncementTag[]
+
+  @@map("tags")
+}
+
+model AnnouncementTag {
+  announcementId String
+  tagId          String
+
+  announcement Announcements @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  tag          Tag           @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([announcementId, tagId])
+  @@map("_announcement_tags")
 model Alert {
   id                String        @id @default(cuid())
   title             String
@@ -86,108 +109,108 @@ model Alert {
 }
 
 model Organization {
-  id                        String             @id @default(cuid())
-  clerkId                   String             @unique
-  name                      String             @unique
-  email                     String             @unique
-  description               String?
-  website                   String?
-  address                   String?
-  city                      String?
-  state                     String?
-  zipCode                   String?
-  latitude                  Float?
-  longitude                 Float?
-  primaryContactName        String
-  primaryContactEmail       String
-  primaryContactPhone       String
-  secondaryContactName      String?
-  secondaryContactEmail     String?
-  region                    TennesseeRegion?
-  organizationType          String?
-  membershipActive          Boolean            @default(false)
-  membershipDate            DateTime?
-  membershipRenewalDate     DateTime?
-  organizationSize          OrganizationSize?
-  role                      OrganizationRole   @default(MEMBER)
-  status                    OrganizationStatus @default(PENDING)
-  tags                      String[]
+  id                    String             @id @default(cuid())
+  clerkId               String             @unique
+  name                  String             @unique
+  email                 String             @unique
+  description           String?
+  website               String?
+  address               String?
+  city                  String?
+  state                 String?
+  zipCode               String?
+  latitude              Float?
+  longitude             Float?
+  primaryContactName    String
+  primaryContactEmail   String
+  primaryContactPhone   String
+  secondaryContactName  String?
+  secondaryContactEmail String?
+  region                TennesseeRegion?
+  organizationType      String?
+  membershipActive      Boolean            @default(false)
+  membershipDate        DateTime?
+  membershipRenewalDate DateTime?
+  organizationSize      OrganizationSize?
+  role                  OrganizationRole   @default(MEMBER)
+  status                OrganizationStatus @default(PENDING)
+  tags                  String[]
 
-  createdAt                 DateTime           @default(now())
-  updatedAt                 DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  surveyResponses           SurveyResponse[]
+  surveyResponses SurveyResponse[]
 
   @@map("organizations")
 }
 
 model SurveyResponse {
-  id             String       @id @default(cuid())
+  id             String    @id @default(cuid())
   responses      Json?
   submittedDate  DateTime?
   surveyId       String
   organizationId String
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  survey         Survey       @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  survey       Survey       @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([surveyId, organizationId])
   @@map("surveyResponse")
 }
 
 model Survey {
-  id                String             @id @default(cuid())
-  title             String
-  description       String?
-  questions         Json?
-  createdDate       DateTime           @default(now())
-  dueDate           DateTime?
-  isActive          Boolean
-  isPublished       Boolean 
-  status            SurveyStatus       @default(DRAFT)
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  questions   Json?
+  createdDate DateTime     @default(now())
+  dueDate     DateTime?
+  isActive    Boolean
+  isPublished Boolean
+  status      SurveyStatus @default(DRAFT)
 
-  surveyResponses   SurveyResponse[]
+  surveyResponses SurveyResponse[]
 
   @@map("survey")
 }
 
 // Model for admins
 model AdminUser {
-    id              String             @id @default(cuid())
-    clerkId         String             @unique
-    email           String             
-    name            String
-    isSuperAdmin    Boolean            @default(false)
-    isActive        Boolean
+  id           String  @id @default(cuid())
+  clerkId      String  @unique
+  email        String
+  name         String
+  isSuperAdmin Boolean @default(false)
+  isActive     Boolean
 
-    @@map("AdminUser")
+  @@map("AdminUser")
 }
 
 model EmailSubscription {
-  id                  String    @id @default(cuid())
-  email               String    @unique
-  name                String?
-  subscriptionTypes   String[]
-  isActive            Boolean   @default(true)
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  id                String   @id @default(cuid())
+  email             String   @unique
+  name              String?
+  subscriptionTypes String[]
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  @@map("emailSubscriptions")
+  @@map("emailSubscriptions")
 }
 
 model Blog {
-  id                String    @id @default(cuid())
-  title             String
-  content           String    @db.Text
-  author            String
-  tags              String[]
-  featuredImageUrl  String?
-  isPublished       Boolean   @default(false)
-  publishedDate     DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  title            String
+  content          String    @db.Text
+  author           String
+  tags             String[]
+  featuredImageUrl String?
+  isPublished      Boolean   @default(false)
+  publishedDate    DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   @@map("blogs")
 }

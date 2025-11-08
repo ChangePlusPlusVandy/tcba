@@ -19,6 +19,7 @@ import OrgBlogsPage from '../pages/OrganizationView/BlogsPage/Blogs';
 import OrgSettingsPage from '../pages/OrganizationView/SettingsPage/Settings';
 import AdminDashboard from '../pages/Admin/AdminDashboard/AdminDashboard';
 import OrganizationManagement from '../pages/Admin/OrganizationManagementPage/OrganizationManagement';
+import Announcement from '../pages/AnnouncementPage/Announcement';
 import AdminAnnouncements from '../pages/Admin/AnnouncementsPage/Announcements';
 import AdminBlogs from '../pages/Admin/BlogsPage/Blogs';
 import AdminAlerts from '../pages/Admin/AlertsPage/Alerts';
@@ -32,6 +33,7 @@ const AppRoutes = () => {
       <Route path='/home' element={<HomePage />} />
       <Route path='/about' element={<AboutPage />} />
       <Route path='/announcements' element={<AnnouncementsPage />} />
+      <Route path='/announcement/:id' element={<Announcement />} />
       <Route path='/blog' element={<BlogPage />} />
       <Route path='/resources' element={<ResourcesPage />} />
       <Route path='/contact' element={<ContactPage />} />
