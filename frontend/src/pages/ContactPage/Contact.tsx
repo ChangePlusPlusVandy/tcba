@@ -50,12 +50,12 @@ const ContactPage = () => {
   };
 
   return (
-    <div className='w-full p-8 md:px-52'>
+    <div className='mt-8 bg-white px-20 py-16'>
       <div className='mb-12'>
-        <h1 className='font-[Open_Sans] text-[32px] font-bold leading-[100%] text-[#3C3C3C] mb-6'>
+        <h1 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
           Contact Us
         </h1>
-        <p className='font-[Open_Sans] text-[16px] font-normal leading-[150%] text-[#3C3C3C] max-w-2xl'>
+        <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800 max-w-2xl'>
           Have a general inquiry or a request? Use this form to reach out to us. This form is for
           general inquiries and requests from other organizations that do not require membership. If
           you're interested in becoming a member organization, please visit our{' '}
@@ -83,7 +83,7 @@ const ContactPage = () => {
         )}
 
         <div className='flex flex-col space-y-2'>
-          <label className='font-[Open_Sans] text-[16px] font-semibold text-[#3C3C3C]'>
+          <label className='text-base font-semibold text-slate-900'>
             Subject
           </label>
           <input
@@ -94,12 +94,12 @@ const ContactPage = () => {
             required
             disabled={loading}
             placeholder='Enter the subject of your inquiry'
-            className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed font-[Open_Sans]'
+            className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
           />
         </div>
 
         <div className='flex flex-col space-y-2'>
-          <label className='font-[Open_Sans] text-[16px] font-semibold text-[#3C3C3C]'>
+          <label className='text-base font-semibold text-slate-900'>
             Message
           </label>
           <textarea
@@ -110,7 +110,7 @@ const ContactPage = () => {
             disabled={loading}
             rows={8}
             placeholder='Enter your message here...'
-            className='box-border w-full px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] resize-none disabled:bg-gray-100 disabled:cursor-not-allowed font-[Open_Sans]'
+            className='box-border w-full px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] resize-none disabled:bg-gray-100 disabled:cursor-not-allowed'
           />
         </div>
 

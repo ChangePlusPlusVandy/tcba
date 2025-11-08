@@ -175,13 +175,15 @@ const AboutPage = () => {
   const visibleRows = showAllPartners ? coalitionRows : coalitionRows.slice(0, 2);
 
   return (
-    <div className='flex flex-col'>
-      <section className='relative w-screen left-1/2 -translate-x-1/2 overflow-hidden'>
-        <div className='grid grid-cols-1 lg:grid-cols-2 min-h-[400px]'>
-          <div className='bg-white px-8 sm:px-12 lg:px-16 py-16 lg:py-20 flex items-center'>
-            <div className='max-w-xl space-y-6'>
-              <h2 className='text-4xl font-semibold text-slate-900'>The Mission</h2>
-              <p className='text-base text-slate-700 leading-relaxed'>
+    <div className='flex flex-col mt-8'>
+      <section>
+        <div className='grid grid-cols-2 gap-0'>
+          <div className='bg-white px-8 sm:px-12 py-20 flex items-center'>
+            <div className='p-8'>
+              <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
+                The Mission
+              </h2>
+              <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
                 The Tennessee Coalition for Better Aging exists to promote the general welfare of
                 older Tennesseans and their families through partnerships that mobilize resources to
                 educate and advocate for important policies and programs.
@@ -189,13 +191,13 @@ const AboutPage = () => {
             </div>
           </div>
           {/* placeholder image (gray for now!) */}
-          <div className='bg-slate-300 min-h-[400px]' />
+          <div className='bg-slate-300 min-h-[220px] mr-12' />
         </div>
       </section>
 
       {/* current priorities */}
-      <section className='max-w-7xl mx-auto px-6 sm:px-10 py-16 lg:py-20 w-full'>
-        <h2 className='text-4xl font-semibold text-slate-900 text-center mb-12'>
+      <section className='mt-8 bg-white px-20 py-16'>
+        <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 text-center mb-12'>
           Current Priorities
         </h2>
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10'>
@@ -218,10 +220,10 @@ const AboutPage = () => {
       </section>
 
       {/* our coalition */}
-      <section className='max-w-7xl mx-auto px-6 sm:px-10 py-16 lg:py-20 w-full'>
+      <section className='mt-8 bg-white px-20 py-16'>
         <div className='text-center space-y-4 mb-12'>
-          <h2 className='text-4xl font-semibold text-slate-900'>Our Coalition</h2>
-          <p className='text-base text-slate-600 max-w-3xl mx-auto'>
+          <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800'>Our Coalition</h2>
+          <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800 max-w-3xl mx-auto'>
             Representative organizations of older Tennesseans and people with disabilities across
             the State have joined the Coalition in an effort to advocate for the communities they
             serve.
@@ -270,7 +272,7 @@ const AboutPage = () => {
             onClick={() => setShowAllPartners(!showAllPartners)}
             className='text-slate-700 px-6 py-2 rounded-full text-sm font-medium border border-slate-300 hover:bg-slate-50 transition flex items-center gap-2'
           >
-            {showAllPartners ? 'Load less' : 'Load more'}
+            {showAllPartners ? 'View less' : 'View more'}
             <svg
               className={`w-4 h-4 transition-transform ${showAllPartners ? 'rotate-180' : ''}`}
               fill='none'
@@ -289,25 +291,34 @@ const AboutPage = () => {
       </section>
 
       {/* tcba officers */}
-      <section className='max-w-7xl mx-auto px-6 sm:px-10 py-16 w-full'>
-        <h2 className='text-3xl font-semibold text-slate-900 mb-8'>TCBA Officers</h2>
-        <div className='space-y-3 text-slate-700'>
-          <p>
-            <span className='font-semibold'>Co-Chair:</span> James Powers, MD - Vanderbilt Univ.
-            Medical Center
-          </p>
-          <p>
-            <span className='font-semibold'>Co-chair:</span> Grace Sutherland Smith, LMSW - AgeWell
-            Middle TN
-          </p>
-          <p>
-            <span className='font-semibold'>Secretary:</span> Donna DeStefano - TN Disability
-            Coalition
-          </p>
+      <section className='mt-8 bg-white px-20 py-16'>
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12'>
+          <div className='flex items-center'>
+            <div className='space-y-6'>
+              <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800'>TCBA Officers</h2>
+              <div className='space-y-3'>
+                <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
+                  <span className='font-semibold'>Co-Chair:</span> James Powers, MD - Vanderbilt Univ.
+                  Medical Center
+                </p>
+                <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
+                  <span className='font-semibold'>Co-chair:</span> Grace Sutherland Smith, LMSW - AgeWell
+                  Middle TN
+                </p>
+                <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
+                  <span className='font-semibold'>Secretary:</span> Donna DeStefano - TN Disability
+                  Coalition
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* placeholder for map */}
+          <div className='bg-slate-300 min-h-[300px] rounded-lg' />
         </div>
 
         {/* join us */}
-        <div className='mt-12 flex justify-center'>
+        <div className='flex justify-center'>
           <Link
             to='/register'
             className='inline-block text-white px-8 py-3 rounded-full text-sm font-semibold shadow-md hover:opacity-90 transition'

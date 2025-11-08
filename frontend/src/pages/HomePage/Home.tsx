@@ -112,7 +112,7 @@ const HomePage = () => {
         {announcement && !isAnnouncementClosed && (
           <div className='absolute top-1 left-0 right-0 z-10 px-2'>
             <div className='bg-rose-100/90 border border-rose-200/80 shadow-lg rounded-3xl px-6 sm:px-10 py-3 relative backdrop-blur-sm'>
-              <div className='max-w-6xl mx-auto'>
+              <div className='max-w-7xl mx-auto'>
                 <button
                   onClick={handleCloseAnnouncement}
                   className='absolute top-3 right-6 sm:right-10 text-rose-900 hover:text-rose-950 transition z-10'
@@ -157,40 +157,36 @@ const HomePage = () => {
           </div>
         )}
 
-        <div className='relative max-w-6xl mx-auto px-6 sm:px-10 pt-24 pb-24 lg:pt-32 lg:pb-28'>
-          <div className='max-w-2xl text-white space-y-6'>
-            <h1 className='text-3xl sm:text-4xl lg:text-5xl font-semibold leading-tight max-w-[70%]'>
-              Tennessee Coalition for Better Aging
-            </h1>
-            <p className='text-base sm:text-lg text-white/90 leading-relaxed max-w-[80%]'>
-              The Tennessee Coalition for Better Aging (TCBA) exists to promote the general welfare
-              of older Tennesseans and their families; through partnerships that mobilize resources
-              to educate and advocate for important policies and programs.
-            </p>
-            <Link
-              to='/register'
-              className='bg-[#cc4444] text-white px-6 py-3 rounded-[18px] text-sm sm:text-base font-semibold shadow-lg hover:bg-[#b53a3a] transition inline-block'
-            >
-              Stay Connected
-            </Link>
-          </div>
+        <div className='relative max-w-7xl mx-auto pt-24 pb-24 lg:pt-32 lg:pb-28'>
+          <h1 className='text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-white max-w-2xl'>
+            Tennessee Coalition for<br />Better Aging
+          </h1>
+          <p className='text-base sm:text-lg text-white/90 leading-relaxed max-w-2xl mt-6'>
+            The Tennessee Coalition for Better Aging (TCBA) exists to promote the general welfare
+            of older Tennesseans and their families; through partnerships that mobilize resources
+            to educate and advocate for important policies and programs.
+          </p>
+          <Link
+            to='/register'
+            className='bg-[#cc4444] text-white px-6 py-3 rounded-[18px] text-sm sm:text-base font-semibold shadow-lg hover:bg-[#b53a3a] transition inline-block mt-6'
+          >
+            Stay Connected
+          </Link>
         </div>
       </section>
 
       <section className='relative w-screen left-1/2 -translate-x-1/2 -mt-8'>
         <div className='grid grid-cols-1 sm:grid-cols-2 grid-rows-4 sm:grid-rows-2 gap-0'>
           <div className='bg-white border border-transparent shadow-lg px-8 sm:px-12 py-12 space-y-6 min-h-[220px] flex flex-col justify-center'>
-            <div className='space-y-3'>
-              <h2 className='text-3xl font-semibold text-slate-900 mb-6'>
-                Working Towards a Better Tomorrow
-              </h2>
-              <p className='text-base text-slate-600 leading-relaxed max-w-[80%]'>
-                Given that older adults are the fastest growing segment of Tennessee's population
-                and the most significant increase will be among those 85 and older, and given that
-                family caregivers provide over 80% of long-term care, we are committed to advocating
-                for and with older adults and their families.
-              </p>
-            </div>
+            <h2 className='text-3xl font-bold text-slate-900'>
+              Working Towards a Better Tomorrow
+            </h2>
+            <p className='text-base text-slate-600 leading-relaxed max-w-[80%]'>
+              Given that older adults are the fastest growing segment of Tennessee's population
+              and the most significant increase will be among those 85 and older, and given that
+              family caregivers provide over 80% of long-term care, we are committed to advocating
+              for and with older adults and their families.
+            </p>
             <p className='text-base text-slate-600 leading-relaxed max-w-[80%]'>
               The Coalition for Better Aging takes collective action to ensure that older adults can
               age with dignity and family caregivers have the support they need. The COVID-19
@@ -209,7 +205,7 @@ const HomePage = () => {
 
       <section className='max-w-6xl mx-auto px-4 sm:px-6 space-y-12 text-center'>
         <div className='space-y-5'>
-          <h2 className='text-3xl font-semibold text-slate-900'>How We Work</h2>
+          <h2 className='text-3xl font-bold text-slate-900'>How We Work</h2>
           <p className='text-lg text-slate-600 italic max-w-3xl mx-auto leading-relaxed'>
             "We have to do the work of imagining what could be possible, and then do our part to
             make it real" - Tallu Quinn, Former Director Nashville Food Project
@@ -225,7 +221,7 @@ const HomePage = () => {
               {item.title === 'Advocacy' && <FaBullhorn className='w-14 h-14 text-slate-700' />}
               {item.title === 'Outreach' && <FaPeopleArrows className='w-14 h-14 text-slate-700' />}
               <div className='space-y-3 px-2'>
-                <h3 className='text-xl font-semibold text-slate-900'>{item.title}</h3>
+                <h3 className='text-xl font-bold text-slate-900'>{item.title}</h3>
                 <p className='text-sm text-slate-600 leading-relaxed'>{item.description}</p>
               </div>
             </div>
@@ -235,7 +231,7 @@ const HomePage = () => {
 
       <section className='max-w-6xl mx-auto px-4 sm:px-6 space-y-12 text-center'>
         <div className='space-y-3'>
-          <h2 className='text-3xl font-semibold text-slate-900'>Why We Work Together</h2>
+          <h2 className='text-3xl font-bold text-slate-900'>Why We Work Together</h2>
           <p className='text-lg text-slate-600 italic max-w-3xl mx-auto leading-relaxed'>
             Our voices are stronger together.
           </p>
@@ -256,7 +252,7 @@ const HomePage = () => {
                 <MdFamilyRestroom className='w-14 h-14 text-slate-700' />
               )}
               <div className='space-y-3 px-2'>
-                <h3 className='text-xl font-semibold text-slate-900'>{item.title}</h3>
+                <h3 className='text-xl font-bold text-slate-900'>{item.title}</h3>
                 <p className='text-sm text-slate-600 leading-relaxed'>{item.description}</p>
               </div>
             </div>

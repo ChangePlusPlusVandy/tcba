@@ -147,10 +147,10 @@ const AnnouncementsPage = () => {
         <div className='grid grid-cols-2 gap-0'>
           <div className='bg-white px-8 sm:px-12 py-20 flex items-center'>
             <div className='p-8'>
-              <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-[#3C3C3C] mb-6'>
+              <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
                 Announcements
               </h2>
-              <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-[#3C3C3C]'>
+              <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
                 The Tennessee Coalition for Better Aging exists to promote the general welfare of
                 older Tennesseans and their families through partnerships that mobilize resources to
                 educate and advocate for important policies and programs.
@@ -162,7 +162,7 @@ const AnnouncementsPage = () => {
       </section>
       <section className='mt-8'>
         <div className='bg-white px-20 py-4'>
-          <p className='font-[Open_Sans] text-[18px] font-bold text-[#3C3C3C] mb-4'>
+          <p className='font-[Open_Sans] text-[18px] font-bold text-gray-800 mb-4'>
             {filterAnnouncements.length}{' '}
             {filterAnnouncements.length === 1 ? 'Announcement' : 'Announcements'}
           </p>

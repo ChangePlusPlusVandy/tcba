@@ -140,10 +140,10 @@ const BlogsPage = () => {
         <div className='grid grid-cols-2 gap-0'>
           <div className='bg-white px-8 sm:px-12 py-20 flex items-center'>
             <div className='p-8'>
-              <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-[#3C3C3C] mb-6'>
+              <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
                 Blogs
               </h2>
-              <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-[#3C3C3C]'>
+              <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
                 Read the latest insights, stories, and updates from the Tennessee Coalition for
                 Better Aging. Our blog features expert perspectives on senior wellness, policy
                 updates, and community highlights.
@@ -156,7 +156,7 @@ const BlogsPage = () => {
 
       <section className='mt-8'>
         <div className='bg-white px-20 py-4'>
-          <p className='font-[Open_Sans] text-[18px] font-bold text-[#3C3C3C] mb-4'>
+          <p className='font-[Open_Sans] text-[18px] font-bold text-gray-800 mb-4'>
             {filteredBlogs.length} {filteredBlogs.length === 1 ? 'Blog' : 'Blogs'}
           </p>
           <div className='flex items-center justify-between'>

@@ -2,7 +2,7 @@ import { type FormEvent, useState } from 'react';
 
 const SignupPage = () => {
   return (
-    <div className='min-h-screen flex'>
+    <div>
       <SignupForm />
     </div>
   );
@@ -21,12 +21,12 @@ const SignupForm = () => {
 
   if (isSubmitted) {
     return (
-      <div className='w-full flex flex-col items-center justify-center text-center min-h-screen p-8 md:px-52'>
+      <div className='w-full flex flex-col items-center justify-center text-center min-h-screen mt-8 bg-white px-20 py-16'>
         <div className='bg-gray-300 h-40 w-40 flex items-center justify-center mb-6'>
           <span className='text-gray-500'></span>
         </div>
-        <h1 className='text-3xl text-gray-700 mb-6'>Form submitted!</h1>
-        <p className='text-center text-gray-700 max-w-2xl mb-6'>
+        <h1 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>Form submitted!</h1>
+        <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800 text-center max-w-2xl mb-6'>
           The Tennessee Coalition for Better Aging exists to promote the general welfare of older
           Tennesseans and their families through partnerships that mobilize resources to educate and
           advocate for important policies and programs.
@@ -36,14 +36,14 @@ const SignupForm = () => {
   }
 
   return (
-    <div className='w-full p-8 md:px-52 '>
+    <div className='mt-8 bg-white px-20 py-16'>
       <div className='grid md:grid-cols-2 gap-8 mb-12'>
         <div>
-          <h1 className='text-3xl font-bold text-gray-700 mb-6  leading-10'>
+          <h1 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
             Subscribe to Email Notifications
           </h1>
 
-          <p className='text-gray-700 mb-6'>
+          <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800 mb-6'>
             Please fill out this form to be notified of our latest posts and service updates. The
             Tennessee Coalition for Better Aging exists to promote the general welfare of older
             Tennesseans and their families through partnerships that mobilize resources to educate
@@ -53,25 +53,25 @@ const SignupForm = () => {
       </div>
 
       <form onSubmit={handleSubmit} className='flex flex-col space-y-8 w-full mx-auto'>
-        <label className='mb-2'>Name</label>
+        <label className='text-base font-semibold text-gray-800 mb-2'>Name</label>
         <div className='flex gap-4'>
           <input
             type='text'
             required
             placeholder='First name'
-            className='box-border w-xl h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px]'
+            className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px]'
           />
 
           <input
             type='text'
             required
             placeholder='Last name'
-            className='box-border w-xl h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px]'
+            className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px]'
           />
         </div>
 
         <div className='flex flex-col space-y-2'>
-          <label>Email Address</label>
+          <label className='text-base font-semibold text-gray-800'>Email Address</label>
           <input
             type='email'
             required
@@ -81,7 +81,7 @@ const SignupForm = () => {
         </div>
 
         <div className='flex flex-col space-y-4'>
-          <label className='font-semibold'>Subscribe to:</label>
+          <label className='text-base font-semibold text-gray-800'>Subscribe to:</label>
           <div className='flex items-center space-x-3'>
             <input
               type='checkbox'
