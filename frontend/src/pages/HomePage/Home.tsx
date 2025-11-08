@@ -159,12 +159,14 @@ const HomePage = () => {
 
         <div className='relative max-w-7xl mx-auto pt-24 pb-24 lg:pt-32 lg:pb-28'>
           <h1 className='text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-white max-w-2xl'>
-            Tennessee Coalition for<br />Better Aging
+            Tennessee Coalition for
+            <br />
+            Better Aging
           </h1>
           <p className='text-base sm:text-lg text-white/90 leading-relaxed max-w-2xl mt-6'>
-            The Tennessee Coalition for Better Aging (TCBA) exists to promote the general welfare
-            of older Tennesseans and their families; through partnerships that mobilize resources
-            to educate and advocate for important policies and programs.
+            The Tennessee Coalition for Better Aging (TCBA) exists to promote the general welfare of
+            older Tennesseans and their families; through partnerships that mobilize resources to
+            educate and advocate for important policies and programs.
           </p>
           <Link
             to='/register'
@@ -178,14 +180,12 @@ const HomePage = () => {
       <section className='relative w-screen left-1/2 -translate-x-1/2 -mt-8'>
         <div className='grid grid-cols-1 sm:grid-cols-2 grid-rows-4 sm:grid-rows-2 gap-0'>
           <div className='bg-white border border-transparent shadow-lg px-8 sm:px-12 py-12 space-y-6 min-h-[220px] flex flex-col justify-center'>
-            <h2 className='text-3xl font-bold text-slate-900'>
-              Working Towards a Better Tomorrow
-            </h2>
+            <h2 className='text-3xl font-bold text-slate-900'>Working Towards a Better Tomorrow</h2>
             <p className='text-base text-slate-600 leading-relaxed max-w-[80%]'>
-              Given that older adults are the fastest growing segment of Tennessee's population
-              and the most significant increase will be among those 85 and older, and given that
-              family caregivers provide over 80% of long-term care, we are committed to advocating
-              for and with older adults and their families.
+              Given that older adults are the fastest growing segment of Tennessee's population and
+              the most significant increase will be among those 85 and older, and given that family
+              caregivers provide over 80% of long-term care, we are committed to advocating for and
+              with older adults and their families.
             </p>
             <p className='text-base text-slate-600 leading-relaxed max-w-[80%]'>
               The Coalition for Better Aging takes collective action to ensure that older adults can

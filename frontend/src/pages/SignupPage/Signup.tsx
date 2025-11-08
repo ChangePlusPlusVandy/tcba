@@ -25,7 +25,9 @@ const SignupForm = () => {
         <div className='bg-gray-300 h-40 w-40 flex items-center justify-center mb-6'>
           <span className='text-gray-500'></span>
         </div>
-        <h1 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>Form submitted!</h1>
+        <h1 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
+          Form submitted!
+        </h1>
         <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800 text-center max-w-2xl mb-6'>
           The Tennessee Coalition for Better Aging exists to promote the general welfare of older
           Tennesseans and their families through partnerships that mobilize resources to educate and

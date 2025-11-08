@@ -222,7 +222,9 @@ const AboutPage = () => {
       {/* our coalition */}
       <section className='mt-8 bg-white px-20 py-16'>
         <div className='text-center space-y-4 mb-12'>
-          <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800'>Our Coalition</h2>
+          <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800'>
+            Our Coalition
+          </h2>
           <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800 max-w-3xl mx-auto'>
             Representative organizations of older Tennesseans and people with disabilities across
             the State have joined the Coalition in an effort to advocate for the communities they
@@ -295,15 +297,17 @@ const AboutPage = () => {
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12'>
           <div className='flex items-center'>
             <div className='space-y-6'>
-              <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800'>TCBA Officers</h2>
+              <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800'>
+                TCBA Officers
+              </h2>
               <div className='space-y-3'>
                 <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
-                  <span className='font-semibold'>Co-Chair:</span> James Powers, MD - Vanderbilt Univ.
-                  Medical Center
+                  <span className='font-semibold'>Co-Chair:</span> James Powers, MD - Vanderbilt
+                  Univ. Medical Center
                 </p>
                 <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
-                  <span className='font-semibold'>Co-chair:</span> Grace Sutherland Smith, LMSW - AgeWell
-                  Middle TN
+                  <span className='font-semibold'>Co-chair:</span> Grace Sutherland Smith, LMSW -
+                  AgeWell Middle TN
                 </p>
                 <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
                   <span className='font-semibold'>Secretary:</span> Donna DeStefano - TN Disability

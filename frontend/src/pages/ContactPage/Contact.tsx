@@ -83,9 +83,7 @@ const ContactPage = () => {
         )}
 
         <div className='flex flex-col space-y-2'>
-          <label className='text-base font-semibold text-slate-900'>
-            Subject
-          </label>
+          <label className='text-base font-semibold text-slate-900'>Subject</label>
           <input
             type='text'
             name='title'
@@ -99,9 +97,7 @@ const ContactPage = () => {
         </div>
 
         <div className='flex flex-col space-y-2'>
-          <label className='text-base font-semibold text-slate-900'>
-            Message
-          </label>
+          <label className='text-base font-semibold text-slate-900'>Message</label>
           <textarea
             name='message'
             value={formData.message}
