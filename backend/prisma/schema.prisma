@@ -1,6 +1,3 @@
-// Prisma schema for TCBA coalition management platform
-// Run npx prisma generate after changes to update types and regenerate client and model
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,28 +8,205 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// Organization permission levels for coalition platform
+model Announcements {
+  id               String            @id @default(cuid())
+  slug             String            @unique
+  title            String
+  content          String            @db.Text
+  publishedDate    DateTime?
+  isPublished      Boolean           @default(false)
+  attachmentUrls   String[]
+  createdByAdminId String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  AnnouncementTag  AnnouncementTag[]
+  tags             Tag[]             @relation("AnnouncementsToTag")
+
+  @@map("announcements")
+}
+
+model Tag {
+  id              String            @id @default(cuid())
+  name            String            @unique
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  AnnouncementTag AnnouncementTag[]
+  BlogTag         BlogTag[]
+  announcements   Announcements[]   @relation("AnnouncementsToTag")
+  blogs           Blog[]            @relation("BlogsToTag")
+
+  @@map("tags")
+}
+
+model AnnouncementTag {
+  announcementId String
+  tagId          String
+  announcement   Announcements @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  tag            Tag           @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([announcementId, tagId])
+  @@map("_announcement_tags")
+}
+
+model BlogTag {
+  blogId String
+  tagId  String
+  blog   Blog   @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([blogId, tagId])
+  @@map("_blog_tags")
+}
+
+model Alert {
+  id               String        @id @default(cuid())
+  title            String
+  content          String
+  priority         AlertPriority @default(MEDIUM)
+  publishedDate    DateTime?
+  isPublished      Boolean       @default(false)
+  attachmentUrls   String[]
+  tags             String[]
+  createdByAdminId String
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@map("alerts")
+}
+
+model Organization {
+  id                    String             @id @default(cuid())
+  clerkId               String             @unique
+  name                  String             @unique
+  email                 String             @unique
+  description           String?
+  website               String?
+  address               String?
+  city                  String?
+  state                 String?
+  zipCode               String?
+  latitude              Float?
+  longitude             Float?
+  primaryContactName    String
+  primaryContactEmail   String
+  primaryContactPhone   String
+  secondaryContactName  String?
+  secondaryContactEmail String?
+  region                TennesseeRegion?
+  organizationType      String?
+  membershipActive      Boolean            @default(false)
+  membershipDate        DateTime?
+  membershipRenewalDate DateTime?
+  organizationSize      OrganizationSize?
+  role                  OrganizationRole   @default(MEMBER)
+  status                OrganizationStatus @default(PENDING)
+  tags                  String[]
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  surveyResponses       SurveyResponse[]
+
+  @@map("organizations")
+}
+
+model SurveyResponse {
+  id             String       @id @default(cuid())
+  responses      Json?
+  submittedDate  DateTime?
+  surveyId       String
+  organizationId String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  survey         Survey       @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@unique([surveyId, organizationId])
+  @@map("surveyResponse")
+}
+
+model Survey {
+  id              String           @id @default(cuid())
+  title           String
+  description     String?
+  questions       Json?
+  createdDate     DateTime         @default(now())
+  dueDate         DateTime?
+  isActive        Boolean
+  isPublished     Boolean
+  status          SurveyStatus     @default(DRAFT)
+  surveyResponses SurveyResponse[]
+
+  @@map("survey")
+}
+
+model AdminUser {
+  id           String  @id @default(cuid())
+  clerkId      String  @unique
+  email        String
+  name         String
+  isSuperAdmin Boolean @default(false)
+  isActive     Boolean
+
+  @@map("AdminUser")
+}
+
+model EmailSubscription {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  name              String?
+  subscriptionTypes String[]
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("emailSubscriptions")
+}
+
+model Blog {
+  id               String    @id @default(cuid())
+  slug             String    @unique
+  title            String
+  content          String
+  author           String
+  featuredImageUrl String?
+  isPublished      Boolean   @default(false)
+  publishedDate    DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  BlogTag          BlogTag[]
+  tags             Tag[]     @relation("BlogsToTag")
+
+  @@map("blogs")
+}
+
+model Notification {
+  id            String           @id @default(cuid())
+  type          NotificationType
+  title         String
+  contentId     String
+  createdAt     DateTime         @default(now())
+  lastCheckedAt DateTime?
+
+  @@map("notifications")
+}
+
 enum OrganizationRole {
-  ADMIN // Full system access (TCBA staff)
-  MEMBER // Standard nonprofit member
+  ADMIN
+  MEMBER
 }
 
-// Organization account states
 enum OrganizationStatus {
-  ACTIVE // Can use platform
-  INACTIVE // Temporarily disabled
-  PENDING // Waiting for setup completion
-  SUSPENDED // Admin blocked access
+  ACTIVE
+  INACTIVE
+  PENDING
+  SUSPENDED
 }
 
-// Tennessee regions for member organizations
 enum TennesseeRegion {
   EAST
   MIDDLE
   WEST
 }
 
-// Organization size categories for dues calculation
 enum OrganizationSize {
   SMALL
   MEDIUM
@@ -40,7 +214,6 @@ enum OrganizationSize {
   EXTRA_LARGE
 }
 
-// Alert priority levels
 enum AlertPriority {
   URGENT
   LOW
@@ -54,140 +227,9 @@ enum SurveyStatus {
   ARCHIVED
 }
 
-model Announcements {
-  id              String   @id @default(cuid())
-  title           String
-  content         String   @db.Text
-  publishedDate   DateTime?
-  isPublished     Boolean  @default(false)
-  attachmentUrls  String[]
-  tags            String[]
-  createdByAdminId String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  @@map("announcements")
-}
-
-model Alert {
-  id                String        @id @default(cuid())
-  title             String
-  content           String
-  priority          AlertPriority @default(MEDIUM)
-  publishedDate     DateTime?
-  isPublished       Boolean       @default(false)
-  attachmentUrls    String[]
-  tags              String[]
-  createdByAdminId  String
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-
-  @@map("alerts")
-}
-
-model Organization {
-  id                        String             @id @default(cuid())
-  clerkId                   String             @unique
-  name                      String             @unique
-  email                     String             @unique
-  description               String?
-  website                   String?
-  address                   String?
-  city                      String?
-  state                     String?
-  zipCode                   String?
-  latitude                  Float?
-  longitude                 Float?
-  primaryContactName        String
-  primaryContactEmail       String
-  primaryContactPhone       String
-  secondaryContactName      String?
-  secondaryContactEmail     String?
-  region                    TennesseeRegion?
-  organizationType          String?
-  membershipActive          Boolean            @default(false)
-  membershipDate            DateTime?
-  membershipRenewalDate     DateTime?
-  organizationSize          OrganizationSize?
-  role                      OrganizationRole   @default(MEMBER)
-  status                    OrganizationStatus @default(PENDING)
-  tags                      String[]
-
-  createdAt                 DateTime           @default(now())
-  updatedAt                 DateTime           @updatedAt
-
-  surveyResponses           SurveyResponse[]
-
-  @@map("organizations")
-}
-
-model SurveyResponse {
-  id             String       @id @default(cuid())
-  responses      Json?
-  submittedDate  DateTime?
-  surveyId       String
-  organizationId String
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-
-  survey         Survey       @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@unique([surveyId, organizationId])
-  @@map("surveyResponse")
-}
-
-model Survey {
-  id                String             @id @default(cuid())
-  title             String
-  description       String?
-  questions         Json?
-  createdDate       DateTime           @default(now())
-  dueDate           DateTime?
-  isActive          Boolean
-  isPublished       Boolean 
-  status            SurveyStatus       @default(DRAFT)
-
-  surveyResponses   SurveyResponse[]
-
-  @@map("survey")
-}
-
-// Model for admins
-model AdminUser {
-    id              String             @id @default(cuid())
-    clerkId         String             @unique
-    email           String             
-    name            String
-    isSuperAdmin    Boolean            @default(false)
-    isActive        Boolean
-
-    @@map("AdminUser")
-}
-
-model EmailSubscription {
-  id                  String    @id @default(cuid())
-  email               String    @unique
-  name                String?
-  subscriptionTypes   String[]
-  isActive            Boolean   @default(true)
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-
-  @@map("emailSubscriptions")
-}
-
-model Blog {
-  id                String    @id @default(cuid())
-  title             String
-  content           String    @db.Text
-  author            String
-  tags              String[]
-  featuredImageUrl  String?
-  isPublished       Boolean   @default(false)
-  publishedDate     DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  @@map("blogs")
+enum NotificationType {
+  BLOG
+  ANNOUNCEMENT
+  ALERT
+  SURVEY
 }

@@ -2,8 +2,17 @@ import { Response } from 'express';
 import { OrganizationRole } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import { prisma } from '../config/prisma.js';
+import { createNotification } from './inAppNotificationController.js';
 
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
+
+const generateSlug = async (title: string, id: string): Promise<string> => {
+  const baseSlug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return `${baseSlug}-${id.substring(0, 8)}`;
+};
 
 export const getAllBlogs = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -22,7 +31,12 @@ export const getAllBlogs = async (req: AuthenticatedRequest, res: Response) => {
       if (endDate) where.publishedDate.lte = new Date(endDate as string);
     }
     if (tags) {
-      where.tags = { hasSome: (tags as string).split(',').map(t => t.trim()) };
+      const tagNames = (tags as string).split(',').map(t => t.trim());
+      where.tags = {
+        some: {
+          name: { in: tagNames },
+        },
+      };
     }
     if (search) {
       where.OR = [
@@ -34,6 +48,7 @@ export const getAllBlogs = async (req: AuthenticatedRequest, res: Response) => {
 
     const blogs = await prisma.blog.findMany({
       where,
+      include: { tags: true },
       orderBy: { [(sortBy as string) || 'publishedDate']: (sortOrder as string) || 'desc' },
       take: limit ? parseInt(limit as string) : undefined,
       skip: offset ? parseInt(offset as string) : undefined,
@@ -52,7 +67,10 @@ export const getBlogById = async (req: AuthenticatedRequest, res: Response) => {
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
-    const blog = await prisma.blog.findUnique({ where: { id } });
+    const blog = await prisma.blog.findUnique({
+      where: { id },
+      include: { tags: true },
+    });
     if (!blog) return res.status(404).json({ error: 'Blog not found' });
 
     res.json(blog);
@@ -62,16 +80,37 @@ export const getBlogById = async (req: AuthenticatedRequest, res: Response) => {
   }
 };
 
+export const getBlogBySlug = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { slug } = req.params;
+    const blog = await prisma.blog.findUnique({
+      where: { slug },
+      include: { tags: true },
+    });
+
+    if (!blog) return res.status(404).json({ error: 'Blog not found' });
+
+    res.json(blog);
+  } catch (error) {
+    console.error('Error fetching blog by slug:', error);
+    res.status(500).json({ error: 'Failed to fetch blog' });
+  }
+};
+
 export const getBlogTags = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const blogs = await prisma.blog.findMany({
-      where: { isPublished: true },
-      select: { tags: true },
+    const tags = await prisma.tag.findMany({
+      where: {
+        blogs: {
+          some: {
+            isPublished: true,
+          },
+        },
+      },
+      orderBy: { name: 'asc' },
     });
-    const allTags = blogs.flatMap(b => b.tags);
-    const uniqueTags = [...new Set(allTags)].sort();
 
-    res.json(uniqueTags);
+    res.json(tags);
   } catch (error) {
     console.error('Error fetching blog tags:', error);
     res.status(500).json({ error: 'Failed to fetch blog tags' });
@@ -89,16 +128,34 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(400).json({ error: 'title, content, and author are required' });
     }
 
-    const blog = await prisma.blog.create({
+    // Create blog with temporary slug
+    const tempBlog = await prisma.blog.create({
       data: {
         title,
         content,
         author,
-        tags: tags || [],
+        slug: 'temp',
         featuredImageUrl: featuredImageUrl || null,
         isPublished: false,
         publishedDate: null,
       },
+    });
+
+    // Generate unique slug using the ID
+    const slug = await generateSlug(title, tempBlog.id);
+
+    // Prepare tag connection data
+    const tagIds = tags || [];
+    const tagConnections = tagIds.map((id: string) => ({ id }));
+
+    // Update with the proper slug and tags
+    const blog = await prisma.blog.update({
+      where: { id: tempBlog.id },
+      data: {
+        slug,
+        tags: { connect: tagConnections },
+      },
+      include: { tags: true },
     });
 
     res.status(201).json(blog);
@@ -114,20 +171,38 @@ export const updateBlog = async (req: AuthenticatedRequest, res: Response) => {
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
-    const blogToUpdate = await prisma.blog.findUnique({ where: { id } });
+    const blogToUpdate = await prisma.blog.findUnique({
+      where: { id },
+      include: { tags: true },
+    });
     if (!blogToUpdate) return res.status(404).json({ error: 'Blog not found' });
 
     const { title, content, author, tags, featuredImageUrl } = req.body;
 
+    const updateData: any = {
+      ...(title && { title }),
+      ...(content && { content }),
+      ...(author && { author }),
+      ...(featuredImageUrl !== undefined && { featuredImageUrl }),
+    };
+
+    // Handle tags update if provided
+    if (tags) {
+      const currentTagIds = blogToUpdate.tags.map(t => t.id);
+      const newTagIds = tags;
+      const toDisconnect = currentTagIds.filter((id: string) => !newTagIds.includes(id));
+      const toConnect = newTagIds.filter((id: string) => !currentTagIds.includes(id));
+
+      updateData.tags = {
+        disconnect: toDisconnect.map((id: string) => ({ id })),
+        connect: toConnect.map((id: string) => ({ id })),
+      };
+    }
+
     const updatedBlog = await prisma.blog.update({
       where: { id },
-      data: {
-        ...(title && { title }),
-        ...(content && { content }),
-        ...(author && { author }),
-        ...(tags && { tags }),
-        ...(featuredImageUrl !== undefined && { featuredImageUrl }),
-      },
+      data: updateData,
+      include: { tags: true },
     });
 
     res.json(updatedBlog);
@@ -170,6 +245,12 @@ export const publishBlog = async (req: AuthenticatedRequest, res: Response) => {
         publishedDate: new Date(),
       },
     });
+
+    try {
+      await createNotification('BLOG', publishedBlog.title, publishedBlog.slug || publishedBlog.id);
+    } catch (notifError) {
+      console.error('Failed to create notification:', notifError);
+    }
 
     res.json(publishedBlog);
   } catch (error) {

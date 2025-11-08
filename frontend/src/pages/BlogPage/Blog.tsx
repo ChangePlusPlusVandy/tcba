@@ -1,4 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { IoArrowBack } from 'react-icons/io5';
+
+type Tag = {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
 type Blog = {
   id: string;
@@ -15,26 +25,17 @@ type Blog = {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
-const filterOptions = [
-  { id: '24h', label: 'Last 24 hours', maxHours: 24 },
-  { id: 'week', label: 'Last week', maxHours: 24 * 7 },
-  { id: 'month', label: 'Last month', maxHours: 24 * 30 },
-  { id: 'year', label: 'Last year', maxHours: 24 * 365 },
-];
-
-const formatRelativeTime = (date: Date) => {
-  const diffMs = Date.now() - date.getTime();
-  const diffMinutes = Math.floor(diffMs / (1000 * 60));
-  if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
-  const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 30) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
-  const diffMonths = Math.floor(diffDays / 30);
-  if (diffMonths < 12) return `${diffMonths} month${diffMonths === 1 ? '' : 's'} ago`;
-  const diffYears = Math.floor(diffMonths / 12);
-  return `${diffYears} year${diffYears === 1 ? '' : 's'} ago`;
-};
+  useEffect(() => {
+    const fetchBlog = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8000/api/blogs/slug/${slug}`);
+        setBlog(response.data);
+      } catch (error) {
+        console.error('Error fetching blog:', error);
+        setBlog(null);
+      }
+      setLoading(false);
+    };
 
 const getPublishedAt = (blog: Blog) =>
   blog.publishedDate ? new Date(blog.publishedDate) : new Date(blog.createdAt);
@@ -78,15 +79,15 @@ const BlogPage = () => {
     });
   }, [blogs, activeFilter]);
 
-  useEffect(() => {
-    setVisibleCount(3);
-  }, [activeFilter]);
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
+    }
 
-  const loadMore = () => {
-    setVisibleCount(prev => Math.min(prev + 3, filteredBlogs.length));
+    if (diffInMinutes < 1440) {
+      return `${Math.floor(diffInMinutes / 60)} ${Math.floor(diffInMinutes / 60) === 1 ? 'hour' : 'hours'} ago`;
+    }
+    return `${Math.floor(diffInMinutes / 1440)} ${Math.floor(diffInMinutes / 1440) === 1 ? 'day' : 'days'} ago`;
   };
-
-  const visibleBlogs = filteredBlogs.slice(0, visibleCount);
 
   return (
     <div className='bg-slate-50 min-h-screen'>
@@ -223,32 +224,12 @@ const BlogPage = () => {
               </article>
             ))}
         </div>
-
-        {visibleCount < filteredBlogs.length && !loading && !error && (
-          <div className='flex justify-center pt-4'>
-            <button
-              onClick={loadMore}
-              className='px-6 py-3 rounded-full border border-slate-300 text-sm font-semibold text-slate-600 bg-white hover:border-slate-400 transition flex items-center gap-2'
-            >
-              Load more
-              <svg
-                xmlns='http://www.w3.org/2000/svg'
-                className='h-4 w-4'
-                viewBox='0 0 24 24'
-                fill='none'
-                stroke='currentColor'
-                strokeWidth='2'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              >
-                <polyline points='6 9 12 15 18 9' />
-              </svg>
-            </button>
-          </div>
-        )}
-      </section>
+        <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-[#3C3C3C] py-8'>
+          {blog.content}
+        </p>
+      </div>
     </div>
   );
 };
 
-export default BlogPage;
+export default Blog;

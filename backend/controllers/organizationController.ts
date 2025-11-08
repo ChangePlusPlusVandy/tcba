@@ -8,10 +8,9 @@ import {
 import { AuthenticatedRequest } from '../types/index.js';
 import { clerkClient } from '../config/clerk.js';
 import { prisma } from '../config/prisma.js';
+import { sendWelcomeEmail } from './notificationController.js';
 
-// Helper: Check if user is admin
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
-// Helper: Resolve target ID (profile or explicit ID)
 const resolveTargetId = (id: string, userId?: string) => (id === 'profile' ? userId : id);
 
 /**
@@ -66,7 +65,7 @@ export const getAllOrganizations = async (req: AuthenticatedRequest, res: Respon
 };
 
 /**
- * @desc    Register new organization
+ * @desc    Register new organization (creates PENDING org, no Clerk user yet)
  * @route   POST /api/organizations/register
  * @access  Public
  */
@@ -74,13 +73,11 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
   try {
     const {
       email,
-      password,
       name,
       description,
       website,
       address,
       city,
-      state,
       zipCode,
       latitude,
       longitude,
@@ -92,66 +89,66 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
       region,
       organizationType,
       organizationSize,
-      membershipDate,
-      membershipRenewalDate,
-      membershipActive,
       tags,
+      additionalNotes,
     } = req.body;
-    if (
-      !email ||
-      !password ||
-      !name ||
-      !primaryContactName ||
-      !primaryContactEmail ||
-      !primaryContactPhone
-    ) {
+
+    console.log('[Registration] Received data:', {
+      primaryContactName,
+      primaryContactEmail,
+      primaryContactPhone,
+      secondaryContactName,
+      secondaryContactEmail,
+    });
+
+    if (!name || !email) {
       return res.status(400).json({
-        error:
-          'Email, password, name, and primary contact information (name, email, phone) are required',
+        error: 'Organization name and email are required',
       });
     }
+
     const existingOrg = await prisma.organization.findFirst({
-      where: { OR: [{ email }, { name }] },
+      where: { OR: [{ name }] },
     });
-    if (existingOrg)
-      return res.status(400).json({ error: 'Organization with this email or name already exists' });
-    const clerkUser = await clerkClient.users.createUser({
-      emailAddress: [email],
-      password,
-      firstName: name.split(' ')[0] || name,
-      lastName: name.split(' ').slice(1).join(' ') || '',
-      publicMetadata: { organizationName: name, role: 'MEMBER' },
-    });
+    if (existingOrg) {
+      return res.status(400).json({ error: 'Organization with this name already exists' });
+    }
+
+    const tempClerkId = `pending_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
     const newOrg = await prisma.organization.create({
       data: {
-        clerkId: clerkUser.id,
+        clerkId: tempClerkId,
         email,
         name,
-        description: description || null,
+        description: additionalNotes || description || null,
         website: website || null,
         address: address || null,
         city: city || null,
-        state: state || null,
         zipCode: zipCode || null,
         latitude: latitude ? parseFloat(latitude) : null,
         longitude: longitude ? parseFloat(longitude) : null,
-        primaryContactName,
-        primaryContactEmail,
-        primaryContactPhone,
+        primaryContactName: primaryContactName || '',
+        primaryContactEmail: primaryContactEmail || '',
+        primaryContactPhone: primaryContactPhone || '',
         secondaryContactName: secondaryContactName || null,
         secondaryContactEmail: secondaryContactEmail || null,
         region: region || null,
         organizationType: organizationType || null,
         organizationSize: organizationSize || null,
-        membershipActive: membershipActive || false,
-        membershipDate: membershipDate ? new Date(membershipDate) : null,
-        membershipRenewalDate: membershipRenewalDate ? new Date(membershipRenewalDate) : null,
+        membershipActive: false,
+        membershipDate: null,
+        membershipRenewalDate: null,
         tags: tags || [],
         role: 'MEMBER',
         status: 'PENDING',
       },
     });
-    res.status(201).json(newOrg);
+
+    res.status(201).json({
+      message: 'Application submitted successfully. A TCBA administrator will review your request.',
+      organization: newOrg,
+    });
   } catch (error) {
     console.error('Error registering organization:', error);
     res.status(500).json({ error: 'Failed to register organization' });
@@ -242,18 +239,222 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
 };
 
 /**
+ * @desc    Approve pending organization (creates Clerk user with generated password)
+ * @route   PUT /api/organizations/:id/approve
+ * @access  Admin only
+ */
+export const approveOrganization = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!isAdmin(req.user?.role)) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const org = await prisma.organization.findUnique({ where: { id } });
+    if (!org) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    if (org.status !== 'PENDING') {
+      return res.status(400).json({ error: 'Organization is not in pending status' });
+    }
+
+    const generatePassword = () => {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%^&*';
+      let password = '';
+      for (let i = 0; i < 12; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return password;
+    };
+
+    const generatedPassword = generatePassword();
+
+    const clerkUser = await clerkClient.users.createUser({
+      emailAddress: [org.email],
+      password: generatedPassword,
+      firstName: org.name.split(' ')[0] || org.name,
+      lastName: org.name.split(' ').slice(1).join(' ') || '',
+      publicMetadata: {
+        organizationName: org.name,
+        role: org.role || 'MEMBER',
+        organizationId: org.id,
+      },
+    });
+
+    const updatedOrg = await prisma.organization.update({
+      where: { id },
+      data: {
+        clerkId: clerkUser.id,
+        status: 'ACTIVE',
+        membershipActive: true,
+        membershipDate: new Date(),
+      },
+    });
+    try {
+      await sendWelcomeEmail(org.email, org.name, generatedPassword);
+    } catch (emailError) {
+      console.error('Error sending welcome email:', emailError);
+    }
+
+    res.json({
+      message: 'Organization approved successfully and welcome email sent',
+      organization: updatedOrg,
+    });
+  } catch (error) {
+    console.error('Error approving organization:', error);
+    res.status(500).json({ error: 'Failed to approve organization' });
+  }
+};
+
+/**
+ * @desc    Decline pending organization request
+ * @route   PUT /api/organizations/:id/decline
+ * @access  Admin only
+ */
+export const declineOrganization = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!isAdmin(req.user?.role)) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const org = await prisma.organization.findUnique({ where: { id } });
+    if (!org) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    if (org.status !== 'PENDING') {
+      return res.status(400).json({ error: 'Only pending organizations can be declined' });
+    }
+
+    await prisma.organization.delete({ where: { id } });
+
+    res.json({ message: 'Organization request declined and removed' });
+  } catch (error) {
+    console.error('Error declining organization:', error);
+    res.status(500).json({ error: 'Failed to decline organization' });
+  }
+};
+
+/**
+ * @desc    Archive organization (set status to INACTIVE)
+ * @route   PUT /api/organizations/:id/archive
+ * @access  Admin only
+ */
+export const archiveOrganization = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!isAdmin(req.user?.role)) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const org = await prisma.organization.findUnique({ where: { id } });
+    if (!org) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    if (org.status === 'INACTIVE') {
+      return res.status(400).json({ error: 'Organization is already archived' });
+    }
+
+    if (org.status === 'PENDING') {
+      return res
+        .status(400)
+        .json({ error: 'Cannot archive pending organizations. Use decline instead.' });
+    }
+
+    const updatedOrg = await prisma.organization.update({
+      where: { id },
+      data: {
+        status: 'INACTIVE',
+        membershipActive: false,
+      },
+    });
+
+    res.json({
+      message: 'Organization archived successfully',
+      organization: updatedOrg,
+    });
+  } catch (error) {
+    console.error('Error archiving organization:', error);
+    res.status(500).json({ error: 'Failed to archive organization' });
+  }
+};
+
+/**
+ * @desc    Unarchive organization (set status to ACTIVE)
+ * @route   PUT /api/organizations/:id/unarchive
+ * @access  Admin only
+ */
+export const unarchiveOrganization = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!isAdmin(req.user?.role)) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const org = await prisma.organization.findUnique({ where: { id } });
+    if (!org) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    if (org.status !== 'INACTIVE') {
+      return res.status(400).json({ error: 'Only archived organizations can be unarchived' });
+    }
+
+    const updatedOrg = await prisma.organization.update({
+      where: { id },
+      data: {
+        status: 'ACTIVE',
+        membershipActive: true,
+      },
+    });
+
+    res.json({
+      message: 'Organization unarchived successfully',
+      organization: updatedOrg,
+    });
+  } catch (error) {
+    console.error('Error unarchiving organization:', error);
+    res.status(500).json({ error: 'Failed to unarchive organization' });
+  }
+};
+
+/**
  * @desc    Delete organization
  * @route   DELETE /api/organizations/:id
- * @access  Admin/Super Admin only
+ * @access  Admin only
  */
 export const deleteOrganization = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
-    if (!isAdmin(req.user?.role)) return res.status(403).json({ error: 'Access denied' });
-    if (req.user?.id === id)
-      return res.status(400).json({ error: 'Cannot delete your own organization' });
+    if (!isAdmin(req.user?.role)) return res.status(403).json({ error: 'Admin access required' });
+
     const orgToDelete = await prisma.organization.findUnique({ where: { id } });
     if (!orgToDelete) return res.status(404).json({ error: 'Organization not found' });
+
+    if (orgToDelete.clerkId) {
+      try {
+        console.log(`Attempting to delete Clerk user with ID: ${orgToDelete.clerkId}`);
+        await clerkClient.users.deleteUser(orgToDelete.clerkId);
+        console.log(`Successfully deleted Clerk user: ${orgToDelete.clerkId}`);
+      } catch (clerkError: any) {
+        console.error('Error deleting Clerk user:', {
+          clerkId: orgToDelete.clerkId,
+          error: clerkError.message,
+          status: clerkError.status,
+          details: clerkError,
+        });
+      }
+    } else {
+      console.log('Organization has no Clerk account (clerkId is null), skipping Clerk deletion');
+    }
+
     await prisma.organization.delete({ where: { id } });
     res.json({ message: 'Organization deleted successfully' });
   } catch (error) {

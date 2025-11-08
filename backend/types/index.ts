@@ -3,14 +3,17 @@
 import type { Request } from 'express';
 import { OrganizationRole } from '@prisma/client';
 
+interface ClerkAuth {
+  userId: string | null;
+  sessionId?: string | null;
+  orgId?: string | null;
+  orgRole?: string;
+  has?: (params: any) => boolean;
+  getToken?: (options?: any) => Promise<string | null>;
+}
+
 export interface AuthenticatedRequest extends Request {
-  auth?: (options?: any) => {
-    userId: string | null;
-    sessionId?: string | null;
-    orgId?: string | null;
-    orgRole?: string;
-    has?: (params: any) => boolean;
-  };
+  auth?: (() => Promise<ClerkAuth>) | ClerkAuth;
   user?: {
     id: string;
     clerkId: string;
