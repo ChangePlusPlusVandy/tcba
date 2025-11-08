@@ -1,30 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 
-type BlogSummary = {
-  id: number;
+type Blog = {
+  id: string;
   title: string;
+  content: string;
   author: string;
-  publishedAt: Date;
   tags: string[];
-  excerpt: string;
+  featuredImageUrl?: string | null;
+  isPublished: boolean;
+  publishedDate?: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
-const generatePlaceholderBlogs = (): BlogSummary[] => {
-  const placeholderText =
-    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec pharetra sed massa id luctus. Suspendisse sem mi, dapibus non lobortis eu, pulvinar eget eros. Aenean et tristique lorem, vitae facilisis erat.';
-  const hourOffsets = [2, 10, 40, 120, 600, 1500]; // hours ago
-  return hourOffsets.map((hoursAgo, index) => {
-    const publishedAt = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
-    return {
-      id: index + 1,
-      title: 'Title of the announcement: Can be long or short',
-      author: 'by Errita Xu',
-      publishedAt,
-      tags: ['tag name', 'longer tag name'],
-      excerpt: placeholderText,
-    };
-  });
-};
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
 const filterOptions = [
   { id: '24h', label: 'Last 24 hours', maxHours: 24 },
@@ -47,20 +36,44 @@ const formatRelativeTime = (date: Date) => {
   return `${diffYears} year${diffYears === 1 ? '' : 's'} ago`;
 };
 
+const getPublishedAt = (blog: Blog) =>
+  blog.publishedDate ? new Date(blog.publishedDate) : new Date(blog.createdAt);
+
 const BlogPage = () => {
-  const [blogs, setBlogs] = useState<BlogSummary[]>(generatePlaceholderBlogs());
+  const [blogs, setBlogs] = useState<Blog[]>([]);
   const [activeFilter, setActiveFilter] = useState(filterOptions[1].id);
   const [filterControlsOpen, setFilterControlsOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(3);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadBlogs = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch(`${API_BASE_URL}/api/blogs?published=true`);
+        if (!response.ok) throw new Error(`Failed to fetch blogs: ${response.statusText}`);
+        const data: Blog[] = await response.json();
+        setBlogs(data);
+      } catch (err) {
+        console.error('Error fetching blogs:', err);
+        setError('An unexpected error occurred.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadBlogs();
+  }, []);
 
   const filteredBlogs = useMemo(() => {
     const filter = filterOptions.find(option => option.id === activeFilter);
     if (!filter) return blogs;
 
     return blogs.filter(blog => {
-      const diffHours = (Date.now() - blog.publishedAt.getTime()) / (1000 * 60 * 60);
+      const publishedAt = getPublishedAt(blog);
+      const diffHours = (Date.now() - publishedAt.getTime()) / (1000 * 60 * 60);
       return diffHours <= filter.maxHours;
     });
   }, [blogs, activeFilter]);
@@ -77,20 +90,27 @@ const BlogPage = () => {
 
   return (
     <div className='bg-slate-50 min-h-screen'>
-      <section className='max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 flex flex-col gap-12 lg:flex-row lg:items-center'>
-        <div className='space-y-5 max-w-xl'>
-          <p className='text-sm font-semibold uppercase tracking-[0.3em] text-slate-500'>Blogs</p>
-          <h1 className='text-4xl font-semibold text-slate-900'>Blogs</h1>
-          <p className='text-base text-slate-600 leading-relaxed'>
-            The Tennessee Coalition for Better Aging exists to promote the general welfare of older
-            Tennesseans and their families through partnerships that mobilize resources to educate
-            and advocate for important policies and programs.
-          </p>
+      <section>
+        <div className='grid grid-cols-2 gap-0'>
+          <div className='bg-white px-8 sm:px-12 py-20 flex items-center'>
+            <div className='p-8'>
+              <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-[#3C3C3C] mb-6'>
+                Blogs
+              </h2>
+              <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-[#3C3C3C]'>
+                The Tennessee Coalition for Better Aging exists to promote the general welfare of
+                older Tennesseans and their families through partnerships that mobilize resources to
+                educate and advocate for important policies and programs.
+              </p>
+            </div>
+          </div>
+          <div className='bg-[#e5e5e5] min-h-[320px] h-full w-full' />
         </div>
-        <div className='flex-1 w-full lg:w-auto aspect-video bg-slate-200 rounded-2xl' />
       </section>
 
       <section className='max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pb-16'>
+        <div className='bg-white flex-col justify-center py-0'>
+        </div>
         <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
           <div className='flex items-center gap-4 text-sm text-slate-600'>
             <span className='font-semibold text-slate-900 whitespace-nowrap'>
@@ -183,7 +203,7 @@ const BlogPage = () => {
                   <div>
                     <h2 className='text-xl font-semibold text-slate-900'>{blog.title}</h2>
                     <p className='text-sm text-slate-500'>
-                      {blog.author} • {formatRelativeTime(blog.publishedAt)}
+                      {blog.author} • {formatRelativeTime(getPublishedAt(blog))}
                     </p>
                   </div>
                   <div className='flex flex-wrap gap-2'>
@@ -196,7 +216,9 @@ const BlogPage = () => {
                       </span>
                     ))}
                   </div>
-                  <p className='text-sm text-slate-600 leading-relaxed'>{blog.excerpt}</p>
+                  <p className='text-sm text-slate-600 leading-relaxed'>
+                    {blog.content.length > 360 ? `${blog.content.slice(0, 360)}…` : blog.content}
+                  </p>
                 </div>
                 <div className='w-full lg:w-56 h-40 bg-slate-200 rounded-2xl flex-shrink-0' />
               </article>
