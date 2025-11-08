@@ -2,19 +2,18 @@ import { Response } from 'express';
 import { OrganizationRole } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import { s3 } from '../config/aws-s3.js';
-
+import { prisma } from '../config/prisma.js';
 
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
-
 
 // Get presigned URL for uploading file to S3
 // Validate fileName, generate unique key, create PutObjectCommand, use getSignedUrl for upload
 // client uploads file then saves key to DB (like Announcements.attachmentUrls)
 export const getPresignedUploadUrl = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
+    // if (!req.user) {
+    //   return res.status(401).json({ error: 'Not authenticated' });
+    // }
     const { fileName, fileType } = req.query;
 
     // Validate fileName
@@ -43,19 +42,18 @@ export const getPresignedUploadUrl = async (req: AuthenticatedRequest, res: Resp
     // Create a unique key (path + filename) - sanitize fileName
     const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
     const key = `uploads/${Date.now()}-${sanitizedFileName}`;
-    
+
     // Define parameters for S3 upload
     const params = {
       Bucket: bucketName,
       Key: key,
-      Expires: 60,
+      Expires: 600,
       ContentType: fileType,
     };
     // Generate pre-signed URL for 'putObject'
     const uploadUrl = await s3.getSignedUrl('putObject', params);
 
     return res.status(200).json({ uploadUrl, key });
-
   } catch (error) {
     console.error('Error generating presigned upload URL:', error);
     res.status(500).json({ error: 'Failed to generate presigned upload URL' });
@@ -82,21 +80,64 @@ export const getPresignedDownloadUrl = async (req: AuthenticatedRequest, res: Re
 export const deleteDocument = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { fileKey } = req.params;
+    const { resourceType, resourceId } = req.body;
     const bucketName = process.env.AWS_S3_BUCKET_NAME;
 
     if (!bucketName) {
       return res.status(500).json({ error: 'S3 bucket not configured' });
     }
 
-    await s3.deleteObject({
-      Bucket: bucketName,
-      Key: fileKey,
-    }).promise();
+    // Validate required fields
+    if (!resourceType || !resourceId) {
+      return res.status(400).json({ error: 'resourceType and resourceId are required' });
+    }
 
-    res.status(200).json({ message: 'File deleted successfully' });
+    // Delete from S3
+    await s3
+      .deleteObject({
+        Bucket: bucketName,
+        Key: fileKey,
+      })
+      .promise();
+
+    // Remove from database based on resource type
+    if (resourceType === 'alert') {
+      const alert = await prisma.alert.findUnique({
+        where: { id: resourceId },
+        select: { attachmentUrls: true },
+      });
+
+      if (alert) {
+        await prisma.alert.update({
+          where: { id: resourceId },
+          data: {
+            attachmentUrls: alert.attachmentUrls.filter(url => url !== fileKey),
+          },
+        });
+      }
+    } else if (resourceType === 'announcement') {
+      const announcement = await prisma.announcements.findUnique({
+        where: { id: resourceId },
+        select: { attachmentUrls: true },
+      });
+
+      if (announcement) {
+        await prisma.announcements.update({
+          where: { id: resourceId },
+          data: {
+            attachmentUrls: announcement.attachmentUrls.filter(url => url !== fileKey),
+          },
+        });
+      }
+    } else {
+      return res
+        .status(400)
+        .json({ error: 'Invalid resourceType. Must be "alert" or "announcement"' });
+    }
+
+    res.status(200).json({ message: 'File deleted successfully from S3 and database' });
   } catch (err) {
     console.error('Error deleting:', err);
     res.status(500).json({ error: 'Failed to delete document' });
   }
 };
-
