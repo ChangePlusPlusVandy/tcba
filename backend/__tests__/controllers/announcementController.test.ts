@@ -35,11 +35,10 @@ describe('Announcement Routes', () => {
         publishedDate: new Date(),
         isPublished: true,
         attachmentUrls: [],
-        tags: [],
         createdByAdminId: 'admin123',
         createdAt: new Date(),
         updatedAt: new Date(),
-      },
+      } as any,
     ]);
 
     const res = await request(app).get('/api/announcements');
@@ -56,11 +55,10 @@ describe('Announcement Routes', () => {
       publishedDate: new Date(),
       isPublished: false,
       attachmentUrls: [],
-      tags: [],
       createdByAdminId: 'admin456',
       createdAt: new Date(),
       updatedAt: new Date(),
-    });
+    } as any);
 
     const res = await request(app).post('/api/announcements').send({
       title: 'New Announcement',
