@@ -189,6 +189,20 @@ model Notification {
   @@map("notifications")
 }
 
+model PageContent {
+  id           String   @id @default(cuid())
+  page         String   
+  section      String   
+  contentKey   String   
+  contentValue String   @db.Text 
+  contentType  String   
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([page, section, contentKey])
+  @@map("page_content")
+}
+
 enum OrganizationRole {
   ADMIN
   MEMBER

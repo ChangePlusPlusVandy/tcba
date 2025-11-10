@@ -1,5 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+
+interface PageContent {
+  [key: string]: { id: string; value: string; type: string };
+}
+
+interface AboutPageProps {
+  previewContent?: PageContent;
+}
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
 // import al logos!
 import aarpLogo from '../../assets/logos/aarp.png';
@@ -40,25 +50,34 @@ type CoalitionPartner = {
   website: string;
 };
 
-const AboutPage = () => {
+const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
   const [showAllPartners, setShowAllPartners] = useState(false);
+  const [content, setContent] = useState<PageContent>({});
+  const [loading, setLoading] = useState(true);
 
-  // cur priorities data
-  const priorities = [
-    {
-      title: 'Increasing Support for Family Caregivers',
-    },
-    {
-      title: 'Addressing the Direct Care Worker Shortage',
-    },
-    {
-      title: 'Expanding Home-Community Based Services and Supports for Aging in Community',
-    },
-    {
-      title:
-        'Collaborating with TN Dept of Disability and Aging (TDDA) on a Multisector Plan for Aging in TN',
-    },
-  ];
+  useEffect(() => {
+    // If preview content is provided, use it directly
+    if (previewContent) {
+      setContent(previewContent);
+      setLoading(false);
+      return;
+    }
+
+    const loadContent = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/page-content/about`);
+        if (!response.ok) throw new Error('Failed to fetch page content');
+        const data = await response.json();
+        setContent(data);
+      } catch (error) {
+        console.error('Error loading page content:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadContent();
+  }, [previewContent]);
 
   // Coalition partners
   const coalitionRows = [
@@ -174,6 +193,16 @@ const AboutPage = () => {
   // show first 2 rows initially; expand upon load morepress
   const visibleRows = showAllPartners ? coalitionRows : coalitionRows.slice(0, 2);
 
+  if (loading) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='text-lg'>Loading...</div>
+      </div>
+    );
+  }
+
+  const missionImageSrc = content['mission_image']?.value;
+
   return (
     <div className='flex flex-col mt-8'>
       <section>
@@ -181,40 +210,66 @@ const AboutPage = () => {
           <div className='bg-white px-8 sm:px-12 py-20 flex items-center'>
             <div className='p-8'>
               <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
-                The Mission
+                {content['mission_title']?.value || 'The Mission'}
               </h2>
-              <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
-                The Tennessee Coalition for Better Aging exists to promote the general welfare of
-                older Tennesseans and their families through partnerships that mobilize resources to
-                educate and advocate for important policies and programs.
-              </p>
+              <div
+                className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'
+                dangerouslySetInnerHTML={{
+                  __html:
+                    content['mission_description']?.value ||
+                    'The Tennessee Coalition for Better Aging exists to promote the general welfare of older Tennesseans and their families through partnerships that mobilize resources to educate and advocate for important policies and programs.',
+                }}
+              />
             </div>
           </div>
           {/* placeholder image (gray for now!) */}
-          <div className='bg-slate-300 min-h-[220px] mr-12' />
+          <div
+            className='bg-slate-300 min-h-[220px] mr-12'
+            style={
+              missionImageSrc
+                ? {
+                    backgroundImage: `url(${missionImageSrc})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }
+                : {}
+            }
+          />
         </div>
       </section>
 
       {/* current priorities */}
       <section className='mt-8 bg-white px-20 py-16'>
         <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 text-center mb-12'>
-          Current Priorities
+          {content['priorities_title']?.value || 'Current Priorities'}
         </h2>
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10'>
-          {priorities.map((priority, index) => (
-            <div key={index} className='flex flex-col items-center text-center space-y-4'>
-              {/* icon image (gray for now!) */}
-              <div className='w-20 h-20 bg-slate-300 rounded' />
-              <p className='text-sm text-slate-800 leading-relaxed px-2'>{priority.title}</p>
-            </div>
-          ))}
+          {[1, 2, 3, 4].map(num => {
+            const title = content[`priority${num}_title`]?.value || '';
+            const desc = content[`priority${num}_desc`]?.value || '';
+            return (
+              <div key={num} className='flex flex-col items-center text-center space-y-4'>
+                {/* icon image (gray for now!) */}
+                <div className='w-20 h-20 bg-slate-300 rounded' />
+                <div className='space-y-2'>
+                  <p className='text-sm font-semibold text-slate-800'>{title}</p>
+                  {desc && (
+                    <div
+                      className='text-xs text-slate-600 leading-relaxed px-2'
+                      dangerouslySetInnerHTML={{ __html: desc }}
+                    />
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
         <div className='flex justify-center'>
           <button
             className='text-white px-8 py-3 rounded-full text-sm font-semibold shadow-md hover:opacity-90 transition'
             style={{ backgroundColor: '#D54242' }}
           >
-            Learn more about our advocacy
+            {content['priorities_button_text']?.value || 'Learn more about our advocacy'}
           </button>
         </div>
       </section>
@@ -298,21 +353,27 @@ const AboutPage = () => {
           <div className='flex items-center'>
             <div className='space-y-6'>
               <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800'>
-                TCBA Officers
+                {content['officers_title']?.value || 'TCBA Officers'}
               </h2>
               <div className='space-y-3'>
-                <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
-                  <span className='font-semibold'>Co-Chair:</span> James Powers, MD - Vanderbilt
-                  Univ. Medical Center
-                </p>
-                <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
-                  <span className='font-semibold'>Co-chair:</span> Grace Sutherland Smith, LMSW -
-                  AgeWell Middle TN
-                </p>
-                <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
-                  <span className='font-semibold'>Secretary:</span> Donna DeStefano - TN Disability
-                  Coalition
-                </p>
+                {content['officers_cochair1']?.value && (
+                  <p
+                    className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'
+                    dangerouslySetInnerHTML={{ __html: content['officers_cochair1'].value }}
+                  />
+                )}
+                {content['officers_cochair2']?.value && (
+                  <p
+                    className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'
+                    dangerouslySetInnerHTML={{ __html: content['officers_cochair2'].value }}
+                  />
+                )}
+                {content['officers_secretary']?.value && (
+                  <p
+                    className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'
+                    dangerouslySetInnerHTML={{ __html: content['officers_secretary'].value }}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -328,7 +389,7 @@ const AboutPage = () => {
             className='inline-block text-white px-8 py-3 rounded-full text-sm font-semibold shadow-md hover:opacity-90 transition'
             style={{ backgroundColor: '#D54242' }}
           >
-            Join us
+            {content['officers_button_text']?.value || 'Join us'}
           </Link>
         </div>
       </section>

@@ -14,8 +14,8 @@ import alertRoutes from './routes/alertRoutes';
 import inAppNotificationRoutes from './routes/inAppNotificationRoutes';
 import contactRoutes from './routes/contactRoutes';
 import fileUploadRoutes from './routes/fileUploadRoutes';
-import { prisma } from './config/prisma';
-import { clerkClient, clerkMiddleware } from '@clerk/express';
+import pageContentRoutes from './routes/pageContentRoutes';
+import { clerkMiddleware } from '@clerk/express';
 
 const app = express();
 app.use(
@@ -45,5 +45,6 @@ app.use('/api/blogs', blogRoutes);
 app.use('/api/notifications', inAppNotificationRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/uploads', fileUploadRoutes);
+app.use('/api/page-content', pageContentRoutes);
 
 export default app;

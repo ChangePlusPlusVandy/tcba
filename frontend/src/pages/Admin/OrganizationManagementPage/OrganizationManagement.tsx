@@ -756,7 +756,7 @@ const OrganizationManagement = () => {
               <div className='modal-action'>
                 <button
                   onClick={() => setSelectedOrg(null)}
-                  className='btn bg-[#194B90] hover:bg-[#133a72] text-white border-none'
+                  className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
                 >
                   Close
                 </button>

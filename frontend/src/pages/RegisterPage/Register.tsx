@@ -1,21 +1,33 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const RegisterPage = () => {
+interface PageContent {
+  [key: string]: { id: string; value: string; type: string };
+}
+
+interface RegisterPageProps {
+  previewContent?: PageContent;
+}
+
+const RegisterPage = ({ previewContent }: RegisterPageProps = {}) => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
   return (
     <main>
-      <RegisterForm />
+      <RegisterForm previewContent={previewContent} />
     </main>
   );
 };
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
-const RegisterForm = () => {
+interface RegisterFormProps {
+  previewContent?: PageContent;
+}
+
+const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
   const regions = ['East', 'Middle', 'West'];
   const membershipSectionRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -39,6 +51,32 @@ const RegisterForm = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [content, setContent] = useState<PageContent>({});
+  const [pageLoading, setPageLoading] = useState(true);
+
+  useEffect(() => {
+    // If preview content is provided, use it directly
+    if (previewContent) {
+      setContent(previewContent);
+      setPageLoading(false);
+      return;
+    }
+
+    const loadContent = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/page-content/register`);
+        if (!response.ok) throw new Error('Failed to fetch page content');
+        const data = await response.json();
+        setContent(data);
+      } catch (error) {
+        console.error('Error loading page content:', error);
+      } finally {
+        setPageLoading(false);
+      }
+    };
+
+    loadContent();
+  }, [previewContent]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -117,6 +155,16 @@ const RegisterForm = () => {
     navigate('/contact');
   };
 
+  if (pageLoading) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='text-lg'>Loading...</div>
+      </div>
+    );
+  }
+
+  const heroImageSrc = content['hero_image']?.value;
+
   return (
     <div className='mt-8'>
       <section>
@@ -124,17 +172,20 @@ const RegisterForm = () => {
           <div className='bg-white px-8 sm:px-12 py-20 flex items-center'>
             <div className='p-8'>
               <h1 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
-                Get Involved
+                {content['hero_title']?.value || 'Get Involved'}
               </h1>
               <ul className='space-y-2 text-gray-700 mb-6'>
                 <li className='list-disc ml-6'>
-                  Opt in to the mail list to stay up to date with TCBA
+                  {content['hero_bullet1']?.value ||
+                    'Opt in to the mail list to stay up to date with TCBA'}
                 </li>
                 <li className='list-disc ml-6'>
-                  Share your story as an older adult or family caregiver
+                  {content['hero_bullet2']?.value ||
+                    'Share your story as an older adult or family caregiver'}
                 </li>
                 <li className='list-disc ml-6'>
-                  Receive help reaching out to and advocating to public officials
+                  {content['hero_bullet3']?.value ||
+                    'Receive help reaching out to and advocating to public officials'}
                 </li>
               </ul>
 
@@ -143,70 +194,99 @@ const RegisterForm = () => {
                   onClick={scrollToMembershipSection}
                   className='bg-[#D54242] text-white px-6 py-3 rounded-[18px] text-sm font-semibold shadow-lg hover:bg-[#b53a3a] transition'
                 >
-                  Join the Coalition
+                  {content['hero_join_button']?.value || 'Join the Coalition'}
                 </button>
                 <button
                   onClick={handleEmailSignup}
                   className='bg-[#D54242] text-white px-6 py-3 rounded-[18px] text-sm font-semibold shadow-lg hover:bg-[#b53a3a] transition'
                 >
-                  Subscribe to Emails
+                  {content['hero_subscribe_button']?.value || 'Subscribe to Emails'}
                 </button>
                 <button
                   onClick={handleContactInquiry}
                   className='bg-[#D54242] text-white px-6 py-3 rounded-[18px] text-sm font-semibold shadow-lg hover:bg-[#b53a3a] transition'
                 >
-                  Contact Us
+                  {content['hero_contact_button']?.value || 'Contact Us'}
                 </button>
               </div>
             </div>
           </div>
 
-          <div className='min-h-[220px] bg-slate-200 mr-12' />
+          <div
+            className='min-h-[220px] bg-slate-200 mr-12'
+            style={
+              heroImageSrc
+                ? {
+                    backgroundImage: `url(${heroImageSrc})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }
+                : {}
+            }
+          />
         </div>
       </section>
 
       <div className='bg-white px-20 py-16'>
         <div ref={membershipSectionRef} className='mb-12'>
           <h2 className='text-3xl font-bold text-gray-800 text-center mb-8'>
-            Membership Information
+            {content['membership_title']?.value || 'Membership Information'}
           </h2>
 
           <div className='grid md:grid-cols-2 gap-8 mb-8'>
             <div>
-              <h3 className='text-xl font-semibold text-gray-800 mb-4'>Eligibility</h3>
-              <p className='text-gray-700 leading-relaxed mb-4'>
-                Membership in the Coalition is open to any organization, agency or department,
-                private or public, profit or non-profit, or individual which subscribes to and
-                actively supports the mission and vision of the Coalition.
-              </p>
-              <p className='text-gray-700 leading-relaxed'>
-                We welcome organizations who are committed to improving the lives of older
-                Tennesseans and their families. Members gain access to collaborative opportunities,
-                advocacy resources, and a network of like-minded organizations working toward
-                positive change for aging populations across Tennessee.
-              </p>
+              <h3 className='text-xl font-semibold text-gray-800 mb-4'>
+                {content['eligibility_title']?.value || 'Eligibility'}
+              </h3>
+              <div
+                className='text-gray-700 leading-relaxed mb-4'
+                dangerouslySetInnerHTML={{
+                  __html:
+                    content['eligibility_para1']?.value ||
+                    'Membership in the Coalition is open to any organization, agency or department, private or public, profit or non-profit, or individual which subscribes to and actively supports the mission and vision of the Coalition.',
+                }}
+              />
+              <div
+                className='text-gray-700 leading-relaxed'
+                dangerouslySetInnerHTML={{
+                  __html:
+                    content['eligibility_para2']?.value ||
+                    'We welcome organizations who are committed to improving the lives of older Tennesseans and their families. Members gain access to collaborative opportunities, advocacy resources, and a network of like-minded organizations working toward positive change for aging populations across Tennessee.',
+                }}
+              />
             </div>
 
             <div>
-              <h3 className='text-xl font-semibold text-gray-800 mb-4'>Membership Requirements</h3>
-              <p className='text-gray-700 leading-relaxed mb-4'>
-                Organizational applicants must complete and sign a Coalition membership application,
-                including the commitment to the Coalition's mission, goals, and conflict of interest
-                statement. The Steering Committee must approve all applications for membership.
-              </p>
-              <p className='text-gray-700 leading-relaxed'>
-                Individuals may actively participate on the Coalition. They do not have a vote
-                because only incorporated organizations have a vote on Coalition matters.
-                Individuals must complete a membership application and agree to act in the best
-                interest of the Coalition's vision, mission, and goals.
-              </p>
+              <h3 className='text-xl font-semibold text-gray-800 mb-4'>
+                {content['requirements_title']?.value || 'Membership Requirements'}
+              </h3>
+              <div
+                className='text-gray-700 leading-relaxed mb-4'
+                dangerouslySetInnerHTML={{
+                  __html:
+                    content['requirements_para1']?.value ||
+                    "Organizational applicants must complete and sign a Coalition membership application, including the commitment to the Coalition's mission, goals, and conflict of interest statement. The Steering Committee must approve all applications for membership.",
+                }}
+              />
+              <div
+                className='text-gray-700 leading-relaxed'
+                dangerouslySetInnerHTML={{
+                  __html:
+                    content['requirements_para2']?.value ||
+                    "Individuals may actively participate on the Coalition. They do not have a vote because only incorporated organizations have a vote on Coalition matters. Individuals must complete a membership application and agree to act in the best interest of the Coalition's vision, mission, and goals.",
+                }}
+              />
             </div>
           </div>
 
-          <p className='text-center text-gray-500 mb-12'>
-            Please complete the form below if you are interested in joining the coalition. A TCBA
-            steering committee member will be in touch after receiving your application.
-          </p>
+          <div
+            className='text-center text-gray-500 mb-12'
+            dangerouslySetInnerHTML={{
+              __html:
+                content['form_description']?.value ||
+                'Please complete the form below if you are interested in joining the coalition. A TCBA steering committee member will be in touch after receiving your application.',
+            }}
+          />
         </div>
 
         <form
