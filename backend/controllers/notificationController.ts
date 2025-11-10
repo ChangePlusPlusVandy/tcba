@@ -4,6 +4,7 @@ import { AuthenticatedRequest } from '../types/index.js';
 import { prisma } from '../config/prisma.js';
 import { SendEmailCommand } from '@aws-sdk/client-ses';
 import { sesClient, sesConfig } from '../config/aws-ses.js';
+import { createNotification } from './inAppNotificationController.js';
 
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 
@@ -121,70 +122,501 @@ Tennessee Coalition for Better Aging
 // Send custom email to organizations, if no tags/regions specified, sends to all orgs
 export const sendCustomEmail = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    if (!req.user || !isAdmin(req.user.role)) {
+    if (!req.user || req.user.role !== 'ADMIN') {
       return res.status(403).json({ error: 'Admin access required' });
     }
+
     const { targetTags, targetRegions, subject, message, html } = req.body;
-    res.status(501).json({ error: 'Not implemented yet' });
+
+    if (!subject || (!message && !html)) {
+      return res.status(400).json({ error: 'Subject and message or html are required' });
+    }
+
+    // Fetch organizations filtered by tags/regions, or all if none
+    const where: any = { status: 'ACTIVE' };
+    if (targetTags?.length) where.tags = { hasSome: targetTags };
+    if (targetRegions?.length) where.region = { in: targetRegions };
+
+    const orgs = await prisma.organization.findMany({
+      where,
+      select: { email: true, primaryContactEmail: true },
+    });
+
+    const emails = Array.from(
+      new Set(
+        orgs
+          .map(o => o.primaryContactEmail || o.email)
+          .filter(Boolean)
+          .map(e => e!.toLowerCase())
+      )
+    );
+
+    if (emails.length === 0) {
+      return res.status(200).json({ message: 'No matching organizations found' });
+    }
+
+    const htmlBody =
+      html ??
+      `
+      <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.5;">
+          <h2>${subject}</h2>
+          <p>${(message ?? '').replace(/\n/g, '<br>')}</p>
+        </body>
+      </html>
+    `;
+    const textBody = message ?? htmlBody.replace(/<[^>]+>/g, '');
+
+    const { SendEmailCommand } = await import('@aws-sdk/client-ses');
+    let sent = 0;
+    const errors: any[] = [];
+
+    for (const email of emails) {
+      const command = new SendEmailCommand({
+        Source: sesConfig.fromEmail,
+        Destination: { ToAddresses: [email] },
+        Message: {
+          Subject: { Data: subject, Charset: 'UTF-8' },
+          Body: {
+            Html: { Data: htmlBody, Charset: 'UTF-8' },
+            Text: { Data: textBody, Charset: 'UTF-8' },
+          },
+        },
+        ReplyToAddresses: [sesConfig.replyToEmail],
+      });
+
+      try {
+        await sesClient.send(command);
+        sent++;
+      } catch (err) {
+        console.error(`Failed to send to ${email}:`, err);
+        errors.push({ email, error: String(err) });
+      }
+    }
+
+    return res.status(200).json({
+      message: 'Custom email send complete',
+      total: emails.length,
+      sent,
+      failed: errors.length,
+      errors,
+    });
   } catch (error) {
     console.error('Error sending custom email:', error);
-    res.status(500).json({ error: 'Failed to send custom email' });
+    return res.status(500).json({ error: 'Failed to send custom email' });
   }
 };
 
 // Send announcement email to organizations matching tags/regions, if none specified, send to all, and all email subscribers
 export const sendAnnouncementNotification = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    if (!req.user || !isAdmin(req.user.role)) {
+    // Only admins can send
+    if (!req.user || req.user.role !== 'ADMIN') {
       return res.status(403).json({ error: 'Admin access required' });
     }
+
     const { id } = req.params;
-    res.status(501).json({ error: 'Not implemented yet' });
+
+    // Fetch the announcement with its tags
+    const announcement = await prisma.announcements.findUnique({
+      where: { id },
+      include: { tags: true },
+    });
+
+    if (!announcement) {
+      return res.status(404).json({ error: 'Announcement not found' });
+    }
+
+    if (!announcement.isPublished) {
+      return res.status(400).json({ error: 'Announcement is not published' });
+    }
+
+    // Collect tag names
+    const tagNames = announcement.tags.map(t => t.name);
+
+    // Filter organizations that match the announcement tags (or all if no tags)
+    const where: any = { status: 'ACTIVE' };
+    if (tagNames.length > 0) where.tags = { hasSome: tagNames };
+
+    const orgs = await prisma.organization.findMany({
+      where,
+      select: { email: true, primaryContactEmail: true },
+    });
+
+    const orgEmails = Array.from(
+      new Set(
+        orgs
+          .map(o => o.primaryContactEmail || o.email)
+          .filter(Boolean)
+          .map(e => e!.toLowerCase())
+      )
+    );
+
+    // Get all active email subscribers
+    const subscribers = await prisma.emailSubscription.findMany({
+      where: { isActive: true },
+      select: { email: true },
+    });
+
+    const subscriberEmails = subscribers.map(s => s.email.toLowerCase());
+
+    // Combine all recipients and remove duplicates
+    const allRecipients = Array.from(new Set([...orgEmails, ...subscriberEmails]));
+
+    if (allRecipients.length === 0) {
+      return res.status(200).json({ message: 'No recipients found for this announcement' });
+    }
+
+    const subject = `New Announcement: ${announcement.title}`;
+    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173';
+    const htmlBody = `
+      <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.5;">
+          <h2>${announcement.title}</h2>
+          <div>${announcement.content.replace(/\n/g, '<br>')}</div>
+          <p><a href="${frontendUrl}/announcements/${announcement.slug}" style="color:#D54242;">Read full announcement</a></p>
+          <p style="font-size:12px;color:#666;">Tennessee Coalition for Better Aging</p>
+        </body>
+      </html>
+    `;
+    const textBody = `${announcement.title}\n\n${announcement.content}\n\nRead more: ${frontendUrl}/announcements/${announcement.slug}`;
+
+    const { SendEmailCommand } = await import('@aws-sdk/client-ses');
+    let sent = 0;
+    const errors: any[] = [];
+
+    for (const email of allRecipients) {
+      const command = new SendEmailCommand({
+        Source: sesConfig.fromEmail,
+        Destination: { ToAddresses: [email] },
+        Message: {
+          Subject: { Data: subject, Charset: 'UTF-8' },
+          Body: {
+            Html: { Data: htmlBody, Charset: 'UTF-8' },
+            Text: { Data: textBody, Charset: 'UTF-8' },
+          },
+        },
+        ReplyToAddresses: [sesConfig.replyToEmail],
+      });
+
+      try {
+        await sesClient.send(command);
+        sent++;
+      } catch (err) {
+        console.error(`Failed to send to ${email}:`, err);
+        errors.push({ email, error: String(err) });
+      }
+    }
+
+    return res.status(200).json({
+      message: 'Announcement emails sent',
+      total: allRecipients.length,
+      sent,
+      failed: errors.length,
+      errors,
+    });
   } catch (error) {
     console.error('Error sending announcement notification:', error);
-    res.status(500).json({ error: 'Failed to send announcement notification' });
+    return res.status(500).json({ error: 'Failed to send announcement notification' });
   }
 };
 
 // send survey invitation to organizations matching targetTags/targetRegions, if none specified, send to all
 export const sendSurveyNotification = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    if (!req.user || !isAdmin(req.user.role)) {
+    if (!req.user || req.user.role !== 'ADMIN') {
       return res.status(403).json({ error: 'Admin access required' });
     }
+
     const { id } = req.params;
-    res.status(501).json({ error: 'Not implemented yet' });
+    const { targetTags, targetRegions } = req.body;
+
+    // Find the survey
+    const survey = await prisma.survey.findUnique({ where: { id } });
+    if (!survey) {
+      return res.status(404).json({ error: 'Survey not found' });
+    }
+
+    if (!survey.isPublished) {
+      return res.status(400).json({ error: 'Survey is not published' });
+    }
+
+    // Build org filters
+    const where: any = { status: 'ACTIVE' };
+    if (targetTags?.length) where.tags = { hasSome: targetTags };
+    if (targetRegions?.length) where.region = { in: targetRegions };
+
+    // Fetch active organizations (filtered or all)
+    const orgs = await prisma.organization.findMany({
+      where,
+      select: { email: true, primaryContactEmail: true },
+    });
+
+    const emails = Array.from(
+      new Set(
+        orgs
+          .map(o => o.primaryContactEmail || o.email)
+          .filter(Boolean)
+          .map(e => e!.toLowerCase())
+      )
+    );
+
+    if (emails.length === 0) {
+      return res.status(200).json({ message: 'No organizations matched filters' });
+    }
+
+    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173';
+    const surveyUrl = `${frontendUrl}/surveys/${survey.id}`;
+
+    const subject = `New Survey: ${survey.title}`;
+    const htmlBody = `
+      <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.5;">
+          <h2>${survey.title}</h2>
+          ${survey.description ? `<p>${survey.description.replace(/\n/g, '<br>')}</p>` : ''}
+          <p><a href="${surveyUrl}" style="color:#D54242;">Click here to take the survey</a></p>
+          ${survey.dueDate ? `<p><strong>Due:</strong> ${new Date(survey.dueDate).toLocaleDateString()}</p>` : ''}
+          <p style="font-size:12px;color:#666;">Tennessee Coalition for Better Aging</p>
+        </body>
+      </html>
+    `;
+    const textBody = `${survey.title}\n\n${survey.description ?? ''}\n\nTake the survey here: ${surveyUrl}`;
+
+    const { SendEmailCommand } = await import('@aws-sdk/client-ses');
+    let sent = 0;
+    const errors: any[] = [];
+
+    for (const email of emails) {
+      const command = new SendEmailCommand({
+        Source: sesConfig.fromEmail,
+        Destination: { ToAddresses: [email] },
+        Message: {
+          Subject: { Data: subject, Charset: 'UTF-8' },
+          Body: {
+            Html: { Data: htmlBody, Charset: 'UTF-8' },
+            Text: { Data: textBody, Charset: 'UTF-8' },
+          },
+        },
+        ReplyToAddresses: [sesConfig.replyToEmail],
+      });
+
+      try {
+        await sesClient.send(command);
+        sent++;
+      } catch (err) {
+        console.error(`Failed to send to ${email}:`, err);
+        errors.push({ email, error: String(err) });
+      }
+    }
+
+    return res.status(200).json({
+      message: 'Survey invitations sent',
+      total: emails.length,
+      sent,
+      failed: errors.length,
+      errors,
+    });
   } catch (error) {
     console.error('Error sending survey notification:', error);
-    res.status(500).json({ error: 'Failed to send survey notification' });
+    return res.status(500).json({ error: 'Failed to send survey notification' });
   }
 };
 
 // send blog notification to all email subscribers
 export const sendBlogNotification = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    if (!req.user || !isAdmin(req.user.role)) {
+    if (!req.user || req.user.role !== 'ADMIN') {
       return res.status(403).json({ error: 'Admin access required' });
     }
+
     const { id } = req.params;
-    res.status(501).json({ error: 'Not implemented yet' });
+
+    // Fetch the published blog post
+    const blog = await prisma.blog.findUnique({
+      where: { id },
+      include: { tags: true },
+    });
+
+    if (!blog) {
+      return res.status(404).json({ error: 'Blog not found' });
+    }
+
+    if (!blog.isPublished) {
+      return res.status(400).json({ error: 'Blog is not published' });
+    }
+
+    // Get all active email subscribers
+    const subscribers = await prisma.emailSubscription.findMany({
+      where: { isActive: true },
+      select: { email: true },
+    });
+
+    const emails = Array.from(new Set(subscribers.map(s => s.email.toLowerCase())));
+
+    if (emails.length === 0) {
+      return res.status(200).json({ message: 'No active email subscribers found' });
+    }
+
+    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173';
+    const blogUrl = `${frontendUrl}/blogs/${blog.slug}`;
+    const subject = `New Blog Post: ${blog.title}`;
+
+    const htmlBody = `
+      <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.5;">
+          <h2>${blog.title}</h2>
+          ${blog.featuredImageUrl ? `<img src="${blog.featuredImageUrl}" alt="Blog image" style="max-width:100%; border-radius:8px;">` : ''}
+          <p>by <strong>${blog.author}</strong></p>
+          <div>${blog.content.substring(0, 300).replace(/\n/g, '<br>')}...</div>
+          <p><a href="${blogUrl}" style="color:#D54242;">Read the full post</a></p>
+          <p style="font-size:12px;color:#666;">Tennessee Coalition for Better Aging</p>
+        </body>
+      </html>
+    `;
+
+    const textBody = `${blog.title}\nby ${blog.author}\n\n${blog.content.substring(0, 300)}...\n\nRead the full post: ${blogUrl}`;
+
+    const { SendEmailCommand } = await import('@aws-sdk/client-ses');
+    let sent = 0;
+    const errors: any[] = [];
+
+    for (const email of emails) {
+      const command = new SendEmailCommand({
+        Source: sesConfig.fromEmail,
+        Destination: { ToAddresses: [email] },
+        Message: {
+          Subject: { Data: subject, Charset: 'UTF-8' },
+          Body: {
+            Html: { Data: htmlBody, Charset: 'UTF-8' },
+            Text: { Data: textBody, Charset: 'UTF-8' },
+          },
+        },
+        ReplyToAddresses: [sesConfig.replyToEmail],
+      });
+
+      try {
+        await sesClient.send(command);
+        sent++;
+      } catch (err) {
+        console.error(`Failed to send to ${email}:`, err);
+        errors.push({ email, error: String(err) });
+      }
+    }
+
+    return res.status(200).json({
+      message: 'Blog notifications sent successfully',
+      total: emails.length,
+      sent,
+      failed: errors.length,
+      errors,
+    });
   } catch (error) {
     console.error('Error sending blog notification:', error);
-    res.status(500).json({ error: 'Failed to send blog notification' });
+    return res.status(500).json({ error: 'Failed to send blog notification' });
   }
 };
 
 // send alerts notification to organizations matching targetTags/targetRegions, if none specified, send to all
 export const sendAlertNotification = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    if (!req.user || !isAdmin(req.user.role)) {
+    // Only admins can send alerts
+    if (!req.user || req.user.role !== 'ADMIN') {
       return res.status(403).json({ error: 'Admin access required' });
     }
+
     const { targetTags, targetRegions, subject, message } = req.body;
-    res.status(501).json({ error: 'Not implemented yet' });
+
+    if (!subject || !message) {
+      return res.status(400).json({ error: 'Subject and message are required' });
+    }
+
+    // Build org filters
+    const where: any = { status: 'ACTIVE', membershipActive: true };
+    if (targetTags?.length) where.tags = { hasSome: targetTags };
+    if (targetRegions?.length) where.region = { in: targetRegions };
+
+    // Fetch matching (or all active) organizations
+    const orgs = await prisma.organization.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        primaryContactEmail: true,
+        primaryContactName: true,
+      },
+    });
+
+    const emails = Array.from(
+      new Set(
+        orgs
+          .map(o => o.primaryContactEmail || o.email)
+          .filter(Boolean)
+          .map(e => e!.toLowerCase())
+      )
+    );
+
+    if (emails.length === 0) {
+      return res.status(200).json({ message: 'No matching organizations found' });
+    }
+
+    const htmlBody = `
+      <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.5;">
+          <div style="border-left: 4px solid #D54242; padding-left: 12px; margin-bottom: 16px;">
+            <h2 style="color:#D54242;">${subject}</h2>
+          </div>
+          <p>${message.replace(/\n/g, '<br>')}</p>
+          <p style="font-size:12px;color:#666;">Tennessee Coalition for Better Aging</p>
+        </body>
+      </html>
+    `;
+    const textBody = `${subject}\n\n${message}`;
+
+    const { SendEmailCommand } = await import('@aws-sdk/client-ses');
+    let sent = 0;
+    const errors: any[] = [];
+
+    for (const email of emails) {
+      const command = new SendEmailCommand({
+        Source: sesConfig.fromEmail,
+        Destination: { ToAddresses: [email] },
+        Message: {
+          Subject: { Data: `[ALERT] ${subject}`, Charset: 'UTF-8' },
+          Body: {
+            Html: { Data: htmlBody, Charset: 'UTF-8' },
+            Text: { Data: textBody, Charset: 'UTF-8' },
+          },
+        },
+        ReplyToAddresses: [sesConfig.replyToEmail],
+      });
+
+      try {
+        await sesClient.send(command);
+        sent++;
+      } catch (err) {
+        console.error(`Failed to send to ${email}:`, err);
+        errors.push({ email, error: String(err) });
+      }
+    }
+
+    // Optionally record an in-app notification
+    try {
+      await createNotification('ALERT', subject, `manual-alert-${Date.now()}`);
+    } catch (notifError) {
+      console.error('Failed to create in-app alert notification:', notifError);
+    }
+
+    return res.status(200).json({
+      message: 'Alert notifications sent',
+      total: emails.length,
+      sent,
+      failed: errors.length,
+      errors,
+    });
   } catch (error) {
     console.error('Error sending alert notification:', error);
-    res.status(500).json({ error: 'Failed to send alert notification' });
+    return res.status(500).json({ error: 'Failed to send alert notification' });
   }
 };
 
