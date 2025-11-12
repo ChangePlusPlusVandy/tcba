@@ -5,10 +5,14 @@ import {
   sendSurveyNotification,
   sendBlogNotification,
   sendAlertNotification,
+  sendContactFormEmail,
 } from '../controllers/notificationController.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
 
+router.post('/contact-form', sendContactFormEmail);
+router.use(authenticateToken);
 router.post('/send', sendCustomEmail);
 router.post('/announcement/:id', sendAnnouncementNotification);
 router.post('/survey/:id', sendSurveyNotification);

@@ -31,6 +31,7 @@ import AboutPageEdit from '../pages/Admin/PageEditPages/AboutPage/AboutPageEdit'
 import RegisterPageEdit from '../pages/Admin/PageEditPages/RegisterPage/RegisterPageEdit';
 import ContactPageEdit from '../pages/Admin/PageEditPages/ContactPage/ContactPageEdit';
 import EmailSignupPageEdit from '../pages/Admin/PageEditPages/EmailSignupPage/EmailSignupPageEdit';
+import CustomEmail from '../pages/Admin/CustomEmail/CustomEmail';
 
 const AppRoutes = () => {
   return (
@@ -158,6 +159,14 @@ const AppRoutes = () => {
         element={
           <AdminRoute>
             <AdminSurveys />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/email'
+        element={
+          <AdminRoute>
+            <CustomEmail />
           </AdminRoute>
         }
       />

@@ -37,6 +37,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
     name: '',
     address: '',
     city: '',
+    state: '',
     zipCode: '',
     email: '',
     primaryContactName: '',
@@ -46,6 +47,8 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
     secondaryContactEmail: '',
     website: '',
     region: '',
+    organizationType: '',
+    organizationSize: '',
     additionalNotes: '',
   });
   const [loading, setLoading] = useState(false);
@@ -55,7 +58,6 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
   const [pageLoading, setPageLoading] = useState(true);
 
   useEffect(() => {
-    // If preview content is provided, use it directly
     if (previewContent) {
       setContent(previewContent);
       setPageLoading(false);
@@ -99,6 +101,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           email: formData.email,
           address: formData.address,
           city: formData.city,
+          state: formData.state || undefined,
           zipCode: formData.zipCode,
           primaryContactName: formData.primaryContactName,
           primaryContactEmail: formData.primaryContactEmail,
@@ -107,6 +110,8 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           secondaryContactEmail: formData.secondaryContactEmail || undefined,
           website: formData.website,
           region: formData.region,
+          organizationType: formData.organizationType || undefined,
+          organizationSize: formData.organizationSize || undefined,
           additionalNotes: formData.additionalNotes,
         }),
       });
@@ -121,6 +126,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
         name: '',
         address: '',
         city: '',
+        state: '',
         zipCode: '',
         email: '',
         primaryContactName: '',
@@ -130,6 +136,8 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
         secondaryContactEmail: '',
         website: '',
         region: '',
+        organizationType: '',
+        organizationSize: '',
         additionalNotes: '',
       });
 
@@ -335,7 +343,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
             />
           </div>
 
-          <div className='grid grid-cols-2 gap-4'>
+          <div className='grid grid-cols-3 gap-4'>
             <div className='flex flex-col space-y-2'>
               <label>City</label>
               <input
@@ -345,6 +353,20 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
                 onChange={handleInputChange}
                 required
                 disabled={loading}
+                className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
+              />
+            </div>
+
+            <div className='flex flex-col space-y-2'>
+              <label>State</label>
+              <input
+                type='text'
+                name='state'
+                value={formData.state}
+                onChange={handleInputChange}
+                required
+                disabled={loading}
+                placeholder='TN'
                 className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
               />
             </div>
@@ -470,6 +492,51 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
                     {region}
                   </option>
                 ))}
+              </select>
+              <div className='pointer-events-none absolute inset-y-0 right-2 flex items-center px-3'>
+                <svg
+                  width='14'
+                  height='9'
+                  viewBox='0 0 15 11'
+                  fill='none'
+                  xmlns='http://www.w3.org/2000/svg'
+                >
+                  <path d='M0.388183 0.315431L7.70162 9.31543L14.3882 0.31543' stroke='#848482' />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className='flex flex-col space-y-2'>
+            <label>Organization Type</label>
+            <input
+              type='text'
+              name='organizationType'
+              value={formData.organizationType}
+              onChange={handleInputChange}
+              disabled={loading}
+              placeholder='Non-profit, Government, Healthcare, etc.'
+              className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
+            />
+          </div>
+
+          <div className='flex flex-col space-y-2'>
+            <label>Organization Size</label>
+            <div className='relative inline-block'>
+              <select
+                name='organizationSize'
+                value={formData.organizationSize}
+                onChange={handleInputChange}
+                disabled={loading}
+                className='text-gray-900 appearance-none box-border w-full h-auto px-4 py-4 bg-white border-[1px] border-gray rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
+              >
+                <option value='' className='text-gray-900'>
+                  Select organization size (optional)
+                </option>
+                <option value='SMALL'>Small (1-50 employees)</option>
+                <option value='MEDIUM'>Medium (51-200 employees)</option>
+                <option value='LARGE'>Large (201-1000 employees)</option>
+                <option value='EXTRA_LARGE'>Extra Large (1000+ employees)</option>
               </select>
               <div className='pointer-events-none absolute inset-y-0 right-2 flex items-center px-3'>
                 <svg

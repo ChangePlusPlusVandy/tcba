@@ -9,6 +9,7 @@ import {
   archiveOrganization,
   unarchiveOrganization,
   deleteOrganization,
+  deactivateAccount,
 } from '../controllers/organizationController.js';
 import { authenticateToken } from '../middleware/auth.js';
 
@@ -23,5 +24,6 @@ router.put('/:id/decline', authenticateToken, declineOrganization);
 router.put('/:id/archive', authenticateToken, archiveOrganization);
 router.put('/:id/unarchive', authenticateToken, unarchiveOrganization);
 router.delete('/:id', authenticateToken, deleteOrganization);
+router.delete('/profile/deactivate', authenticateToken, deactivateAccount);
 
 export default router;

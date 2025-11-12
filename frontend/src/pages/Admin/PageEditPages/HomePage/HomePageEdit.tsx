@@ -50,13 +50,13 @@ const HomePageEdit = () => {
   };
 
   const handleContentChange = (key: string, value: string) => {
-    setContent(prev => ({
-      ...prev,
+    setContent({
+      ...content,
       [key]: {
-        ...prev[key],
+        ...content[key],
         value,
       },
-    }));
+    });
   };
 
   const handleSave = async () => {
@@ -85,7 +85,10 @@ const HomePageEdit = () => {
         throw new Error('Failed to save changes');
       }
 
+      await fetchContent();
+
       setSuccessMessage('Changes saved successfully!');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err: any) {
       console.error('Error saving:', err);
@@ -348,7 +351,7 @@ const HomePageEdit = () => {
 
           {/* Preview Modal */}
           {showPreview && (
-            <div className='fixed inset-0 z-50 flex items-center justify-center bg-gray-500 bg-opacity-30 p-4'>
+            <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4'>
               <div className='bg-white rounded-lg w-full h-full overflow-hidden flex flex-col'>
                 <div className='flex items-center justify-between p-4 border-b bg-white sticky top-0 z-10'>
                   <h2 className='text-xl font-bold text-gray-900'>Preview: Home Page</h2>

@@ -78,6 +78,7 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
       website,
       address,
       city,
+      state,
       zipCode,
       latitude,
       longitude,
@@ -125,6 +126,7 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
         website: website || null,
         address: address || null,
         city: city || null,
+        state: state || null,
         zipCode: zipCode || null,
         latitude: latitude ? parseFloat(latitude) : null,
         longitude: longitude ? parseFloat(longitude) : null,
@@ -460,5 +462,55 @@ export const deleteOrganization = async (req: AuthenticatedRequest, res: Respons
   } catch (error) {
     console.error('Error deleting organization:', error);
     res.status(500).json({ error: 'Failed to delete organization' });
+  }
+};
+
+/**
+ * @desc    Deactivate own organization account (self-deactivation)
+ * @route   DELETE /api/organizations/profile/deactivate
+ * @access  Own organization only
+ */
+export const deactivateAccount = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const orgToDelete = await prisma.organization.findUnique({
+      where: { id: req.user.id },
+    });
+
+    if (!orgToDelete) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    console.log(
+      `Organization ${orgToDelete.name} (${orgToDelete.id}) is requesting account deactivation`
+    );
+
+    // Delete from Clerk first
+    if (orgToDelete.clerkId) {
+      try {
+        console.log(`Deleting Clerk user: ${orgToDelete.clerkId}`);
+        await clerkClient.users.deleteUser(orgToDelete.clerkId);
+        console.log(`Successfully deleted Clerk user: ${orgToDelete.clerkId}`);
+      } catch (clerkError: any) {
+        console.error('Error deleting Clerk user:', {
+          clerkId: orgToDelete.clerkId,
+          error: clerkError.message,
+          status: clerkError.status,
+        });
+        // Continue with database deletion even if Clerk deletion fails
+      }
+    }
+
+    // Delete organization (cascade will delete survey responses)
+    await prisma.organization.delete({ where: { id: req.user.id } });
+
+    console.log(`Successfully deactivated and deleted organization: ${orgToDelete.name}`);
+    res.json({ message: 'Account deactivated successfully' });
+  } catch (error) {
+    console.error('Error deactivating account:', error);
+    res.status(500).json({ error: 'Failed to deactivate account' });
   }
 };

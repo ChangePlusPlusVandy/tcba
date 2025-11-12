@@ -56,7 +56,6 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // If preview content is provided, use it directly
     if (previewContent) {
       setContent(previewContent);
       setLoading(false);
@@ -249,7 +248,6 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
             const desc = content[`priority${num}_desc`]?.value || '';
             return (
               <div key={num} className='flex flex-col items-center text-center space-y-4'>
-                {/* icon image (gray for now!) */}
                 <div className='w-20 h-20 bg-slate-300 rounded' />
                 <div className='space-y-2'>
                   <p className='text-sm font-semibold text-slate-800'>{title}</p>
@@ -378,7 +376,6 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
             </div>
           </div>
 
-          {/* placeholder for map */}
           <div className='bg-slate-300 min-h-[300px] rounded-lg' />
         </div>
 
