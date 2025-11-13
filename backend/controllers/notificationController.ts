@@ -125,7 +125,16 @@ export const sendCustomEmail = async (req: AuthenticatedRequest, res: Response) 
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    const { targetTags, targetRegions, subject, message, html, recipientEmails } = req.body;
+    const {
+      targetTags,
+      targetRegions,
+      subject,
+      message,
+      html,
+      recipientEmails,
+      filters,
+      scheduledFor,
+    } = req.body;
 
     if (!subject || (!message && !html)) {
       return res.status(400).json({ error: 'Subject and message or html are required' });
@@ -171,6 +180,37 @@ export const sendCustomEmail = async (req: AuthenticatedRequest, res: Response) 
     `;
     const textBody = message ?? htmlBody.replace(/<[^>]+>/g, '');
 
+    if (scheduledFor) {
+      console.log('[sendCustomEmail] Scheduling email for:', scheduledFor);
+      try {
+        const emailHistory = await prisma.emailHistory.create({
+          data: {
+            subject,
+            body: htmlBody,
+            recipientEmails: emails,
+            recipientCount: emails.length,
+            filters: filters || null,
+            scheduledFor: new Date(scheduledFor),
+            status: 'SCHEDULED',
+            createdByAdminId: req.user.id,
+          },
+        });
+
+        console.log('[sendCustomEmail] Email scheduled successfully:', emailHistory.id);
+        return res.status(200).json({
+          message: 'Email scheduled successfully',
+          total: emails.length,
+          scheduledFor,
+          emailHistoryId: emailHistory.id,
+        });
+      } catch (scheduleError) {
+        console.error('[sendCustomEmail] Failed to schedule email:', scheduleError);
+        throw scheduleError;
+      }
+    }
+
+    console.log('[sendCustomEmail] Sending email immediately to', emails.length, 'recipients');
+
     let sent = 0;
     const errors: any[] = [];
 
@@ -197,6 +237,25 @@ export const sendCustomEmail = async (req: AuthenticatedRequest, res: Response) 
       }
     }
 
+    const status = sent > 0 ? 'SENT' : 'FAILED';
+    try {
+      await prisma.emailHistory.create({
+        data: {
+          subject,
+          body: htmlBody,
+          recipientEmails: emails,
+          recipientCount: emails.length,
+          filters: filters || null,
+          sentAt: new Date(),
+          status,
+          createdByAdminId: req.user.id,
+        },
+      });
+      console.log('[sendCustomEmail] Email history saved successfully');
+    } catch (historyError) {
+      console.error('[sendCustomEmail] Failed to save email history:', historyError);
+    }
+
     return res.status(200).json({
       message: 'Custom email send complete',
       total: emails.length,
@@ -207,6 +266,25 @@ export const sendCustomEmail = async (req: AuthenticatedRequest, res: Response) 
   } catch (error) {
     console.error('Error sending custom email:', error);
     return res.status(500).json({ error: 'Failed to send custom email' });
+  }
+};
+
+export const getEmailHistory = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user || req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const emailHistory = await prisma.emailHistory.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return res.status(200).json(emailHistory);
+  } catch (error) {
+    console.error('Error fetching email history:', error);
+    return res.status(500).json({ error: 'Failed to fetch email history' });
   }
 };
 

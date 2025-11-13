@@ -193,6 +193,29 @@ model Notification {
   @@map("notifications")
 }
 
+model EmailHistory {
+  id               String    @id @default(cuid())
+  subject          String
+  body             String    @db.Text
+  recipientEmails  String[]
+  recipientCount   Int
+  filters          Json?
+  scheduledFor     DateTime?
+  sentAt           DateTime?
+  status           EmailStatus @default(SCHEDULED)
+  createdByAdminId String
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@map("email_history")
+}
+
+enum EmailStatus {
+  SCHEDULED
+  SENT
+  FAILED
+}
+
 model PageContent {
   id           String   @id @default(cuid())
   page         String   
