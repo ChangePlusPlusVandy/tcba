@@ -4,6 +4,7 @@ import ContentEditor from '../components/ContentEditor';
 import ImageUploader from '../components/ImageUploader';
 import AdminSidebar from '../../../../components/AdminSidebar';
 import Register from '../../../RegisterPage/Register';
+import Toast from '../../../../components/Toast';
 
 interface ContentItem {
   id: string;
@@ -20,8 +21,7 @@ const RegisterPageEdit = () => {
   const [content, setContent] = useState<PageContentState>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
@@ -43,7 +43,7 @@ const RegisterPageEdit = () => {
       setContent(data);
     } catch (err: any) {
       console.error('Error fetching content:', err);
-      setError(err.message || 'Failed to load content');
+      setToast({ message: err.message || 'Failed to load content', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -62,8 +62,6 @@ const RegisterPageEdit = () => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      setError(null);
-      setSuccessMessage(null);
 
       const token = await getToken();
 
@@ -87,12 +85,10 @@ const RegisterPageEdit = () => {
 
       await fetchContent();
 
-      setSuccessMessage('Changes saved successfully!');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => setSuccessMessage(null), 3000);
+      setToast({ message: 'Changes saved successfully!', type: 'success' });
     } catch (err: any) {
       console.error('Error saving:', err);
-      setError(err.message || 'Failed to save changes');
+      setToast({ message: err.message || 'Failed to save changes', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -100,8 +96,6 @@ const RegisterPageEdit = () => {
 
   const handleReset = () => {
     fetchContent();
-    setSuccessMessage(null);
-    setError(null);
   };
 
   if (loading) {
@@ -126,18 +120,6 @@ const RegisterPageEdit = () => {
               Manage the content displayed on the Get Involved (Register) page
             </p>
           </div>
-
-          {successMessage && (
-            <div className='mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-md'>
-              {successMessage}
-            </div>
-          )}
-
-          {error && (
-            <div className='mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md'>
-              {error}
-            </div>
-          )}
 
           <div className='bg-white rounded-lg shadow-md p-6 mb-6'>
             <h2 className='text-xl font-semibold text-gray-800 mb-4'>Hero Section</h2>
@@ -316,6 +298,7 @@ const RegisterPageEdit = () => {
           )}
         </div>
       </div>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
+import Toast from '../../../components/Toast';
 
 interface Tag {
   id: string;
@@ -44,8 +45,7 @@ const ProfilePage = () => {
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -111,7 +111,7 @@ const ProfilePage = () => {
       });
     } catch (err: any) {
       console.error('Error fetching organization data:', err);
-      setError(err.message || 'Failed to load organization data');
+      setToast({ message: err.message || 'Failed to load organization data', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -150,8 +150,6 @@ const ProfilePage = () => {
     e.preventDefault();
     try {
       setSaving(true);
-      setError(null);
-      setSuccessMessage(null);
 
       const token = await getToken();
 
@@ -171,11 +169,10 @@ const ProfilePage = () => {
 
       const updatedData = await response.json();
       setOrganization(updatedData);
-      setSuccessMessage('Organization profile updated successfully!');
-      setTimeout(() => setSuccessMessage(null), 3000);
+      setToast({ message: 'Organization profile updated successfully!', type: 'success' });
     } catch (err: any) {
       console.error('Error updating organization:', err);
-      setError(err.message || 'Failed to update organization');
+      setToast({ message: err.message || 'Failed to update organization', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -201,18 +198,6 @@ const ProfilePage = () => {
           <p className='text-gray-600 mb-8'>
             Manage your organization's information and preferences
           </p>
-
-          {successMessage && (
-            <div className='mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-md'>
-              {successMessage}
-            </div>
-          )}
-
-          {error && (
-            <div className='mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md'>
-              {error}
-            </div>
-          )}
 
           <form onSubmit={handleSubmit}>
             <div className='bg-white rounded-lg shadow-md p-6 mb-6'>
@@ -488,6 +473,7 @@ const ProfilePage = () => {
           </form>
         </div>
       </div>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 };

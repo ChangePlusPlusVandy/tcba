@@ -3,6 +3,7 @@ import { useAuth } from '@clerk/clerk-react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import AdminSidebar from '../../../components/AdminSidebar';
+import Toast from '../../../components/Toast';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -60,9 +61,10 @@ const CustomEmail = () => {
   const [emailHistory, setEmailHistory] = useState<EmailHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [expandedEmailIds, setExpandedEmailIds] = useState<Set<string>>(new Set());
+  const [regionDropdownOpen, setRegionDropdownOpen] = useState(false);
+  const [orgSizeDropdownOpen, setOrgSizeDropdownOpen] = useState(false);
 
   const handleImageUpload = () => {
     const input = document.createElement('input');
@@ -295,25 +297,23 @@ const CustomEmail = () => {
 
   const handleSend = async () => {
     if (!emailTitle.trim() || !emailBody.trim()) {
-      setError('Please provide both email title and body');
+      setToast({ message: 'Please provide both email title and body', type: 'error' });
       return;
     }
 
     if (scheduleType === 'scheduled' && !scheduledDateTime) {
-      setError('Please select a schedule date and time');
+      setToast({ message: 'Please select a schedule date and time', type: 'error' });
       return;
     }
 
     const recipients = getFilteredOrganizations();
     if (recipients.length === 0) {
-      setError('Please select at least one organization to send the email to');
+      setToast({ message: 'Please select at least one organization to send the email to', type: 'error' });
       return;
     }
 
     try {
       setSending(true);
-      setError(null);
-      setSuccessMessage(null);
 
       const token = await getToken();
 
@@ -344,9 +344,9 @@ const CustomEmail = () => {
       }
 
       if (scheduleType === 'scheduled') {
-        setSuccessMessage(`Email scheduled successfully for ${recipients.length} organization(s)!`);
+        setToast({ message: `Email scheduled successfully for ${recipients.length} organization(s)!`, type: 'success' });
       } else {
-        setSuccessMessage(`Email sent successfully to ${recipients.length} organization(s)!`);
+        setToast({ message: `Email sent successfully to ${recipients.length} organization(s)!`, type: 'success' });
       }
 
       // Refresh email history
@@ -362,13 +362,9 @@ const CustomEmail = () => {
       setOrgSearchQuery('');
       setScheduleType('now');
       setScheduledDateTime('');
-
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => setSuccessMessage(null), 5000);
     } catch (err: any) {
       console.error('Error sending email:', err);
-      setError(err.message || 'Failed to send email');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setToast({ message: err.message || 'Failed to send email', type: 'error' });
     } finally {
       setSending(false);
     }
@@ -446,18 +442,6 @@ const CustomEmail = () => {
             </nav>
           </div>
 
-          {successMessage && (
-            <div className='mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-md'>
-              {successMessage}
-            </div>
-          )}
-
-          {error && (
-            <div className='mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md'>
-              {error}
-            </div>
-          )}
-
           {activeTab === 'new' && (
             <>
               {/* Filters Section */}
@@ -496,16 +480,57 @@ const CustomEmail = () => {
                   <label className='text-sm font-semibold text-gray-700 mb-2 block'>
                     Filter by Region
                   </label>
-                  <select
-                    value={selectedRegion}
-                    onChange={e => setSelectedRegion(e.target.value)}
-                    className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
-                  >
-                    <option value=''>None</option>
-                    <option value='EAST'>East</option>
-                    <option value='MIDDLE'>Middle</option>
-                    <option value='WEST'>West</option>
-                  </select>
+                  <div className='relative'>
+                    <button
+                      type='button'
+                      onClick={() => setRegionDropdownOpen(!regionDropdownOpen)}
+                      className='w-full px-4 py-2 border border-gray-300 rounded-[10px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#D54242] hover:bg-gray-50 flex items-center justify-between'
+                    >
+                      <span>{selectedRegion === '' ? 'None' : selectedRegion === 'EAST' ? 'East' : selectedRegion === 'MIDDLE' ? 'Middle' : 'West'}</span>
+                      <svg
+                        className={`w-4 h-4 transition-transform ${regionDropdownOpen ? 'rotate-180' : ''}`}
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M19 9l-7 7-7-7'
+                        />
+                      </svg>
+                    </button>
+
+                    {regionDropdownOpen && (
+                      <div className='absolute top-full left-0 mt-2 w-full bg-white border border-gray-300 rounded-[10px] shadow-lg z-50'>
+                        <div className='py-2'>
+                          {[
+                            { value: '', label: 'None' },
+                            { value: 'EAST', label: 'East' },
+                            { value: 'MIDDLE', label: 'Middle' },
+                            { value: 'WEST', label: 'West' },
+                          ].map(region => (
+                            <button
+                              key={region.value}
+                              type='button'
+                              onClick={() => {
+                                setSelectedRegion(region.value);
+                                setRegionDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-4 py-2 hover:bg-gray-50 text-sm ${
+                                selectedRegion === region.value
+                                  ? 'bg-blue-50 text-[#194B90] font-medium'
+                                  : 'text-gray-700'
+                              }`}
+                            >
+                              {region.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Organization Size Filter */}
@@ -513,17 +538,68 @@ const CustomEmail = () => {
                   <label className='text-sm font-semibold text-gray-700 mb-2 block'>
                     Filter by Organization Size
                   </label>
-                  <select
-                    value={selectedOrgSize}
-                    onChange={e => setSelectedOrgSize(e.target.value)}
-                    className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
-                  >
-                    <option value=''>None</option>
-                    <option value='SMALL'>Small (1-50 employees)</option>
-                    <option value='MEDIUM'>Medium (51-200 employees)</option>
-                    <option value='LARGE'>Large (201-1000 employees)</option>
-                    <option value='EXTRA_LARGE'>Extra Large (1000+ employees)</option>
-                  </select>
+                  <div className='relative'>
+                    <button
+                      type='button'
+                      onClick={() => setOrgSizeDropdownOpen(!orgSizeDropdownOpen)}
+                      className='w-full px-4 py-2 border border-gray-300 rounded-[10px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#D54242] hover:bg-gray-50 flex items-center justify-between'
+                    >
+                      <span>
+                        {selectedOrgSize === ''
+                          ? 'None'
+                          : selectedOrgSize === 'SMALL'
+                            ? 'Small (1-50 employees)'
+                            : selectedOrgSize === 'MEDIUM'
+                              ? 'Medium (51-200 employees)'
+                              : selectedOrgSize === 'LARGE'
+                                ? 'Large (201-1000 employees)'
+                                : 'Extra Large (1000+ employees)'}
+                      </span>
+                      <svg
+                        className={`w-4 h-4 transition-transform ${orgSizeDropdownOpen ? 'rotate-180' : ''}`}
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M19 9l-7 7-7-7'
+                        />
+                      </svg>
+                    </button>
+
+                    {orgSizeDropdownOpen && (
+                      <div className='absolute top-full left-0 mt-2 w-full bg-white border border-gray-300 rounded-[10px] shadow-lg z-50'>
+                        <div className='py-2'>
+                          {[
+                            { value: '', label: 'None' },
+                            { value: 'SMALL', label: 'Small (1-50 employees)' },
+                            { value: 'MEDIUM', label: 'Medium (51-200 employees)' },
+                            { value: 'LARGE', label: 'Large (201-1000 employees)' },
+                            { value: 'EXTRA_LARGE', label: 'Extra Large (1000+ employees)' },
+                          ].map(size => (
+                            <button
+                              key={size.value}
+                              type='button'
+                              onClick={() => {
+                                setSelectedOrgSize(size.value);
+                                setOrgSizeDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-4 py-2 hover:bg-gray-50 text-sm ${
+                                selectedOrgSize === size.value
+                                  ? 'bg-blue-50 text-[#194B90] font-medium'
+                                  : 'text-gray-700'
+                              }`}
+                            >
+                              {size.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Manual Organization Selection */}
@@ -671,8 +747,6 @@ const CustomEmail = () => {
                     setOrgSearchQuery('');
                     setScheduleType('now');
                     setScheduledDateTime('');
-                    setError(null);
-                    setSuccessMessage(null);
                   }}
                   disabled={sending}
                   className='px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50'
@@ -817,6 +891,7 @@ const CustomEmail = () => {
           )}
         </div>
       </div>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 };

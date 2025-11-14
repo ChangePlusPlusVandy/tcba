@@ -1,4 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
+import Toast from '../../components/Toast';
 
 interface PageContent {
   [key: string]: { id: string; value: string; type: string };
@@ -16,8 +17,7 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
     message: '',
   });
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [content, setContent] = useState<PageContent>({});
   const [pageLoading, setPageLoading] = useState(true);
 
@@ -52,8 +52,6 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setSuccess(false);
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/contact`, {
@@ -70,13 +68,13 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
         throw new Error(errorData.error || 'Failed to send message');
       }
 
-      setSuccess(true);
+      setToast({ message: 'Message sent successfully! We\'ll get back to you as soon as possible.', type: 'success' });
       setFormData({
         title: '',
         message: '',
       });
     } catch (err: any) {
-      setError(err.message || 'Failed to send message. Please try again.');
+      setToast({ message: err.message || 'Failed to send message. Please try again.', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -107,21 +105,6 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
       </div>
 
       <form onSubmit={handleSubmit} className='flex flex-col space-y-8 w-full mx-auto'>
-        {success && (
-          <div className='bg-green-50 border border-green-200 text-green-700 px-6 py-4 rounded-lg'>
-            <p className='font-semibold'>Message Sent Successfully!</p>
-            <p className='text-sm mt-1'>
-              Thank you for contacting us. We'll get back to you as soon as possible.
-            </p>
-          </div>
-        )}
-
-        {error && (
-          <div className='bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg'>
-            {error}
-          </div>
-        )}
-
         <div className='flex flex-col space-y-2'>
           <label className='text-base font-semibold text-slate-900'>Subject</label>
           <input
@@ -160,6 +143,7 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
           </button>
         </div>
       </form>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 };

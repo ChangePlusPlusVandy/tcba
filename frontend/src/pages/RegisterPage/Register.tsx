@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Toast from '../../components/Toast';
 
 interface PageContent {
   [key: string]: { id: string; value: string; type: string };
@@ -52,8 +53,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
     additionalNotes: '',
   });
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [content, setContent] = useState<PageContent>({});
   const [pageLoading, setPageLoading] = useState(true);
 
@@ -90,7 +90,6 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/organizations/register`, {
@@ -121,7 +120,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
         throw new Error(errorData.error || 'Failed to submit application');
       }
 
-      setSuccess(true);
+      setToast({ message: 'Application Submitted Successfully! A TCBA administrator will review your request and contact you via email.', type: 'success' });
       setFormData({
         name: '',
         address: '',
@@ -140,12 +139,8 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
         organizationSize: '',
         additionalNotes: '',
       });
-
-      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (err: any) {
-      setError(err.message || 'Failed to submit application. Please try again.');
-
-      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setToast({ message: err.message || 'Failed to submit application. Please try again.', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -302,21 +297,6 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           onSubmit={handleSubmit}
           className='flex flex-col space-y-8 w-full mx-auto'
         >
-          {success && (
-            <div className='bg-green-50 border border-green-200 text-green-700 px-6 py-4 rounded-lg'>
-              <p className='font-semibold'>Application Submitted Successfully!</p>
-              <p className='text-sm mt-1'>
-                A TCBA administrator will review your request and contact you via email.
-              </p>
-            </div>
-          )}
-
-          {error && (
-            <div className='bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg'>
-              {error}
-            </div>
-          )}
-
           <div className='flex flex-col space-y-2'>
             <label>Organization Name</label>
             <input
@@ -521,7 +501,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>Organization Size</label>
+            <label>Organization Size (Optional)</label>
             <div className='relative inline-block'>
               <select
                 name='organizationSize'
@@ -531,7 +511,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
                 className='text-gray-900 appearance-none box-border w-full h-auto px-4 py-4 bg-white border-[1px] border-gray rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
               >
                 <option value='' className='text-gray-900'>
-                  Select organization size (optional)
+                  Select organization size
                 </option>
                 <option value='SMALL'>Small (1-50 employees)</option>
                 <option value='MEDIUM'>Medium (51-200 employees)</option>
@@ -575,6 +555,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
         </form>
       </div>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 };
