@@ -61,7 +61,10 @@ const CustomEmail = () => {
   const [emailHistory, setEmailHistory] = useState<EmailHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info';
+  } | null>(null);
   const [expandedEmailIds, setExpandedEmailIds] = useState<Set<string>>(new Set());
   const [regionDropdownOpen, setRegionDropdownOpen] = useState(false);
   const [orgSizeDropdownOpen, setOrgSizeDropdownOpen] = useState(false);
@@ -170,6 +173,25 @@ const CustomEmail = () => {
       fetchEmailHistory();
     }
   }, [activeTab]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+
+      if (!target.closest('.region-dropdown-container')) {
+        setRegionDropdownOpen(false);
+      }
+      if (!target.closest('.org-size-dropdown-container')) {
+        setOrgSizeDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Clear manual exclusions when filters change
   useEffect(() => {
@@ -308,7 +330,10 @@ const CustomEmail = () => {
 
     const recipients = getFilteredOrganizations();
     if (recipients.length === 0) {
-      setToast({ message: 'Please select at least one organization to send the email to', type: 'error' });
+      setToast({
+        message: 'Please select at least one organization to send the email to',
+        type: 'error',
+      });
       return;
     }
 
@@ -344,9 +369,15 @@ const CustomEmail = () => {
       }
 
       if (scheduleType === 'scheduled') {
-        setToast({ message: `Email scheduled successfully for ${recipients.length} organization(s)!`, type: 'success' });
+        setToast({
+          message: `Email scheduled successfully for ${recipients.length} organization(s)!`,
+          type: 'success',
+        });
       } else {
-        setToast({ message: `Email sent successfully to ${recipients.length} organization(s)!`, type: 'success' });
+        setToast({
+          message: `Email sent successfully to ${recipients.length} organization(s)!`,
+          type: 'success',
+        });
       }
 
       // Refresh email history
@@ -480,13 +511,21 @@ const CustomEmail = () => {
                   <label className='text-sm font-semibold text-gray-700 mb-2 block'>
                     Filter by Region
                   </label>
-                  <div className='relative'>
+                  <div className='relative region-dropdown-container'>
                     <button
                       type='button'
                       onClick={() => setRegionDropdownOpen(!regionDropdownOpen)}
-                      className='w-full px-4 py-2 border border-gray-300 rounded-[10px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#D54242] hover:bg-gray-50 flex items-center justify-between'
+                      className='w-full px-4 py-2 border border-gray-300 rounded-[10px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#194B90] hover:bg-gray-50 flex items-center justify-between'
                     >
-                      <span>{selectedRegion === '' ? 'None' : selectedRegion === 'EAST' ? 'East' : selectedRegion === 'MIDDLE' ? 'Middle' : 'West'}</span>
+                      <span>
+                        {selectedRegion === ''
+                          ? 'None'
+                          : selectedRegion === 'EAST'
+                            ? 'East'
+                            : selectedRegion === 'MIDDLE'
+                              ? 'Middle'
+                              : 'West'}
+                      </span>
                       <svg
                         className={`w-4 h-4 transition-transform ${regionDropdownOpen ? 'rotate-180' : ''}`}
                         fill='none'
@@ -538,11 +577,11 @@ const CustomEmail = () => {
                   <label className='text-sm font-semibold text-gray-700 mb-2 block'>
                     Filter by Organization Size
                   </label>
-                  <div className='relative'>
+                  <div className='relative org-size-dropdown-container'>
                     <button
                       type='button'
                       onClick={() => setOrgSizeDropdownOpen(!orgSizeDropdownOpen)}
-                      className='w-full px-4 py-2 border border-gray-300 rounded-[10px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#D54242] hover:bg-gray-50 flex items-center justify-between'
+                      className='w-full px-4 py-2 border border-gray-300 rounded-[10px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#194B90] hover:bg-gray-50 flex items-center justify-between'
                     >
                       <span>
                         {selectedOrgSize === ''

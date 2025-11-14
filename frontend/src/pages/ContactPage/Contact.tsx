@@ -17,7 +17,10 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
     message: '',
   });
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info';
+  } | null>(null);
   const [content, setContent] = useState<PageContent>({});
   const [pageLoading, setPageLoading] = useState(true);
 
@@ -68,13 +71,19 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
         throw new Error(errorData.error || 'Failed to send message');
       }
 
-      setToast({ message: 'Message sent successfully! We\'ll get back to you as soon as possible.', type: 'success' });
+      setToast({
+        message: "Message sent successfully! We'll get back to you as soon as possible.",
+        type: 'success',
+      });
       setFormData({
         title: '',
         message: '',
       });
     } catch (err: any) {
-      setToast({ message: err.message || 'Failed to send message. Please try again.', type: 'error' });
+      setToast({
+        message: err.message || 'Failed to send message. Please try again.',
+        type: 'error',
+      });
     } finally {
       setLoading(false);
     }

@@ -32,6 +32,8 @@ import RegisterPageEdit from '../pages/Admin/PageEditPages/RegisterPage/Register
 import ContactPageEdit from '../pages/Admin/PageEditPages/ContactPage/ContactPageEdit';
 import EmailSignupPageEdit from '../pages/Admin/PageEditPages/EmailSignupPage/EmailSignupPageEdit';
 import CustomEmail from '../pages/Admin/CustomEmail/CustomEmail';
+import AdminMessages from '../pages/Admin/MessagesPage/Messages';
+import OrganizationMessages from '../pages/OrganizationView/MessagesPage/Messages';
 
 const AppRoutes = () => {
   return (
@@ -107,6 +109,14 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path='/messages'
+        element={
+          <ProtectedRoute>
+            <OrganizationMessages />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path='/admin'
         element={
           <AdminRoute>
@@ -167,6 +177,14 @@ const AppRoutes = () => {
         element={
           <AdminRoute>
             <CustomEmail />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/messages'
+        element={
+          <AdminRoute>
+            <AdminMessages />
           </AdminRoute>
         }
       />

@@ -53,7 +53,10 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
     additionalNotes: '',
   });
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info';
+  } | null>(null);
   const [content, setContent] = useState<PageContent>({});
   const [pageLoading, setPageLoading] = useState(true);
 
@@ -120,7 +123,11 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
         throw new Error(errorData.error || 'Failed to submit application');
       }
 
-      setToast({ message: 'Application Submitted Successfully! A TCBA administrator will review your request and contact you via email.', type: 'success' });
+      setToast({
+        message:
+          'Application Submitted Successfully! A TCBA administrator will review your request and contact you via email.',
+        type: 'success',
+      });
       setFormData({
         name: '',
         address: '',
@@ -140,7 +147,10 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
         additionalNotes: '',
       });
     } catch (err: any) {
-      setToast({ message: err.message || 'Failed to submit application. Please try again.', type: 'error' });
+      setToast({
+        message: err.message || 'Failed to submit application. Please try again.',
+        type: 'error',
+      });
     } finally {
       setLoading(false);
     }
