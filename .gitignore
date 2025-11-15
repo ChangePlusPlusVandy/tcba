@@ -120,3 +120,6 @@ uploads/
 *.pem
 *.key
 *.crt
+
+# Seed data (contains sensitive organization info)
+backend/prisma/seedOrganizationLocations.ts

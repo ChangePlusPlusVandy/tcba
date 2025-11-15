@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import GoogleMap from '../../components/GoogleMap';
 
 // import al logos!
 import aarpLogo from '../../assets/logos/aarp.png';
@@ -40,8 +41,91 @@ type CoalitionPartner = {
   website: string;
 };
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+interface MapOrganization {
+  id: string;
+  name: string;
+  description: string | null;
+  address: string | null;
+  city: string | null;
+  zipCode: string | null;
+  latitude: number;
+  longitude: number;
+  website: string | null;
+  region: string | null;
+  organizationType: string | null;
+  logo?: string;
+}
+
 const AboutPage = () => {
   const [showAllPartners, setShowAllPartners] = useState(false);
+  const [mapOrganizations, setMapOrganizations] = useState<MapOrganization[]>([]);
+  const [isLoadingMap, setIsLoadingMap] = useState(true);
+
+  // Logo mapping for organizations
+  const logoMap: Record<string, string> = {
+    'AARP Tennessee': aarpLogo,
+    'AgeWell Middle Tennessee': agewellLogo,
+    'Aging Commission of the Mid-South': agingcommissionLogo,
+    "Alzheimer's Association Tennessee Chapter": alzheimersassocLogo,
+    "Alzheimer's Tennessee": alzheimerstnLogo,
+    'Centennial Adultcare Center': centennialadultLogo,
+    'East Tennessee Human Resource Agency': ethraLogo,
+    'ENCORE Ministry Foundation': encoreLogo,
+    'Fifty Forward': fiftyforwardLogo,
+    'First Tennessee Area Agency on Aging and Disability': firsttnaaadLogo,
+    'Greater Nashville Regional Council': gnrcLogo,
+    'Interfaith Dental Clinic': ifdentalLogo,
+    'Mental Health America of the Mid-South': mhamidsouthLogo,
+    'Mid-Cumberland Human Resource Agency': mchraLogo,
+    'NASW Tennessee Chapter': naswtnLogo,
+    'Northwest Tennessee Development District': nwtddLogo,
+    'South Central Tennessee Development District': sctnddLogo,
+    'Southeast Tennessee Area Agency on Aging and Disability': sctnaaadLogo,
+    'Southwest Tennessee Development District': swtddLogo,
+    'Tennessee Alliance for Legal Services': talsLogo,
+    'Tennessee Association of Area Agencies on Aging and Disability': taadsLogo,
+    'Tennessee Caregiver Coalition': tnccLogo,
+    'Tennessee Disability Coalition': tndcLogo,
+    'Tennessee Federation for the Aging': tnfdaLogo,
+    'Tennessee Health Care Campaign': tnhccLogo,
+    'Tennessee Justice Center': tnjcLogo,
+    'Upper Cumberland Development District': ucddLogo,
+    'University of Tennessee College of Social Work': utkcswLogo,
+    'Vanderbilt University Medical Center': vumcLogo,
+    'West End Home Foundation': wehfLogo,
+  };
+
+  // Fetch organizations for map
+  useEffect(() => {
+    const fetchMapOrganizations = async () => {
+      try {
+        console.log('Fetching organizations from:', `${API_BASE_URL}/api/map/organizations`);
+        const response = await fetch(`${API_BASE_URL}/api/map/organizations`);
+        console.log('Response status:', response.status);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Received organizations:', data.length, data);
+          // Add logos to organizations
+          const orgsWithLogos = data.map((org: MapOrganization) => ({
+            ...org,
+            logo: logoMap[org.name],
+          }));
+          setMapOrganizations(orgsWithLogos);
+        } else {
+          console.error('Failed to fetch organizations:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching map organizations:', error);
+      } finally {
+        setIsLoadingMap(false);
+      }
+    };
+
+    fetchMapOrganizations();
+  }, []);
 
   // cur priorities data
   const priorities = [
@@ -306,7 +390,7 @@ const AboutPage = () => {
                   Univ. Medical Center
                 </p>
                 <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
-                  <span className='font-semibold'>Co-chair:</span> Grace Sutherland Smith, LMSW -
+                  <span className='font-semibold'>Co-Chair:</span> Grace Sutherland Smith, LMSW -
                   AgeWell Middle TN
                 </p>
                 <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
@@ -317,8 +401,21 @@ const AboutPage = () => {
             </div>
           </div>
 
-          {/* placeholder for map */}
-          <div className='bg-slate-300 min-h-[300px] rounded-lg' />
+          {/* Google Maps showing coalition member organizations */}
+          {isLoadingMap ? (
+            <div className='bg-slate-300 min-h-[300px] rounded-lg flex items-center justify-center'>
+              <p className='text-gray-600'>Loading map...</p>
+            </div>
+          ) : (
+            <GoogleMap
+              apiKey={GOOGLE_MAPS_API_KEY}
+              markers={mapOrganizations}
+              center={{ lat: 35.6775, lng: -86.1804 }}
+              zoom={6.4}
+              height='300px'
+              className='shadow-md'
+            />
+          )}
         </div>
 
         {/* join us */}
