@@ -14,13 +14,14 @@ import alertRoutes from './routes/alertRoutes';
 import inAppNotificationRoutes from './routes/inAppNotificationRoutes';
 import contactRoutes from './routes/contactRoutes';
 import fileUploadRoutes from './routes/fileUploadRoutes';
+import mapRoutes from './routes/mapRoutes';
 import { prisma } from './config/prisma';
 import { clerkClient, clerkMiddleware } from '@clerk/express';
 
 const app = express();
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL || '*',
     credentials: true,
   })
 );
@@ -45,5 +46,6 @@ app.use('/api/blogs', blogRoutes);
 app.use('/api/notifications', inAppNotificationRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/uploads', fileUploadRoutes);
+app.use('/api/map', mapRoutes);
 
 export default app;

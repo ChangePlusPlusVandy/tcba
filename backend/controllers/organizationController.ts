@@ -116,6 +116,37 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
 
     const tempClerkId = `pending_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
+    // Auto-geocode address if lat/lng not provided
+    let finalLatitude = latitude ? parseFloat(latitude) : null;
+    let finalLongitude = longitude ? parseFloat(longitude) : null;
+
+    if (!finalLatitude && !finalLongitude && (address || city)) {
+      try {
+        const fullAddress = `${address || ''}, ${city || ''}, ${zipCode || ''}, Tennessee`.trim();
+        const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+
+        if (apiKey) {
+          console.log('[Registration] Geocoding address:', fullAddress);
+          const encodedAddress = encodeURIComponent(fullAddress);
+          const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}`;
+
+          const response = await fetch(geocodeUrl);
+          const data = await response.json();
+
+          if (data.status === 'OK' && data.results.length > 0) {
+            finalLatitude = data.results[0].geometry.location.lat;
+            finalLongitude = data.results[0].geometry.location.lng;
+            console.log('[Registration] ✓ Geocoded to:', finalLatitude, finalLongitude);
+          } else {
+            console.log('[Registration] Geocoding failed:', data.status);
+          }
+        }
+      } catch (geocodeError) {
+        console.error('[Registration] Geocoding error:', geocodeError);
+        // Continue without coordinates if geocoding fails
+      }
+    }
+
     const newOrg = await prisma.organization.create({
       data: {
         clerkId: tempClerkId,
@@ -126,8 +157,8 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
         address: address || null,
         city: city || null,
         zipCode: zipCode || null,
-        latitude: latitude ? parseFloat(latitude) : null,
-        longitude: longitude ? parseFloat(longitude) : null,
+        latitude: finalLatitude,
+        longitude: finalLongitude,
         primaryContactName: primaryContactName || '',
         primaryContactEmail: primaryContactEmail || '',
         primaryContactPhone: primaryContactPhone || '',
