@@ -26,6 +26,14 @@ import AdminAlerts from '../pages/Admin/AlertsPage/Alerts';
 import AdminSurveys from '../pages/Admin/SurveysPage/Surveys';
 import Blog from '../pages/BlogPage/Blog';
 import BlogsPage from '../pages/BlogsPage/Blogs';
+import HomePageEdit from '../pages/Admin/PageEditPages/HomePage/HomePageEdit';
+import AboutPageEdit from '../pages/Admin/PageEditPages/AboutPage/AboutPageEdit';
+import RegisterPageEdit from '../pages/Admin/PageEditPages/RegisterPage/RegisterPageEdit';
+import ContactPageEdit from '../pages/Admin/PageEditPages/ContactPage/ContactPageEdit';
+import EmailSignupPageEdit from '../pages/Admin/PageEditPages/EmailSignupPage/EmailSignupPageEdit';
+import CustomEmail from '../pages/Admin/CustomEmail/CustomEmail';
+import AdminMessages from '../pages/Admin/MessagesPage/Messages';
+import OrganizationMessages from '../pages/OrganizationView/MessagesPage/Messages';
 
 const AppRoutes = () => {
   return (
@@ -101,6 +109,14 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path='/messages'
+        element={
+          <ProtectedRoute>
+            <OrganizationMessages />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path='/admin'
         element={
           <AdminRoute>
@@ -153,6 +169,62 @@ const AppRoutes = () => {
         element={
           <AdminRoute>
             <AdminSurveys />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/email'
+        element={
+          <AdminRoute>
+            <CustomEmail />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/messages'
+        element={
+          <AdminRoute>
+            <AdminMessages />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/page-edit/home'
+        element={
+          <AdminRoute>
+            <HomePageEdit />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/page-edit/about'
+        element={
+          <AdminRoute>
+            <AboutPageEdit />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/page-edit/register'
+        element={
+          <AdminRoute>
+            <RegisterPageEdit />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/page-edit/contact'
+        element={
+          <AdminRoute>
+            <ContactPageEdit />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/page-edit/signup'
+        element={
+          <AdminRoute>
+            <EmailSignupPageEdit />
           </AdminRoute>
         }
       />

@@ -1,15 +1,51 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
+import Toast from '../../components/Toast';
+
+interface PageContent {
+  [key: string]: { id: string; value: string; type: string };
+}
+
+interface ContactPageProps {
+  previewContent?: PageContent;
+}
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
-const ContactPage = () => {
+const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
   const [formData, setFormData] = useState({
     title: '',
     message: '',
   });
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info';
+  } | null>(null);
+  const [content, setContent] = useState<PageContent>({});
+  const [pageLoading, setPageLoading] = useState(true);
+
+  useEffect(() => {
+    if (previewContent) {
+      setContent(previewContent);
+      setPageLoading(false);
+      return;
+    }
+
+    const loadContent = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/page-content/contact`);
+        if (!response.ok) throw new Error('Failed to fetch page content');
+        const data = await response.json();
+        setContent(data);
+      } catch (error) {
+        console.error('Error loading page content:', error);
+      } finally {
+        setPageLoading(false);
+      }
+    };
+
+    loadContent();
+  }, [previewContent]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -19,8 +55,6 @@ const ContactPage = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setSuccess(false);
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/contact`, {
@@ -37,51 +71,49 @@ const ContactPage = () => {
         throw new Error(errorData.error || 'Failed to send message');
       }
 
-      setSuccess(true);
+      setToast({
+        message: "Message sent successfully! We'll get back to you as soon as possible.",
+        type: 'success',
+      });
       setFormData({
         title: '',
         message: '',
       });
     } catch (err: any) {
-      setError(err.message || 'Failed to send message. Please try again.');
+      setToast({
+        message: err.message || 'Failed to send message. Please try again.',
+        type: 'error',
+      });
     } finally {
       setLoading(false);
     }
   };
 
+  if (pageLoading) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='text-lg'>Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className='mt-8 bg-white px-20 py-16'>
       <div className='mb-12'>
         <h1 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
-          Contact Us
+          {content['header_title']?.value || 'Contact Us'}
         </h1>
-        <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800 max-w-2xl'>
-          Have a general inquiry or a request? Use this form to reach out to us. This form is for
-          general inquiries and requests from other organizations that do not require membership. If
-          you're interested in becoming a member organization, please visit our{' '}
-          <a href='/register' className='text-[#D54242] underline hover:text-[#b53a3a]'>
-            registration page
-          </a>
-          .
-        </p>
+        <p
+          className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800 max-w-2xl'
+          dangerouslySetInnerHTML={{
+            __html:
+              content['header_description']?.value ||
+              "Have a general inquiry or a request? Use this form to reach out to us. This form is for general inquiries and requests from other organizations that do not require membership. If you're interested in becoming a member organization, please visit our <a href='/register' class='text-[#D54242] underline hover:text-[#b53a3a]'>registration page</a>.",
+          }}
+        />
       </div>
 
       <form onSubmit={handleSubmit} className='flex flex-col space-y-8 w-full mx-auto'>
-        {success && (
-          <div className='bg-green-50 border border-green-200 text-green-700 px-6 py-4 rounded-lg'>
-            <p className='font-semibold'>Message Sent Successfully!</p>
-            <p className='text-sm mt-1'>
-              Thank you for contacting us. We'll get back to you as soon as possible.
-            </p>
-          </div>
-        )}
-
-        {error && (
-          <div className='bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg'>
-            {error}
-          </div>
-        )}
-
         <div className='flex flex-col space-y-2'>
           <label className='text-base font-semibold text-slate-900'>Subject</label>
           <input
@@ -120,6 +152,7 @@ const ContactPage = () => {
           </button>
         </div>
       </form>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 };

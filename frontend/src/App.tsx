@@ -35,7 +35,7 @@ function App() {
   return (
     <div className='min-h-screen flex flex-col bg-white'>
       <Navbar />
-      <main className='flex-grow w-full mb-12'>
+      <main className='flex-grow w-full'>
         <AppRoutes />
       </main>
       <Footer />

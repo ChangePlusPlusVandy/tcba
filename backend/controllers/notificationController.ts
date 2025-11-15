@@ -119,37 +119,50 @@ Tennessee Coalition for Better Aging
   await sesClient.send(command);
 };
 
-// Send custom email to organizations, if no tags/regions specified, sends to all orgs
 export const sendCustomEmail = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user || req.user.role !== 'ADMIN') {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    const { targetTags, targetRegions, subject, message, html } = req.body;
+    const {
+      targetTags,
+      targetRegions,
+      subject,
+      message,
+      html,
+      recipientEmails,
+      filters,
+      scheduledFor,
+    } = req.body;
 
     if (!subject || (!message && !html)) {
       return res.status(400).json({ error: 'Subject and message or html are required' });
     }
 
-    // Fetch organizations filtered by tags/regions, or all if none
-    const where: any = { status: 'ACTIVE' };
-    if (targetTags?.length) where.tags = { hasSome: targetTags };
-    if (targetRegions?.length) where.region = { in: targetRegions };
+    let emails: string[];
 
-    const orgs = await prisma.organization.findMany({
-      where,
-      select: { email: true, primaryContactEmail: true },
-    });
+    if (recipientEmails && Array.isArray(recipientEmails) && recipientEmails.length > 0) {
+      emails = Array.from(new Set(recipientEmails.map((e: string) => e.toLowerCase())));
+    } else {
+      const where: any = { status: 'ACTIVE' };
+      if (targetTags?.length) where.tags = { hasSome: targetTags };
+      if (targetRegions?.length) where.region = { in: targetRegions };
 
-    const emails = Array.from(
-      new Set(
-        orgs
-          .map(o => o.primaryContactEmail || o.email)
-          .filter(Boolean)
-          .map(e => e!.toLowerCase())
-      )
-    );
+      const orgs = await prisma.organization.findMany({
+        where,
+        select: { email: true, primaryContactEmail: true },
+      });
+
+      emails = Array.from(
+        new Set(
+          orgs
+            .map(o => o.primaryContactEmail || o.email)
+            .filter(Boolean)
+            .map(e => e!.toLowerCase())
+        )
+      );
+    }
 
     if (emails.length === 0) {
       return res.status(200).json({ message: 'No matching organizations found' });
@@ -167,7 +180,37 @@ export const sendCustomEmail = async (req: AuthenticatedRequest, res: Response) 
     `;
     const textBody = message ?? htmlBody.replace(/<[^>]+>/g, '');
 
-    const { SendEmailCommand } = await import('@aws-sdk/client-ses');
+    if (scheduledFor) {
+      console.log('[sendCustomEmail] Scheduling email for:', scheduledFor);
+      try {
+        const emailHistory = await prisma.emailHistory.create({
+          data: {
+            subject,
+            body: htmlBody,
+            recipientEmails: emails,
+            recipientCount: emails.length,
+            filters: filters || null,
+            scheduledFor: new Date(scheduledFor),
+            status: 'SCHEDULED',
+            createdByAdminId: req.user.id,
+          },
+        });
+
+        console.log('[sendCustomEmail] Email scheduled successfully:', emailHistory.id);
+        return res.status(200).json({
+          message: 'Email scheduled successfully',
+          total: emails.length,
+          scheduledFor,
+          emailHistoryId: emailHistory.id,
+        });
+      } catch (scheduleError) {
+        console.error('[sendCustomEmail] Failed to schedule email:', scheduleError);
+        throw scheduleError;
+      }
+    }
+
+    console.log('[sendCustomEmail] Sending email immediately to', emails.length, 'recipients');
+
     let sent = 0;
     const errors: any[] = [];
 
@@ -194,6 +237,25 @@ export const sendCustomEmail = async (req: AuthenticatedRequest, res: Response) 
       }
     }
 
+    const status = sent > 0 ? 'SENT' : 'FAILED';
+    try {
+      await prisma.emailHistory.create({
+        data: {
+          subject,
+          body: htmlBody,
+          recipientEmails: emails,
+          recipientCount: emails.length,
+          filters: filters || null,
+          sentAt: new Date(),
+          status,
+          createdByAdminId: req.user.id,
+        },
+      });
+      console.log('[sendCustomEmail] Email history saved successfully');
+    } catch (historyError) {
+      console.error('[sendCustomEmail] Failed to save email history:', historyError);
+    }
+
     return res.status(200).json({
       message: 'Custom email send complete',
       total: emails.length,
@@ -207,7 +269,25 @@ export const sendCustomEmail = async (req: AuthenticatedRequest, res: Response) 
   }
 };
 
-// Send announcement email to organizations matching tags/regions, if none specified, send to all, and all email subscribers
+export const getEmailHistory = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user || req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const emailHistory = await prisma.emailHistory.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return res.status(200).json(emailHistory);
+  } catch (error) {
+    console.error('Error fetching email history:', error);
+    return res.status(500).json({ error: 'Failed to fetch email history' });
+  }
+};
+
 export const sendAnnouncementNotification = async (req: AuthenticatedRequest, res: Response) => {
   try {
     // Only admins can send
@@ -252,7 +332,6 @@ export const sendAnnouncementNotification = async (req: AuthenticatedRequest, re
       )
     );
 
-    // Get all active email subscribers
     const subscribers = await prisma.emailSubscription.findMany({
       where: { isActive: true },
       select: { email: true },
@@ -260,7 +339,6 @@ export const sendAnnouncementNotification = async (req: AuthenticatedRequest, re
 
     const subscriberEmails = subscribers.map(s => s.email.toLowerCase());
 
-    // Combine all recipients and remove duplicates
     const allRecipients = Array.from(new Set([...orgEmails, ...subscriberEmails]));
 
     if (allRecipients.length === 0) {
@@ -281,7 +359,6 @@ export const sendAnnouncementNotification = async (req: AuthenticatedRequest, re
     `;
     const textBody = `${announcement.title}\n\n${announcement.content}\n\nRead more: ${frontendUrl}/announcements/${announcement.slug}`;
 
-    const { SendEmailCommand } = await import('@aws-sdk/client-ses');
     let sent = 0;
     const errors: any[] = [];
 
@@ -321,7 +398,6 @@ export const sendAnnouncementNotification = async (req: AuthenticatedRequest, re
   }
 };
 
-// send survey invitation to organizations matching targetTags/targetRegions, if none specified, send to all
 export const sendSurveyNotification = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user || req.user.role !== 'ADMIN') {
@@ -382,7 +458,6 @@ export const sendSurveyNotification = async (req: AuthenticatedRequest, res: Res
     `;
     const textBody = `${survey.title}\n\n${survey.description ?? ''}\n\nTake the survey here: ${surveyUrl}`;
 
-    const { SendEmailCommand } = await import('@aws-sdk/client-ses');
     let sent = 0;
     const errors: any[] = [];
 
@@ -422,7 +497,6 @@ export const sendSurveyNotification = async (req: AuthenticatedRequest, res: Res
   }
 };
 
-// send blog notification to all email subscribers
 export const sendBlogNotification = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user || req.user.role !== 'ADMIN') {
@@ -476,7 +550,6 @@ export const sendBlogNotification = async (req: AuthenticatedRequest, res: Respo
 
     const textBody = `${blog.title}\nby ${blog.author}\n\n${blog.content.substring(0, 300)}...\n\nRead the full post: ${blogUrl}`;
 
-    const { SendEmailCommand } = await import('@aws-sdk/client-ses');
     let sent = 0;
     const errors: any[] = [];
 
@@ -516,7 +589,6 @@ export const sendBlogNotification = async (req: AuthenticatedRequest, res: Respo
   }
 };
 
-// send alerts notification to organizations matching targetTags/targetRegions, if none specified, send to all
 export const sendAlertNotification = async (req: AuthenticatedRequest, res: Response) => {
   try {
     // Only admins can send alerts
@@ -573,7 +645,6 @@ export const sendAlertNotification = async (req: AuthenticatedRequest, res: Resp
     `;
     const textBody = `${subject}\n\n${message}`;
 
-    const { SendEmailCommand } = await import('@aws-sdk/client-ses');
     let sent = 0;
     const errors: any[] = [];
 

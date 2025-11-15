@@ -1,6 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import tcbaDDABill from '../../assets/TCBADDABill.jpeg';
+import { FaHandHoldingHeart, FaUserNurse, FaHome } from 'react-icons/fa';
+import { HiUserGroup } from 'react-icons/hi';
 import GoogleMap from '../../components/GoogleMap';
+
+interface PageContent {
+  [key: string]: { id: string; value: string; type: string };
+}
+
+interface AboutPageProps {
+  previewContent?: PageContent;
+}
 
 // import al logos!
 import aarpLogo from '../../assets/logos/aarp.png';
@@ -34,14 +45,7 @@ import utkcswLogo from '../../assets/logos/utkcsw.png';
 import vumcLogo from '../../assets/logos/vumc.png';
 import wehfLogo from '../../assets/logos/wehf.png';
 
-// member org type
-type CoalitionPartner = {
-  name: string;
-  logo: string;
-  website: string;
-};
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 interface MapOrganization {
@@ -59,10 +63,12 @@ interface MapOrganization {
   logo?: string;
 }
 
-const AboutPage = () => {
+const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
   const [showAllPartners, setShowAllPartners] = useState(false);
   const [mapOrganizations, setMapOrganizations] = useState<MapOrganization[]>([]);
   const [isLoadingMap, setIsLoadingMap] = useState(true);
+  const [content, setContent] = useState<PageContent>({});
+  const [loading, setLoading] = useState(true);
 
   // Logo mapping for organizations
   const logoMap: Record<string, string> = {
@@ -127,22 +133,38 @@ const AboutPage = () => {
     fetchMapOrganizations();
   }, []);
 
-  // cur priorities data
-  const priorities = [
-    {
-      title: 'Increasing Support for Family Caregivers',
-    },
-    {
-      title: 'Addressing the Direct Care Worker Shortage',
-    },
-    {
-      title: 'Expanding Home-Community Based Services and Supports for Aging in Community',
-    },
-    {
-      title:
-        'Collaborating with TN Dept of Disability and Aging (TDDA) on a Multisector Plan for Aging in TN',
-    },
-  ];
+  useEffect(() => {
+    if (previewContent) {
+      setContent(previewContent);
+      setLoading(false);
+      return;
+    }
+
+    const loadContent = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/page-content/about`);
+        if (!response.ok) throw new Error('Failed to fetch page content');
+        const data = await response.json();
+        setContent(data);
+      } catch (error) {
+        console.error('Error loading page content:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadContent();
+  }, [previewContent]);
+
+  if (loading) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='text-lg'>Loading...</div>
+      </div>
+    );
+  }
+
+  const missionImageSrc = content['mission_image']?.value || tcbaDDABill;
 
   // Coalition partners
   const coalitionRows = [
@@ -265,45 +287,93 @@ const AboutPage = () => {
           <div className='bg-white px-8 sm:px-12 py-20 flex items-center'>
             <div className='p-8'>
               <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
-                The Mission
+                {content['mission_title']?.value || 'The Mission'}
               </h2>
-              <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
-                The Tennessee Coalition for Better Aging exists to promote the general welfare of
-                older Tennesseans and their families through partnerships that mobilize resources to
-                educate and advocate for important policies and programs.
-              </p>
+              <div
+                className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'
+                dangerouslySetInnerHTML={{
+                  __html:
+                    content['mission_description']?.value ||
+                    'The Tennessee Coalition for Better Aging exists to promote the general welfare of older Tennesseans and their families through partnerships that mobilize resources to educate and advocate for important policies and programs.',
+                }}
+              />
             </div>
           </div>
-          {/* placeholder image (gray for now!) */}
-          <div className='bg-slate-300 min-h-[220px] mr-12' />
+          <div className='bg-slate-300 h-[400px] mr-12 overflow-hidden rounded-lg relative group'>
+            <img src={missionImageSrc} alt='TCBA DDA Bill' className='w-full h-full object-cover' />
+            <div className='absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-6'>
+              <div
+                className='text-white text-sm leading-relaxed'
+                dangerouslySetInnerHTML={{
+                  __html:
+                    content['mission_image_hover']?.value ||
+                    'TCBA advocates alongside, Commissioner Brad Turner, Gov. Bill Lee, and bill sponsor, Sen. Becky Massey at the signing of the Tennessee Disability and Aging Act, legislation that merges DIDD and TCAD, creating a new Department of Disability and Aging (DDA) on April 11, 2024.',
+                }}
+              />
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* current priorities */}
       <section className='mt-8 bg-white px-20 py-16'>
         <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 text-center mb-12'>
-          Current Priorities
+          {content['priorities_title']?.value || 'Current Priorities'}
         </h2>
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10'>
-          {priorities.map((priority, index) => (
-            <div key={index} className='flex flex-col items-center text-center space-y-4'>
-              {/* icon image (gray for now!) */}
-              <div className='w-20 h-20 bg-slate-300 rounded' />
-              <p className='text-sm text-slate-800 leading-relaxed px-2'>{priority.title}</p>
-            </div>
-          ))}
+          {[
+            {
+              num: 1,
+              defaultTitle: 'Increasing Support for Family Caregivers',
+              icon: FaHandHoldingHeart,
+            },
+            {
+              num: 2,
+              defaultTitle: 'Addressing the Direct Care Worker Shortage',
+              icon: FaUserNurse,
+            },
+            {
+              num: 3,
+              defaultTitle:
+                'Collaborating with TN Dept of Disability and Aging (TDDA) on a Multisector Plan for Aging in TN',
+              icon: HiUserGroup,
+            },
+            {
+              num: 4,
+              defaultTitle:
+                'Expanding Home- Community-Based Services and Supports for Aging in Community',
+              icon: FaHome,
+            },
+          ].map(({ num, defaultTitle, icon: Icon }) => {
+            const title = content[`priority${num}_title`]?.value || defaultTitle;
+            const desc = content[`priority${num}_desc`]?.value || '';
+            return (
+              <div key={num} className='flex flex-col items-center text-center space-y-4'>
+                <div className='w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center'>
+                  <Icon className='w-10 h-10 text-slate-700' />
+                </div>
+                <div className='space-y-2'>
+                  <p className='text-sm font-semibold text-slate-800'>{title}</p>
+                  {desc && (
+                    <div
+                      className='text-xs text-slate-600 leading-relaxed px-2'
+                      dangerouslySetInnerHTML={{ __html: desc }}
+                    />
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
         <div className='flex justify-center'>
           <button
             className='text-white px-8 py-3 rounded-full text-sm font-semibold shadow-md hover:opacity-90 transition'
             style={{ backgroundColor: '#D54242' }}
           >
-            Learn more about our advocacy
+            {content['priorities_button_text']?.value || 'Learn more about our advocacy'}
           </button>
         </div>
       </section>
 
-      {/* our coalition */}
       <section className='mt-8 bg-white px-20 py-16'>
         <div className='text-center space-y-4 mb-12'>
           <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800'>
@@ -382,21 +452,27 @@ const AboutPage = () => {
           <div className='flex items-center'>
             <div className='space-y-6'>
               <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800'>
-                TCBA Officers
+                {content['officers_title']?.value || 'TCBA Officers'}
               </h2>
               <div className='space-y-3'>
-                <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
-                  <span className='font-semibold'>Co-Chair:</span> James Powers, MD - Vanderbilt
-                  Univ. Medical Center
-                </p>
-                <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
-                  <span className='font-semibold'>Co-Chair:</span> Grace Sutherland Smith, LMSW -
-                  AgeWell Middle TN
-                </p>
-                <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
-                  <span className='font-semibold'>Secretary:</span> Donna DeStefano - TN Disability
-                  Coalition
-                </p>
+                {content['officers_cochair1']?.value && (
+                  <p
+                    className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'
+                    dangerouslySetInnerHTML={{ __html: content['officers_cochair1'].value }}
+                  />
+                )}
+                {content['officers_cochair2']?.value && (
+                  <p
+                    className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'
+                    dangerouslySetInnerHTML={{ __html: content['officers_cochair2'].value }}
+                  />
+                )}
+                {content['officers_secretary']?.value && (
+                  <p
+                    className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'
+                    dangerouslySetInnerHTML={{ __html: content['officers_secretary'].value }}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -425,7 +501,7 @@ const AboutPage = () => {
             className='inline-block text-white px-8 py-3 rounded-full text-sm font-semibold shadow-md hover:opacity-90 transition'
             style={{ backgroundColor: '#D54242' }}
           >
-            Join us
+            {content['officers_button_text']?.value || 'Join us'}
           </Link>
         </div>
       </section>

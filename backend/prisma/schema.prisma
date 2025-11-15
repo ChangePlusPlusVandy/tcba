@@ -101,6 +101,10 @@ model Organization {
   role                  OrganizationRole   @default(MEMBER)
   status                OrganizationStatus @default(PENDING)
   tags                  String[]
+  notifyAnnouncements   Boolean            @default(true)
+  notifySurveys         Boolean            @default(true)
+  notifyAlerts          Boolean            @default(true)
+  notifyBlogs           Boolean            @default(true)
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
   surveyResponses       SurveyResponse[]
@@ -187,6 +191,43 @@ model Notification {
   lastCheckedAt DateTime?
 
   @@map("notifications")
+}
+
+model EmailHistory {
+  id               String    @id @default(cuid())
+  subject          String
+  body             String    @db.Text
+  recipientEmails  String[]
+  recipientCount   Int
+  filters          Json?
+  scheduledFor     DateTime?
+  sentAt           DateTime?
+  status           EmailStatus @default(SCHEDULED)
+  createdByAdminId String
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@map("email_history")
+}
+
+enum EmailStatus {
+  SCHEDULED
+  SENT
+  FAILED
+}
+
+model PageContent {
+  id           String   @id @default(cuid())
+  page         String   
+  section      String   
+  contentKey   String   
+  contentValue String   @db.Text 
+  contentType  String   
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([page, section, contentKey])
+  @@map("page_content")
 }
 
 enum OrganizationRole {

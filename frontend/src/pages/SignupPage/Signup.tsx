@@ -1,23 +1,70 @@
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useState, useEffect } from 'react';
 
-const SignupPage = () => {
+interface PageContent {
+  [key: string]: { id: string; value: string; type: string };
+}
+
+interface SignupPageProps {
+  previewContent?: PageContent;
+}
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
+
+const SignupPage = ({ previewContent }: SignupPageProps = {}) => {
   return (
     <div>
-      <SignupForm />
+      <SignupForm previewContent={previewContent} />
     </div>
   );
 };
 
-const SignupForm = () => {
+interface SignupFormProps {
+  previewContent?: PageContent;
+}
+
+const SignupForm = ({ previewContent }: SignupFormProps = {}) => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [announcements, setAnnouncements] = useState(false);
   const [blogs, setBlogs] = useState(false);
+  const [content, setContent] = useState<PageContent>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (previewContent) {
+      setContent(previewContent);
+      setLoading(false);
+      return;
+    }
+
+    const loadContent = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/page-content/signup`);
+        if (!response.ok) throw new Error('Failed to fetch page content');
+        const data = await response.json();
+        setContent(data);
+      } catch (error) {
+        console.error('Error loading page content:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadContent();
+  }, [previewContent]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitted(true);
     console.log('Form submitted!', { announcements, blogs });
   };
+
+  if (loading) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='text-lg'>Loading...</div>
+      </div>
+    );
+  }
 
   if (isSubmitted) {
     return (
@@ -26,13 +73,16 @@ const SignupForm = () => {
           <span className='text-gray-500'></span>
         </div>
         <h1 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
-          Form submitted!
+          {content['success_title']?.value || 'Form submitted!'}
         </h1>
-        <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800 text-center max-w-2xl mb-6'>
-          The Tennessee Coalition for Better Aging exists to promote the general welfare of older
-          Tennesseans and their families through partnerships that mobilize resources to educate and
-          advocate for important policies and programs.
-        </p>
+        <div
+          className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800 text-center max-w-2xl mb-6'
+          dangerouslySetInnerHTML={{
+            __html:
+              content['success_message']?.value ||
+              'The Tennessee Coalition for Better Aging exists to promote the general welfare of older Tennesseans and their families through partnerships that mobilize resources to educate and advocate for important policies and programs.',
+          }}
+        />
       </div>
     );
   }
@@ -42,15 +92,17 @@ const SignupForm = () => {
       <div className='grid md:grid-cols-2 gap-8 mb-12'>
         <div>
           <h1 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
-            Subscribe to Email Notifications
+            {content['header_title']?.value || 'Subscribe to Email Notifications'}
           </h1>
 
-          <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800 mb-6'>
-            Please fill out this form to be notified of our latest posts and service updates. The
-            Tennessee Coalition for Better Aging exists to promote the general welfare of older
-            Tennesseans and their families through partnerships that mobilize resources to educate
-            and advocate for important policies and programs.
-          </p>
+          <div
+            className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800 mb-6'
+            dangerouslySetInnerHTML={{
+              __html:
+                content['header_description']?.value ||
+                'Please fill out this form to be notified of our latest posts and service updates. The Tennessee Coalition for Better Aging exists to promote the general welfare of older Tennesseans and their families through partnerships that mobilize resources to educate and advocate for important policies and programs.',
+            }}
+          />
         </div>
       </div>
 

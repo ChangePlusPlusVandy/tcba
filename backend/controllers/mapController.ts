@@ -61,9 +61,9 @@ export const geocodeAddress = async (req: Request, res: Response) => {
     const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}`;
 
     const response = await fetch(geocodeUrl);
-    const data = await response.json();
+    const data: any = await response.json();
 
-    if (data.status === 'OK' && data.results.length > 0) {
+    if (data.status === 'OK' && data.results && data.results.length > 0) {
       const location = data.results[0].geometry.location;
       res.status(200).json({
         latitude: location.lat,

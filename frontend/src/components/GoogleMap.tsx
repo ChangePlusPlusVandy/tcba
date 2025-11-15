@@ -64,6 +64,12 @@ const GoogleMap = ({
       return () => clearInterval(pollInterval);
     }
 
+    if (!apiKey) {
+      console.error('✗ Google Maps API key is missing');
+      setError('Google Maps API key is not configured');
+      return;
+    }
+
     console.log('Loading Google Maps API with key:', apiKey.substring(0, 10) + '...');
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
