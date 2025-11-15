@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Toast from '../../components/Toast';
+import getInvolvedImage from '../../assets/getInvolved.png';
 
 interface PageContent {
   [key: string]: { id: string; value: string; type: string };
@@ -176,7 +177,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
     );
   }
 
-  const heroImageSrc = content['hero_image']?.value;
+  const heroImageSrc = content['hero_image']?.value || getInvolvedImage;
 
   return (
     <div className='mt-8'>
@@ -225,18 +226,13 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
             </div>
           </div>
 
-          <div
-            className='min-h-[220px] bg-slate-200 mr-12'
-            style={
-              heroImageSrc
-                ? {
-                    backgroundImage: `url(${heroImageSrc})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  }
-                : {}
-            }
-          />
+          <div className='h-[400px] bg-slate-200 mr-12 overflow-hidden rounded-lg'>
+            <img
+              src={heroImageSrc}
+              alt='Get Involved with TCBA'
+              className='w-full h-full object-cover'
+            />
+          </div>
         </div>
       </section>
 

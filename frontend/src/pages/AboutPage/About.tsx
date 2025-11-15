@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import tcbaDDABill from '../../assets/TCBADDABill.jpeg';
+import { FaHandHoldingHeart, FaUserNurse, FaHome } from 'react-icons/fa';
+import { HiUserGroup } from 'react-icons/hi';
 
 interface PageContent {
   [key: string]: { id: string; value: string; type: string };
@@ -200,7 +203,7 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
     );
   }
 
-  const missionImageSrc = content['mission_image']?.value;
+  const missionImageSrc = content['mission_image']?.value || tcbaDDABill;
 
   return (
     <div className='flex flex-col mt-8'>
@@ -221,19 +224,19 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
               />
             </div>
           </div>
-          {/* placeholder image (gray for now!) */}
-          <div
-            className='bg-slate-300 min-h-[220px] mr-12'
-            style={
-              missionImageSrc
-                ? {
-                    backgroundImage: `url(${missionImageSrc})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  }
-                : {}
-            }
-          />
+          {/* banner image */}
+          <div className='bg-slate-300 h-[400px] mr-12 overflow-hidden rounded-lg relative group'>
+            <img
+              src={missionImageSrc}
+              alt='TCBA DDA Bill'
+              className='w-full h-full object-cover'
+            />
+            <div className='absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-6'>
+              <p className='text-white text-sm leading-relaxed'>
+                TCBA advocates alongside, Commissioner Brad Turner, Gov. Bill Lee, and bill sponsor, Sen. Becky Massey at the signing of the Tennessee Disability and Aging Act, legislation that merges DIDD and TCAD, creating a new Department of Disability and Aging (DDA) on April 11, 2024.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -243,12 +246,37 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
           {content['priorities_title']?.value || 'Current Priorities'}
         </h2>
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10'>
-          {[1, 2, 3, 4].map(num => {
-            const title = content[`priority${num}_title`]?.value || '';
+          {[
+            {
+              num: 1,
+              defaultTitle: 'Increasing Support for Family Caregivers',
+              icon: FaHandHoldingHeart,
+            },
+            {
+              num: 2,
+              defaultTitle: 'Addressing the Direct Care Worker Shortage',
+              icon: FaUserNurse,
+            },
+            {
+              num: 3,
+              defaultTitle:
+                'Collaborating with TN Dept of Disability and Aging (TDDA) on a Multisector Plan for Aging in TN',
+              icon: HiUserGroup,
+            },
+            {
+              num: 4,
+              defaultTitle:
+                'Expanding Home- Community-Based Services and Supports for Aging in Community',
+              icon: FaHome,
+            },
+          ].map(({ num, defaultTitle, icon: Icon }) => {
+            const title = content[`priority${num}_title`]?.value || defaultTitle;
             const desc = content[`priority${num}_desc`]?.value || '';
             return (
               <div key={num} className='flex flex-col items-center text-center space-y-4'>
-                <div className='w-20 h-20 bg-slate-300 rounded' />
+                <div className='w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center'>
+                  <Icon className='w-10 h-10 text-slate-700' />
+                </div>
                 <div className='space-y-2'>
                   <p className='text-sm font-semibold text-slate-800'>{title}</p>
                   {desc && (

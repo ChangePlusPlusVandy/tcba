@@ -150,7 +150,7 @@ const BlogsPage = () => {
               </p>
             </div>
           </div>
-          <div className='min-h-[220px] bg-slate-200 mr-12' />
+          <div className='h-[400px] bg-slate-200 mr-12 rounded-lg' />
         </div>
       </section>
 

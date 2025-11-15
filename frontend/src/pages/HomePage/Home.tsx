@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import heroImage from '../../assets/home.jpg';
+import tcbaCapitol from '../../assets/TCBACapitol.jpg';
+import tcbaGroupPhoto from '../../assets/TCBAGroupPhoto.png';
 import { FaHandshake, FaBullhorn, FaPeopleArrows, FaChartLine } from 'react-icons/fa';
 import { MdHealthAndSafety, MdFamilyRestroom } from 'react-icons/md';
 
@@ -189,43 +191,75 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
       </section>
 
       <section className='relative w-screen left-1/2 -translate-x-1/2 -mt-8'>
-        <div className='grid grid-cols-1 sm:grid-cols-2 grid-rows-4 sm:grid-rows-2 gap-0'>
-          <div className='bg-white border border-transparent shadow-lg px-8 sm:px-12 py-12 space-y-6 min-h-[220px] flex flex-col justify-center'>
-            <h2 className='text-3xl font-bold text-slate-900'>
-              {content['working_title']?.value || 'Working Towards a Better Tomorrow'}
-            </h2>
-            <div
-              className='text-base text-slate-600 leading-relaxed max-w-[80%]'
-              dangerouslySetInnerHTML={{
-                __html:
-                  content['working_paragraph1']?.value ||
-                  "Given that older adults are the fastest growing segment of Tennessee's population and the most significant increase will be among those 85 and older, and given that family caregivers provide over 80% of long-term care, we are committed to advocating for and with older adults and their families.",
-              }}
-            />
-            <div
-              className='text-base text-slate-600 leading-relaxed max-w-[80%]'
-              dangerouslySetInnerHTML={{
-                __html:
-                  content['working_paragraph2']?.value ||
-                  'The Coalition for Better Aging takes collective action to ensure that older adults can age with dignity and family caregivers have the support they need. The COVID-19 pandemic highlighted the shortcomings of our current systems and the need to prioritize the health and well-being of older Tennesseans and their families.',
-              }}
-            />
+        <div className='max-w-7xl mx-auto px-4 sm:px-6'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 auto-rows-fr'>
+            <div className='bg-white border border-transparent px-8 sm:px-12 py-10 space-y-4 flex flex-col justify-center rounded-lg'>
+              <h2 className='text-3xl font-bold text-slate-900'>
+                {content['working_title']?.value || 'Working Towards a Better Tomorrow'}
+              </h2>
+              <div
+                className='text-base text-slate-600 leading-relaxed max-w-[80%]'
+                dangerouslySetInnerHTML={{
+                  __html:
+                    content['working_paragraph1']?.value ||
+                    "Given that older adults are the fastest growing segment of Tennessee's population and the most significant increase will be among those 85 and older, and given that family caregivers provide over 80% of long-term care, we are committed to advocating for and with older adults and their families.",
+                }}
+              />
+              <div
+                className='text-base text-slate-600 leading-relaxed max-w-[80%]'
+                dangerouslySetInnerHTML={{
+                  __html:
+                    content['working_paragraph2']?.value ||
+                    'The Coalition for Better Aging takes collective action to ensure that older adults can age with dignity and family caregivers have the support they need. The COVID-19 pandemic highlighted the shortcomings of our current systems and the need to prioritize the health and well-being of older Tennesseans and their families.',
+                }}
+              />
+            </div>
+            <div className='bg-slate-200 border border-transparent overflow-hidden relative group rounded-lg'>
+              <img
+                src={content['working_image1']?.value || tcbaCapitol}
+                alt='TCBA at the Capitol'
+                className='w-full h-full object-cover'
+              />
+              <div className='absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-6'>
+                <p className='text-white text-sm leading-relaxed'>
+                  TCBA members (left to right) Dianne Oliver, Executive Director of The West Home Foundation; Carol Westlake, Executive Director of the Tennessee Disability Coalition (TDC); Mia McNeil, State Director for AARP-TN; Kimberly Spaulding, AARP-TN's Advocacy Director; Grace Smith, Executive Director of AgeWell Middle TN and Donna DeStefano, Assistant Executive Director of TDC after meeting with Gov. Bill Lee's staff to discuss elevating and reorganizing aging and disability at the state level.
+                </p>
+              </div>
+            </div>
+            <div className='bg-slate-200 border border-transparent overflow-hidden relative group rounded-lg'>
+              <img
+                src={content['working_image2']?.value || tcbaGroupPhoto}
+                alt='TCBA Group Photo'
+                className='w-full h-full object-cover'
+              />
+              <div className='absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-6'>
+                <p className='text-white text-sm leading-relaxed'>
+                  TCBA members (left to right) Grace Smith, AgeWell Middle TN; Sara Fowler, GNRC Director of Aging and Disability Services; Dianne Oliver, The West Home Foundation; Kimberly Spaulding, AARP-TN; Mia McNeil, AARP-TN; and Donna DeStefano, TDC met with DIDD Commissioner Brad Turner and Chief of Staff, Lauren LeGate, to discuss priority issues, opportunities and proposed legislation to move TCAD and create a Dept. of Aging and Disability.
+                </p>
+              </div>
+            </div>
+            <div className='bg-white border border-transparent px-8 sm:px-12 py-10 space-y-4 flex flex-col justify-center rounded-lg'>
+              <h2 className='text-3xl font-bold text-slate-900'>
+                {content['working_text_title']?.value || 'Our Vision'}
+              </h2>
+              <div
+                className='text-base text-slate-600 leading-relaxed'
+                dangerouslySetInnerHTML={{
+                  __html:
+                    content['working_text_paragraph1']?.value ||
+                    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
+                }}
+              />
+              <div
+                className='text-base text-slate-600 leading-relaxed'
+                dangerouslySetInnerHTML={{
+                  __html:
+                    content['working_text_paragraph2']?.value ||
+                    'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.',
+                }}
+              />
+            </div>
           </div>
-          {[1, 2, 3].map(item => (
-            <div
-              key={item}
-              className='min-h-[220px] bg-slate-200 border border-transparent shadow-inner'
-              style={
-                content[`working_image${item}`]?.value
-                  ? {
-                      backgroundImage: `url(${content[`working_image${item}`].value})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                    }
-                  : {}
-              }
-            />
-          ))}
         </div>
       </section>
 

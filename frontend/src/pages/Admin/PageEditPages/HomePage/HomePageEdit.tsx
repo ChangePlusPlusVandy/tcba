@@ -52,12 +52,13 @@ const HomePageEdit = () => {
     }
   };
 
-  const handleContentChange = (key: string, value: string) => {
+  const handleContentChange = (key: string, value: string, type?: string) => {
     setContent({
       ...content,
       [key]: {
         ...content[key],
         value,
+        type: type || content[key]?.type || 'text',
       },
     });
   };
@@ -68,22 +69,62 @@ const HomePageEdit = () => {
 
       const token = await getToken();
 
-      const updates = Object.entries(content).map(([key, item]) => ({
-        id: item.id,
-        contentValue: item.value,
-      }));
+      // Separate existing items (with ID) and new items (without ID)
+      const existingItems: any[] = [];
+      const newItems: any[] = [];
 
-      const response = await fetch(`${API_BASE_URL}/api/page-content/bulk`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ updates }),
+      Object.entries(content).forEach(([key, item]) => {
+        if (item.id) {
+          existingItems.push({
+            id: item.id,
+            contentValue: item.value,
+          });
+        } else if (item.value) {
+          // Parse the key to extract section and contentKey
+          const parts = key.split('_');
+          const section = parts[0];
+          const contentKey = parts.slice(1).join('_');
+
+          newItems.push({
+            page: 'home',
+            section,
+            contentKey,
+            contentValue: item.value,
+            contentType: item.type || 'text',
+          });
+        }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to save changes');
+      // Create new items first
+      for (const newItem of newItems) {
+        const createResponse = await fetch(`${API_BASE_URL}/api/page-content`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(newItem),
+        });
+
+        if (!createResponse.ok) {
+          throw new Error(`Failed to create ${newItem.contentKey}`);
+        }
+      }
+
+      // Update existing items
+      if (existingItems.length > 0) {
+        const response = await fetch(`${API_BASE_URL}/api/page-content/bulk`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ updates: existingItems }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save changes');
+        }
       }
 
       await fetchContent();
@@ -183,7 +224,7 @@ const HomePageEdit = () => {
               type='richtext'
             />
 
-            <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-6'>
               <ImageUploader
                 label='Image 1'
                 currentImageUrl={content['working_image1']?.value}
@@ -194,10 +235,28 @@ const HomePageEdit = () => {
                 currentImageUrl={content['working_image2']?.value}
                 onChange={val => handleContentChange('working_image2', val)}
               />
-              <ImageUploader
-                label='Image 3'
-                currentImageUrl={content['working_image3']?.value}
-                onChange={val => handleContentChange('working_image3', val)}
+            </div>
+
+            <div className='space-y-4'>
+              <h3 className='text-lg font-semibold text-gray-700'>Vision Section</h3>
+              <ContentEditor
+                label='Section Title'
+                value={content['working_text_title']?.value || ''}
+                onChange={val => handleContentChange('working_text_title', val)}
+                type='text'
+                placeholder='Our Vision'
+              />
+              <ContentEditor
+                label='Paragraph 1'
+                value={content['working_text_paragraph1']?.value || ''}
+                onChange={val => handleContentChange('working_text_paragraph1', val)}
+                type='richtext'
+              />
+              <ContentEditor
+                label='Paragraph 2'
+                value={content['working_text_paragraph2']?.value || ''}
+                onChange={val => handleContentChange('working_text_paragraph2', val)}
+                type='richtext'
               />
             </div>
           </div>

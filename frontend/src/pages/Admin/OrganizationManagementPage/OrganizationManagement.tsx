@@ -51,7 +51,6 @@ const OrganizationManagement = () => {
   const { getToken } = useAuth();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'ACTIVE' | 'INACTIVE'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [actioningOrg, setActioningOrg] = useState<string | null>(null);
@@ -153,7 +152,6 @@ const OrganizationManagement = () => {
 
   const fetchOrganizations = async () => {
     try {
-      setError('');
       const response = await fetchWithAuth(`${API_BASE_URL}/api/organizations`);
 
       if (!response.ok) throw new Error('Failed to fetch organizations');
@@ -161,7 +159,7 @@ const OrganizationManagement = () => {
       const data = await response.json();
       setOrganizations(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to load organizations');
+      setToast({ message: err.message || 'Failed to load organizations', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -230,7 +228,6 @@ const OrganizationManagement = () => {
     const { action, orgId } = confirmModal;
     setConfirmModal(null);
     setActioningOrg(orgId);
-    setError('');
 
     try {
       let response;
@@ -261,12 +258,10 @@ const OrganizationManagement = () => {
       };
 
       setToast({ message: successMessages[action], type: 'success' });
-      setError('');
       fetchOrganizations();
     } catch (err: any) {
       const errorMessage = err.message || `Failed to ${action} organization`;
       setToast({ message: errorMessage, type: 'error' });
-      setError(errorMessage);
     } finally {
       setActioningOrg(null);
     }
@@ -278,7 +273,6 @@ const OrganizationManagement = () => {
     const { orgId } = rejectionModal;
     setRejectionModal(null);
     setActioningOrg(orgId);
-    setError('');
 
     try {
       const response = await fetchWithAuth(`${API_BASE_URL}/api/organizations/${orgId}/decline`, {
@@ -298,13 +292,11 @@ const OrganizationManagement = () => {
         message: 'Organization request declined and notification sent.',
         type: 'success',
       });
-      setError('');
-      setRejectionReason('');
+        setRejectionReason('');
       fetchOrganizations();
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to decline organization';
       setToast({ message: errorMessage, type: 'error' });
-      setError(errorMessage);
     } finally {
       setActioningOrg(null);
     }
@@ -316,7 +308,6 @@ const OrganizationManagement = () => {
     const { orgId } = deletionModal;
     setDeletionModal(null);
     setActioningOrg(orgId);
-    setError('');
 
     try {
       const response = await fetchWithAuth(`${API_BASE_URL}/api/organizations/${orgId}`, {
@@ -336,13 +327,11 @@ const OrganizationManagement = () => {
         message: 'Organization deleted and notification sent.',
         type: 'success',
       });
-      setError('');
-      setDeletionReason('');
+        setDeletionReason('');
       fetchOrganizations();
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to delete organization';
       setToast({ message: errorMessage, type: 'error' });
-      setError(errorMessage);
     } finally {
       setActioningOrg(null);
     }
@@ -352,7 +341,6 @@ const OrganizationManagement = () => {
     if (!editingOrg) return;
 
     setActioningOrg(editingOrg.id);
-    setError('');
 
     try {
       const response = await fetchWithAuth(`${API_BASE_URL}/api/organizations/${editingOrg.id}`, {
@@ -369,13 +357,11 @@ const OrganizationManagement = () => {
       }
 
       setToast({ message: 'Organization updated successfully!', type: 'success' });
-      setError('');
-      setEditingOrg(null);
+        setEditingOrg(null);
       fetchOrganizations();
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to update organization';
       setToast({ message: errorMessage, type: 'error' });
-      setError(errorMessage);
     } finally {
       setActioningOrg(null);
     }
@@ -923,11 +909,6 @@ const OrganizationManagement = () => {
             )}
           </div>
 
-          {error && (
-            <div className='bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg mb-6'>
-              {error}
-            </div>
-          )}
 
           {loading ? (
             <div className='text-center py-12'>
