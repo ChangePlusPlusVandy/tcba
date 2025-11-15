@@ -28,10 +28,21 @@ type Tag = {
 const AdminAnnouncements = () => {
   const { getToken } = useAuth();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<'ALL' | 'PUBLISHED' | 'DRAFTS'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newAnnouncement, setNewAnnouncement] = useState({
+    title: '',
+    slug: '',
+    content: '',
+    isPublished: false,
+    tags: [] as string[],
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
 
@@ -98,6 +109,7 @@ const AdminAnnouncements = () => {
 
     return response;
   };
+
   const fetchAnnouncement = async () => {
     try {
       setError('');
@@ -114,8 +126,69 @@ const AdminAnnouncements = () => {
     }
   };
 
+  const fetchTags = async () => {
+    try {
+      setError('');
+      const response = await fetchWithAuth(`${API_BASE_URL}/api/tags`);
+
+      if (!response.ok) throw new Error('Failed to fetch tags');
+
+      const data = await response.json();
+      setTags(data);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load tags');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateAnnouncement = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      const response = await fetchWithAuth(`${API_BASE_URL}/api/announcements`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newAnnouncement),
+      });
+
+      if (!response.ok) throw new Error('Failed to create announcement');
+
+      // Refresh the announcements list
+      await fetchAnnouncement();
+
+      // Close modal and reset form
+      setIsCreateModalOpen(false);
+      setNewAnnouncement({
+        title: '',
+        slug: '',
+        content: '',
+        isPublished: false,
+        tags: [],
+      });
+    } catch (err: any) {
+      setError(err.message || 'Failed to create announcement');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const generateSlug = (title: string): string => {
+    const baseSlug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+    const timestamp = Date.now().toString(36);
+    return `${baseSlug}-${timestamp}`;
+  };
+
   useEffect(() => {
     fetchAnnouncement();
+    fetchTags();
   }, []);
 
   const published = announcements.filter(a => a.isPublished === true);
@@ -162,7 +235,7 @@ const AdminAnnouncements = () => {
                   filter === f
                     ? 'bg-[#EBF3FF] text-[#194B90] border border-[#194B90]'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                }`}
+                } cursor-pointer`}
               >
                 {f.charAt(0) + f.slice(1).toLowerCase()}
               </button>
@@ -193,6 +266,14 @@ const AdminAnnouncements = () => {
                 />
               </svg>
             </div>
+          </div>
+          <div className='flex gap-2'>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className='px-6 py-2.5 rounded-[10px] font-medium transition bg-[#EBF3FF] text-[#194B90] border border-[#194B90] cursor-pointer'
+            >
+              Create
+            </button>
           </div>
         </div>
 
@@ -413,6 +494,165 @@ const AdminAnnouncements = () => {
             <div
               className='modal-backdrop bg-black/30'
               onClick={() => setSelectedAnnouncement(null)}
+            ></div>
+          </div>
+        </>
+      )}
+      {/* CREATE MODAL */}
+      {isCreateModalOpen && (
+        <>
+          <input type='checkbox' checked readOnly className='modal-toggle' />
+          <div className='modal modal-open'>
+            <div className='modal-box max-w-2xl max-h-[80vh] bg-white overflow-y-auto m-8'>
+              <h3 className='font-bold text-xl text-gray-900 mb-4'>Create New Announcement</h3>
+
+              <form onSubmit={handleCreateAnnouncement} className='space-y-4'>
+                {/* Title */}
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                    Title <span className='text-red-500'>*</span>
+                  </label>
+                  <input
+                    type='text'
+                    required
+                    value={newAnnouncement.title}
+                    onChange={e => {
+                      const title = e.target.value;
+                      setNewAnnouncement({
+                        ...newAnnouncement,
+                        title,
+                        slug: generateSlug(title), // ← ADD THIS LINE
+                      });
+                    }}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                    placeholder='Enter announcement title'
+                  />
+                </div>
+
+                {/* Content */}
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                    Content <span className='text-red-500'>*</span>
+                  </label>
+                  <textarea
+                    required
+                    rows={6}
+                    value={newAnnouncement.content}
+                    onChange={e =>
+                      setNewAnnouncement({ ...newAnnouncement, content: e.target.value })
+                    }
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                    placeholder='Enter announcement content'
+                  />
+                </div>
+
+                {/* Tags */}
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-2'>Tags</label>
+                  <div className='border border-gray-300 rounded-lg p-3 min-h-[80px]'>
+                    {tags.length === 0 ? (
+                      <p className='text-sm text-gray-500'>No tags available</p>
+                    ) : (
+                      <div className='flex flex-wrap gap-2'>
+                        {tags.map(tag => {
+                          const isSelected = newAnnouncement.tags.includes(tag.id);
+                          return (
+                            <button
+                              key={tag.id}
+                              type='button'
+                              onClick={() => {
+                                if (isSelected) {
+                                  setNewAnnouncement({
+                                    ...newAnnouncement,
+                                    tags: newAnnouncement.tags.filter(id => id !== tag.id),
+                                  });
+                                } else {
+                                  setNewAnnouncement({
+                                    ...newAnnouncement,
+                                    tags: [...newAnnouncement.tags, tag.id],
+                                  });
+                                }
+                              }}
+                              className={`px-4 py-1 text-sm font-medium rounded-full transition-colors ${
+                                isSelected
+                                  ? 'bg-[#194B90] text-white border-2 border-[#194B90]'
+                                  : 'bg-gray-100 text-gray-700 border-2 border-gray-300 hover:bg-gray-200'
+                              }`}
+                            >
+                              {tag.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Selected count indicator */}
+                  {newAnnouncement.tags.length > 0 && (
+                    <p className='text-xs text-gray-600 mt-2'>
+                      {newAnnouncement.tags.length} tag
+                      {newAnnouncement.tags.length !== 1 ? 's' : ''} selected
+                    </p>
+                  )}
+                </div>
+
+                {/* Published Status */}
+                <div className='flex items-center gap-2'>
+                  <input
+                    type='checkbox'
+                    id='isPublished'
+                    checked={newAnnouncement.isPublished}
+                    onChange={e =>
+                      setNewAnnouncement({ ...newAnnouncement, isPublished: e.target.checked })
+                    }
+                    className='w-4 h-4 text-[#194B90] border-gray-300 rounded focus:ring-[#194B90]'
+                  />
+                  <label htmlFor='isPublished' className='text-sm font-medium text-gray-700'>
+                    Publish immediately
+                  </label>
+                </div>
+
+                {/* Actions */}
+                <div className='flex gap-3 pt-4'>
+                  <button
+                    type='submit'
+                    disabled={isSubmitting}
+                    className='px-6 py-2.5 bg-[#194B90] hover:bg-[#133a72] text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+                  >
+                    {isSubmitting ? 'Creating...' : 'Create Announcement'}
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => {
+                      setIsCreateModalOpen(false);
+                      setNewAnnouncement({
+                        title: '',
+                        slug: '',
+                        content: '',
+                        isPublished: false,
+                        tags: [],
+                      });
+                    }}
+                    className='px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium'
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div
+              className='modal-backdrop bg-black/30'
+              onClick={() => {
+                setIsCreateModalOpen(false);
+                setNewAnnouncement({
+                  title: '',
+                  slug: '',
+                  content: '',
+                  isPublished: false,
+                  tags: [],
+                });
+              }}
             ></div>
           </div>
         </>
