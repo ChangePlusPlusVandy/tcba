@@ -500,6 +500,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
               name='organizationType'
               value={formData.organizationType}
               onChange={handleInputChange}
+              required
               disabled={loading}
               placeholder='Non-profit, Government, Healthcare, etc.'
               className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
@@ -507,16 +508,17 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>Organization Size (Optional)</label>
+            <label>Organization Size</label>
             <div className='relative inline-block'>
               <select
                 name='organizationSize'
                 value={formData.organizationSize}
                 onChange={handleInputChange}
+                required
                 disabled={loading}
                 className='text-gray-900 appearance-none box-border w-full h-auto px-4 py-4 bg-white border-[1px] border-gray rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
               >
-                <option value='' className='text-gray-900'>
+                <option value='' hidden className='text-gray-900'>
                   Select organization size
                 </option>
                 <option value='SMALL'>Small (1-50 employees)</option>

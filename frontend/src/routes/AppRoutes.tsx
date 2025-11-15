@@ -17,6 +17,7 @@ import OrgSurveysPage from '../pages/OrganizationView/SurveysPage/Surveys';
 import OrgAnnouncementsPage from '../pages/OrganizationView/AnnouncementsPage/Announcements';
 import OrgBlogsPage from '../pages/OrganizationView/BlogsPage/Blogs';
 import OrgSettingsPage from '../pages/OrganizationView/SettingsPage/Settings';
+import OrganizationsList from '../pages/OrganizationView/OrganizationsListPage/OrganizationsList';
 import AdminDashboard from '../pages/Admin/AdminDashboard/AdminDashboard';
 import OrganizationManagement from '../pages/Admin/OrganizationManagementPage/OrganizationManagement';
 import Announcement from '../pages/AnnouncementPage/Announcement';
@@ -89,6 +90,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <OrgSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/organizations'
+        element={
+          <ProtectedRoute>
+            <OrganizationsList />
           </ProtectedRoute>
         }
       />

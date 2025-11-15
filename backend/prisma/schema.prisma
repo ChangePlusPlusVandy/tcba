@@ -105,6 +105,7 @@ model Organization {
   notifySurveys         Boolean            @default(true)
   notifyAlerts          Boolean            @default(true)
   notifyBlogs           Boolean            @default(true)
+  visibleInDirectory    Boolean            @default(true)
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
   surveyResponses       SurveyResponse[]
