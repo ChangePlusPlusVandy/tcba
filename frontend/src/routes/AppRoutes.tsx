@@ -26,6 +26,7 @@ import AdminAlerts from '../pages/Admin/AlertsPage/Alerts';
 import AdminSurveys from '../pages/Admin/SurveysPage/Surveys';
 import Blog from '../pages/BlogPage/Blog';
 import BlogsPage from '../pages/BlogsPage/Blogs';
+import CreateAlert from '../pages/Admin/AlertsPage/Create-Alert';
 
 const AppRoutes = () => {
   return (
@@ -145,6 +146,14 @@ const AppRoutes = () => {
         element={
           <AdminRoute>
             <AdminAlerts />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/alerts/create-alert'
+        element={
+          <AdminRoute>
+            <CreateAlert />
           </AdminRoute>
         }
       />
