@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import Toast from '../../../components/Toast';
-import ConfirmModal from '../../../components/ConfirmModal';
 import AdminSidebar from '../../../components/AdminSidebar';
-import { useNavigate } from 'react-router-dom';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -35,7 +32,6 @@ const AdminAnnouncements = () => {
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<'ALL' | 'PUBLISHED' | 'DRAFTS'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
-  const navigate = useNavigate();
 
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
 
