@@ -52,12 +52,13 @@ const AboutPageEdit = () => {
     }
   };
 
-  const handleContentChange = (key: string, value: string) => {
+  const handleContentChange = (key: string, value: string, type?: string) => {
     setContent({
       ...content,
       [key]: {
         ...content[key],
         value,
+        type: type || content[key]?.type || 'text',
       },
     });
   };
@@ -68,22 +69,58 @@ const AboutPageEdit = () => {
 
       const token = await getToken();
 
-      const updates = Object.entries(content).map(([key, item]) => ({
-        id: item.id,
-        contentValue: item.value,
-      }));
+      const existingItems: any[] = [];
+      const newItems: any[] = [];
 
-      const response = await fetch(`${API_BASE_URL}/api/page-content/bulk`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ updates }),
+      Object.entries(content).forEach(([key, item]) => {
+        if (item.id) {
+          existingItems.push({
+            id: item.id,
+            contentValue: item.value,
+          });
+        } else if (item.value) {
+          const parts = key.split('_');
+          const section = parts[0];
+          const contentKey = parts.slice(1).join('_');
+
+          newItems.push({
+            page: 'about',
+            section,
+            contentKey,
+            contentValue: item.value,
+            contentType: item.type || 'text',
+          });
+        }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to save changes');
+      for (const newItem of newItems) {
+        const createResponse = await fetch(`${API_BASE_URL}/api/page-content`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(newItem),
+        });
+
+        if (!createResponse.ok) {
+          throw new Error(`Failed to create ${newItem.contentKey}`);
+        }
+      }
+
+      if (existingItems.length > 0) {
+        const response = await fetch(`${API_BASE_URL}/api/page-content/bulk`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ updates: existingItems }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save changes');
+        }
       }
 
       await fetchContent();
@@ -140,11 +177,21 @@ const AboutPageEdit = () => {
               type='richtext'
             />
 
-            <ImageUploader
-              label='Mission Image'
-              currentImageUrl={content['mission_image']?.value}
-              onChange={val => handleContentChange('mission_image', val)}
-            />
+            <div className='space-y-4'>
+              <h3 className='text-lg font-semibold text-gray-700'>Banner Image</h3>
+              <ImageUploader
+                label='Mission Image'
+                currentImageUrl={content['mission_image']?.value}
+                onChange={val => handleContentChange('mission_image', val)}
+              />
+              <ContentEditor
+                label='Image Hover Text'
+                value={content['mission_image_hover']?.value || ''}
+                onChange={val => handleContentChange('mission_image_hover', val)}
+                type='richtext'
+                placeholder='Enter hover text for banner image...'
+              />
+            </div>
           </div>
 
           <div className='bg-white rounded-lg shadow-md p-6 mb-6'>

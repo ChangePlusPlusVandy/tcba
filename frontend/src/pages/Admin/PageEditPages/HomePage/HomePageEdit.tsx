@@ -68,8 +68,6 @@ const HomePageEdit = () => {
       setSaving(true);
 
       const token = await getToken();
-
-      // Separate existing items (with ID) and new items (without ID)
       const existingItems: any[] = [];
       const newItems: any[] = [];
 
@@ -80,7 +78,6 @@ const HomePageEdit = () => {
             contentValue: item.value,
           });
         } else if (item.value) {
-          // Parse the key to extract section and contentKey
           const parts = key.split('_');
           const section = parts[0];
           const contentKey = parts.slice(1).join('_');
@@ -95,7 +92,6 @@ const HomePageEdit = () => {
         }
       });
 
-      // Create new items first
       for (const newItem of newItems) {
         const createResponse = await fetch(`${API_BASE_URL}/api/page-content`, {
           method: 'POST',
@@ -111,7 +107,6 @@ const HomePageEdit = () => {
         }
       }
 
-      // Update existing items
       if (existingItems.length > 0) {
         const response = await fetch(`${API_BASE_URL}/api/page-content/bulk`, {
           method: 'PUT',
@@ -224,17 +219,38 @@ const HomePageEdit = () => {
               type='richtext'
             />
 
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-6'>
-              <ImageUploader
-                label='Image 1'
-                currentImageUrl={content['working_image1']?.value}
-                onChange={val => handleContentChange('working_image1', val)}
-              />
-              <ImageUploader
-                label='Image 2'
-                currentImageUrl={content['working_image2']?.value}
-                onChange={val => handleContentChange('working_image2', val)}
-              />
+            <div className='space-y-6'>
+              <div className='space-y-4'>
+                <h3 className='text-lg font-semibold text-gray-700'>Image 1 (Capitol)</h3>
+                <ImageUploader
+                  label='Image'
+                  currentImageUrl={content['working_image1']?.value}
+                  onChange={val => handleContentChange('working_image1', val)}
+                />
+                <ContentEditor
+                  label='Hover Text'
+                  value={content['working_image1_hover']?.value || ''}
+                  onChange={val => handleContentChange('working_image1_hover', val)}
+                  type='richtext'
+                  placeholder='Enter hover text for image 1...'
+                />
+              </div>
+
+              <div className='space-y-4'>
+                <h3 className='text-lg font-semibold text-gray-700'>Image 2 (Group Photo)</h3>
+                <ImageUploader
+                  label='Image'
+                  currentImageUrl={content['working_image2']?.value}
+                  onChange={val => handleContentChange('working_image2', val)}
+                />
+                <ContentEditor
+                  label='Hover Text'
+                  value={content['working_image2_hover']?.value || ''}
+                  onChange={val => handleContentChange('working_image2_hover', val)}
+                  type='richtext'
+                  placeholder='Enter hover text for image 2...'
+                />
+              </div>
             </div>
 
             <div className='space-y-4'>

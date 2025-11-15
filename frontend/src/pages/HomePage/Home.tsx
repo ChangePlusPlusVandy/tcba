@@ -221,9 +221,14 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
                 className='w-full h-full object-cover'
               />
               <div className='absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-6'>
-                <p className='text-white text-sm leading-relaxed'>
-                  TCBA members (left to right) Dianne Oliver, Executive Director of The West Home Foundation; Carol Westlake, Executive Director of the Tennessee Disability Coalition (TDC); Mia McNeil, State Director for AARP-TN; Kimberly Spaulding, AARP-TN's Advocacy Director; Grace Smith, Executive Director of AgeWell Middle TN and Donna DeStefano, Assistant Executive Director of TDC after meeting with Gov. Bill Lee's staff to discuss elevating and reorganizing aging and disability at the state level.
-                </p>
+                <div
+                  className='text-white text-sm leading-relaxed'
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      content['working_image1_hover']?.value ||
+                      "TCBA members (left to right) Dianne Oliver, Executive Director of The West Home Foundation; Carol Westlake, Executive Director of the Tennessee Disability Coalition (TDC); Mia McNeil, State Director for AARP-TN; Kimberly Spaulding, AARP-TN's Advocacy Director; Grace Smith, Executive Director of AgeWell Middle TN and Donna DeStefano, Assistant Executive Director of TDC after meeting with Gov. Bill Lee's staff to discuss elevating and reorganizing aging and disability at the state level.",
+                  }}
+                />
               </div>
             </div>
             <div className='bg-slate-200 border border-transparent overflow-hidden relative group rounded-lg'>
@@ -233,9 +238,14 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
                 className='w-full h-full object-cover'
               />
               <div className='absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-6'>
-                <p className='text-white text-sm leading-relaxed'>
-                  TCBA members (left to right) Grace Smith, AgeWell Middle TN; Sara Fowler, GNRC Director of Aging and Disability Services; Dianne Oliver, The West Home Foundation; Kimberly Spaulding, AARP-TN; Mia McNeil, AARP-TN; and Donna DeStefano, TDC met with DIDD Commissioner Brad Turner and Chief of Staff, Lauren LeGate, to discuss priority issues, opportunities and proposed legislation to move TCAD and create a Dept. of Aging and Disability.
-                </p>
+                <div
+                  className='text-white text-sm leading-relaxed'
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      content['working_image2_hover']?.value ||
+                      'TCBA members (left to right) Grace Smith, AgeWell Middle TN; Sara Fowler, GNRC Director of Aging and Disability Services; Dianne Oliver, The West Home Foundation; Kimberly Spaulding, AARP-TN; Mia McNeil, AARP-TN; and Donna DeStefano, TDC met with DIDD Commissioner Brad Turner and Chief of Staff, Lauren LeGate, to discuss priority issues, opportunities and proposed legislation to move TCAD and create a Dept. of Aging and Disability.',
+                  }}
+                />
               </div>
             </div>
             <div className='bg-white border border-transparent px-8 sm:px-12 py-10 space-y-4 flex flex-col justify-center rounded-lg'>

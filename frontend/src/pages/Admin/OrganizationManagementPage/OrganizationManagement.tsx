@@ -292,7 +292,7 @@ const OrganizationManagement = () => {
         message: 'Organization request declined and notification sent.',
         type: 'success',
       });
-        setRejectionReason('');
+      setRejectionReason('');
       fetchOrganizations();
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to decline organization';
@@ -327,7 +327,7 @@ const OrganizationManagement = () => {
         message: 'Organization deleted and notification sent.',
         type: 'success',
       });
-        setDeletionReason('');
+      setDeletionReason('');
       fetchOrganizations();
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to delete organization';
@@ -357,7 +357,7 @@ const OrganizationManagement = () => {
       }
 
       setToast({ message: 'Organization updated successfully!', type: 'success' });
-        setEditingOrg(null);
+      setEditingOrg(null);
       fetchOrganizations();
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to update organization';
@@ -908,7 +908,6 @@ const OrganizationManagement = () => {
               </div>
             )}
           </div>
-
 
           {loading ? (
             <div className='text-center py-12'>

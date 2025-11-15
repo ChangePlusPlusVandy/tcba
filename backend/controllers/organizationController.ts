@@ -515,9 +515,10 @@ export const deactivateAccount = async (req: AuthenticatedRequest, res: Response
       return res.status(404).json({ error: 'Organization not found' });
     }
 
-    console.log(`Organization ${orgToDelete.name} (${orgToDelete.id}) is requesting account deactivation`);
+    console.log(
+      `Organization ${orgToDelete.name} (${orgToDelete.id}) is requesting account deactivation`
+    );
 
-    
     if (orgToDelete.clerkId) {
       try {
         console.log(`Deleting Clerk user: ${orgToDelete.clerkId}`);
@@ -529,11 +530,9 @@ export const deactivateAccount = async (req: AuthenticatedRequest, res: Response
           error: clerkError.message,
           status: clerkError.status,
         });
-        
       }
     }
 
-    
     await prisma.organization.delete({ where: { id: req.user.id } });
 
     console.log(`Successfully deactivated and deleted organization: ${orgToDelete.name}`);

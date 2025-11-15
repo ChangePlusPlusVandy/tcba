@@ -300,15 +300,16 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
             </div>
           </div>
           <div className='bg-slate-300 h-[400px] mr-12 overflow-hidden rounded-lg relative group'>
-            <img
-              src={missionImageSrc}
-              alt='TCBA DDA Bill'
-              className='w-full h-full object-cover'
-            />
+            <img src={missionImageSrc} alt='TCBA DDA Bill' className='w-full h-full object-cover' />
             <div className='absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-6'>
-              <p className='text-white text-sm leading-relaxed'>
-                TCBA advocates alongside, Commissioner Brad Turner, Gov. Bill Lee, and bill sponsor, Sen. Becky Massey at the signing of the Tennessee Disability and Aging Act, legislation that merges DIDD and TCAD, creating a new Department of Disability and Aging (DDA) on April 11, 2024.
-              </p>
+              <div
+                className='text-white text-sm leading-relaxed'
+                dangerouslySetInnerHTML={{
+                  __html:
+                    content['mission_image_hover']?.value ||
+                    'TCBA advocates alongside, Commissioner Brad Turner, Gov. Bill Lee, and bill sponsor, Sen. Becky Massey at the signing of the Tennessee Disability and Aging Act, legislation that merges DIDD and TCAD, creating a new Department of Disability and Aging (DDA) on April 11, 2024.',
+                }}
+              />
             </div>
           </div>
         </div>

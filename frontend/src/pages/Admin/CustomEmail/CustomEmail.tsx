@@ -20,18 +20,15 @@ const CustomEmail = () => {
   const { getToken } = useAuth();
   const quillRef = useRef<ReactQuill>(null);
 
-  
   const [emailTitle, setEmailTitle] = useState('');
   const [emailBody, setEmailBody] = useState('');
 
-  
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedRegion, setSelectedRegion] = useState<string>('');
   const [selectedOrgSize, setSelectedOrgSize] = useState<string>('');
   const [manuallyExcludedOrgs, setManuallyExcludedOrgs] = useState<string[]>([]);
   const [orgSearchQuery, setOrgSearchQuery] = useState<string>('');
 
-  
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +62,6 @@ const CustomEmail = () => {
         const fileName = file.name;
         const fileType = file.type;
 
-        
         const presignedResponse = await fetch(
           `${API_BASE_URL}/api/uploads/presigned-upload?fileName=${encodeURIComponent(fileName)}&fileType=${encodeURIComponent(fileType)}`,
           {
@@ -81,7 +77,6 @@ const CustomEmail = () => {
 
         const { uploadUrl, key } = await presignedResponse.json();
 
-        
         const uploadResponse = await fetch(uploadUrl, {
           method: 'PUT',
           body: file,
@@ -94,12 +89,10 @@ const CustomEmail = () => {
           throw new Error('Failed to upload file');
         }
 
-        
         const bucketName = import.meta.env.VITE_AWS_S3_BUCKET_NAME;
         const region = import.meta.env.VITE_AWS_REGION || 'us-east-2';
         const imageUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;
 
-        
         const quill = quillRef.current?.getEditor();
         if (quill) {
           const range = quill.getSelection();
@@ -135,7 +128,6 @@ const CustomEmail = () => {
     fetchOrganizations();
   }, []);
 
-  
   useEffect(() => {
     setManuallyExcludedOrgs([]);
   }, [selectedTags, selectedRegion, selectedOrgSize]);
@@ -158,7 +150,6 @@ const CustomEmail = () => {
       console.log('Fetched organizations:', data);
       setOrganizations(data);
 
-      
       const tags = new Set<string>();
       data.forEach((org: Organization) => {
         console.log('Org:', org.name, 'Tags:', org.tags);
@@ -181,36 +172,29 @@ const CustomEmail = () => {
   };
 
   const getFilteredOrganizations = () => {
-    
     let filtered = organizations;
 
-    
     if (selectedTags.length > 0) {
-      filtered = filtered.filter(org =>
-        org.tags && selectedTags.some(tag => org.tags.includes(tag))
+      filtered = filtered.filter(
+        org => org.tags && selectedTags.some(tag => org.tags.includes(tag))
       );
     }
 
-    
     if (selectedRegion) {
       filtered = filtered.filter(org => org.region === selectedRegion);
     }
 
-    
     if (selectedOrgSize) {
       filtered = filtered.filter(org => org.organizationSize === selectedOrgSize);
     }
 
-    
     filtered = filtered.filter(org => !manuallyExcludedOrgs.includes(org.id));
 
     return filtered;
   };
 
   const handleTagToggle = (tag: string) => {
-    setSelectedTags(prev =>
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    );
+    setSelectedTags(prev => (prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]));
   };
 
   const handleOrgToggle = (orgId: string) => {
@@ -219,13 +203,12 @@ const CustomEmail = () => {
     );
   };
 
-  
   const getBaseFilteredOrganizations = () => {
     let filtered = organizations;
 
     if (selectedTags.length > 0) {
-      filtered = filtered.filter(org =>
-        org.tags && selectedTags.some(tag => org.tags.includes(tag))
+      filtered = filtered.filter(
+        org => org.tags && selectedTags.some(tag => org.tags.includes(tag))
       );
     }
 
@@ -248,7 +231,10 @@ const CustomEmail = () => {
 
     const recipients = getFilteredOrganizations();
     if (recipients.length === 0) {
-      setToast({ message: 'Please select at least one organization to send the email to', type: 'error' });
+      setToast({
+        message: 'Please select at least one organization to send the email to',
+        type: 'error',
+      });
       return;
     }
 
@@ -258,12 +244,10 @@ const CustomEmail = () => {
 
       const token = await getToken();
 
-
       const requestData: any = {
         subject: emailTitle,
         html: emailBody,
       };
-
 
       requestData.recipientEmails = recipients.map(org => org.email);
 
@@ -280,7 +264,10 @@ const CustomEmail = () => {
         throw new Error('Failed to send email');
       }
 
-      setToast({ message: `Email sent successfully to ${recipients.length} organization(s)!`, type: 'success' });
+      setToast({
+        message: `Email sent successfully to ${recipients.length} organization(s)!`,
+        type: 'success',
+      });
 
       setEmailTitle('');
       setEmailBody('');
@@ -321,18 +308,12 @@ const CustomEmail = () => {
           </div>
 
           {toast && (
-            <Toast
-              message={toast.message}
-              type={toast.type}
-              onClose={() => setToast(null)}
-            />
+            <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
           )}
 
-          
           <div className='bg-white rounded-lg shadow-md p-6 mb-6'>
             <h2 className='text-xl font-semibold text-gray-800 mb-4'>Select Recipients</h2>
 
-            
             <div className='mb-6'>
               <label className='text-sm font-semibold text-gray-700 mb-2 block'>
                 Filter by Tags
@@ -359,7 +340,6 @@ const CustomEmail = () => {
               )}
             </div>
 
-            
             <div className='mb-6'>
               <label className='text-sm font-semibold text-gray-700 mb-2 block'>
                 Filter by Region
@@ -376,7 +356,6 @@ const CustomEmail = () => {
               </select>
             </div>
 
-            
             <div className='mb-6'>
               <label className='text-sm font-semibold text-gray-700 mb-2 block'>
                 Filter by Organization Size
@@ -394,12 +373,11 @@ const CustomEmail = () => {
               </select>
             </div>
 
-            
             <div className='mb-4'>
               <label className='text-sm font-semibold text-gray-700 mb-2 block'>
                 Refine Selection
               </label>
-              
+
               <input
                 type='text'
                 value={orgSearchQuery}
@@ -409,9 +387,7 @@ const CustomEmail = () => {
               />
               <div className='border border-gray-300 rounded-md p-4 max-h-64 overflow-y-auto'>
                 {getBaseFilteredOrganizations()
-                  .filter(org =>
-                    org.name.toLowerCase().includes(orgSearchQuery.toLowerCase())
-                  )
+                  .filter(org => org.name.toLowerCase().includes(orgSearchQuery.toLowerCase()))
                   .map(org => (
                     <label
                       key={org.id}
@@ -424,22 +400,17 @@ const CustomEmail = () => {
                         className='w-4 h-4 text-[#D54242] border-gray-300 rounded focus:ring-[#D54242]'
                       />
                       <span className='text-gray-700'>{org.name}</span>
-                      {org.region && (
-                        <span className='text-xs text-gray-500'>({org.region})</span>
-                      )}
+                      {org.region && <span className='text-xs text-gray-500'>({org.region})</span>}
                     </label>
                   ))}
                 {getBaseFilteredOrganizations().filter(org =>
                   org.name.toLowerCase().includes(orgSearchQuery.toLowerCase())
                 ).length === 0 && (
-                  <p className='text-sm text-gray-500 text-center py-4'>
-                    No organizations found
-                  </p>
+                  <p className='text-sm text-gray-500 text-center py-4'>No organizations found</p>
                 )}
               </div>
             </div>
 
-            
             <div className='bg-blue-50 border border-blue-200 rounded-md p-4'>
               <p className='text-sm font-semibold text-gray-700 mb-2'>
                 Selected Recipients: {filteredOrganizations.length}
@@ -459,11 +430,9 @@ const CustomEmail = () => {
             </div>
           </div>
 
-
           <div className='bg-white rounded-lg shadow-md p-6 mb-6'>
             <h2 className='text-xl font-semibold text-gray-800 mb-4'>Email Content</h2>
 
-            
             <div className='flex flex-col space-y-2 mb-6'>
               <label className='text-sm font-semibold text-gray-700'>Email Subject</label>
               <input
@@ -475,7 +444,6 @@ const CustomEmail = () => {
               />
             </div>
 
-            
             <div className='flex flex-col space-y-2 mb-6'>
               <label className='text-sm font-semibold text-gray-700'>Email Body</label>
               <div className='border border-gray-300 rounded-md overflow-hidden'>
@@ -491,7 +459,6 @@ const CustomEmail = () => {
               </div>
             </div>
           </div>
-
 
           <div className='flex justify-end space-x-4'>
             <button
