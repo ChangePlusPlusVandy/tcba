@@ -75,8 +75,26 @@ export const getPresignedDownloadUrl = async (req: AuthenticatedRequest, res: Re
     if (!req.user || !isAdmin(req.user.role)) {
       return res.status(403).json({ error: 'Admin access required' });
     }
+    // extracts fileKey from the URL path
     const { fileKey } = req.params;
-    res.status(501).json({ error: 'Not implemented yet' });
+    if (!fileKey) {
+      return res.status(400).json({ error: 'fileKey parameter is required' });
+    }
+
+    // gets bucket name from environment variables
+    const bucketName = process.env.AWS_S3_BUCKET_NAME;
+
+    // defines parameters for presigned URL generation
+    const params = {
+      Bucket: bucketName,
+      Key: fileKey,
+      Expires: 600,
+    };
+
+    // generates presigned URL for 'getObject' operation
+    const url = s3.getSignedUrl('getObject', params);
+
+    return res.status(200).json({ downloadUrl: url });
   } catch (error) {
     console.error('Error generating presigned download URL:', error);
     res.status(500).json({ error: 'Failed to generate presigned download URL' });
