@@ -12,10 +12,7 @@ export const getMapOrganizations = async (req: Request, res: Response) => {
     const organizations = await prisma.organization.findMany({
       where: {
         status: 'ACTIVE',
-        AND: [
-          { latitude: { not: null } },
-          { longitude: { not: null } },
-        ],
+        AND: [{ latitude: { not: null } }, { longitude: { not: null } }],
       },
       select: {
         id: true,

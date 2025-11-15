@@ -47,9 +47,7 @@ const GoogleMap = ({
     }
 
     // Check if script is already being loaded
-    const existingScript = document.querySelector(
-      `script[src*="maps.googleapis.com/maps/api/js"]`
-    );
+    const existingScript = document.querySelector(`script[src*="maps.googleapis.com/maps/api/js"]`);
 
     if (existingScript) {
       console.log('✓ Google Maps script already in DOM, polling for API...');
@@ -86,7 +84,11 @@ const GoogleMap = ({
 
   // Initialize map
   useEffect(() => {
-    console.log('Map initialization effect:', { isLoaded, hasMapRef: !!mapRef.current, hasMapInstance: !!mapInstanceRef.current });
+    console.log('Map initialization effect:', {
+      isLoaded,
+      hasMapRef: !!mapRef.current,
+      hasMapInstance: !!mapInstanceRef.current,
+    });
 
     if (!isLoaded || !mapRef.current) return;
 
@@ -121,7 +123,12 @@ const GoogleMap = ({
       hasMap: !!mapInstanceRef.current,
       isLoaded,
       markersCount: markers.length,
-      markers: markers.map(m => ({ name: m.name, hasLogo: !!m.logo, lat: m.latitude, lng: m.longitude }))
+      markers: markers.map(m => ({
+        name: m.name,
+        hasLogo: !!m.logo,
+        lat: m.latitude,
+        lng: m.longitude,
+      })),
     });
 
     if (!mapInstanceRef.current || !isLoaded) {
@@ -132,11 +139,11 @@ const GoogleMap = ({
     console.log('✓ Map is ready! Adding', markers.length, 'markers...');
 
     // Clear existing markers
-    markersRef.current.forEach((marker) => marker.setMap(null));
+    markersRef.current.forEach(marker => marker.setMap(null));
     markersRef.current = [];
 
     // Add new markers
-    markers.forEach((markerData) => {
+    markers.forEach(markerData => {
       if (
         markerData.latitude === null ||
         markerData.longitude === null ||
@@ -161,7 +168,13 @@ const GoogleMap = ({
         },
       });
 
-      console.log('Created marker for:', markerData.name, 'at', markerData.latitude, markerData.longitude);
+      console.log(
+        'Created marker for:',
+        markerData.name,
+        'at',
+        markerData.latitude,
+        markerData.longitude
+      );
 
       // Create info window content - only name and website link
       const infoContent = `
@@ -213,17 +226,13 @@ const GoogleMap = ({
         className={`flex items-center justify-center bg-red-50 border border-red-200 rounded-lg ${className}`}
         style={{ height }}
       >
-        <p className="text-red-600">{error}</p>
+        <p className='text-red-600'>{error}</p>
       </div>
     );
   }
 
   return (
-    <div
-      ref={mapRef}
-      className={`rounded-lg ${className}`}
-      style={{ height, width: '100%' }}
-    />
+    <div ref={mapRef} className={`rounded-lg ${className}`} style={{ height, width: '100%' }} />
   );
 };
 
