@@ -10,6 +10,7 @@ import {
   publishBlog,
   unpublishBlog,
 } from '../controllers/blogController.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -17,11 +18,11 @@ router.get('/', getAllBlogs);
 router.get('/tags', getBlogTags);
 router.get('/slug/:slug', getBlogBySlug);
 
-router.get('/:id', getBlogById);
-router.post('/', createBlog);
-router.put('/:id', updateBlog);
-router.delete('/:id', deleteBlog);
-router.put('/:id/publish', publishBlog);
-router.put('/:id/unpublish', unpublishBlog);
+router.get('/:id', authenticateToken, getBlogById);
+router.post('/', authenticateToken, createBlog);
+router.put('/:id', authenticateToken, updateBlog);
+router.delete('/:id', authenticateToken, deleteBlog);
+router.put('/:id/publish', authenticateToken, publishBlog);
+router.put('/:id/unpublish', authenticateToken, unpublishBlog);
 
 export default router;
