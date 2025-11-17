@@ -18,7 +18,7 @@ const OrgSettingsPage = () => {
   const { getToken } = useAuth();
   const { signOut } = useClerk();
   const navigate = useNavigate();
-  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [, setOrganization] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{
