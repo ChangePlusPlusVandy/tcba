@@ -28,7 +28,13 @@ type Organization = {
   createdAt: string;
 };
 
-type SortField = 'name' | 'region' | 'primaryContactName' | 'website' | 'organizationType' | 'createdAt';
+type SortField =
+  | 'name'
+  | 'region'
+  | 'primaryContactName'
+  | 'website'
+  | 'organizationType'
+  | 'createdAt';
 type SortDirection = 'asc' | 'desc';
 
 const OrganizationsList = () => {
@@ -111,8 +117,7 @@ const OrganizationsList = () => {
 
     const matchesType = typeFilter === 'all' || org.organizationType === typeFilter;
 
-    const matchesTags =
-      tagsFilter.length === 0 || tagsFilter.some(tag => org.tags?.includes(tag));
+    const matchesTags = tagsFilter.length === 0 || tagsFilter.some(tag => org.tags?.includes(tag));
 
     return matchesSearch && matchesRegion && matchesType && matchesTags;
   });
@@ -151,7 +156,12 @@ const OrganizationsList = () => {
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
       return (
-        <svg className='w-4 h-4 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+        <svg
+          className='w-4 h-4 text-gray-400'
+          fill='none'
+          stroke='currentColor'
+          viewBox='0 0 24 24'
+        >
           <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
         </svg>
       );
@@ -656,11 +666,19 @@ const OrganizationsList = () => {
                 </div>
               )}
 
-              {(selectedOrg.address || selectedOrg.city || selectedOrg.state || selectedOrg.zipCode) && (
+              {(selectedOrg.address ||
+                selectedOrg.city ||
+                selectedOrg.state ||
+                selectedOrg.zipCode) && (
                 <div>
                   <h3 className='text-lg font-semibold text-gray-800 mb-3'>Address</h3>
                   <p className='text-sm text-gray-900'>
-                    {selectedOrg.address && <>{selectedOrg.address}<br /></>}
+                    {selectedOrg.address && (
+                      <>
+                        {selectedOrg.address}
+                        <br />
+                      </>
+                    )}
                     {selectedOrg.city && selectedOrg.city}
                     {selectedOrg.state && `, ${selectedOrg.state}`}
                     {selectedOrg.zipCode && ` ${selectedOrg.zipCode}`}

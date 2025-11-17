@@ -211,7 +211,7 @@ const AnnouncementsPage = () => {
               <div className='relative' ref={filterRef}>
                 <button
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className={`px-6 py-3 ${isFilterOpen ? 'bg-[#C6D9F2]' : 'bg-[#EBF3FF]'} text-[#194B90] rounded-lg shadow-sm hover:bg-[#C6D9F2] transition-colors flex items-center gap-2`}
+                  className={`px-6 py-3 ${isFilterOpen ? 'bg-[#b53a3a]' : 'bg-[#D54242]'} text-white rounded-lg shadow-sm hover:bg-[#b53a3a] transition-colors flex items-center gap-2`}
                 >
                   Filter
                   <IoFunnelOutline className='w-5 h-5' />
@@ -317,9 +317,10 @@ const AnnouncementsPage = () => {
                         </>
                       )}
                     </div>
-                    <p className='font-[Open_Sans] text-[14px] font-normal leading-[150%] text-[#3C3C3C] mb-2'>
-                      {displayedContent}
-                    </p>
+                    <div
+                      className='font-[Open_Sans] text-[14px] font-normal leading-[150%] text-[#3C3C3C] mb-2'
+                      dangerouslySetInnerHTML={{ __html: displayedContent }}
+                    />
                   </div>
                 </div>
               );

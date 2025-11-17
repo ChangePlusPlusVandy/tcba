@@ -271,7 +271,8 @@ const OrgSettingsPage = () => {
                 <div>
                   <div className='font-medium text-gray-900'>Include in Organization Directory</div>
                   <div className='text-sm text-gray-500'>
-                    Allow other organizations to see your organization's information in the directory
+                    Allow other organizations to see your organization's information in the
+                    directory
                   </div>
                 </div>
               </label>

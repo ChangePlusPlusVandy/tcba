@@ -176,7 +176,7 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
           const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}`;
 
           const response = await fetch(geocodeUrl);
-          const data:any = await response.json();
+          const data: any = await response.json();
 
           if (data.status === 'OK' && data.results.length > 0) {
             finalLatitude = data.results[0].geometry.location.lat;
@@ -296,7 +296,8 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
 
       if (newAddress || newCity) {
         try {
-          const fullAddress = `${newAddress || ''}, ${newCity || ''}, ${newZipCode || ''}, Tennessee`.trim();
+          const fullAddress =
+            `${newAddress || ''}, ${newCity || ''}, ${newZipCode || ''}, Tennessee`.trim();
           const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
           if (apiKey) {
@@ -305,7 +306,7 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
             const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}`;
 
             const response = await fetch(geocodeUrl);
-            const data:any = await response.json();
+            const data: any = await response.json();
 
             if (data.status === 'OK' && data.results.length > 0) {
               updateData.latitude = data.results[0].geometry.location.lat;

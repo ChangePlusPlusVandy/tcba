@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import AdminSidebar from '../../../components/AdminSidebar';
+import Toast from '../../../components/Toast';
+import ConfirmModal from '../../../components/ConfirmModal';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -45,6 +49,17 @@ const AdminAnnouncements = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
+  const [selectedAnnouncementIds, setSelectedAnnouncementIds] = useState<string[]>([]);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info';
+  } | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    title: string;
+    message: string;
+    confirmText: string;
+    onConfirm: () => void;
+  } | null>(null);
 
   const isTokenExpiringSoon = (token: string): boolean => {
     try {
@@ -70,7 +85,7 @@ const AdminAnnouncements = () => {
 
     if (isTokenExpiringSoon(token)) {
       console.log('Token expiring soon, proactively refreshing...');
-      token = await getToken({ skipCache: true });
+      token = await getToken({ skipCache: true, template: 'jwt-template-tcba' });
 
       if (!token) {
         throw new Error('No authentication token available');
@@ -88,7 +103,7 @@ const AdminAnnouncements = () => {
     if (response.status === 401) {
       console.log('Token expired, refreshing and retrying...');
 
-      token = await getToken({ skipCache: true });
+      token = await getToken({ skipCache: true, template: 'jwt-template-tcba' });
 
       if (!token) {
         throw new Error('No authentication token available');
@@ -103,6 +118,8 @@ const AdminAnnouncements = () => {
       });
 
       if (response.status === 401) {
+        const errorBody = await response.text();
+        console.error('Auth failed even after token refresh. Response:', errorBody);
         throw new Error('Authentication failed. Please try logging in again.');
       }
     }
@@ -118,6 +135,16 @@ const AdminAnnouncements = () => {
       if (!response.ok) throw new Error('Failed to fetch announcements');
 
       const data = await response.json();
+      console.log('Fetched announcements:', data);
+      console.log('Announcements count:', data.length);
+      console.log(
+        'Drafts:',
+        data.filter((a: any) => !a.isPublished)
+      );
+      console.log(
+        'Published:',
+        data.filter((a: any) => a.isPublished)
+      );
       setAnnouncements(data);
     } catch (err: any) {
       setError(err.message || 'Failed to load announcements');
@@ -148,18 +175,34 @@ const AdminAnnouncements = () => {
     setError('');
 
     try {
+      const payload = {
+        title: newAnnouncement.title,
+        content: newAnnouncement.content,
+        isPublished: newAnnouncement.isPublished,
+        tagIds: newAnnouncement.tags, // Backend expects tagIds, not tags
+        publishedDate: newAnnouncement.isPublished ? new Date().toISOString() : null,
+      };
+
       const response = await fetchWithAuth(`${API_BASE_URL}/api/announcements`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newAnnouncement),
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error('Failed to create announcement');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create announcement');
+      }
 
       // Refresh the announcements list
       await fetchAnnouncement();
+
+      const successMessage = newAnnouncement.isPublished
+        ? 'Announcement created successfully'
+        : 'Announcement saved successfully';
+      setToast({ message: successMessage, type: 'success' });
 
       // Close modal and reset form
       setIsCreateModalOpen(false);
@@ -171,10 +214,45 @@ const AdminAnnouncements = () => {
         tags: [],
       });
     } catch (err: any) {
+      console.error('Create announcement error:', err);
       setError(err.message || 'Failed to create announcement');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedAnnouncementIds.length === 0) return;
+
+    const count = selectedAnnouncementIds.length;
+    setConfirmModal({
+      title: 'Delete Announcements',
+      message: `Are you sure you want to delete ${count} announcement${count > 1 ? 's' : ''}? This action cannot be undone.`,
+      confirmText: 'Delete',
+      onConfirm: async () => {
+        try {
+          setError('');
+          await Promise.all(
+            selectedAnnouncementIds.map(id =>
+              fetchWithAuth(`${API_BASE_URL}/api/announcements/${id}`, {
+                method: 'DELETE',
+              })
+            )
+          );
+
+          await fetchAnnouncement();
+          setSelectedAnnouncementIds([]);
+          setToast({
+            message: `${count} announcement${count > 1 ? 's' : ''} deleted successfully`,
+            type: 'success',
+          });
+        } catch (err: any) {
+          setToast({ message: err.message || 'Failed to delete announcements', type: 'error' });
+        } finally {
+          setConfirmModal(null);
+        }
+      },
+    });
   };
 
   const generateSlug = (title: string): string => {
@@ -242,6 +320,22 @@ const AdminAnnouncements = () => {
             ))}
           </div>
 
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className='px-6 py-2.5 rounded-[10px] font-medium transition bg-[#D54242] text-white hover:bg-[#b53a3a] cursor-pointer'
+          >
+            Create
+          </button>
+
+          {selectedAnnouncementIds.length > 0 && (
+            <button
+              onClick={handleDeleteSelected}
+              className='px-6 py-2.5 rounded-[10px] font-medium transition bg-[#D54242] text-white hover:bg-[#b53a3a] cursor-pointer'
+            >
+              Delete Selected ({selectedAnnouncementIds.length})
+            </button>
+          )}
+
           {/* SEARCH */}
           <div className='flex-1 max-w-xl ml-auto'>
             <div className='relative'>
@@ -267,14 +361,6 @@ const AdminAnnouncements = () => {
               </svg>
             </div>
           </div>
-          <div className='flex gap-2'>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className='px-6 py-2.5 rounded-[10px] font-medium transition bg-[#EBF3FF] text-[#194B90] border border-[#194B90] cursor-pointer'
-            >
-              Create
-            </button>
-          </div>
         </div>
 
         {/* ERROR */}
@@ -298,6 +384,23 @@ const AdminAnnouncements = () => {
             <table className='min-w-full'>
               <thead className='bg-gray-50 border-b border-gray-200'>
                 <tr>
+                  <th className='px-6 py-4 w-12'>
+                    <input
+                      type='checkbox'
+                      checked={
+                        selectedAnnouncementIds.length === searchedAnnouncements.length &&
+                        searchedAnnouncements.length > 0
+                      }
+                      onChange={e => {
+                        if (e.target.checked) {
+                          setSelectedAnnouncementIds(searchedAnnouncements.map(a => a.id));
+                        } else {
+                          setSelectedAnnouncementIds([]);
+                        }
+                      }}
+                      className='w-4 h-4'
+                    />
+                  </th>
                   <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>Title</th>
                   <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
                     Status
@@ -311,12 +414,27 @@ const AdminAnnouncements = () => {
 
               <tbody className='divide-y divide-gray-200'>
                 {searchedAnnouncements.map(a => (
-                  <tr
-                    key={a.id}
-                    className='hover:bg-gray-50'
-                    onClick={() => setSelectedAnnouncement(a)}
-                  >
-                    <td className='px-6 py-4 text-[#194B90] font-medium hover:underline'>
+                  <tr key={a.id} className='hover:bg-gray-50'>
+                    <td className='px-6 py-4' onClick={e => e.stopPropagation()}>
+                      <input
+                        type='checkbox'
+                        checked={selectedAnnouncementIds.includes(a.id)}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            setSelectedAnnouncementIds([...selectedAnnouncementIds, a.id]);
+                          } else {
+                            setSelectedAnnouncementIds(
+                              selectedAnnouncementIds.filter(id => id !== a.id)
+                            );
+                          }
+                        }}
+                        className='w-4 h-4'
+                      />
+                    </td>
+                    <td
+                      className='px-6 py-4 text-[#194B90] font-medium hover:underline cursor-pointer'
+                      onClick={() => setSelectedAnnouncement(a)}
+                    >
                       {a.title}
                     </td>
 
@@ -340,7 +458,7 @@ const AdminAnnouncements = () => {
                           a.tags.map(t => (
                             <span
                               key={t.id}
-                              className='px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs'
+                              className='px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
                             >
                               {t.name}
                             </span>
@@ -449,7 +567,7 @@ const AdminAnnouncements = () => {
                       {selectedAnnouncement.tags.map((tag, index) => (
                         <span
                           key={index}
-                          className='px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full'
+                          className='px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
                         >
                           {tag.name}
                         </span>
@@ -484,7 +602,7 @@ const AdminAnnouncements = () => {
               <div className='modal-action'>
                 <button
                   onClick={() => setSelectedAnnouncement(null)}
-                  className='btn bg-[#194B90] hover:bg-[#133a72] text-white border-none'
+                  className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
                 >
                   Close
                 </button>
@@ -530,26 +648,34 @@ const AdminAnnouncements = () => {
                 </div>
 
                 {/* Content */}
-                <div>
+                <div className='mb-4'>
                   <label className='block text-sm font-semibold text-gray-700 mb-1'>
                     Content <span className='text-red-500'>*</span>
                   </label>
-                  <textarea
-                    required
-                    rows={6}
-                    value={newAnnouncement.content}
-                    onChange={e =>
-                      setNewAnnouncement({ ...newAnnouncement, content: e.target.value })
-                    }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
-                    placeholder='Enter announcement content'
-                  />
+                  <div style={{ height: '250px' }}>
+                    <ReactQuill
+                      theme='snow'
+                      value={newAnnouncement.content}
+                      onChange={value => setNewAnnouncement({ ...newAnnouncement, content: value })}
+                      placeholder='Enter announcement content...'
+                      modules={{
+                        toolbar: [
+                          [{ header: [1, 2, 3, false] }],
+                          ['bold', 'italic', 'underline', 'strike'],
+                          [{ list: 'ordered' }, { list: 'bullet' }],
+                          ['link'],
+                          ['clean'],
+                        ],
+                      }}
+                      style={{ height: '200px' }}
+                    />
+                  </div>
                 </div>
 
                 {/* Tags */}
                 <div>
                   <label className='block text-sm font-semibold text-gray-700 mb-2'>Tags</label>
-                  <div className='border border-gray-300 rounded-lg p-3 min-h-[80px]'>
+                  <div className='min-h-[80px]'>
                     {tags.length === 0 ? (
                       <p className='text-sm text-gray-500'>No tags available</p>
                     ) : (
@@ -575,7 +701,7 @@ const AdminAnnouncements = () => {
                               }}
                               className={`px-4 py-1 text-sm font-medium rounded-full transition-colors ${
                                 isSelected
-                                  ? 'bg-[#194B90] text-white border-2 border-[#194B90]'
+                                  ? 'bg-[#D54242] text-white border-2 border-[#D54242]'
                                   : 'bg-gray-100 text-gray-700 border-2 border-gray-300 hover:bg-gray-200'
                               }`}
                             >
@@ -596,30 +722,131 @@ const AdminAnnouncements = () => {
                   )}
                 </div>
 
-                {/* Published Status */}
-                <div className='flex items-center gap-2'>
-                  <input
-                    type='checkbox'
-                    id='isPublished'
-                    checked={newAnnouncement.isPublished}
-                    onChange={e =>
-                      setNewAnnouncement({ ...newAnnouncement, isPublished: e.target.checked })
-                    }
-                    className='w-4 h-4 text-[#194B90] border-gray-300 rounded focus:ring-[#194B90]'
-                  />
-                  <label htmlFor='isPublished' className='text-sm font-medium text-gray-700'>
-                    Publish immediately
-                  </label>
-                </div>
-
                 {/* Actions */}
                 <div className='flex gap-3 pt-4'>
                   <button
-                    type='submit'
+                    type='button'
                     disabled={isSubmitting}
-                    className='px-6 py-2.5 bg-[#194B90] hover:bg-[#133a72] text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+                    onClick={async () => {
+                      // Validation
+                      if (!newAnnouncement.title.trim()) {
+                        setError('Title is required');
+                        return;
+                      }
+                      if (!newAnnouncement.content.trim()) {
+                        setError('Content is required');
+                        return;
+                      }
+
+                      setIsSubmitting(true);
+                      setError('');
+
+                      try {
+                        const payload = {
+                          title: newAnnouncement.title,
+                          content: newAnnouncement.content,
+                          isPublished: true,
+                          tagIds: newAnnouncement.tags,
+                          publishedDate: new Date().toISOString(),
+                        };
+
+                        console.log('Publishing announcement with payload:', payload);
+
+                        const response = await fetchWithAuth(`${API_BASE_URL}/api/announcements`, {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify(payload),
+                        });
+
+                        if (!response.ok) {
+                          const errorData = await response.json();
+                          console.error('Server error:', errorData);
+                          throw new Error(errorData.error || 'Failed to create announcement');
+                        }
+
+                        await fetchAnnouncement();
+                        setIsCreateModalOpen(false);
+                        setNewAnnouncement({
+                          title: '',
+                          slug: '',
+                          content: '',
+                          isPublished: false,
+                          tags: [],
+                        });
+                      } catch (err: any) {
+                        console.error('Create announcement error:', err);
+                        setError(err.message || 'Failed to create announcement');
+                      } finally {
+                        setIsSubmitting(false);
+                      }
+                    }}
+                    className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed'
                   >
-                    {isSubmitting ? 'Creating...' : 'Create Announcement'}
+                    {isSubmitting ? 'Publishing...' : 'Publish'}
+                  </button>
+                  <button
+                    type='button'
+                    disabled={isSubmitting}
+                    onClick={async () => {
+                      // Validation
+                      if (!newAnnouncement.title.trim()) {
+                        setError('Title is required');
+                        return;
+                      }
+                      if (!newAnnouncement.content.trim()) {
+                        setError('Content is required');
+                        return;
+                      }
+
+                      setIsSubmitting(true);
+                      setError('');
+
+                      try {
+                        const payload = {
+                          title: newAnnouncement.title,
+                          content: newAnnouncement.content,
+                          isPublished: false,
+                          tagIds: newAnnouncement.tags,
+                          publishedDate: null,
+                        };
+
+                        console.log('Saving to drafts with payload:', payload);
+
+                        const response = await fetchWithAuth(`${API_BASE_URL}/api/announcements`, {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify(payload),
+                        });
+
+                        if (!response.ok) {
+                          const errorData = await response.json();
+                          console.error('Server error:', errorData);
+                          throw new Error(errorData.error || 'Failed to create announcement');
+                        }
+
+                        await fetchAnnouncement();
+                        setIsCreateModalOpen(false);
+                        setNewAnnouncement({
+                          title: '',
+                          slug: '',
+                          content: '',
+                          isPublished: false,
+                          tags: [],
+                        });
+                      } catch (err: any) {
+                        console.error('Create announcement error:', err);
+                        setError(err.message || 'Failed to create announcement');
+                      } finally {
+                        setIsSubmitting(false);
+                      }
+                    }}
+                    className='px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+                  >
+                    {isSubmitting ? 'Saving...' : 'Save to Drafts'}
                   </button>
                   <button
                     type='button'
@@ -656,6 +883,18 @@ const AdminAnnouncements = () => {
             ></div>
           </div>
         </>
+      )}
+
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+      {confirmModal && (
+        <ConfirmModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmText={confirmModal.confirmText}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal(null)}
+        />
       )}
     </div>
   );
