@@ -3,6 +3,7 @@ import {
   getAllSubscriptions,
   registerSubscription,
   getSubscriptionById,
+  getSubscriptionByEmail,
   updateSubscription,
   deleteSubscription,
 } from '../controllers/emailSubscriptionController.js';
@@ -10,6 +11,7 @@ import {
 const router = Router();
 
 router.get('/', getAllSubscriptions);
+router.get('/by-email', getSubscriptionByEmail);
 router.post('/register', registerSubscription);
 router.get('/:id', getSubscriptionById);
 router.put('/:id', updateSubscription);

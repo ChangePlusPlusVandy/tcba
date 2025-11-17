@@ -9,7 +9,6 @@ interface Organization {
   name: string;
   notifyAnnouncements: boolean;
   notifySurveys: boolean;
-  notifyAlerts: boolean;
   notifyBlogs: boolean;
   visibleInDirectory: boolean;
 }
@@ -31,7 +30,6 @@ const OrgSettingsPage = () => {
   const [notificationSettings, setNotificationSettings] = useState({
     notifyAnnouncements: true,
     notifySurveys: true,
-    notifyAlerts: true,
     notifyBlogs: true,
   });
 
@@ -66,7 +64,6 @@ const OrgSettingsPage = () => {
       setNotificationSettings({
         notifyAnnouncements: data.notifyAnnouncements ?? true,
         notifySurveys: data.notifySurveys ?? true,
-        notifyAlerts: data.notifyAlerts ?? true,
         notifyBlogs: data.notifyBlogs ?? true,
       });
 
@@ -177,8 +174,11 @@ const OrgSettingsPage = () => {
 
           <div className='bg-white rounded-lg shadow-md p-6 mb-6'>
             <h2 className='text-xl font-semibold text-gray-800 mb-2'>Notification Preferences</h2>
-            <p className='text-sm text-gray-600 mb-4'>
+            <p className='text-sm text-gray-600 mb-2'>
               Choose which email notifications you'd like to receive
+            </p>
+            <p className='text-sm text-gray-500 italic mb-4'>
+              Note: All organizations will always receive alert notifications
             </p>
 
             <div className='space-y-4'>
@@ -208,21 +208,6 @@ const OrgSettingsPage = () => {
                   <div className='font-medium text-gray-900'>Surveys</div>
                   <div className='text-sm text-gray-500'>
                     Receive notifications about new surveys
-                  </div>
-                </div>
-              </label>
-
-              <label className='flex items-center gap-3 cursor-pointer'>
-                <input
-                  type='checkbox'
-                  checked={notificationSettings.notifyAlerts}
-                  onChange={() => handleNotificationChange('notifyAlerts')}
-                  className='w-5 h-5 text-[#D54242] border-gray-300 rounded focus:ring-[#D54242] focus:ring-2'
-                />
-                <div>
-                  <div className='font-medium text-gray-900'>Alerts</div>
-                  <div className='text-sm text-gray-500'>
-                    Receive notifications about important alerts
                   </div>
                 </div>
               </label>

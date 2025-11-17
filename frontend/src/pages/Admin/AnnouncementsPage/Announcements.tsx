@@ -179,7 +179,7 @@ const AdminAnnouncements = () => {
         title: newAnnouncement.title,
         content: newAnnouncement.content,
         isPublished: newAnnouncement.isPublished,
-        tagIds: newAnnouncement.tags, // Backend expects tagIds, not tags
+        tagIds: newAnnouncement.tags, 
         publishedDate: newAnnouncement.isPublished ? new Date().toISOString() : null,
       };
 
@@ -196,7 +196,7 @@ const AdminAnnouncements = () => {
         throw new Error(errorData.error || 'Failed to create announcement');
       }
 
-      // Refresh the announcements list
+      
       await fetchAnnouncement();
 
       const successMessage = newAnnouncement.isPublished
@@ -204,7 +204,7 @@ const AdminAnnouncements = () => {
         : 'Announcement saved successfully';
       setToast({ message: successMessage, type: 'success' });
 
-      // Close modal and reset form
+      
       setIsCreateModalOpen(false);
       setNewAnnouncement({
         title: '',
@@ -302,7 +302,7 @@ const AdminAnnouncements = () => {
           {filter === 'DRAFTS' && `Drafts (${currentFilterCount})`}
         </h1>
 
-        {/* FILTER BUTTONS */}
+        
         <div className='flex items-center gap-4 mb-6'>
           <div className='flex gap-2'>
             {['ALL', 'PUBLISHED', 'DRAFTS'].map(f => (
@@ -336,7 +336,7 @@ const AdminAnnouncements = () => {
             </button>
           )}
 
-          {/* SEARCH */}
+          
           <div className='flex-1 max-w-xl ml-auto'>
             <div className='relative'>
               <input
@@ -363,14 +363,14 @@ const AdminAnnouncements = () => {
           </div>
         </div>
 
-        {/* ERROR */}
+        
         {error && (
           <div className='bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg mb-6'>
             {error}
           </div>
         )}
 
-        {/* LOADING */}
+        
         {loading ? (
           <div className='text-center py-12'>
             <p className='text-gray-600'>Loading announcements...</p>
@@ -483,11 +483,11 @@ const AdminAnnouncements = () => {
           <input type='checkbox' checked readOnly className='modal-toggle' />
           <div className='modal modal-open'>
             <div className='modal-box max-w-2xl max-h-[80vh] bg-white overflow-y-auto m-8'>
-              {/* Title */}
+              
               <h3 className='font-bold text-xl text-gray-900 mb-3'>{selectedAnnouncement.title}</h3>
 
               <div className='space-y-4'>
-                {/* Basic Info */}
+                
                 <div>
                   <h4 className='font-semibold text-base text-gray-800 mb-2'>Basic Information</h4>
                   <div className='grid grid-cols-2 gap-3'>
@@ -529,7 +529,7 @@ const AdminAnnouncements = () => {
                   </div>
                 </div>
 
-                {/* Content */}
+                
                 <div>
                   <h4 className='font-semibold text-base text-gray-800 mb-2'>Content</h4>
                   <p className='text-sm text-gray-900 whitespace-pre-line'>
@@ -537,7 +537,7 @@ const AdminAnnouncements = () => {
                   </p>
                 </div>
 
-                {/* Attachments */}
+                
                 <div>
                   <h4 className='font-semibold text-base text-gray-800 mb-2'>Attachments</h4>
                   {selectedAnnouncement.attachmentUrls?.length > 0 ? (
@@ -550,7 +550,7 @@ const AdminAnnouncements = () => {
                           >
                             {url}
                           </a>{' '}
-                          {/* add clickable download link */}
+                        
                         </li>
                       ))}
                     </ul>
@@ -559,7 +559,7 @@ const AdminAnnouncements = () => {
                   )}
                 </div>
 
-                {/* Tags */}
+                
                 <div>
                   <h4 className='font-semibold text-base text-gray-800 mb-2'>Tags</h4>
                   {selectedAnnouncement.tags && selectedAnnouncement.tags.length > 0 ? (
@@ -578,7 +578,7 @@ const AdminAnnouncements = () => {
                   )}
                 </div>
 
-                {/* Dates */}
+                
                 <div>
                   <h4 className='font-semibold text-base text-gray-800 mb-2'>Dates</h4>
                   <div className='grid grid-cols-2 gap-3'>
@@ -598,8 +598,30 @@ const AdminAnnouncements = () => {
                 </div>
               </div>
 
-              {/* Actions */}
+              
               <div className='modal-action'>
+                {!selectedAnnouncement.isPublished && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        await fetchWithAuth(
+                          `${API_BASE_URL}/api/announcements/${selectedAnnouncement.id}/publish`,
+                          {
+                            method: 'POST',
+                          }
+                        );
+                        setToast({ message: 'Announcement published successfully', type: 'success' });
+                        await fetchAnnouncement();
+                        setSelectedAnnouncement(null);
+                      } catch (err: any) {
+                        setToast({ message: err.message || 'Failed to publish announcement', type: 'error' });
+                      }
+                    }}
+                    className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
+                  >
+                    Publish
+                  </button>
+                )}
                 <button
                   onClick={() => setSelectedAnnouncement(null)}
                   className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
@@ -616,7 +638,7 @@ const AdminAnnouncements = () => {
           </div>
         </>
       )}
-      {/* CREATE MODAL */}
+      
       {isCreateModalOpen && (
         <>
           <input type='checkbox' checked readOnly className='modal-toggle' />
@@ -625,7 +647,7 @@ const AdminAnnouncements = () => {
               <h3 className='font-bold text-xl text-gray-900 mb-4'>Create New Announcement</h3>
 
               <form onSubmit={handleCreateAnnouncement} className='space-y-4'>
-                {/* Title */}
+                
                 <div>
                   <label className='block text-sm font-semibold text-gray-700 mb-1'>
                     Title <span className='text-red-500'>*</span>
@@ -639,7 +661,7 @@ const AdminAnnouncements = () => {
                       setNewAnnouncement({
                         ...newAnnouncement,
                         title,
-                        slug: generateSlug(title), // ← ADD THIS LINE
+                        slug: generateSlug(title),
                       });
                     }}
                     className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
@@ -647,7 +669,7 @@ const AdminAnnouncements = () => {
                   />
                 </div>
 
-                {/* Content */}
+                
                 <div className='mb-4'>
                   <label className='block text-sm font-semibold text-gray-700 mb-1'>
                     Content <span className='text-red-500'>*</span>
@@ -672,7 +694,7 @@ const AdminAnnouncements = () => {
                   </div>
                 </div>
 
-                {/* Tags */}
+                
                 <div>
                   <label className='block text-sm font-semibold text-gray-700 mb-2'>Tags</label>
                   <div className='min-h-[80px]'>
@@ -713,7 +735,7 @@ const AdminAnnouncements = () => {
                     )}
                   </div>
 
-                  {/* Selected count indicator */}
+                  
                   {newAnnouncement.tags.length > 0 && (
                     <p className='text-xs text-gray-600 mt-2'>
                       {newAnnouncement.tags.length} tag
@@ -722,13 +744,13 @@ const AdminAnnouncements = () => {
                   )}
                 </div>
 
-                {/* Actions */}
+
                 <div className='flex gap-3 pt-4'>
                   <button
                     type='button'
                     disabled={isSubmitting}
                     onClick={async () => {
-                      // Validation
+                      
                       if (!newAnnouncement.title.trim()) {
                         setError('Title is required');
                         return;
@@ -775,9 +797,11 @@ const AdminAnnouncements = () => {
                           isPublished: false,
                           tags: [],
                         });
+                        setToast({ message: 'Announcement published successfully!', type: 'success' });
                       } catch (err: any) {
                         console.error('Create announcement error:', err);
                         setError(err.message || 'Failed to create announcement');
+                        setToast({ message: err.message || 'Failed to publish announcement', type: 'error' });
                       } finally {
                         setIsSubmitting(false);
                       }
@@ -837,9 +861,11 @@ const AdminAnnouncements = () => {
                           isPublished: false,
                           tags: [],
                         });
+                        setToast({ message: 'Announcement saved to drafts!', type: 'success' });
                       } catch (err: any) {
                         console.error('Create announcement error:', err);
                         setError(err.message || 'Failed to create announcement');
+                        setToast({ message: err.message || 'Failed to save announcement', type: 'error' });
                       } finally {
                         setIsSubmitting(false);
                       }

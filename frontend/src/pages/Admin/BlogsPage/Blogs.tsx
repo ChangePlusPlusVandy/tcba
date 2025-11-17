@@ -55,8 +55,6 @@ const AdminBlogs = () => {
     isPublished: false,
   });
 
-  const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false);
-
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info';
@@ -439,187 +437,258 @@ const AdminBlogs = () => {
       </div>
 
       {isCreateModalOpen && (
-        <div className='modal modal-open'>
-          <div className='modal-box max-w-4xl'>
-            <h3 className='font-bold text-lg mb-4'>Create New Blog</h3>
+        <>
+          <input type='checkbox' checked readOnly className='modal-toggle' />
+          <div className='modal modal-open'>
+            <div className='modal-box max-w-2xl max-h-[80vh] bg-white overflow-y-auto m-8'>
+              <h3 className='font-bold text-xl text-gray-900 mb-4'>Create New Blog</h3>
 
-            <div className='space-y-4'>
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>Title *</label>
-                <input
-                  type='text'
-                  value={newBlog.title}
-                  onChange={e => setNewBlog({ ...newBlog, title: e.target.value })}
-                  className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#194B90]'
-                  placeholder='Enter blog title'
-                />
-              </div>
-
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>Author *</label>
-                <input
-                  type='text'
-                  value={newBlog.author}
-                  onChange={e => setNewBlog({ ...newBlog, author: e.target.value })}
-                  className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#194B90]'
-                  placeholder='Enter author name'
-                />
-              </div>
-
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>Content *</label>
-                <ReactQuill
-                  theme='snow'
-                  value={newBlog.content}
-                  onChange={value => setNewBlog({ ...newBlog, content: value })}
-                  modules={modules}
-                  className='bg-white'
-                />
-              </div>
-
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>Tags</label>
-                <div className='flex gap-2 flex-wrap mb-2'>
-                  {newBlog.tagIds.map(tagId => {
-                    const tag = allTags.find(t => t.id === tagId);
-                    return tag ? (
-                      <span
-                        key={tag.id}
-                        className='px-3 py-1 bg-blue-50 text-blue-700 text-sm font-medium rounded-full flex items-center gap-2'
-                      >
-                        {tag.name}
-                        <button
-                          onClick={() =>
-                            setNewBlog({
-                              ...newBlog,
-                              tagIds: newBlog.tagIds.filter(id => id !== tagId),
-                            })
-                          }
-                          className='text-blue-700 hover:text-blue-900'
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ) : null;
-                  })}
+              <div className='space-y-4'>
+                
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                    Title <span className='text-red-500'>*</span>
+                  </label>
+                  <input
+                    type='text'
+                    required
+                    value={newBlog.title}
+                    onChange={e => setNewBlog({ ...newBlog, title: e.target.value })}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                    placeholder='Enter blog title'
+                  />
                 </div>
-                <div className='relative'>
-                  <button
-                    type='button'
-                    onClick={() => setIsTagDropdownOpen(!isTagDropdownOpen)}
-                    className='px-4 py-2 bg-[#194B90] text-white rounded-md hover:bg-[#153a70] text-sm'
-                  >
-                    Add Tag
-                  </button>
-                  {isTagDropdownOpen && (
-                    <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-md shadow-lg z-50 w-56 max-h-60 overflow-y-auto'>
-                      {allTags
-                        .filter(tag => !newBlog.tagIds.includes(tag.id))
-                        .map(tag => (
-                          <button
-                            key={tag.id}
-                            type='button'
-                            onClick={() => {
-                              setNewBlog({
-                                ...newBlog,
-                                tagIds: [...newBlog.tagIds, tag.id],
-                              });
-                              setIsTagDropdownOpen(false);
-                            }}
-                            className='w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-gray-700'
-                          >
-                            {tag.name}
-                          </button>
-                        ))}
-                      {allTags.filter(tag => !newBlog.tagIds.includes(tag.id)).length === 0 && (
-                        <div className='px-4 py-2 text-sm text-gray-500'>No tags available</div>
-                      )}
-                    </div>
+
+
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                    Author <span className='text-red-500'>*</span>
+                  </label>
+                  <input
+                    type='text'
+                    required
+                    value={newBlog.author}
+                    onChange={e => setNewBlog({ ...newBlog, author: e.target.value })}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                    placeholder='Enter author name'
+                  />
+                </div>
+
+                
+                <div className='mb-4'>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                    Content <span className='text-red-500'>*</span>
+                  </label>
+                  <div style={{ height: '250px' }}>
+                    <ReactQuill
+                      theme='snow'
+                      value={newBlog.content}
+                      onChange={value => setNewBlog({ ...newBlog, content: value })}
+                      placeholder='Enter blog content...'
+                      modules={modules}
+                      style={{ height: '200px' }}
+                    />
+                  </div>
+                </div>
+
+                
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-2'>Tags</label>
+                  <div className='min-h-[80px]'>
+                    {allTags.length === 0 ? (
+                      <p className='text-sm text-gray-500'>No tags available</p>
+                    ) : (
+                      <div className='flex flex-wrap gap-2'>
+                        {allTags.map(tag => {
+                          const isSelected = newBlog.tagIds.includes(tag.id);
+                          return (
+                            <button
+                              key={tag.id}
+                              type='button'
+                              onClick={() => {
+                                if (isSelected) {
+                                  setNewBlog({
+                                    ...newBlog,
+                                    tagIds: newBlog.tagIds.filter(id => id !== tag.id),
+                                  });
+                                } else {
+                                  setNewBlog({
+                                    ...newBlog,
+                                    tagIds: [...newBlog.tagIds, tag.id],
+                                  });
+                                }
+                              }}
+                              className={`px-4 py-1 text-sm font-medium rounded-full transition-colors ${
+                                isSelected
+                                  ? 'bg-[#D54242] text-white border-2 border-[#D54242]'
+                                  : 'bg-gray-100 text-gray-700 border-2 border-gray-300 hover:bg-gray-200'
+                              }`}
+                            >
+                              {tag.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  
+                  {newBlog.tagIds.length > 0 && (
+                    <p className='text-xs text-gray-600 mt-2'>
+                      {newBlog.tagIds.length} tag{newBlog.tagIds.length !== 1 ? 's' : ''} selected
+                    </p>
                   )}
                 </div>
+
+                
+                <div className='flex gap-3 pt-4'>
+                  <button
+                    type='button'
+                    onClick={() => handleCreateBlog(true)}
+                    className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-lg font-medium'
+                  >
+                    Publish
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => handleCreateBlog(false)}
+                    className='px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium'
+                  >
+                    Save to Drafts
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => {
+                      setIsCreateModalOpen(false);
+                      setNewBlog({
+                        title: '',
+                        content: '',
+                        author: '',
+                        tagIds: [],
+                        isPublished: false,
+                      });
+                    }}
+                    className='px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium'
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
-
-            <div className='modal-action'>
-              <button
-                onClick={() => {
-                  setIsCreateModalOpen(false);
-                  setNewBlog({
-                    title: '',
-                    content: '',
-                    author: '',
-                    tagIds: [],
-                    isPublished: false,
-                  });
-                }}
-                className='btn btn-ghost'
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleCreateBlog(false)}
-                className='btn bg-gray-600 text-white hover:bg-gray-700'
-              >
-                Save to Drafts
-              </button>
-              <button
-                onClick={() => handleCreateBlog(true)}
-                className='btn bg-[#194B90] text-white hover:bg-[#153a70]'
-              >
-                Publish
-              </button>
-            </div>
           </div>
-        </div>
+        </>
       )}
 
       {isDetailModalOpen && selectedBlog && (
-        <div className='modal modal-open'>
-          <div className='modal-box max-w-4xl'>
-            <h3 className='font-bold text-2xl mb-2'>{selectedBlog.title}</h3>
-            <p className='text-sm text-gray-600 mb-4'>By {selectedBlog.author}</p>
+        <>
+          <input type='checkbox' checked readOnly className='modal-toggle' />
+          <div className='modal modal-open'>
+            <div className='modal-box max-w-2xl max-h-[80vh] bg-white overflow-y-auto m-8'>
+              <h3 className='font-bold text-xl text-gray-900 mb-3'>{selectedBlog.title}</h3>
 
-            <div className='flex gap-2 flex-wrap mb-4'>
-              {selectedBlog.tags.map(tag => (
-                <span
-                  key={tag.id}
-                  className='px-3 py-1 bg-blue-50 text-blue-700 text-sm font-medium rounded-full'
-                >
-                  {tag.name}
-                </span>
-              ))}
-            </div>
+              <div className='space-y-4'>
+                {/* Basic Info */}
+                <div>
+                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Basic Information</h4>
+                  <div className='grid grid-cols-2 gap-3'>
+                    <div>
+                      <span className='text-sm font-bold text-gray-600'>Author:</span>
+                      <p className='text-sm text-gray-900'>{selectedBlog.author}</p>
+                    </div>
 
-            <div
-              className='prose max-w-none mb-4'
-              dangerouslySetInnerHTML={{ __html: selectedBlog.content }}
-            />
+                    <div>
+                      <span className='text-sm font-bold text-gray-600'>Status:</span>
+                      <p className='text-sm'>
+                        <span
+                          className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full ${
+                            selectedBlog.isPublished
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {selectedBlog.isPublished ? 'Published' : 'Draft'}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Content</h4>
+                  <div
+                    className='prose max-w-none text-sm text-gray-900'
+                    dangerouslySetInnerHTML={{ __html: selectedBlog.content }}
+                  />
+                </div>
 
-            <div className='flex items-center justify-between mt-6 pt-4 border-t'>
-              <div>
-                <p className='text-sm text-gray-600'>
-                  Status:{' '}
-                  <span
-                    className={`font-medium ${
-                      selectedBlog.isPublished ? 'text-green-600' : 'text-yellow-600'
-                    }`}
+                <div>
+                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Tags</h4>
+                  {selectedBlog.tags && selectedBlog.tags.length > 0 ? (
+                    <div className='flex flex-wrap gap-2'>
+                      {selectedBlog.tags.map(tag => (
+                        <span
+                          key={tag.id}
+                          className='px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
+                        >
+                          {tag.name}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className='text-sm text-gray-900'>No tags</p>
+                  )}
+                </div>
+
+                
+                <div>
+                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Dates</h4>
+                  <div className='grid grid-cols-2 gap-3'>
+                    <div>
+                      <span className='text-sm font-bold text-gray-600'>Created:</span>
+                      <p className='text-sm text-gray-900'>
+                        {new Date(selectedBlog.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div>
+                      <span className='text-sm font-bold text-gray-600'>Updated:</span>
+                      <p className='text-sm text-gray-900'>
+                        {new Date(selectedBlog.updatedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              
+              <div className='modal-action'>
+                {!selectedBlog.isPublished && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        await fetchWithAuth(`${API_BASE_URL}/api/blogs/${selectedBlog.id}/publish`, {
+                          method: 'PUT',
+                        });
+                        setToast({ message: 'Blog published successfully', type: 'success' });
+                        await fetchBlogs();
+                        closeDetailModal();
+                      } catch (err: any) {
+                        setToast({ message: err.message || 'Failed to publish blog', type: 'error' });
+                      }
+                    }}
+                    className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
                   >
-                    {selectedBlog.isPublished ? 'Published' : 'Draft'}
-                  </span>
-                </p>
-                <p className='text-sm text-gray-600'>
-                  Created: {new Date(selectedBlog.createdAt).toLocaleString()}
-                </p>
+                    Publish
+                  </button>
+                )}
+                <button
+                  onClick={closeDetailModal}
+                  className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
+                >
+                  Close
+                </button>
               </div>
             </div>
-
-            <div className='modal-action'>
-              <button onClick={closeDetailModal} className='btn'>
-                Close
-              </button>
-            </div>
           </div>
-        </div>
+        </>
       )}
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}

@@ -7,6 +7,8 @@ import {
   createAnnouncement,
   updateAnnouncement,
   deleteAnnouncement,
+  publishAnnouncement,
+  unpublishAnnouncement,
 } from '../controllers/announcementController';
 import { authenticateToken } from '../middleware/auth.js';
 
@@ -19,5 +21,7 @@ router.get('/:id', getAnnouncementById);
 router.post('/', authenticateToken, createAnnouncement);
 router.put('/:id', authenticateToken, updateAnnouncement);
 router.delete('/:id', authenticateToken, deleteAnnouncement);
+router.post('/:id/publish', authenticateToken, publishAnnouncement);
+router.post('/:id/unpublish', authenticateToken, unpublishAnnouncement);
 
 export default router;

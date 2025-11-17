@@ -1,4 +1,5 @@
 import { type FormEvent, useState, useEffect } from 'react';
+import Toast from '../../components/Toast';
 
 interface PageContent {
   [key: string]: { id: string; value: string; type: string };
@@ -23,11 +24,15 @@ interface SignupFormProps {
 }
 
 const SignupForm = ({ previewContent }: SignupFormProps = {}) => {
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const [announcements, setAnnouncements] = useState(false);
   const [blogs, setBlogs] = useState(false);
   const [content, setContent] = useState<PageContent>({});
   const [loading, setLoading] = useState(true);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
     if (previewContent) {
@@ -54,8 +59,53 @@ const SignupForm = ({ previewContent }: SignupFormProps = {}) => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setIsSubmitted(true);
-    console.log('Form submitted!', { announcements, blogs });
+    setToast(null);
+    setSubmitting(true);
+
+    const subscriptionTypes: string[] = [];
+    if (announcements) subscriptionTypes.push('ANNOUNCEMENT');
+    if (blogs) subscriptionTypes.push('BLOG');
+
+    if (subscriptionTypes.length === 0) {
+      setToast({ message: 'Please select at least one subscription type', type: 'error' });
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/subscriptions/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          name: `${firstName} ${lastName}`,
+          subscriptionTypes,
+          isActive: true,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to register subscription');
+      }
+
+      setToast({ message: 'Subscribed successfully!', type: 'success' });
+      setFirstName('');
+      setLastName('');
+      setEmail('');
+      setAnnouncements(false);
+      setBlogs(false);
+    } catch (err) {
+      console.error('Error submitting form:', err);
+      setToast({
+        message: err instanceof Error ? err.message : 'Failed to submit subscription. Please try again.',
+        type: 'error',
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -66,28 +116,9 @@ const SignupForm = ({ previewContent }: SignupFormProps = {}) => {
     );
   }
 
-  if (isSubmitted) {
-    return (
-      <div className='w-full flex flex-col items-center justify-center text-center min-h-screen mt-8 bg-white px-20 py-16'>
-        <div className='bg-gray-300 h-40 w-40 flex items-center justify-center mb-6'>
-          <span className='text-gray-500'></span>
-        </div>
-        <h1 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
-          {content['success_title']?.value || 'Form submitted!'}
-        </h1>
-        <div
-          className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800 text-center max-w-2xl mb-6'
-          dangerouslySetInnerHTML={{
-            __html:
-              content['success_message']?.value ||
-              'The Tennessee Coalition for Better Aging exists to promote the general welfare of older Tennesseans and their families through partnerships that mobilize resources to educate and advocate for important policies and programs.',
-          }}
-        />
-      </div>
-    );
-  }
-
   return (
+    <>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     <div className='mt-8 bg-white px-20 py-16'>
       <div className='grid md:grid-cols-2 gap-8 mb-12'>
         <div>
@@ -113,6 +144,8 @@ const SignupForm = ({ previewContent }: SignupFormProps = {}) => {
             type='text'
             required
             placeholder='First name'
+            value={firstName}
+            onChange={e => setFirstName(e.target.value)}
             className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px]'
           />
 
@@ -120,6 +153,8 @@ const SignupForm = ({ previewContent }: SignupFormProps = {}) => {
             type='text'
             required
             placeholder='Last name'
+            value={lastName}
+            onChange={e => setLastName(e.target.value)}
             className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px]'
           />
         </div>
@@ -130,6 +165,8 @@ const SignupForm = ({ previewContent }: SignupFormProps = {}) => {
             type='email'
             required
             placeholder='example@example.com'
+            value={email}
+            onChange={e => setEmail(e.target.value)}
             className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px]'
           />
         </div>
@@ -165,13 +202,15 @@ const SignupForm = ({ previewContent }: SignupFormProps = {}) => {
         <div className='flex flex-col items-center'>
           <button
             type='submit'
-            className='w-[110px] h-[50px] rounded-[15px] bg-[#D54242] text-white hover:bg-[#b53a3a] transition'
+            disabled={submitting}
+            className='w-[110px] h-[50px] rounded-[15px] bg-[#D54242] text-white hover:bg-[#b53a3a] transition disabled:bg-gray-400 disabled:cursor-not-allowed'
           >
-            Submit
+            {submitting ? 'Submitting...' : 'Submit'}
           </button>
         </div>
       </form>
     </div>
+    </>
   );
 };
 

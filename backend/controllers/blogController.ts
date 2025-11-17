@@ -3,6 +3,7 @@ import { OrganizationRole } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import { prisma } from '../config/prisma.js';
 import { createNotification } from './inAppNotificationController.js';
+import { sendBlogEmails } from '../services/emailNotificationService.js';
 
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 
@@ -147,7 +148,7 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
-    const { title, content, author, tags, featuredImageUrl } = req.body;
+    const { title, content, author, tags, featuredImageUrl, isPublished, publishedDate } = req.body;
 
     if (!title || !content || !author) {
       return res.status(400).json({ error: 'title, content, and author are required' });
@@ -161,8 +162,8 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
         author,
         slug: 'temp',
         featuredImageUrl: featuredImageUrl || null,
-        isPublished: false,
-        publishedDate: null,
+        isPublished: isPublished || false,
+        publishedDate: isPublished ? (publishedDate || new Date()) : null,
       },
     });
 
@@ -182,6 +183,17 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
       },
       include: { tags: true },
     });
+
+    // If published immediately, send notifications
+    if (blog.isPublished) {
+      try {
+        await createNotification('BLOG', blog.title, blog.slug || blog.id);
+        await sendBlogEmails(blog.id);
+        console.log('Blog notifications sent successfully');
+      } catch (notifError) {
+        console.error('Failed to create notification or send emails:', notifError);
+      }
+    }
 
     res.status(201).json(blog);
   } catch (error) {
@@ -273,8 +285,10 @@ export const publishBlog = async (req: AuthenticatedRequest, res: Response) => {
 
     try {
       await createNotification('BLOG', publishedBlog.title, publishedBlog.slug || publishedBlog.id);
+      await sendBlogEmails(publishedBlog.id);
+      console.log('Blog notifications sent successfully');
     } catch (notifError) {
-      console.error('Failed to create notification:', notifError);
+      console.error('Failed to create notification or send emails:', notifError);
     }
 
     res.json(publishedBlog);

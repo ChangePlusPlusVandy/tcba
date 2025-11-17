@@ -309,9 +309,10 @@ const BlogsPage = () => {
                         </>
                       )}
                     </div>
-                    <p className='font-[Open_Sans] text-[14px] font-normal leading-[150%] text-[#3C3C3C] mb-2'>
-                      {displayedContent}
-                    </p>
+                    <div
+                      className='font-[Open_Sans] text-[14px] font-normal leading-[150%] text-[#3C3C3C] mb-2'
+                      dangerouslySetInnerHTML={{ __html: displayedContent }}
+                    />
                   </div>
                 </div>
               );

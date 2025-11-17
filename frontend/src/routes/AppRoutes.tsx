@@ -10,6 +10,7 @@ import LoginPage from '../pages/LoginPage/Login';
 import ForgotPasswordPage from '../pages/ForgotPasswordPage/ForgotPassword';
 import RegisterPage from '../pages/RegisterPage/Register';
 import SignupPage from '../pages/SignupPage/Signup';
+import UnsubscribePage from '../pages/UnsubscribePage/Unsubscribe';
 import DashboardPage from '../pages/OrganizationView/DashboardPage/Dashboard';
 import ProfilePage from '../pages/OrganizationView/ProfilePage/Profile';
 import OrgAlertsPage from '../pages/OrganizationView/AlertsPage/Alerts';
@@ -52,6 +53,7 @@ const AppRoutes = () => {
       <Route path='/forgot-password' element={<ForgotPasswordPage />} />
       <Route path='/register' element={<RegisterPage />} />
       <Route path='/email-signup' element={<SignupPage />} />
+      <Route path='/unsubscribe' element={<UnsubscribePage />} />
 
       <Route
         path='/dashboard'

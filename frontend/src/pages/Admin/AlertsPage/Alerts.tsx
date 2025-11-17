@@ -421,155 +421,232 @@ const AdminAlerts = () => {
       </div>
 
       {isCreateModalOpen && (
-        <div className='modal modal-open'>
-          <div className='modal-box max-w-4xl'>
-            <h3 className='font-bold text-lg mb-4'>Create New Alert</h3>
+        <>
+          <input type='checkbox' checked readOnly className='modal-toggle' />
+          <div className='modal modal-open'>
+            <div className='modal-box max-w-2xl max-h-[80vh] bg-white overflow-y-auto m-8'>
+              <h3 className='font-bold text-xl text-gray-900 mb-4'>Create New Alert</h3>
 
-            <div className='space-y-4'>
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>Title *</label>
-                <input
-                  type='text'
-                  value={newAlert.title}
-                  onChange={e => setNewAlert({ ...newAlert, title: e.target.value })}
-                  className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#194B90]'
-                  placeholder='Enter alert title'
-                />
-              </div>
+              <div className='space-y-4'>
+                
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                    Title <span className='text-red-500'>*</span>
+                  </label>
+                  <input
+                    type='text'
+                    required
+                    value={newAlert.title}
+                    onChange={e => setNewAlert({ ...newAlert, title: e.target.value })}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                    placeholder='Enter alert title'
+                  />
+                </div>
 
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>Priority *</label>
-                <div className='relative'>
+                
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                    Priority <span className='text-red-500'>*</span>
+                  </label>
+                  <div className='relative'>
+                    <button
+                      type='button'
+                      onClick={() => setIsPriorityDropdownOpen(!isPriorityDropdownOpen)}
+                      className='w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#194B90] hover:bg-gray-50 flex items-center justify-between text-sm'
+                    >
+                      <span>{newAlert.priority}</span>
+                      <svg
+                        className={`w-4 h-4 transition-transform ${isPriorityDropdownOpen ? 'rotate-180' : ''}`}
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M19 9l-7 7-7-7'
+                        />
+                      </svg>
+                    </button>
+
+                    {isPriorityDropdownOpen && (
+                      <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-50 w-full'>
+                        {(['URGENT', 'MEDIUM', 'LOW'] as AlertPriority[]).map(priority => (
+                          <button
+                            key={priority}
+                            type='button'
+                            onClick={() => {
+                              setNewAlert({ ...newAlert, priority });
+                              setIsPriorityDropdownOpen(false);
+                            }}
+                            className='w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-gray-700'
+                          >
+                            {priority}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                
+                <div className='mb-4'>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                    Content <span className='text-red-500'>*</span>
+                  </label>
+                  <div style={{ height: '250px' }}>
+                    <ReactQuill
+                      theme='snow'
+                      value={newAlert.content}
+                      onChange={value => setNewAlert({ ...newAlert, content: value })}
+                      placeholder='Enter alert content...'
+                      modules={modules}
+                      style={{ height: '200px' }}
+                    />
+                  </div>
+                </div>
+
+                
+                <div className='flex gap-3 pt-4'>
                   <button
                     type='button'
-                    onClick={() => setIsPriorityDropdownOpen(!isPriorityDropdownOpen)}
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#194B90] hover:bg-gray-50 flex items-center justify-between text-sm'
+                    onClick={() => handleCreateAlert(true)}
+                    className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-lg font-medium'
                   >
-                    <span>{newAlert.priority}</span>
-                    <svg
-                      className={`w-4 h-4 transition-transform ${isPriorityDropdownOpen ? 'rotate-180' : ''}`}
-                      fill='none'
-                      stroke='currentColor'
-                      viewBox='0 0 24 24'
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth={2}
-                        d='M19 9l-7 7-7-7'
-                      />
-                    </svg>
+                    Publish
                   </button>
-
-                  {isPriorityDropdownOpen && (
-                    <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-md shadow-lg z-50 w-full'>
-                      {(['URGENT', 'MEDIUM', 'LOW'] as AlertPriority[]).map(priority => (
-                        <button
-                          key={priority}
-                          type='button'
-                          onClick={() => {
-                            setNewAlert({ ...newAlert, priority });
-                            setIsPriorityDropdownOpen(false);
-                          }}
-                          className='w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-gray-700'
-                        >
-                          {priority}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  <button
+                    type='button'
+                    onClick={() => handleCreateAlert(false)}
+                    className='px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium'
+                  >
+                    Save to Drafts
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => {
+                      setIsCreateModalOpen(false);
+                      setNewAlert({
+                        title: '',
+                        content: '',
+                        priority: 'MEDIUM',
+                        isPublished: false,
+                      });
+                    }}
+                    className='px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium'
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
-
-              <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>Content *</label>
-                <ReactQuill
-                  theme='snow'
-                  value={newAlert.content}
-                  onChange={value => setNewAlert({ ...newAlert, content: value })}
-                  modules={modules}
-                  className='bg-white'
-                />
-              </div>
-            </div>
-
-            <div className='modal-action'>
-              <button
-                onClick={() => {
-                  setIsCreateModalOpen(false);
-                  setNewAlert({
-                    title: '',
-                    content: '',
-                    priority: 'MEDIUM',
-                    isPublished: false,
-                  });
-                }}
-                className='btn btn-ghost'
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleCreateAlert(false)}
-                className='btn bg-gray-600 text-white hover:bg-gray-700'
-              >
-                Save to Drafts
-              </button>
-              <button
-                onClick={() => handleCreateAlert(true)}
-                className='btn bg-[#194B90] text-white hover:bg-[#153a70]'
-              >
-                Publish
-              </button>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {isDetailModalOpen && selectedAlert && (
-        <div className='modal modal-open'>
-          <div className='modal-box max-w-4xl'>
-            <h3 className='font-bold text-2xl mb-2'>{selectedAlert.title}</h3>
+        <>
+          <input type='checkbox' checked readOnly className='modal-toggle' />
+          <div className='modal modal-open'>
+            <div className='modal-box max-w-2xl max-h-[80vh] bg-white overflow-y-auto m-8'>
+              <h3 className='font-bold text-xl text-gray-900 mb-3'>{selectedAlert.title}</h3>
 
-            <div className='flex gap-2 mb-4'>
-              <span
-                className={`px-3 py-1 text-sm font-medium rounded-full ${getPriorityColor(
-                  selectedAlert.priority
-                )}`}
-              >
-                Priority: {selectedAlert.priority}
-              </span>
-            </div>
+              <div className='space-y-4'>
+                
+                <div>
+                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Basic Information</h4>
+                  <div className='grid grid-cols-2 gap-3'>
+                    <div>
+                      <span className='text-sm font-bold text-gray-600'>Priority:</span>
+                      <p className='text-sm'>
+                        <span
+                          className={`px-2 py-1 inline-flex text-xs font-medium rounded-full ${getPriorityColor(
+                            selectedAlert.priority
+                          )}`}
+                        >
+                          {selectedAlert.priority}
+                        </span>
+                      </p>
+                    </div>
 
-            <div
-              className='prose max-w-none mb-4'
-              dangerouslySetInnerHTML={{ __html: selectedAlert.content }}
-            />
+                    <div>
+                      <span className='text-sm font-bold text-gray-600'>Status:</span>
+                      <p className='text-sm'>
+                        <span
+                          className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full ${
+                            selectedAlert.isPublished
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {selectedAlert.isPublished ? 'Published' : 'Draft'}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
-            <div className='flex items-center justify-between mt-6 pt-4 border-t'>
-              <div>
-                <p className='text-sm text-gray-600'>
-                  Status:{' '}
-                  <span
-                    className={`font-medium ${
-                      selectedAlert.isPublished ? 'text-green-600' : 'text-yellow-600'
-                    }`}
+                
+                <div>
+                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Content</h4>
+                  <div
+                    className='prose max-w-none text-sm text-gray-900'
+                    dangerouslySetInnerHTML={{ __html: selectedAlert.content }}
+                  />
+                </div>
+
+                
+                <div>
+                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Dates</h4>
+                  <div className='grid grid-cols-2 gap-3'>
+                    <div>
+                      <span className='text-sm font-bold text-gray-600'>Created:</span>
+                      <p className='text-sm text-gray-900'>
+                        {new Date(selectedAlert.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div>
+                      <span className='text-sm font-bold text-gray-600'>Updated:</span>
+                      <p className='text-sm text-gray-900'>
+                        {new Date(selectedAlert.updatedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              
+              <div className='modal-action'>
+                {!selectedAlert.isPublished && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        await fetchWithAuth(`${API_BASE_URL}/api/alerts/${selectedAlert.id}/publish`, {
+                          method: 'POST',
+                        });
+                        setToast({ message: 'Alert published successfully', type: 'success' });
+                        await fetchAlerts();
+                        closeDetailModal();
+                      } catch (err: any) {
+                        setToast({ message: err.message || 'Failed to publish alert', type: 'error' });
+                      }
+                    }}
+                    className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
                   >
-                    {selectedAlert.isPublished ? 'Published' : 'Draft'}
-                  </span>
-                </p>
-                <p className='text-sm text-gray-600'>
-                  Created: {new Date(selectedAlert.createdAt).toLocaleString()}
-                </p>
+                    Publish
+                  </button>
+                )}
+                <button
+                  onClick={closeDetailModal}
+                  className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
+                >
+                  Close
+                </button>
               </div>
             </div>
-
-            <div className='modal-action'>
-              <button onClick={closeDetailModal} className='btn'>
-                Close
-              </button>
-            </div>
           </div>
-        </div>
+        </>
       )}
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}

@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { OrganizationRole } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import { createNotification } from './inAppNotificationController.js';
+import { sendAnnouncementEmails } from '../services/emailNotificationService.js';
 
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 
@@ -193,6 +194,9 @@ export const createAnnouncement = async (req: AuthenticatedRequest, res: Respons
     if (newAnnouncement.isPublished) {
       try {
         await createNotification('ANNOUNCEMENT', newAnnouncement.title, newAnnouncement.slug);
+        // Send email notifications to organizations with announcement notifications enabled
+        await sendAnnouncementEmails(newAnnouncement.id);
+        console.log('Announcement notifications sent successfully');
       } catch (notifError) {
         console.error('Failed to create notification:', notifError);
       }
@@ -269,5 +273,73 @@ export const deleteAnnouncement = async (req: AuthenticatedRequest, res: Respons
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to delete announcement' });
+  }
+};
+
+/**
+ * @desc    Publish an announcement
+ * @route   POST /api/announcements/:id/publish
+ * @access  Admin/Super Admin
+ */
+export const publishAnnouncement = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+    if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
+
+    const announcement = await prisma.announcements.findUnique({ where: { id } });
+    if (!announcement) return res.status(404).json({ error: 'Announcement not found' });
+
+    const publishedAnnouncement = await prisma.announcements.update({
+      where: { id },
+      data: {
+        isPublished: true,
+        publishedDate: new Date(),
+      },
+      include: { tags: true },
+    });
+
+    try {
+      await createNotification('ANNOUNCEMENT', publishedAnnouncement.title, publishedAnnouncement.slug);
+      // Send email notifications to organizations with announcement notifications enabled
+      await sendAnnouncementEmails(publishedAnnouncement.id);
+      console.log('Announcement notifications sent successfully');
+    } catch (notifError) {
+      console.error('Failed to create notification or send emails:', notifError);
+    }
+
+    res.json(publishedAnnouncement);
+  } catch (error) {
+    console.error('Error publishing announcement:', error);
+    res.status(500).json({ error: 'Failed to publish announcement' });
+  }
+};
+
+/**
+ * @desc    Unpublish an announcement
+ * @route   POST /api/announcements/:id/unpublish
+ * @access  Admin/Super Admin
+ */
+export const unpublishAnnouncement = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+    if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
+
+    const announcement = await prisma.announcements.findUnique({ where: { id } });
+    if (!announcement) return res.status(404).json({ error: 'Announcement not found' });
+
+    const unpublishedAnnouncement = await prisma.announcements.update({
+      where: { id },
+      data: {
+        isPublished: false,
+      },
+      include: { tags: true },
+    });
+
+    res.json(unpublishedAnnouncement);
+  } catch (error) {
+    console.error('Error unpublishing announcement:', error);
+    res.status(500).json({ error: 'Failed to unpublish announcement' });
   }
 };
