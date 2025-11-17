@@ -163,7 +163,7 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
         slug: 'temp',
         featuredImageUrl: featuredImageUrl || null,
         isPublished: isPublished || false,
-        publishedDate: isPublished ? (publishedDate || new Date()) : null,
+        publishedDate: isPublished ? publishedDate || new Date() : null,
       },
     });
 

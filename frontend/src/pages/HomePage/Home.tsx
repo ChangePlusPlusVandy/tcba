@@ -290,7 +290,7 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
           />
         </div>
         <div className='grid gap-12 md:grid-cols-3 justify-items-center'>
-          {['partnership', 'advocacy', 'outreach'].map((key) => {
+          {['partnership', 'advocacy', 'outreach'].map(key => {
             const title =
               content[`how_we_work_${key}_title`]?.value ||
               key.charAt(0).toUpperCase() + key.slice(1);

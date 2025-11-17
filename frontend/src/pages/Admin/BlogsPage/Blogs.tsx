@@ -444,7 +444,6 @@ const AdminBlogs = () => {
               <h3 className='font-bold text-xl text-gray-900 mb-4'>Create New Blog</h3>
 
               <div className='space-y-4'>
-                
                 <div>
                   <label className='block text-sm font-semibold text-gray-700 mb-1'>
                     Title <span className='text-red-500'>*</span>
@@ -458,7 +457,6 @@ const AdminBlogs = () => {
                     placeholder='Enter blog title'
                   />
                 </div>
-
 
                 <div>
                   <label className='block text-sm font-semibold text-gray-700 mb-1'>
@@ -474,7 +472,6 @@ const AdminBlogs = () => {
                   />
                 </div>
 
-                
                 <div className='mb-4'>
                   <label className='block text-sm font-semibold text-gray-700 mb-1'>
                     Content <span className='text-red-500'>*</span>
@@ -491,7 +488,6 @@ const AdminBlogs = () => {
                   </div>
                 </div>
 
-                
                 <div>
                   <label className='block text-sm font-semibold text-gray-700 mb-2'>Tags</label>
                   <div className='min-h-[80px]'>
@@ -532,7 +528,6 @@ const AdminBlogs = () => {
                     )}
                   </div>
 
-                  
                   {newBlog.tagIds.length > 0 && (
                     <p className='text-xs text-gray-600 mt-2'>
                       {newBlog.tagIds.length} tag{newBlog.tagIds.length !== 1 ? 's' : ''} selected
@@ -540,7 +535,6 @@ const AdminBlogs = () => {
                   )}
                 </div>
 
-                
                 <div className='flex gap-3 pt-4'>
                   <button
                     type='button'
@@ -638,7 +632,6 @@ const AdminBlogs = () => {
                   )}
                 </div>
 
-                
                 <div>
                   <h4 className='font-semibold text-base text-gray-800 mb-2'>Dates</h4>
                   <div className='grid grid-cols-2 gap-3'>
@@ -658,20 +651,25 @@ const AdminBlogs = () => {
                 </div>
               </div>
 
-              
               <div className='modal-action'>
                 {!selectedBlog.isPublished && (
                   <button
                     onClick={async () => {
                       try {
-                        await fetchWithAuth(`${API_BASE_URL}/api/blogs/${selectedBlog.id}/publish`, {
-                          method: 'PUT',
-                        });
+                        await fetchWithAuth(
+                          `${API_BASE_URL}/api/blogs/${selectedBlog.id}/publish`,
+                          {
+                            method: 'PUT',
+                          }
+                        );
                         setToast({ message: 'Blog published successfully', type: 'success' });
                         await fetchBlogs();
                         closeDetailModal();
                       } catch (err: any) {
-                        setToast({ message: err.message || 'Failed to publish blog', type: 'error' });
+                        setToast({
+                          message: err.message || 'Failed to publish blog',
+                          type: 'error',
+                        });
                       }
                     }}
                     className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'

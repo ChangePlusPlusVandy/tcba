@@ -300,7 +300,11 @@ export const publishAnnouncement = async (req: AuthenticatedRequest, res: Respon
     });
 
     try {
-      await createNotification('ANNOUNCEMENT', publishedAnnouncement.title, publishedAnnouncement.slug);
+      await createNotification(
+        'ANNOUNCEMENT',
+        publishedAnnouncement.title,
+        publishedAnnouncement.slug
+      );
       // Send email notifications to organizations with announcement notifications enabled
       await sendAnnouncementEmails(publishedAnnouncement.id);
       console.log('Announcement notifications sent successfully');

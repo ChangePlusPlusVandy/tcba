@@ -6,7 +6,6 @@ import { EmailService } from '../services/EmailService.js';
 import { createNotification } from './inAppNotificationController.js';
 import { sendAlertEmails as sendAlertEmailNotifications } from '../services/emailNotificationService.js';
 
-
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 
 /**
@@ -45,19 +44,16 @@ export const getAlerts = async (req: AuthenticatedRequest, res: Response) => {
 
     const where: any = {
       ...(priority && { priority: priority as AlertPriority }),
-      
+
       ...(!isAuthenticatedAdmin && { isPublished: true }),
-      
+
       ...(isAuthenticatedAdmin &&
         isPublished !== undefined && { isPublished: isPublished === 'true' }),
     };
 
     const alerts = await prisma.alert.findMany({
       where,
-      orderBy: [
-        { priority: 'asc' }, 
-        { createdAt: 'desc' },
-      ],
+      orderBy: [{ priority: 'asc' }, { createdAt: 'desc' }],
     });
 
     console.log(`Returning ${alerts.length} alerts (admin: ${isAuthenticatedAdmin})`);
@@ -75,7 +71,6 @@ export const getAlerts = async (req: AuthenticatedRequest, res: Response) => {
  */
 export const getAlertById = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    
     if (!req.user?.id) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -91,19 +86,16 @@ export const getAlertById = async (req: AuthenticatedRequest, res: Response) => 
       return res.status(404).json({ error: 'Alert not found' });
     }
 
-    
     if (!userIsAdmin && !alert.isPublished) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    
     if (!userIsAdmin) {
       const userOrganization = await prisma.organization.findUnique({
         where: { id: req.user.id },
         select: { tags: true },
       });
 
-      
       if (alert.tags && alert.tags.length > 0 && userOrganization) {
         const hasMatchingTag = alert.tags.some(alertTag =>
           userOrganization.tags.includes(alertTag)
@@ -129,7 +121,6 @@ export const getAlertById = async (req: AuthenticatedRequest, res: Response) => 
  */
 export const getAlertsByPriority = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    
     if (!req.user?.id) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -141,7 +132,6 @@ export const getAlertsByPriority = async (req: AuthenticatedRequest, res: Respon
       return res.status(400).json({ error: 'Invalid priority. Must be URGENT, MEDIUM, or LOW' });
     }
 
-    
     let userOrganization;
     if (!userIsAdmin) {
       userOrganization = await prisma.organization.findUnique({
@@ -153,20 +143,18 @@ export const getAlertsByPriority = async (req: AuthenticatedRequest, res: Respon
     let alerts = await prisma.alert.findMany({
       where: {
         priority: priority.toUpperCase() as AlertPriority,
-        
+
         ...(!userIsAdmin && { isPublished: true }),
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    
     if (!userIsAdmin && userOrganization) {
       alerts = alerts.filter(alert => {
-        
         if (!alert.tags || alert.tags.length === 0) {
           return true;
         }
-        
+
         return alert.tags.some(alertTag => userOrganization.tags.includes(alertTag));
       });
     }
@@ -185,7 +173,6 @@ export const getAlertsByPriority = async (req: AuthenticatedRequest, res: Respon
  */
 export const createAlert = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    
     if (!req.user?.id) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -237,7 +224,6 @@ export const createAlert = async (req: AuthenticatedRequest, res: Response) => {
  */
 export const updateAlert = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    
     if (!req.user?.id) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -312,7 +298,6 @@ export const deleteAlert = async (req: AuthenticatedRequest, res: Response) => {
  */
 export const publishAlert = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    
     if (!req.user?.id) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -340,7 +325,6 @@ export const publishAlert = async (req: AuthenticatedRequest, res: Response) => 
       },
     });
 
-    
     try {
       await sendAlertEmailNotifications(publishedAlert.id);
       console.log('Alert notifications sent successfully');

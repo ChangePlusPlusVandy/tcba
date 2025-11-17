@@ -100,7 +100,8 @@ const SignupForm = ({ previewContent }: SignupFormProps = {}) => {
     } catch (err) {
       console.error('Error submitting form:', err);
       setToast({
-        message: err instanceof Error ? err.message : 'Failed to submit subscription. Please try again.',
+        message:
+          err instanceof Error ? err.message : 'Failed to submit subscription. Please try again.',
         type: 'error',
       });
     } finally {
@@ -119,97 +120,97 @@ const SignupForm = ({ previewContent }: SignupFormProps = {}) => {
   return (
     <>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-    <div className='mt-8 bg-white px-20 py-16'>
-      <div className='grid md:grid-cols-2 gap-8 mb-12'>
-        <div>
-          <h1 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
-            {content['header_title']?.value || 'Subscribe to Email Notifications'}
-          </h1>
+      <div className='mt-8 bg-white px-20 py-16'>
+        <div className='grid md:grid-cols-2 gap-8 mb-12'>
+          <div>
+            <h1 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
+              {content['header_title']?.value || 'Subscribe to Email Notifications'}
+            </h1>
 
-          <div
-            className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800 mb-6'
-            dangerouslySetInnerHTML={{
-              __html:
-                content['header_description']?.value ||
-                'Please fill out this form to be notified of our latest posts and service updates. The Tennessee Coalition for Better Aging exists to promote the general welfare of older Tennesseans and their families through partnerships that mobilize resources to educate and advocate for important policies and programs.',
-            }}
-          />
+            <div
+              className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800 mb-6'
+              dangerouslySetInnerHTML={{
+                __html:
+                  content['header_description']?.value ||
+                  'Please fill out this form to be notified of our latest posts and service updates. The Tennessee Coalition for Better Aging exists to promote the general welfare of older Tennesseans and their families through partnerships that mobilize resources to educate and advocate for important policies and programs.',
+              }}
+            />
+          </div>
         </div>
+
+        <form onSubmit={handleSubmit} className='flex flex-col space-y-8 w-full mx-auto'>
+          <label className='text-base font-semibold text-gray-800 mb-2'>Name</label>
+          <div className='flex gap-4'>
+            <input
+              type='text'
+              required
+              placeholder='First name'
+              value={firstName}
+              onChange={e => setFirstName(e.target.value)}
+              className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px]'
+            />
+
+            <input
+              type='text'
+              required
+              placeholder='Last name'
+              value={lastName}
+              onChange={e => setLastName(e.target.value)}
+              className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px]'
+            />
+          </div>
+
+          <div className='flex flex-col space-y-2'>
+            <label className='text-base font-semibold text-gray-800'>Email Address</label>
+            <input
+              type='email'
+              required
+              placeholder='example@example.com'
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px]'
+            />
+          </div>
+
+          <div className='flex flex-col space-y-4'>
+            <label className='text-base font-semibold text-gray-800'>Subscribe to:</label>
+            <div className='flex items-center space-x-3'>
+              <input
+                type='checkbox'
+                id='announcements'
+                checked={announcements}
+                onChange={e => setAnnouncements(e.target.checked)}
+                className='w-5 h-5 text-[#D54242] border-gray-500 rounded focus:ring-[#D54242]'
+              />
+              <label htmlFor='announcements' className='cursor-pointer'>
+                Announcements
+              </label>
+            </div>
+            <div className='flex items-center space-x-3'>
+              <input
+                type='checkbox'
+                id='blogs'
+                checked={blogs}
+                onChange={e => setBlogs(e.target.checked)}
+                className='w-5 h-5 text-[#D54242] border-gray-500 rounded focus:ring-[#D54242]'
+              />
+              <label htmlFor='blogs' className='cursor-pointer'>
+                Blogs
+              </label>
+            </div>
+          </div>
+
+          <div className='flex flex-col items-center'>
+            <button
+              type='submit'
+              disabled={submitting}
+              className='w-[110px] h-[50px] rounded-[15px] bg-[#D54242] text-white hover:bg-[#b53a3a] transition disabled:bg-gray-400 disabled:cursor-not-allowed'
+            >
+              {submitting ? 'Submitting...' : 'Submit'}
+            </button>
+          </div>
+        </form>
       </div>
-
-      <form onSubmit={handleSubmit} className='flex flex-col space-y-8 w-full mx-auto'>
-        <label className='text-base font-semibold text-gray-800 mb-2'>Name</label>
-        <div className='flex gap-4'>
-          <input
-            type='text'
-            required
-            placeholder='First name'
-            value={firstName}
-            onChange={e => setFirstName(e.target.value)}
-            className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px]'
-          />
-
-          <input
-            type='text'
-            required
-            placeholder='Last name'
-            value={lastName}
-            onChange={e => setLastName(e.target.value)}
-            className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px]'
-          />
-        </div>
-
-        <div className='flex flex-col space-y-2'>
-          <label className='text-base font-semibold text-gray-800'>Email Address</label>
-          <input
-            type='email'
-            required
-            placeholder='example@example.com'
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px]'
-          />
-        </div>
-
-        <div className='flex flex-col space-y-4'>
-          <label className='text-base font-semibold text-gray-800'>Subscribe to:</label>
-          <div className='flex items-center space-x-3'>
-            <input
-              type='checkbox'
-              id='announcements'
-              checked={announcements}
-              onChange={e => setAnnouncements(e.target.checked)}
-              className='w-5 h-5 text-[#D54242] border-gray-500 rounded focus:ring-[#D54242]'
-            />
-            <label htmlFor='announcements' className='cursor-pointer'>
-              Announcements
-            </label>
-          </div>
-          <div className='flex items-center space-x-3'>
-            <input
-              type='checkbox'
-              id='blogs'
-              checked={blogs}
-              onChange={e => setBlogs(e.target.checked)}
-              className='w-5 h-5 text-[#D54242] border-gray-500 rounded focus:ring-[#D54242]'
-            />
-            <label htmlFor='blogs' className='cursor-pointer'>
-              Blogs
-            </label>
-          </div>
-        </div>
-
-        <div className='flex flex-col items-center'>
-          <button
-            type='submit'
-            disabled={submitting}
-            className='w-[110px] h-[50px] rounded-[15px] bg-[#D54242] text-white hover:bg-[#b53a3a] transition disabled:bg-gray-400 disabled:cursor-not-allowed'
-          >
-            {submitting ? 'Submitting...' : 'Submit'}
-          </button>
-        </div>
-      </form>
-    </div>
     </>
   );
 };

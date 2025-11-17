@@ -109,9 +109,7 @@ export const getPublicImageUrl = async (req: Request, res: Response) => {
     }
 
     const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-    const hasImageExtension = imageExtensions.some(ext =>
-      fileKey.toLowerCase().endsWith(ext)
-    );
+    const hasImageExtension = imageExtensions.some(ext => fileKey.toLowerCase().endsWith(ext));
 
     if (!hasImageExtension) {
       return res.status(403).json({ error: 'Only image files can be accessed publicly' });

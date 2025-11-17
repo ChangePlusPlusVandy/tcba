@@ -91,21 +91,13 @@ async function sendEmails(
       unsubscribeUrl = `${frontendUrl}/unsubscribe?email=${encodeURIComponent(email)}`;
     }
 
-    const personalizedHtmlBody = emailContent.htmlBody.replace(
-      /href="[^"]*\/unsubscribe"/g,
-      `href="${unsubscribeUrl}"`
-    ).replace(
-      /href="[^"]*\/settings"/g,
-      `href="${unsubscribeUrl}"`
-    );
+    const personalizedHtmlBody = emailContent.htmlBody
+      .replace(/href="[^"]*\/unsubscribe"/g, `href="${unsubscribeUrl}"`)
+      .replace(/href="[^"]*\/settings"/g, `href="${unsubscribeUrl}"`);
 
-    const personalizedTextBody = emailContent.textBody.replace(
-      /Unsubscribe: [^\n]*/g,
-      `Unsubscribe: ${unsubscribeUrl}`
-    ).replace(
-      /Manage preferences: [^\n]*/g,
-      `Manage preferences: ${unsubscribeUrl}`
-    );
+    const personalizedTextBody = emailContent.textBody
+      .replace(/Unsubscribe: [^\n]*/g, `Unsubscribe: ${unsubscribeUrl}`)
+      .replace(/Manage preferences: [^\n]*/g, `Manage preferences: ${unsubscribeUrl}`);
 
     const command = new SendEmailCommand({
       Source: sesConfig.fromEmail,
@@ -214,7 +206,9 @@ Manage preferences: ${frontendUrl}/settings
 
     let individualResults = { sent: 0, total: 0, errors: [] as any[] };
     if (individualSubscribers.length > 0) {
-      console.log(`Sending announcement emails to ${individualSubscribers.length} individual subscribers`);
+      console.log(
+        `Sending announcement emails to ${individualSubscribers.length} individual subscribers`
+      );
       individualResults = await sendEmails(individualSubscribers, emailContent, frontendUrl, false);
     }
 
@@ -349,8 +343,8 @@ export async function sendAlertEmails(alertId: string) {
     }
 
     const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173';
-    const priorityLabel = alert.priority === 'URGENT' ? '[URGENT] ' :
-                          alert.priority === 'MEDIUM' ? '[IMPORTANT] ' : '';
+    const priorityLabel =
+      alert.priority === 'URGENT' ? '[URGENT] ' : alert.priority === 'MEDIUM' ? '[IMPORTANT] ' : '';
 
     const emailContent: EmailContent = {
       subject: `${priorityLabel}Alert: ${alert.title}`,
@@ -418,7 +412,11 @@ Manage other email preferences: ${frontendUrl}/settings
   }
 }
 
-export async function sendSurveyEmails(surveyId: string, targetTags?: string[], targetRegions?: string[]) {
+export async function sendSurveyEmails(
+  surveyId: string,
+  targetTags?: string[],
+  targetRegions?: string[]
+) {
   try {
     const survey = await prisma.survey.findUnique({
       where: { id: surveyId },

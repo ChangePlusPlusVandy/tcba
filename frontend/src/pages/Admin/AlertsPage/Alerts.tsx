@@ -428,7 +428,6 @@ const AdminAlerts = () => {
               <h3 className='font-bold text-xl text-gray-900 mb-4'>Create New Alert</h3>
 
               <div className='space-y-4'>
-                
                 <div>
                   <label className='block text-sm font-semibold text-gray-700 mb-1'>
                     Title <span className='text-red-500'>*</span>
@@ -443,7 +442,6 @@ const AdminAlerts = () => {
                   />
                 </div>
 
-                
                 <div>
                   <label className='block text-sm font-semibold text-gray-700 mb-1'>
                     Priority <span className='text-red-500'>*</span>
@@ -490,7 +488,6 @@ const AdminAlerts = () => {
                   </div>
                 </div>
 
-                
                 <div className='mb-4'>
                   <label className='block text-sm font-semibold text-gray-700 mb-1'>
                     Content <span className='text-red-500'>*</span>
@@ -507,7 +504,6 @@ const AdminAlerts = () => {
                   </div>
                 </div>
 
-                
                 <div className='flex gap-3 pt-4'>
                   <button
                     type='button'
@@ -553,7 +549,6 @@ const AdminAlerts = () => {
               <h3 className='font-bold text-xl text-gray-900 mb-3'>{selectedAlert.title}</h3>
 
               <div className='space-y-4'>
-                
                 <div>
                   <h4 className='font-semibold text-base text-gray-800 mb-2'>Basic Information</h4>
                   <div className='grid grid-cols-2 gap-3'>
@@ -587,7 +582,6 @@ const AdminAlerts = () => {
                   </div>
                 </div>
 
-                
                 <div>
                   <h4 className='font-semibold text-base text-gray-800 mb-2'>Content</h4>
                   <div
@@ -596,7 +590,6 @@ const AdminAlerts = () => {
                   />
                 </div>
 
-                
                 <div>
                   <h4 className='font-semibold text-base text-gray-800 mb-2'>Dates</h4>
                   <div className='grid grid-cols-2 gap-3'>
@@ -616,20 +609,25 @@ const AdminAlerts = () => {
                 </div>
               </div>
 
-              
               <div className='modal-action'>
                 {!selectedAlert.isPublished && (
                   <button
                     onClick={async () => {
                       try {
-                        await fetchWithAuth(`${API_BASE_URL}/api/alerts/${selectedAlert.id}/publish`, {
-                          method: 'POST',
-                        });
+                        await fetchWithAuth(
+                          `${API_BASE_URL}/api/alerts/${selectedAlert.id}/publish`,
+                          {
+                            method: 'POST',
+                          }
+                        );
                         setToast({ message: 'Alert published successfully', type: 'success' });
                         await fetchAlerts();
                         closeDetailModal();
                       } catch (err: any) {
-                        setToast({ message: err.message || 'Failed to publish alert', type: 'error' });
+                        setToast({
+                          message: err.message || 'Failed to publish alert',
+                          type: 'error',
+                        });
                       }
                     }}
                     className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'

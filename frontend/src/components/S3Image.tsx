@@ -22,14 +22,12 @@ const S3Image = ({ src, alt, className, fallbackSrc }: S3ImageProps) => {
         return;
       }
 
-      
       if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:')) {
         setImageSrc(src);
         setLoading(false);
         return;
       }
 
-      
       try {
         const response = await fetch(
           `${API_BASE_URL}/api/uploads/public-image/${encodeURIComponent(src)}`
