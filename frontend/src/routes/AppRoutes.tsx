@@ -4,7 +4,6 @@ import AdminRoute from '../components/AdminRoute';
 import HomePage from '../pages/HomePage/Home';
 import AboutPage from '../pages/AboutPage/About';
 import AnnouncementsPage from '../pages/AnnouncementsPage/Announcements';
-import ResourcesPage from '../pages/ResourcesPage/Resources';
 import ContactPage from '../pages/ContactPage/Contact';
 import LoginPage from '../pages/LoginPage/Login';
 import ForgotPasswordPage from '../pages/ForgotPasswordPage/ForgotPassword';
@@ -47,7 +46,6 @@ const AppRoutes = () => {
       <Route path='/announcement/:slug' element={<Announcement />} />
       <Route path='/blogs' element={<BlogsPage />} />
       <Route path='/blog/:slug' element={<Blog />} />
-      <Route path='/resources' element={<ResourcesPage />} />
       <Route path='/contact' element={<ContactPage />} />
       <Route path='/login' element={<LoginPage />} />
       <Route path='/forgot-password' element={<ForgotPasswordPage />} />
