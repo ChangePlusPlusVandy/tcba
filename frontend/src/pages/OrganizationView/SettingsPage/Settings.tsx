@@ -11,6 +11,7 @@ interface Organization {
   notifySurveys: boolean;
   notifyAlerts: boolean;
   notifyBlogs: boolean;
+  visibleInDirectory: boolean;
 }
 
 const OrgSettingsPage = () => {
@@ -32,6 +33,10 @@ const OrgSettingsPage = () => {
     notifySurveys: true,
     notifyAlerts: true,
     notifyBlogs: true,
+  });
+
+  const [privacySettings, setPrivacySettings] = useState({
+    visibleInDirectory: true,
   });
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
@@ -64,6 +69,10 @@ const OrgSettingsPage = () => {
         notifyAlerts: data.notifyAlerts ?? true,
         notifyBlogs: data.notifyBlogs ?? true,
       });
+
+      setPrivacySettings({
+        visibleInDirectory: data.visibleInDirectory ?? true,
+      });
     } catch (err: any) {
       console.error('Error fetching organization settings:', err);
       setToast({ message: err.message || 'Failed to load settings', type: 'error' });
@@ -74,6 +83,13 @@ const OrgSettingsPage = () => {
 
   const handleNotificationChange = (key: keyof typeof notificationSettings) => {
     setNotificationSettings(prev => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  const handlePrivacyChange = (key: keyof typeof privacySettings) => {
+    setPrivacySettings(prev => ({
       ...prev,
       [key]: !prev[key],
     }));
@@ -91,7 +107,10 @@ const OrgSettingsPage = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(notificationSettings),
+        body: JSON.stringify({
+          ...notificationSettings,
+          ...privacySettings,
+        }),
       });
 
       if (!response.ok) {
@@ -219,6 +238,41 @@ const OrgSettingsPage = () => {
                   <div className='font-medium text-gray-900'>Blog Posts</div>
                   <div className='text-sm text-gray-500'>
                     Receive notifications about new blog posts
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <div className='mt-6 flex justify-end'>
+              <button
+                onClick={handleSaveSettings}
+                disabled={saving}
+                className='px-6 py-2 bg-[#D54242] text-white rounded-md hover:bg-[#b53a3a] disabled:opacity-50'
+              >
+                {saving ? 'Saving...' : 'Save Preferences'}
+              </button>
+            </div>
+          </div>
+
+          <div className='bg-white rounded-lg shadow-md p-6 mb-6'>
+            <h2 className='text-xl font-semibold text-gray-800 mb-2'>Privacy</h2>
+            <p className='text-sm text-gray-600 mb-4'>
+              Control your organization's visibility in the coalition directory
+            </p>
+
+            <div className='space-y-4'>
+              <label className='flex items-center gap-3 cursor-pointer'>
+                <input
+                  type='checkbox'
+                  checked={privacySettings.visibleInDirectory}
+                  onChange={() => handlePrivacyChange('visibleInDirectory')}
+                  className='w-5 h-5 text-[#D54242] border-gray-300 rounded focus:ring-[#D54242] focus:ring-2'
+                />
+                <div>
+                  <div className='font-medium text-gray-900'>Include in Organization Directory</div>
+                  <div className='text-sm text-gray-500'>
+                    Allow other organizations to see your organization's information in the
+                    directory
                   </div>
                 </div>
               </label>

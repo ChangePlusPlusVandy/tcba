@@ -9,38 +9,49 @@ import { createNotification } from './inAppNotificationController.js';
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 
 /**
- * @desc    Get all alerts (only published ones for non-admins, filtered by matching tags)
+ * @desc    Get all alerts (public shows only published, admins see all)
  * @route   GET /api/alerts?priority
- * @access  Authenticated organizations and admins only
+ * @access  Public (optional authentication)
  */
 export const getAlerts = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // Ensure user is authenticated
-    if (!req.user?.id) {
-      return res.status(401).json({ error: 'Authentication required' });
+    let isAuthenticatedAdmin = false;
+
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7);
+        const { verifyToken } = await import('@clerk/express');
+        const verifiedToken = await verifyToken(token, {
+          secretKey: process.env.CLERK_SECRET_KEY!,
+          clockSkewInMs: 5000,
+        });
+
+        const adminUser = await prisma.adminUser.findUnique({
+          where: { clerkId: verifiedToken.sub },
+        });
+
+        if (adminUser) {
+          isAuthenticatedAdmin = true;
+          console.log('Admin authenticated in getAlerts');
+        }
+      } catch (error) {
+        console.log('Auth failed in getAlerts, treating as public');
+      }
     }
 
     const { priority, isPublished } = req.query;
-    const userIsAdmin = isAdmin(req.user?.role);
-
-    // Get the current organization's tags (for non-admins)
-    let userOrganization;
-    if (!userIsAdmin) {
-      userOrganization = await prisma.organization.findUnique({
-        where: { id: req.user.id },
-        select: { tags: true },
-      });
-    }
 
     const where: any = {
       ...(priority && { priority: priority as AlertPriority }),
       // Non-admins can only see published alerts
-      ...(!userIsAdmin && { isPublished: true }),
+      ...(!isAuthenticatedAdmin && { isPublished: true }),
       // Admins can filter by isPublished
-      ...(userIsAdmin && isPublished !== undefined && { isPublished: isPublished === 'true' }),
+      ...(isAuthenticatedAdmin &&
+        isPublished !== undefined && { isPublished: isPublished === 'true' }),
     };
 
-    let alerts = await prisma.alert.findMany({
+    const alerts = await prisma.alert.findMany({
       where,
       orderBy: [
         { priority: 'asc' }, // URGENT first (assuming enum order)
@@ -48,18 +59,7 @@ export const getAlerts = async (req: AuthenticatedRequest, res: Response) => {
       ],
     });
 
-    // Filter alerts by matching tags for non-admins
-    if (!userIsAdmin && userOrganization) {
-      alerts = alerts.filter(alert => {
-        // If alert has no tags, it's a broadcast alert visible to all
-        if (!alert.tags || alert.tags.length === 0) {
-          return true;
-        }
-        // Check if organization has any matching tags with the alert
-        return alert.tags.some(alertTag => userOrganization.tags.includes(alertTag));
-      });
-    }
-
+    console.log(`Returning ${alerts.length} alerts (admin: ${isAuthenticatedAdmin})`);
     res.status(200).json(alerts);
   } catch (error) {
     console.error('Error fetching alerts:', error);

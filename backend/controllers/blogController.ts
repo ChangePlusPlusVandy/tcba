@@ -16,11 +16,36 @@ const generateSlug = async (title: string, id: string): Promise<string> => {
 
 export const getAllBlogs = async (req: AuthenticatedRequest, res: Response) => {
   try {
+    let isAuthenticatedAdmin = false;
+
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7);
+        const { verifyToken } = await import('@clerk/express');
+        const verifiedToken = await verifyToken(token, {
+          secretKey: process.env.CLERK_SECRET_KEY!,
+          clockSkewInMs: 5000,
+        });
+
+        const adminUser = await prisma.adminUser.findUnique({
+          where: { clerkId: verifiedToken.sub },
+        });
+
+        if (adminUser) {
+          isAuthenticatedAdmin = true;
+          console.log('Admin authenticated in getAllBlogs');
+        }
+      } catch (error) {
+        console.log('Auth failed in getAllBlogs, treating as public');
+      }
+    }
+
     const { published, startDate, endDate, tags, search, sortBy, sortOrder, limit, offset } =
       req.query;
 
     const where: any = {};
-    if (!req.user || !isAdmin(req.user.role)) {
+    if (!isAuthenticatedAdmin) {
       where.isPublished = true;
     } else if (published !== undefined) {
       where.isPublished = published === 'true';

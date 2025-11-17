@@ -17,6 +17,7 @@ import OrgSurveysPage from '../pages/OrganizationView/SurveysPage/Surveys';
 import OrgAnnouncementsPage from '../pages/OrganizationView/AnnouncementsPage/Announcements';
 import OrgBlogsPage from '../pages/OrganizationView/BlogsPage/Blogs';
 import OrgSettingsPage from '../pages/OrganizationView/SettingsPage/Settings';
+import OrganizationsList from '../pages/OrganizationView/OrganizationsListPage/OrganizationsList';
 import AdminDashboard from '../pages/Admin/AdminDashboard/AdminDashboard';
 import OrganizationManagement from '../pages/Admin/OrganizationManagementPage/OrganizationManagement';
 import Announcement from '../pages/AnnouncementPage/Announcement';
@@ -31,7 +32,7 @@ import AboutPageEdit from '../pages/Admin/PageEditPages/AboutPage/AboutPageEdit'
 import RegisterPageEdit from '../pages/Admin/PageEditPages/RegisterPage/RegisterPageEdit';
 import ContactPageEdit from '../pages/Admin/PageEditPages/ContactPage/ContactPageEdit';
 import EmailSignupPageEdit from '../pages/Admin/PageEditPages/EmailSignupPage/EmailSignupPageEdit';
-import CustomEmail from '../pages/Admin/CustomEmail/CustomEmail';
+import CustomEmail from '../pages/Admin/CustomEmailPage/CustomEmail';
 import AdminMessages from '../pages/Admin/MessagesPage/Messages';
 import OrganizationMessages from '../pages/OrganizationView/MessagesPage/Messages';
 
@@ -89,6 +90,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <OrgSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/organizations'
+        element={
+          <ProtectedRoute>
+            <OrganizationsList />
           </ProtectedRoute>
         }
       />
