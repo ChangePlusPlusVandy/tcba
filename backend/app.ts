@@ -23,7 +23,7 @@ import { clerkClient, clerkMiddleware } from '@clerk/express';
 const app = express();
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || '*',
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173' || 'https://tcba-frontend.vercel.app',
     credentials: true,
   })
 );
