@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
 import { API_BASE_URL } from '../../config/api';
+import 'react-quill-new/dist/quill.snow.css';
 
 type Tag = {
   id: string;
@@ -95,7 +96,7 @@ const Blog = () => {
           )}
         </div>
         <div
-          className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-[#3C3C3C] py-8 prose prose-lg max-w-none'
+          className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-[#3C3C3C] py-8 ql-editor'
           dangerouslySetInnerHTML={{ __html: blog.content }}
         />
       </div>

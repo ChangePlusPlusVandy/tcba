@@ -2,6 +2,7 @@ import axios from 'axios';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoFunnelOutline, IoSearchOutline } from 'react-icons/io5';
+import 'react-quill-new/dist/quill.snow.css';
 import { API_BASE_URL } from '../../config/api';
 
 type Tag = {
@@ -311,7 +312,7 @@ const BlogsPage = () => {
                       )}
                     </div>
                     <div
-                      className='font-[Open_Sans] text-[14px] font-normal leading-[150%] text-[#3C3C3C] mb-2'
+                      className='font-[Open_Sans] text-[14px] font-normal leading-[150%] text-[#3C3C3C] mb-2 ql-editor'
                       dangerouslySetInnerHTML={{ __html: displayedContent }}
                     />
                   </div>

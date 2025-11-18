@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
+import 'react-quill-new/dist/quill.snow.css';
 
 export default function Announcement() {
   const { slug } = useParams<{ slug: string }>();
@@ -75,7 +76,7 @@ export default function Announcement() {
           )}
         </div>
         <div
-          className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-[#3C3C3C] py-8'
+          className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-[#3C3C3C] py-8 ql-editor'
           dangerouslySetInnerHTML={{ __html: announcement.content }}
         />
       </div>

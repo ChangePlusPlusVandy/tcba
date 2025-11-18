@@ -151,6 +151,8 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
     const { title, content, author, tags, tagIds, featuredImageUrl, isPublished, publishedDate } =
       req.body;
 
+    console.log('createBlog - Received data:', { title, author, tags, tagIds, isPublished });
+
     if (!title || !content || !author) {
       return res.status(400).json({ error: 'title, content, and author are required' });
     }
@@ -170,7 +172,9 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
     const slug = await generateSlug(title, tempBlog.id);
 
     const tagIdsToUse = tagIds || tags || [];
+    console.log('createBlog - Tag IDs to use:', tagIdsToUse);
     const tagConnections = tagIdsToUse.map((id: string) => ({ id }));
+    console.log('createBlog - Tag connections:', tagConnections);
 
     const blog = await prisma.blog.update({
       where: { id: tempBlog.id },
