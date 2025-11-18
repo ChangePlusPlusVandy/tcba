@@ -9,7 +9,7 @@ import {
   deleteAnnouncement,
   publishAnnouncement,
   unpublishAnnouncement,
-} from '../controllers/announcementController';
+} from '../controllers/announcementController.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();

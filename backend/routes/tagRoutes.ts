@@ -5,7 +5,7 @@ import {
   addTagToAnnouncement,
   removeTagFromAnnouncement,
   deleteTag,
-} from '../controllers/tagController';
+} from '../controllers/tagController.js';
 
 const router = Router();
 

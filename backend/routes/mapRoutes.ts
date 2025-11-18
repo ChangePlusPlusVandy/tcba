@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getMapOrganizations, geocodeAddress } from '../controllers/mapController';
+import { getMapOrganizations, geocodeAddress } from '../controllers/mapController.js';
 
 const router = Router();
 

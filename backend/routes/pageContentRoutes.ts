@@ -6,8 +6,8 @@ import {
   bulkUpdatePageContent,
   createPageContent,
   deletePageContent,
-} from '../controllers/pageContentController';
-import { authenticateToken, requireAdmin } from '../middleware/auth';
+} from '../controllers/pageContentController.js';
+import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 
 const router = Router();
 

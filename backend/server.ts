@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import app from './app';
+import app from './app.js';
 import { clerkMiddleware } from '@clerk/express';
 import { startScheduledEmailService } from './services/scheduledEmailService.js';
 
