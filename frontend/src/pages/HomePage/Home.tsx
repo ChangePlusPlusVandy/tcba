@@ -5,6 +5,7 @@ import tcbaCapitol from '../../assets/TCBACapitol.jpg';
 import tcbaGroupPhoto from '../../assets/TCBAGroupPhoto.png';
 import { FaHandshake, FaBullhorn, FaPeopleArrows, FaChartLine } from 'react-icons/fa';
 import { MdHealthAndSafety, MdFamilyRestroom } from 'react-icons/md';
+import S3Image from '../../components/S3Image';
 
 type Announcement = {
   id: string;
@@ -114,8 +115,9 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
   return (
     <div className='flex flex-col gap-16 pb-20'>
       <section className='relative min-h-[420px] w-screen left-1/2 -translate-x-1/2 overflow-hidden'>
-        <img
+        <S3Image
           src={heroImageSrc}
+          fallbackSrc={heroImage}
           alt='Hands providing support'
           className='absolute inset-0 w-full h-full object-cover'
         />
@@ -215,8 +217,9 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
               />
             </div>
             <div className='bg-slate-200 border border-transparent overflow-hidden relative group rounded-lg'>
-              <img
+              <S3Image
                 src={content['working_image1']?.value || tcbaCapitol}
+                fallbackSrc={tcbaCapitol}
                 alt='TCBA at the Capitol'
                 className='w-full h-full object-cover'
               />
@@ -232,8 +235,9 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
               </div>
             </div>
             <div className='bg-slate-200 border border-transparent overflow-hidden relative group rounded-lg'>
-              <img
+              <S3Image
                 src={content['working_image2']?.value || tcbaGroupPhoto}
+                fallbackSrc={tcbaGroupPhoto}
                 alt='TCBA Group Photo'
                 className='w-full h-full object-cover'
               />
@@ -286,7 +290,7 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
           />
         </div>
         <div className='grid gap-12 md:grid-cols-3 justify-items-center'>
-          {['partnership', 'advocacy', 'outreach'].map((key, index) => {
+          {['partnership', 'advocacy', 'outreach'].map(key => {
             const title =
               content[`how_we_work_${key}_title`]?.value ||
               key.charAt(0).toUpperCase() + key.slice(1);

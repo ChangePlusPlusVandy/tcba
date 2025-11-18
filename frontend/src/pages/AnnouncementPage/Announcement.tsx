@@ -73,9 +73,10 @@ export default function Announcement() {
             </>
           )}
         </div>
-        <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-[#3C3C3C] py-8'>
-          {announcement.content}
-        </p>
+        <div
+          className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-[#3C3C3C] py-8'
+          dangerouslySetInnerHTML={{ __html: announcement.content }}
+        />
       </div>
     </div>
   );

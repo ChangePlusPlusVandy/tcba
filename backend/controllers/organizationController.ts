@@ -14,6 +14,50 @@ const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 const resolveTargetId = (id: string, userId?: string) => (id === 'profile' ? userId : id);
 
 /**
+ * @desc    Get organizations visible in directory (for org panel)
+ * @route   GET /api/organizations/directory
+ * @access  Authenticated organizations
+ */
+export const getDirectoryOrganizations = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const organizations = await prisma.organization.findMany({
+      where: {
+        status: 'ACTIVE',
+        visibleInDirectory: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        description: true,
+        website: true,
+        address: true,
+        city: true,
+        state: true,
+        zipCode: true,
+        primaryContactName: true,
+        primaryContactEmail: true,
+        primaryContactPhone: true,
+        secondaryContactName: true,
+        secondaryContactEmail: true,
+        region: true,
+        organizationType: true,
+        organizationSize: true,
+        status: true,
+        tags: true,
+        createdAt: true,
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    res.json(organizations);
+  } catch (error) {
+    console.error('Error fetching directory organizations:', error);
+    res.status(500).json({ error: 'Failed to fetch directory organizations' });
+  }
+};
+
+/**
  * @desc    Get all organizations with optional search/filter
  * @route   GET /api/organizations?query
  * @access  Admin/Super Admin only
@@ -132,7 +176,7 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
           const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}`;
 
           const response = await fetch(geocodeUrl);
-          const data = await response.json();
+          const data: any = await response.json();
 
           if (data.status === 'OK' && data.results.length > 0) {
             finalLatitude = data.results[0].geometry.location.lat;
@@ -241,6 +285,44 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
       ...(userIsAdmin && role && { role }),
       ...(userIsAdmin && status && { status }),
     };
+
+    if (updateFields.address || updateFields.city || updateFields.zipCode) {
+      const currentOrg = await prisma.organization.findUnique({ where: { id: targetId } });
+      if (!currentOrg) return res.status(404).json({ error: 'Organization not found' });
+
+      const newAddress = updateFields.address ?? currentOrg.address;
+      const newCity = updateFields.city ?? currentOrg.city;
+      const newZipCode = updateFields.zipCode ?? currentOrg.zipCode;
+
+      if (newAddress || newCity) {
+        try {
+          const fullAddress =
+            `${newAddress || ''}, ${newCity || ''}, ${newZipCode || ''}, Tennessee`.trim();
+          const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+
+          if (apiKey) {
+            console.log('[Update] Geocoding address:', fullAddress);
+            const encodedAddress = encodeURIComponent(fullAddress);
+            const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}`;
+
+            const response = await fetch(geocodeUrl);
+            const data: any = await response.json();
+
+            if (data.status === 'OK' && data.results.length > 0) {
+              updateData.latitude = data.results[0].geometry.location.lat;
+              updateData.longitude = data.results[0].geometry.location.lng;
+              console.log('[Update] ✓ Geocoded to:', updateData.latitude, updateData.longitude);
+            } else {
+              console.log('[Update] Geocoding failed:', data.status);
+            }
+          }
+        } catch (geocodeError) {
+          console.error('[Update] Geocoding error:', geocodeError);
+          // Continue without updating coordinates if geocoding fails
+        }
+      }
+    }
+
     if (email) {
       const existingOrg = await prisma.organization.findFirst({
         where: { email, NOT: { id: targetId } },

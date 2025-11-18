@@ -85,6 +85,9 @@ const OrganizationManagement = () => {
   const [regionDropdownOpen, setRegionDropdownOpen] = useState(false);
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
   const [actionDropdownOpen, setActionDropdownOpen] = useState<string | null>(null);
+  const [editTagDropdownOpen, setEditTagDropdownOpen] = useState(false);
+  const [editRegionDropdownOpen, setEditRegionDropdownOpen] = useState(false);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
 
   const isTokenExpiringSoon = (token: string): boolean => {
     try {
@@ -165,8 +168,26 @@ const OrganizationManagement = () => {
     }
   };
 
+  const fetchTags = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/tags`);
+      if (!response.ok) throw new Error('Failed to fetch tags');
+      const data = await response.json();
+      console.log('Fetched tags from API:', data);
+      const tagNames = data.map((tag: { name: string }) => tag.name);
+      console.log('Tag names:', tagNames);
+      setAvailableTags(tagNames);
+    } catch (err: any) {
+      console.error('Error fetching tags:', err);
+      const orgTags = Array.from(new Set(organizations.flatMap(org => org.tags || [])));
+      console.log('Using fallback tags from organizations:', orgTags);
+      setAvailableTags(orgTags);
+    }
+  };
+
   useEffect(() => {
     fetchOrganizations();
+    fetchTags();
   }, []);
 
   useEffect(() => {
@@ -185,16 +206,36 @@ const OrganizationManagement = () => {
       if (!target.closest('.action-dropdown-container')) {
         setActionDropdownOpen(null);
       }
+      if (!target.closest('.edit-tag-dropdown-container')) {
+        setEditTagDropdownOpen(false);
+      }
+      if (!target.closest('.edit-region-dropdown-container')) {
+        setEditRegionDropdownOpen(false);
+      }
     };
 
-    if (tagDropdownOpen || regionDropdownOpen || typeDropdownOpen || actionDropdownOpen) {
+    if (
+      tagDropdownOpen ||
+      regionDropdownOpen ||
+      typeDropdownOpen ||
+      actionDropdownOpen ||
+      editTagDropdownOpen ||
+      editRegionDropdownOpen
+    ) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [tagDropdownOpen, regionDropdownOpen, typeDropdownOpen, actionDropdownOpen]);
+  }, [
+    tagDropdownOpen,
+    regionDropdownOpen,
+    typeDropdownOpen,
+    actionDropdownOpen,
+    editTagDropdownOpen,
+    editRegionDropdownOpen,
+  ]);
 
   const handleActionClick = (
     action: 'approve' | 'decline' | 'archive' | 'unarchive' | 'delete',
@@ -492,15 +533,13 @@ const OrganizationManagement = () => {
     }
   };
 
-  const pendingOrgs = organizations.filter(org => org.status === 'PENDING');
-  const activeOrgs = organizations.filter(org => org.status === 'ACTIVE');
-  const inactiveOrgs = organizations.filter(org => org.status === 'INACTIVE');
-
   const uniqueOrgTypes = Array.from(
     new Set(organizations.map(org => org.organizationType).filter(Boolean))
   ) as string[];
 
   const allTags = Array.from(new Set(organizations.flatMap(org => org.tags || [])));
+
+  const combinedTags = Array.from(new Set([...availableTags, ...allTags]));
 
   useEffect(() => {
     if (regionFilter !== 'all') {
@@ -644,7 +683,7 @@ const OrganizationManagement = () => {
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  All ({organizations.length})
+                  All
                 </button>
                 <button
                   onClick={() => setFilter('PENDING')}
@@ -654,7 +693,7 @@ const OrganizationManagement = () => {
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  Pending ({pendingOrgs.length})
+                  Pending
                 </button>
                 <button
                   onClick={() => setFilter('ACTIVE')}
@@ -664,7 +703,7 @@ const OrganizationManagement = () => {
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  Active ({activeOrgs.length})
+                  Active
                 </button>
                 <button
                   onClick={() => setFilter('INACTIVE')}
@@ -674,7 +713,7 @@ const OrganizationManagement = () => {
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  Inactive ({inactiveOrgs.length})
+                  Inactive
                 </button>
               </div>
 
@@ -1347,7 +1386,7 @@ const OrganizationManagement = () => {
                       {selectedOrg.tags.map((tag, index) => (
                         <span
                           key={index}
-                          className='px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full'
+                          className='px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
                         >
                           {tag}
                         </span>
@@ -1410,7 +1449,7 @@ const OrganizationManagement = () => {
       {editingOrg && (
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4'>
           <div className='bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col'>
-            <div className='flex items-center justify-between p-6 border-b bg-white'>
+            <div className='flex items-center justify-between p-6 bg-white'>
               <h2 className='text-xl font-bold text-gray-900'>Edit Organization Details</h2>
               <button
                 onClick={() => setEditingOrg(null)}
@@ -1599,23 +1638,209 @@ const OrganizationManagement = () => {
                     </div>
                     <div>
                       <label className='block text-sm font-medium text-gray-700 mb-1'>Region</label>
-                      <select
-                        value={editingOrg.region || ''}
-                        onChange={e => setEditingOrg({ ...editingOrg, region: e.target.value })}
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#194B90]'
-                      >
-                        <option value=''>Select Region</option>
-                        <option value='East'>East</option>
-                        <option value='Middle'>Middle</option>
-                        <option value='West'>West</option>
-                      </select>
+                      <div className='relative edit-region-dropdown-container'>
+                        <button
+                          type='button'
+                          onClick={() => setEditRegionDropdownOpen(!editRegionDropdownOpen)}
+                          className='w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#194B90] hover:bg-gray-50 flex items-center justify-between text-sm'
+                        >
+                          <span>{editingOrg.region || 'Select Region'}</span>
+                          <svg
+                            className={`w-4 h-4 transition-transform ${editRegionDropdownOpen ? 'rotate-180' : ''}`}
+                            fill='none'
+                            stroke='currentColor'
+                            viewBox='0 0 24 24'
+                          >
+                            <path
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                              strokeWidth={2}
+                              d='M19 9l-7 7-7-7'
+                            />
+                          </svg>
+                        </button>
+
+                        {editRegionDropdownOpen && (
+                          <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-md shadow-lg z-50 w-full'>
+                            <div className='py-2'>
+                              {['East', 'Middle', 'West'].map(region => (
+                                <button
+                                  key={region}
+                                  type='button'
+                                  onClick={() => {
+                                    setEditingOrg({ ...editingOrg, region });
+                                    setEditRegionDropdownOpen(false);
+                                  }}
+                                  className='w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-gray-700'
+                                >
+                                  {region}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className='text-lg font-semibold text-gray-800 mb-3'>Membership</h3>
+                  <div className='grid grid-cols-2 gap-4'>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Membership Date
+                      </label>
+                      <input
+                        type='date'
+                        value={
+                          editingOrg.membershipDate
+                            ? new Date(editingOrg.membershipDate).toISOString().split('T')[0]
+                            : ''
+                        }
+                        onChange={e =>
+                          setEditingOrg({
+                            ...editingOrg,
+                            membershipDate: e.target.value ? e.target.value : undefined,
+                          })
+                        }
+                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                      />
+                    </div>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Renewal Date
+                      </label>
+                      <input
+                        type='date'
+                        value={
+                          editingOrg.membershipRenewalDate
+                            ? new Date(editingOrg.membershipRenewalDate).toISOString().split('T')[0]
+                            : ''
+                        }
+                        onChange={e =>
+                          setEditingOrg({
+                            ...editingOrg,
+                            membershipRenewalDate: e.target.value ? e.target.value : undefined,
+                          })
+                        }
+                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className='text-lg font-semibold text-gray-800 mb-3'>Tags</h3>
+                  <div className='space-y-2'>
+                    <div className='flex flex-wrap gap-2'>
+                      {editingOrg.tags && editingOrg.tags.length > 0 ? (
+                        editingOrg.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className='px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full border border-blue-200 flex items-center gap-2'
+                          >
+                            {tag}
+                            <button
+                              type='button'
+                              onClick={() => {
+                                const newTags = editingOrg.tags.filter((_, i) => i !== index);
+                                setEditingOrg({ ...editingOrg, tags: newTags });
+                              }}
+                              className='text-red-600 hover:text-red-800'
+                            >
+                              <svg
+                                className='w-4 h-4'
+                                fill='none'
+                                stroke='currentColor'
+                                viewBox='0 0 24 24'
+                              >
+                                <path
+                                  strokeLinecap='round'
+                                  strokeLinejoin='round'
+                                  strokeWidth={2}
+                                  d='M6 18L18 6M6 6l12 12'
+                                />
+                              </svg>
+                            </button>
+                          </span>
+                        ))
+                      ) : (
+                        <p className='text-sm text-gray-500'>No tags assigned</p>
+                      )}
+                    </div>
+                    <div className='flex gap-2 items-start'>
+                      <div className='relative flex-1 edit-tag-dropdown-container'>
+                        <button
+                          type='button'
+                          onClick={() => setEditTagDropdownOpen(!editTagDropdownOpen)}
+                          className='w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#194B90] hover:bg-gray-50 flex items-center justify-between text-sm'
+                        >
+                          <span>Select a tag...</span>
+                          <svg
+                            className={`w-4 h-4 transition-transform ${editTagDropdownOpen ? 'rotate-180' : ''}`}
+                            fill='none'
+                            stroke='currentColor'
+                            viewBox='0 0 24 24'
+                          >
+                            <path
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                              strokeWidth={2}
+                              d='M19 9l-7 7-7-7'
+                            />
+                          </svg>
+                        </button>
+
+                        {editTagDropdownOpen && (
+                          <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-md shadow-lg z-50 w-full max-h-[200px] overflow-y-auto'>
+                            {combinedTags.filter(tag => !editingOrg.tags?.includes(tag)).length ===
+                            0 ? (
+                              <div className='px-4 py-3 text-sm text-gray-500'>
+                                No tags available
+                              </div>
+                            ) : (
+                              <div className='py-2'>
+                                {combinedTags
+                                  .filter(tag => !editingOrg.tags?.includes(tag))
+                                  .map(tag => (
+                                    <button
+                                      key={tag}
+                                      type='button'
+                                      onClick={() => {
+                                        setEditingOrg({
+                                          ...editingOrg,
+                                          tags: [...(editingOrg.tags || []), tag],
+                                        });
+                                        setEditTagDropdownOpen(false);
+                                      }}
+                                      className='w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-gray-700'
+                                    >
+                                      {tag}
+                                    </button>
+                                  ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        type='button'
+                        onClick={() => setEditTagDropdownOpen(!editTagDropdownOpen)}
+                        className='px-4 py-2 bg-[#D54242] text-white rounded-md hover:bg-[#b53a3a] text-sm whitespace-nowrap'
+                      >
+                        Add Tag
+                      </button>
+                    </div>
+                    <p className='text-xs text-gray-500'>
+                      Select a tag from the dropdown to add it
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className='flex justify-end gap-3 p-6 border-t bg-gray-50'>
+            <div className='flex justify-end gap-3 p-6 bg-gray-50'>
               <button
                 onClick={() => setEditingOrg(null)}
                 disabled={actioningOrg === editingOrg.id}

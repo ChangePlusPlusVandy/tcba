@@ -30,6 +30,7 @@ describe('Announcement Routes', () => {
     prismaMock.announcements.findMany.mockResolvedValue([
       {
         id: '1',
+        slug: 'test',
         title: 'Test',
         content: 'Hello world',
         publishedDate: new Date(),
@@ -47,9 +48,10 @@ describe('Announcement Routes', () => {
     expect(res.body[0].title).toBe('Test');
   });
 
-  it('POST /api/announcements creates a new announcement', async () => {
+  it('POST /api/announcements creates an announcement', async () => {
     prismaMock.announcements.create.mockResolvedValue({
       id: '2',
+      slug: 'new-announcement',
       title: 'New Announcement',
       content: 'This is a test',
       publishedDate: new Date(),
@@ -70,17 +72,17 @@ describe('Announcement Routes', () => {
     expect(res.body.title).toBe('New Announcement');
   });
 
-  it('GET /api/announcements/published-date/:publishedDate returns announcements for that day', async () => {
+  it('GET /api/announcements/published-date/:publishedDate returns announcements for that date', async () => {
     const publishedDate = '2025-05-01';
     const mockAnnouncements = [
       {
         id: '3',
+        slug: 'published-announcement',
         title: 'Published Announcement',
         content: 'Announcement content',
         publishedDate: new Date('2025-05-01T12:00:00.000Z'),
         isPublished: true,
         attachmentUrls: [],
-        tags: [],
         createdByAdminId: 'admin789',
         createdAt: new Date('2025-04-30T18:00:00.000Z'),
         updatedAt: new Date('2025-05-01T12:00:00.000Z'),

@@ -41,7 +41,7 @@ interface Organization {
 
 const ProfilePage = () => {
   const { getToken } = useAuth();
-  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [, setOrganization] = useState<Organization | null>(null);
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

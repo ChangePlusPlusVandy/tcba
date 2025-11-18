@@ -21,7 +21,7 @@ const ConfirmModal = ({
     <>
       <input type='checkbox' checked={true} readOnly className='modal-toggle' />
       <div className='modal modal-open'>
-        <div className='modal-box bg-white'>
+        <div className='modal-box bg-white' data-type={type}>
           <h3 className='font-bold text-lg text-gray-900 mb-2'>{title}</h3>
           <p className='py-4 text-gray-600'>{message}</p>
           <div className='modal-action'>

@@ -18,14 +18,55 @@ const ImageUploader = ({
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<string | null>(currentImageUrl || null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [loadingPresignedUrl, setLoadingPresignedUrl] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
   useEffect(() => {
-    setPreview(currentImageUrl || null);
-  }, [currentImageUrl]);
+    const loadImage = async () => {
+      if (!currentImageUrl) {
+        setPreview(null);
+        return;
+      }
+
+      // If it's a data URL or full HTTP URL, use it directly
+      if (currentImageUrl.startsWith('data:') || currentImageUrl.startsWith('http')) {
+        setPreview(currentImageUrl);
+        return;
+      }
+
+      // Otherwise, it's an S3 key - get presigned URL
+      setLoadingPresignedUrl(true);
+      try {
+        const token = await getToken();
+        const response = await fetch(
+          `${API_BASE_URL}/api/uploads/presigned-download/${encodeURIComponent(currentImageUrl)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const { downloadUrl } = await response.json();
+          setPreview(downloadUrl);
+        } else {
+          console.error('Failed to get presigned URL for image');
+          setPreview(null);
+        }
+      } catch (err) {
+        console.error('Error loading image:', err);
+        setPreview(null);
+      } finally {
+        setLoadingPresignedUrl(false);
+      }
+    };
+
+    loadImage();
+  }, [currentImageUrl, getToken, API_BASE_URL]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -87,11 +128,11 @@ const ImageUploader = ({
 
       setProgress(100);
 
-      const bucketName = import.meta.env.VITE_AWS_S3_BUCKET_NAME;
-      const region = import.meta.env.VITE_AWS_REGION || 'us-east-2';
-      const imageUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;
+      console.log('Upload successful! S3 Key:', key);
 
-      onChange(imageUrl);
+      // Keep the local preview (data URL) until we can load from S3
+      // The parent component will store the key, and we'll use presigned URLs to display
+      onChange(key);
     } catch (err: any) {
       console.error('Upload error:', err);
       setError(err.message || 'Failed to upload image');
@@ -113,12 +154,22 @@ const ImageUploader = ({
     <div className='flex flex-col space-y-2 mb-6'>
       <label className='text-sm font-semibold text-gray-700'>{label}</label>
 
-      {preview ? (
+      {loadingPresignedUrl ? (
+        <div className='w-full max-w-md h-48 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center'>
+          <p className='text-gray-400'>Loading image...</p>
+        </div>
+      ) : preview ? (
         <div className='relative w-full max-w-md'>
           <img
             src={preview}
             alt='Preview'
             className='w-full h-48 object-cover rounded-md border border-gray-300'
+            onLoad={() => console.log('Image loaded successfully:', preview)}
+            onError={e => {
+              console.error('Image failed to load:', preview);
+              console.error('Error event:', e);
+              setError('Failed to load image. Please try again.');
+            }}
           />
           {!disabled && (
             <button

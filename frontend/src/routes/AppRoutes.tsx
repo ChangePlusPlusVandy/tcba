@@ -4,12 +4,12 @@ import AdminRoute from '../components/AdminRoute';
 import HomePage from '../pages/HomePage/Home';
 import AboutPage from '../pages/AboutPage/About';
 import AnnouncementsPage from '../pages/AnnouncementsPage/Announcements';
-import ResourcesPage from '../pages/ResourcesPage/Resources';
 import ContactPage from '../pages/ContactPage/Contact';
 import LoginPage from '../pages/LoginPage/Login';
 import ForgotPasswordPage from '../pages/ForgotPasswordPage/ForgotPassword';
 import RegisterPage from '../pages/RegisterPage/Register';
 import SignupPage from '../pages/SignupPage/Signup';
+import UnsubscribePage from '../pages/UnsubscribePage/Unsubscribe';
 import DashboardPage from '../pages/OrganizationView/DashboardPage/Dashboard';
 import ProfilePage from '../pages/OrganizationView/ProfilePage/Profile';
 import OrgAlertsPage from '../pages/OrganizationView/AlertsPage/Alerts';
@@ -17,6 +17,7 @@ import OrgSurveysPage from '../pages/OrganizationView/SurveysPage/Surveys';
 import OrgAnnouncementsPage from '../pages/OrganizationView/AnnouncementsPage/Announcements';
 import OrgBlogsPage from '../pages/OrganizationView/BlogsPage/Blogs';
 import OrgSettingsPage from '../pages/OrganizationView/SettingsPage/Settings';
+import OrganizationsList from '../pages/OrganizationView/OrganizationsListPage/OrganizationsList';
 import AdminDashboard from '../pages/Admin/AdminDashboard/AdminDashboard';
 import OrganizationManagement from '../pages/Admin/OrganizationManagementPage/OrganizationManagement';
 import Announcement from '../pages/AnnouncementPage/Announcement';
@@ -31,7 +32,7 @@ import AboutPageEdit from '../pages/Admin/PageEditPages/AboutPage/AboutPageEdit'
 import RegisterPageEdit from '../pages/Admin/PageEditPages/RegisterPage/RegisterPageEdit';
 import ContactPageEdit from '../pages/Admin/PageEditPages/ContactPage/ContactPageEdit';
 import EmailSignupPageEdit from '../pages/Admin/PageEditPages/EmailSignupPage/EmailSignupPageEdit';
-import CustomEmail from '../pages/Admin/CustomEmail/CustomEmail';
+import CustomEmail from '../pages/Admin/CustomEmailPage/CustomEmail';
 import AdminMessages from '../pages/Admin/MessagesPage/Messages';
 import OrganizationMessages from '../pages/OrganizationView/MessagesPage/Messages';
 
@@ -45,12 +46,12 @@ const AppRoutes = () => {
       <Route path='/announcement/:slug' element={<Announcement />} />
       <Route path='/blogs' element={<BlogsPage />} />
       <Route path='/blog/:slug' element={<Blog />} />
-      <Route path='/resources' element={<ResourcesPage />} />
       <Route path='/contact' element={<ContactPage />} />
       <Route path='/login' element={<LoginPage />} />
       <Route path='/forgot-password' element={<ForgotPasswordPage />} />
       <Route path='/register' element={<RegisterPage />} />
       <Route path='/email-signup' element={<SignupPage />} />
+      <Route path='/unsubscribe' element={<UnsubscribePage />} />
 
       <Route
         path='/dashboard'
@@ -89,6 +90,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <OrgSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/organizations'
+        element={
+          <ProtectedRoute>
+            <OrganizationsList />
           </ProtectedRoute>
         }
       />

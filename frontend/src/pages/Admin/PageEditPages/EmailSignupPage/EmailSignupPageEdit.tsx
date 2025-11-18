@@ -67,7 +67,7 @@ const EmailSignupPageEdit = () => {
 
       const token = await getToken();
 
-      const updates = Object.entries(content).map(([key, item]) => ({
+      const updates = Object.entries(content).map(([, item]) => ({
         id: item.id,
         contentValue: item.value,
       }));

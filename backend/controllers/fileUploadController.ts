@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { OrganizationRole } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import { s3 } from '../config/aws-s3.js';
@@ -75,11 +75,60 @@ export const getPresignedDownloadUrl = async (req: AuthenticatedRequest, res: Re
     if (!req.user || !isAdmin(req.user.role)) {
       return res.status(403).json({ error: 'Admin access required' });
     }
+    // extracts fileKey from the URL path
     const { fileKey } = req.params;
-    res.status(501).json({ error: 'Not implemented yet' });
+    if (!fileKey) {
+      return res.status(400).json({ error: 'fileKey parameter is required' });
+    }
+
+    // gets bucket name from environment variables
+    const bucketName = process.env.AWS_S3_BUCKET_NAME;
+
+    // defines parameters for presigned URL generation
+    const params = {
+      Bucket: bucketName,
+      Key: fileKey,
+      Expires: 600,
+    };
+
+    // generates presigned URL for 'getObject' operation
+    const url = s3.getSignedUrl('getObject', params);
+
+    return res.status(200).json({ downloadUrl: url });
   } catch (error) {
     console.error('Error generating presigned download URL:', error);
     res.status(500).json({ error: 'Failed to generate presigned download URL' });
+  }
+};
+
+export const getPublicImageUrl = async (req: Request, res: Response) => {
+  try {
+    const { fileKey } = req.params;
+    if (!fileKey) {
+      return res.status(400).json({ error: 'fileKey parameter is required' });
+    }
+
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    const hasImageExtension = imageExtensions.some(ext => fileKey.toLowerCase().endsWith(ext));
+
+    if (!hasImageExtension) {
+      return res.status(403).json({ error: 'Only image files can be accessed publicly' });
+    }
+
+    const bucketName = process.env.AWS_S3_BUCKET_NAME;
+
+    const params = {
+      Bucket: bucketName,
+      Key: fileKey,
+      Expires: 3600,
+    };
+
+    const url = s3.getSignedUrl('getObject', params);
+
+    return res.status(200).json({ url });
+  } catch (error) {
+    console.error('Error generating public image URL:', error);
+    res.status(500).json({ error: 'Failed to generate image URL' });
   }
 };
 

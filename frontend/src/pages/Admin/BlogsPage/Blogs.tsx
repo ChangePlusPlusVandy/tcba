@@ -1,166 +1,258 @@
-import { Link } from 'react-router-dom';
-import { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
 import { useAuth } from '@clerk/clerk-react';
-import AdminSidebar from '../../../components/AdminSidebar';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
+import AdminSidebar from '../../../components/AdminSidebar';
+import Toast from '../../../components/Toast';
+import ConfirmModal from '../../../components/ConfirmModal';
 
-// Remove template blogs, use real data from backend
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
-const Badge = ({ status }: { status: string }) => {
-  if (status === 'Published') {
-    return (
-      <span className='text-sm font-medium bg-green-100 text-green-800 px-3 py-1 rounded-full'>
-        Published
-      </span>
-    );
-  }
-  return (
-    <span className='text-sm font-medium bg-gray-100 text-gray-700 px-3 py-1 rounded-full'>
-      Draft
-    </span>
-  );
+type Tag = {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
+type Blog = {
+  id: string;
+  slug: string;
+  title: string;
+  content: string;
+  author: string;
+  tags: Tag[];
+  featuredImageUrl?: string;
+  isPublished: boolean;
+  publishedDate?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type Filter = 'ALL' | 'PUBLISHED' | 'DRAFTS';
+
 const AdminBlogs = () => {
-  const [showCreate, setShowCreate] = useState(false);
-  const [title, setTitle] = useState('');
-  const [author, setAuthor] = useState('');
-  const [tags, setTags] = useState<string[]>(['Tag #1', 'Tag #2']);
-  const [newTag, setNewTag] = useState('');
-  const [content, setContent] = useState('');
-  const quillRef = useRef<ReactQuill>(null);
-
-  const addTag = () => {
-    const t = newTag.trim();
-    if (t && !tags.includes(t)) {
-      setTags(s => [...s, t]);
-    }
-    setNewTag('');
-  };
-
-  const removeTag = (t: string) => setTags(s => s.filter(x => x !== t));
-
-  const plainText = (content || '').replace(/<[^>]+>/g, '').trim();
-  const wordCount = plainText ? plainText.split(/\s+/).length : 0;
-
-  const modules = {
-    toolbar: {
-      container: [
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ header: [1, 2, 3, false] }],
-        [{ list: 'ordered' }, { list: 'bullet' }],
-        ['link', 'image'],
-        ['clean'],
-      ],
-      handlers: {
-        image: function () {
-          const url = prompt('Enter image URL');
-          if (url) {
-            const editor = quillRef.current?.getEditor();
-            const range = editor?.getSelection()?.index ?? editor?.getLength() ?? 0;
-            editor?.insertEmbed(range, 'image', url);
-            editor?.setSelection((range ?? 0) + 1);
-          }
-        },
-      },
-    },
-  };
-
-  const formats = [
-    'header',
-    'bold',
-    'italic',
-    'underline',
-    'strike',
-    'list',
-    'bullet',
-    'link',
-    'image',
-  ];
-
-  const [errors, setErrors] = useState({ title: false, author: false, content: false });
-  const [blogs, setBlogs] = useState<any[]>([]);
   const { getToken } = useAuth();
+
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState('');
-  const [filter, setFilter] = useState<'ALL' | 'PUBLISHED' | 'DRAFTS'>('ALL');
+  const [error, setError] = useState('');
+  const [selectedBlogIds, setSelectedBlogIds] = useState<string[]>([]);
+  const [filter, setFilter] = useState<Filter>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
+
+  const [newBlog, setNewBlog] = useState({
+    title: '',
+    content: '',
+    author: '',
+    tagIds: [] as string[],
+    isPublished: false,
+  });
+
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info';
+  } | null>(null);
+
+  const [confirmModal, setConfirmModal] = useState<{
+    title: string;
+    message: string;
+    confirmText: string;
+    onConfirm: () => void;
+  } | null>(null);
+
+  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+    const token = await getToken({ template: 'jwt-template-tcba' });
+    if (!token) throw new Error('Authentication required');
+
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error ${response.status}`);
+    }
+
+    if (response.status === 204) return null;
+    return response.json();
+  };
+
+  const fetchBlogs = async () => {
+    try {
+      setError('');
+      const data = await fetchWithAuth(`${API_BASE_URL}/api/blogs`);
+      console.log('Fetched blogs:', data);
+      console.log('Blogs count:', data.length);
+      console.log(
+        'Drafts:',
+        data.filter((b: any) => !b.isPublished)
+      );
+      console.log(
+        'Published:',
+        data.filter((b: any) => b.isPublished)
+      );
+      setBlogs(data);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch blogs');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTags = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/blogs/tags`);
+      setAllTags(response.data);
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+    }
+  };
 
   useEffect(() => {
-    const fetchBlogs = async () => {
-      setLoading(true);
-      setFetchError('');
-      try {
-        const token = await getToken({ skipCache: true, template: 'jwt-template-tcba' });
-        const res = await axios.get('/api/blogs', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        // Defensive: ensure blogs is always an array
-        const data = Array.isArray(res.data) ? res.data : [];
-        setBlogs(data);
-      } catch (err: any) {
-        setFetchError('Failed to fetch blogs');
-        setBlogs([]);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchBlogs();
+    fetchTags();
   }, []);
 
-  const validate = () => {
-    const tErr = !title.trim();
-    const aErr = !author.trim();
-    const pt = (content || '').replace(/<[^>]+>/g, '').trim();
-    const cErr = !pt;
-    setErrors({ title: tErr, author: aErr, content: cErr });
-    return !(tErr || aErr || cErr);
-  };
-
-  const handleSaveDraft = () => {
-    if (!validate()) return;
-    // simulate save draft (replace with API call)
-    setShowCreate(false);
-  };
-
-  const handlePublish = async () => {
-    if (!validate()) return;
-    try {
-      const token = await getToken({ skipCache: true, template: 'jwt-template-tcba' });
-      // 1. Create blog (draft)
-      const createRes = await axios.post(
-        '/api/blogs',
-        {
-          title,
-          author,
-          content,
-          tags: [], // TODO: map tag names to IDs if needed
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const blogId = createRes.data.id;
-      // 2. Publish blog
-      const publishRes = await axios.put(`/api/blogs/${blogId}/publish`, null, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      // 3. Update UI: add new blog to top
-      setBlogs(prev => [publishRes.data, ...prev]);
-      // 4. Reset modal state
-      setTitle('');
-      setAuthor('');
-      setTags(['Tag #1', 'Tag #2']);
-      setContent('');
-      setShowCreate(false);
-    } catch (err: any) {
-      if (err?.response?.status === 401) {
-        alert('Unauthorized. Please sign in as an admin to publish.');
-      } else {
-        alert('Failed to publish blog.');
-      }
+  const handleCreateBlog = async (publish: boolean) => {
+    if (!newBlog.title.trim()) {
+      setToast({ message: 'Title is required', type: 'error' });
+      return;
     }
+    if (!newBlog.content.trim()) {
+      setToast({ message: 'Content is required', type: 'error' });
+      return;
+    }
+    if (!newBlog.author.trim()) {
+      setToast({ message: 'Author is required', type: 'error' });
+      return;
+    }
+
+    try {
+      setError('');
+      const blogData = {
+        ...newBlog,
+        isPublished: publish,
+        publishedDate: publish ? new Date().toISOString() : null,
+      };
+
+      console.log('Creating blog with data:', blogData);
+
+      await fetchWithAuth(`${API_BASE_URL}/api/blogs`, {
+        method: 'POST',
+        body: JSON.stringify(blogData),
+      });
+
+      await fetchBlogs();
+      setIsCreateModalOpen(false);
+      setNewBlog({
+        title: '',
+        content: '',
+        author: '',
+        tagIds: [],
+        isPublished: false,
+      });
+
+      const successMessage = publish ? 'Blog created successfully' : 'Blog saved successfully';
+      setToast({ message: successMessage, type: 'success' });
+    } catch (err: any) {
+      setToast({ message: err.message || 'Failed to create blog', type: 'error' });
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedBlogIds.length === 0) return;
+
+    const count = selectedBlogIds.length;
+    setConfirmModal({
+      title: 'Delete Blogs',
+      message: `Are you sure you want to delete ${count} blog${count > 1 ? 's' : ''}? This action cannot be undone.`,
+      confirmText: 'Delete',
+      onConfirm: async () => {
+        try {
+          setError('');
+          await Promise.all(
+            selectedBlogIds.map(id =>
+              fetchWithAuth(`${API_BASE_URL}/api/blogs/${id}`, {
+                method: 'DELETE',
+              })
+            )
+          );
+
+          await fetchBlogs();
+          setSelectedBlogIds([]);
+          setToast({
+            message: `${count} blog${count > 1 ? 's' : ''} deleted successfully`,
+            type: 'success',
+          });
+        } catch (err: any) {
+          setToast({ message: err.message || 'Failed to delete blogs', type: 'error' });
+        } finally {
+          setConfirmModal(null);
+        }
+      },
+    });
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedBlogIds(filteredBlogs.map(b => b.id));
+    } else {
+      setSelectedBlogIds([]);
+    }
+  };
+
+  const handleSelectBlog = (id: string) => {
+    setSelectedBlogIds(prev =>
+      prev.includes(id) ? prev.filter(blogId => blogId !== id) : [...prev, id]
+    );
+  };
+
+  const openDetailModal = (blog: Blog) => {
+    setSelectedBlog(blog);
+    setIsDetailModalOpen(true);
+  };
+
+  const closeDetailModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedBlog(null);
+  };
+
+  const filteredBlogs = blogs.filter(blog => {
+    if (filter === 'PUBLISHED' && !blog.isPublished) return false;
+    if (filter === 'DRAFTS' && blog.isPublished) return false;
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return (
+        blog.title.toLowerCase().includes(query) ||
+        blog.content.toLowerCase().includes(query) ||
+        blog.author.toLowerCase().includes(query)
+      );
+    }
+
+    return true;
+  });
+
+  const modules = {
+    toolbar: [
+      [{ header: [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      ['link'],
+      ['clean'],
+    ],
   };
 
   return (
@@ -168,254 +260,446 @@ const AdminBlogs = () => {
       <AdminSidebar />
 
       <div className='flex-1 p-8'>
-        <div className='flex items-start justify-between mb-6'>
-          <div>
-            <h2 className='text-2xl font-bold text-gray-800'>
-              {filter === 'ALL' ? 'All Blogs' : filter === 'PUBLISHED' ? 'Published' : 'Drafts'}{' '}
-              <span className='text-2xl font-bold text-gray-800'>
-                (
-                {filter === 'ALL'
-                  ? blogs.length
-                  : filter === 'PUBLISHED'
-                    ? blogs.filter(b => b.isPublished).length
-                    : blogs.filter(b => !b.isPublished).length}
-                )
-              </span>
-            </h2>
-          </div>
+        <h1 className='text-3xl font-bold text-gray-800 mb-6'>All Blogs ({blogs.length})</h1>
 
-          {/* Create new button moved next to search input */}
-        </div>
-
-        <div className='flex items-center justify-between p-2 mb-4 bg-transparent'>
-          <div className='flex items-center gap-3'>
+        <div className='flex items-center gap-4 mb-6'>
+          <div className='flex gap-2'>
             <button
               onClick={() => setFilter('ALL')}
-              className={`px-3 py-1 rounded-md text-sm ${
+              className={`px-6 py-2.5 rounded-[10px] font-medium transition ${
                 filter === 'ALL'
-                  ? 'bg-blue-50 text-blue-700 border border-blue-300 shadow-inner'
-                  : 'border border-gray-200 bg-transparent'
-              }`}
+                  ? 'bg-[#EBF3FF] text-[#194B90] border border-[#194B90]'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              } cursor-pointer`}
             >
               All
             </button>
             <button
               onClick={() => setFilter('PUBLISHED')}
-              className={`px-3 py-1 rounded-md text-sm ${
+              className={`px-6 py-2.5 rounded-[10px] font-medium transition ${
                 filter === 'PUBLISHED'
-                  ? 'bg-blue-50 text-blue-700 border border-blue-300 shadow-inner'
-                  : 'border border-gray-200 bg-transparent'
-              }`}
+                  ? 'bg-[#EBF3FF] text-[#194B90] border border-[#194B90]'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              } cursor-pointer`}
             >
               Published
             </button>
             <button
               onClick={() => setFilter('DRAFTS')}
-              className={`px-3 py-1 rounded-md text-sm ${
+              className={`px-6 py-2.5 rounded-[10px] font-medium transition ${
                 filter === 'DRAFTS'
-                  ? 'bg-blue-50 text-blue-700 border border-blue-300 shadow-inner'
-                  : 'border border-gray-200 bg-transparent'
-              }`}
+                  ? 'bg-[#EBF3FF] text-[#194B90] border border-[#194B90]'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              } cursor-pointer`}
             >
               Drafts
             </button>
           </div>
 
-          <div className='flex items-center gap-3'>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className='px-6 py-2.5 rounded-[10px] font-medium transition bg-[#D54242] text-white hover:bg-[#b53a3a] cursor-pointer'
+          >
+            Create
+          </button>
+
+          {selectedBlogIds.length > 0 && (
+            <button
+              onClick={handleDeleteSelected}
+              className='px-6 py-2.5 rounded-[10px] font-medium transition bg-[#D54242] text-white hover:bg-[#b53a3a] cursor-pointer'
+            >
+              Delete Selected ({selectedBlogIds.length})
+            </button>
+          )}
+
+          <div className='flex-1 max-w-xl ml-auto'>
             <div className='relative'>
               <input
-                className='border border-gray-200 rounded-md px-3 py-2 w-80 text-sm bg-white'
+                type='text'
                 placeholder='Search blogs'
-                aria-label='search'
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className='w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#194B90]'
               />
-            </div>
-            <div className='flex items-center'>
-              <button
-                onClick={() => setShowCreate(true)}
-                className='ml-3 px-4 py-2 rounded-md text-sm bg-blue-50 text-blue-700 border border-blue-300 shadow-inner'
+              <svg
+                className='absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
               >
-                Create new
-              </button>
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
+                />
+              </svg>
             </div>
           </div>
         </div>
 
-        <div className='bg-white rounded-md shadow-sm overflow-hidden'>
-          {loading ? (
-            <div className='p-8 text-center text-gray-500'>Loading blogs...</div>
-          ) : fetchError ? (
-            <div className='p-8 text-center text-red-500'>{fetchError}</div>
-          ) : (
-            <table className='w-full table-fixed'>
-              <thead className='bg-gray-50'>
-                <tr className='text-left text-sm text-gray-600'>
-                  <th className='px-6 py-4'>Title</th>
-                  <th className='px-6 py-4'>Status</th>
-                  <th className='px-6 py-4'>Tags</th>
-                  <th className='px-6 py-4'>Published</th>
+        {error && (
+          <div className='bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg mb-6'>
+            {error}
+          </div>
+        )}
+
+        {loading ? (
+          <div className='text-center py-12'>
+            <p className='text-gray-600'>Loading blogs...</p>
+          </div>
+        ) : filteredBlogs.length === 0 ? (
+          <div className='text-center py-12'>
+            <p className='text-gray-600'>No blogs found</p>
+          </div>
+        ) : (
+          <div className='bg-white rounded-lg border border-gray-200 overflow-hidden'>
+            <table className='min-w-full'>
+              <thead className='bg-gray-50 border-b border-gray-200'>
+                <tr>
+                  <th className='px-6 py-4 w-12'>
+                    <input
+                      type='checkbox'
+                      checked={
+                        filteredBlogs.length > 0 && selectedBlogIds.length === filteredBlogs.length
+                      }
+                      onChange={handleSelectAll}
+                      className='w-4 h-4'
+                    />
+                  </th>
+                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>Title</th>
+                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
+                    Author
+                  </th>
+                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
+                    Status
+                  </th>
+                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>Tags</th>
+                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
+                    Published
+                  </th>
                 </tr>
               </thead>
-              <tbody>
-                {(() => {
-                  const filteredBlogs =
-                    filter === 'ALL'
-                      ? blogs
-                      : filter === 'PUBLISHED'
-                        ? blogs.filter(b => b.isPublished)
-                        : blogs.filter(b => !b.isPublished);
-                  return filteredBlogs.map((b, i) => (
-                    <tr key={b.id} className={`${i % 2 === 0 ? '' : 'bg-gray-50'}`}>
-                      <td className='px-6 py-4'>
-                        <Link to='#' className='text-sm text-blue-600 hover:underline'>
-                          {b.title}
-                        </Link>
-                      </td>
-                      <td className='px-6 py-4'>
-                        <Badge status={b.isPublished ? 'Published' : 'Draft'} />
-                      </td>
-                      <td className='px-6 py-4 text-sm text-gray-600'>
-                        {b.tags?.map((t: any) => t.name).join(', ') || 'None'}
-                      </td>
-                      <td className='px-6 py-4 text-sm text-gray-500'>
-                        {b.publishedDate ? new Date(b.publishedDate).toLocaleDateString() : '—'}
-                      </td>
-                    </tr>
-                  ));
-                })()}
+              <tbody className='divide-y divide-gray-200'>
+                {filteredBlogs.map(blog => (
+                  <tr key={blog.id} className='hover:bg-gray-50'>
+                    <td className='px-6 py-4' onClick={e => e.stopPropagation()}>
+                      <input
+                        type='checkbox'
+                        checked={selectedBlogIds.includes(blog.id)}
+                        onChange={() => handleSelectBlog(blog.id)}
+                        className='w-4 h-4'
+                      />
+                    </td>
+                    <td
+                      className='px-6 py-4 text-[#194B90] font-medium hover:underline cursor-pointer'
+                      onClick={() => openDetailModal(blog)}
+                    >
+                      {blog.title}
+                    </td>
+                    <td className='px-6 py-4'>
+                      <span className='text-sm text-gray-900'>{blog.author}</span>
+                    </td>
+                    <td className='px-6 py-4'>
+                      <span
+                        className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                          blog.isPublished
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {blog.isPublished ? 'Published' : 'Draft'}
+                      </span>
+                    </td>
+                    <td className='px-6 py-4'>
+                      <div className='flex gap-2 flex-wrap'>
+                        {blog.tags.map(tag => (
+                          <span
+                            key={tag.id}
+                            className='px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
+                          >
+                            {tag.name}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className='px-6 py-4'>
+                      <span className='text-sm text-gray-600'>
+                        {new Date(blog.createdAt).toLocaleDateString()}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
-          )}
-        </div>
-        {/* Create modal */}
-        {showCreate && (
-          <div
-            className='fixed inset-0 z-50 flex items-start justify-center pt-28'
-            aria-modal='true'
-            role='dialog'
-          >
-            <div className='absolute inset-0 bg-black/40' onClick={() => setShowCreate(false)} />
-
-            <div className='relative z-10 w-[90%] max-w-4xl bg-white rounded-lg shadow-lg p-6 max-h-[85vh] overflow-auto'>
-              <div className='flex items-start justify-between mb-4'>
-                <h3 className='text-xl font-semibold'>Create New Blog</h3>
-                <button
-                  onClick={() => setShowCreate(false)}
-                  className='text-gray-500 hover:text-gray-800'
-                  aria-label='Close'
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className='space-y-4'>
-                <div>
-                  <label className='block text-sm text-gray-700 mb-1'>
-                    Title <span className='text-red-500'>*</span>
-                  </label>
-                  <input
-                    value={title}
-                    onChange={e => setTitle(e.target.value)}
-                    className={`w-full rounded-md px-3 py-2 ${errors.title ? 'border-red-500' : 'border border-gray-300'}`}
-                  />
-                  {errors.title && (
-                    <div className='text-sm text-red-500 mt-1'>Title is required</div>
-                  )}
-                </div>
-
-                <div>
-                  <label className='block text-sm text-gray-700 mb-1'>
-                    Author <span className='text-red-500'>*</span>
-                  </label>
-                  <input
-                    value={author}
-                    onChange={e => setAuthor(e.target.value)}
-                    className={`w-full rounded-md px-3 py-2 ${errors.author ? 'border-red-500' : 'border border-gray-300'}`}
-                  />
-                  {errors.author && (
-                    <div className='text-sm text-red-500 mt-1'>Author is required</div>
-                  )}
-                </div>
-
-                <div>
-                  <div className='flex items-center gap-2 mb-2'>
-                    {tags.map(t => (
-                      <div
-                        key={t}
-                        className='flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-md text-sm'
-                      >
-                        <span>{t}</span>
-                        <button onClick={() => removeTag(t)} className='text-blue-700'>
-                          ×
-                        </button>
-                      </div>
-                    ))}
-
-                    <div className='flex items-center border border-gray-300 rounded-md px-2 py-1'>
-                      <input
-                        value={newTag}
-                        onChange={e => setNewTag(e.target.value)}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            addTag();
-                          }
-                        }}
-                        placeholder='New Tag'
-                        className='text-sm outline-none px-2'
-                      />
-                      <button onClick={addTag} className='text-gray-600 px-2'>
-                        +
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className='block text-sm text-gray-700 mb-1'>
-                    Blog <span className='text-red-500'>*</span>
-                  </label>
-                  <div
-                    className={`${errors.content ? 'border-red-500' : 'border border-gray-300'} rounded-md`}
-                  >
-                    <div className='min-h-[96px]'>
-                      <ReactQuill
-                        ref={quillRef}
-                        value={content}
-                        onChange={setContent}
-                        modules={modules}
-                        formats={formats}
-                        theme='snow'
-                        style={{ minHeight: '96px', height: '96px' }}
-                      />
-                    </div>
-                    <div className='text-right text-xs text-gray-400 pr-3 pb-2'>
-                      {wordCount} words
-                    </div>
-                  </div>
-                  {errors.content && (
-                    <div className='text-sm text-red-500 mt-1'>Blog content is required</div>
-                  )}
-                </div>
-              </div>
-
-              <div className='mt-6 flex items-center justify-center gap-4'>
-                <button
-                  onClick={handleSaveDraft}
-                  className='px-6 py-2 border border-gray-300 rounded-md bg-white text-sm'
-                >
-                  Save Draft
-                </button>
-                <button
-                  onClick={handlePublish}
-                  className='px-6 py-2 bg-red-600 text-white rounded-md text-sm'
-                >
-                  Publish
-                </button>
-              </div>
-            </div>
           </div>
         )}
       </div>
+
+      {isCreateModalOpen && (
+        <>
+          <input type='checkbox' checked readOnly className='modal-toggle' />
+          <div className='modal modal-open'>
+            <div className='modal-box max-w-2xl max-h-[80vh] bg-white overflow-y-auto m-8'>
+              <h3 className='font-bold text-xl text-gray-900 mb-4'>Create New Blog</h3>
+
+              <div className='space-y-4'>
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                    Title <span className='text-red-500'>*</span>
+                  </label>
+                  <input
+                    type='text'
+                    required
+                    value={newBlog.title}
+                    onChange={e => setNewBlog({ ...newBlog, title: e.target.value })}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                    placeholder='Enter blog title'
+                  />
+                </div>
+
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                    Author <span className='text-red-500'>*</span>
+                  </label>
+                  <input
+                    type='text'
+                    required
+                    value={newBlog.author}
+                    onChange={e => setNewBlog({ ...newBlog, author: e.target.value })}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                    placeholder='Enter author name'
+                  />
+                </div>
+
+                <div className='mb-4'>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                    Content <span className='text-red-500'>*</span>
+                  </label>
+                  <div style={{ height: '250px' }}>
+                    <ReactQuill
+                      theme='snow'
+                      value={newBlog.content}
+                      onChange={value => setNewBlog({ ...newBlog, content: value })}
+                      placeholder='Enter blog content...'
+                      modules={modules}
+                      style={{ height: '200px' }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-2'>Tags</label>
+                  <div className='min-h-[80px]'>
+                    {allTags.length === 0 ? (
+                      <p className='text-sm text-gray-500'>No tags available</p>
+                    ) : (
+                      <div className='flex flex-wrap gap-2'>
+                        {allTags.map(tag => {
+                          const isSelected = newBlog.tagIds.includes(tag.id);
+                          return (
+                            <button
+                              key={tag.id}
+                              type='button'
+                              onClick={() => {
+                                if (isSelected) {
+                                  setNewBlog({
+                                    ...newBlog,
+                                    tagIds: newBlog.tagIds.filter(id => id !== tag.id),
+                                  });
+                                } else {
+                                  setNewBlog({
+                                    ...newBlog,
+                                    tagIds: [...newBlog.tagIds, tag.id],
+                                  });
+                                }
+                              }}
+                              className={`px-4 py-1 text-sm font-medium rounded-full transition-colors ${
+                                isSelected
+                                  ? 'bg-[#D54242] text-white border-2 border-[#D54242]'
+                                  : 'bg-gray-100 text-gray-700 border-2 border-gray-300 hover:bg-gray-200'
+                              }`}
+                            >
+                              {tag.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {newBlog.tagIds.length > 0 && (
+                    <p className='text-xs text-gray-600 mt-2'>
+                      {newBlog.tagIds.length} tag{newBlog.tagIds.length !== 1 ? 's' : ''} selected
+                    </p>
+                  )}
+                </div>
+
+                <div className='flex gap-3 pt-4'>
+                  <button
+                    type='button'
+                    onClick={() => handleCreateBlog(true)}
+                    className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-lg font-medium'
+                  >
+                    Publish
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => handleCreateBlog(false)}
+                    className='px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium'
+                  >
+                    Save to Drafts
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => {
+                      setIsCreateModalOpen(false);
+                      setNewBlog({
+                        title: '',
+                        content: '',
+                        author: '',
+                        tagIds: [],
+                        isPublished: false,
+                      });
+                    }}
+                    className='px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium'
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {isDetailModalOpen && selectedBlog && (
+        <>
+          <input type='checkbox' checked readOnly className='modal-toggle' />
+          <div className='modal modal-open'>
+            <div className='modal-box max-w-2xl max-h-[80vh] bg-white overflow-y-auto m-8'>
+              <h3 className='font-bold text-xl text-gray-900 mb-3'>{selectedBlog.title}</h3>
+
+              <div className='space-y-4'>
+                {/* Basic Info */}
+                <div>
+                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Basic Information</h4>
+                  <div className='grid grid-cols-2 gap-3'>
+                    <div>
+                      <span className='text-sm font-bold text-gray-600'>Author:</span>
+                      <p className='text-sm text-gray-900'>{selectedBlog.author}</p>
+                    </div>
+
+                    <div>
+                      <span className='text-sm font-bold text-gray-600'>Status:</span>
+                      <p className='text-sm'>
+                        <span
+                          className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full ${
+                            selectedBlog.isPublished
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {selectedBlog.isPublished ? 'Published' : 'Draft'}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Content</h4>
+                  <div
+                    className='prose max-w-none text-sm text-gray-900'
+                    dangerouslySetInnerHTML={{ __html: selectedBlog.content }}
+                  />
+                </div>
+
+                <div>
+                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Tags</h4>
+                  {selectedBlog.tags && selectedBlog.tags.length > 0 ? (
+                    <div className='flex flex-wrap gap-2'>
+                      {selectedBlog.tags.map(tag => (
+                        <span
+                          key={tag.id}
+                          className='px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
+                        >
+                          {tag.name}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className='text-sm text-gray-900'>No tags</p>
+                  )}
+                </div>
+
+                <div>
+                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Dates</h4>
+                  <div className='grid grid-cols-2 gap-3'>
+                    <div>
+                      <span className='text-sm font-bold text-gray-600'>Created:</span>
+                      <p className='text-sm text-gray-900'>
+                        {new Date(selectedBlog.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div>
+                      <span className='text-sm font-bold text-gray-600'>Updated:</span>
+                      <p className='text-sm text-gray-900'>
+                        {new Date(selectedBlog.updatedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className='modal-action'>
+                {!selectedBlog.isPublished && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        await fetchWithAuth(
+                          `${API_BASE_URL}/api/blogs/${selectedBlog.id}/publish`,
+                          {
+                            method: 'PUT',
+                          }
+                        );
+                        setToast({ message: 'Blog published successfully', type: 'success' });
+                        await fetchBlogs();
+                        closeDetailModal();
+                      } catch (err: any) {
+                        setToast({
+                          message: err.message || 'Failed to publish blog',
+                          type: 'error',
+                        });
+                      }
+                    }}
+                    className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
+                  >
+                    Publish
+                  </button>
+                )}
+                <button
+                  onClick={closeDetailModal}
+                  className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+      {confirmModal && (
+        <ConfirmModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmText={confirmModal.confirmText}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal(null)}
+        />
+      )}
     </div>
   );
 };

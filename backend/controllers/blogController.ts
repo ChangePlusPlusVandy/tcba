@@ -3,6 +3,7 @@ import { OrganizationRole } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import { prisma } from '../config/prisma.js';
 import { createNotification } from './inAppNotificationController.js';
+import { sendBlogEmails } from '../services/emailNotificationService.js';
 
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 
@@ -16,11 +17,36 @@ const generateSlug = async (title: string, id: string): Promise<string> => {
 
 export const getAllBlogs = async (req: AuthenticatedRequest, res: Response) => {
   try {
+    let isAuthenticatedAdmin = false;
+
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7);
+        const { verifyToken } = await import('@clerk/express');
+        const verifiedToken = await verifyToken(token, {
+          secretKey: process.env.CLERK_SECRET_KEY!,
+          clockSkewInMs: 5000,
+        });
+
+        const adminUser = await prisma.adminUser.findUnique({
+          where: { clerkId: verifiedToken.sub },
+        });
+
+        if (adminUser) {
+          isAuthenticatedAdmin = true;
+          console.log('Admin authenticated in getAllBlogs');
+        }
+      } catch (error) {
+        console.log('Auth failed in getAllBlogs, treating as public');
+      }
+    }
+
     const { published, startDate, endDate, tags, search, sortBy, sortOrder, limit, offset } =
       req.query;
 
     const where: any = {};
-    if (!req.user || !isAdmin(req.user.role)) {
+    if (!isAuthenticatedAdmin) {
       where.isPublished = true;
     } else if (published !== undefined) {
       where.isPublished = published === 'true';
@@ -122,13 +148,12 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
-    const { title, content, author, tags, featuredImageUrl } = req.body;
+    const { title, content, author, tags, featuredImageUrl, isPublished, publishedDate } = req.body;
 
     if (!title || !content || !author) {
       return res.status(400).json({ error: 'title, content, and author are required' });
     }
 
-    // Create blog with temporary slug
     const tempBlog = await prisma.blog.create({
       data: {
         title,
@@ -136,19 +161,16 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
         author,
         slug: 'temp',
         featuredImageUrl: featuredImageUrl || null,
-        isPublished: false,
-        publishedDate: null,
+        isPublished: isPublished || false,
+        publishedDate: isPublished ? publishedDate || new Date() : null,
       },
     });
 
-    // Generate unique slug using the ID
     const slug = await generateSlug(title, tempBlog.id);
 
-    // Prepare tag connection data
     const tagIds = tags || [];
     const tagConnections = tagIds.map((id: string) => ({ id }));
 
-    // Update with the proper slug and tags
     const blog = await prisma.blog.update({
       where: { id: tempBlog.id },
       data: {
@@ -157,6 +179,16 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
       },
       include: { tags: true },
     });
+
+    if (blog.isPublished) {
+      try {
+        await createNotification('BLOG', blog.title, blog.slug || blog.id);
+        await sendBlogEmails(blog.id);
+        console.log('Blog notifications sent successfully');
+      } catch (notifError) {
+        console.error('Failed to create notification or send emails:', notifError);
+      }
+    }
 
     res.status(201).json(blog);
   } catch (error) {
@@ -248,8 +280,10 @@ export const publishBlog = async (req: AuthenticatedRequest, res: Response) => {
 
     try {
       await createNotification('BLOG', publishedBlog.title, publishedBlog.slug || publishedBlog.id);
+      await sendBlogEmails(publishedBlog.id);
+      console.log('Blog notifications sent successfully');
     } catch (notifError) {
-      console.error('Failed to create notification:', notifError);
+      console.error('Failed to create notification or send emails:', notifError);
     }
 
     res.json(publishedBlog);

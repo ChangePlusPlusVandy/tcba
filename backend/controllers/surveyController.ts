@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { OrganizationRole } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import { prisma } from '../config/prisma.js';
+import { sendSurveyEmails } from '../services/emailNotificationService.js';
 import { createNotification } from './inAppNotificationController.js';
 
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
@@ -165,10 +166,20 @@ export const publishSurvey = async (req: AuthenticatedRequest, res: Response) =>
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
     const { id } = req.params;
+    const { targetTags, targetRegions } = req.body;
+
     const survey = await prisma.survey.update({
       where: { id },
       data: { status: 'ACTIVE', isPublished: true, isActive: true },
     });
+
+    try {
+      await sendSurveyEmails(survey.id, targetTags, targetRegions);
+      console.log('Survey notifications sent successfully');
+    } catch (emailError) {
+      console.error('Failed to send survey email notifications:', emailError);
+    }
+
     res.json(survey);
   } catch (error) {
     console.error('Error publishing survey:', error);
