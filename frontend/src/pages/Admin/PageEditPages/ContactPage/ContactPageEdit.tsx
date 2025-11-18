@@ -4,6 +4,7 @@ import ContentEditor from '../components/ContentEditor';
 import AdminSidebar from '../../../../components/AdminSidebar';
 import Contact from '../../../ContactPage/Contact';
 import Toast from '../../../../components/Toast';
+import { API_BASE_URL } from '../../../../config/api';
 
 interface ContentItem {
   id: string;
@@ -25,8 +26,6 @@ const ContactPageEdit = () => {
     type: 'success' | 'error' | 'info';
   } | null>(null);
   const [showPreview, setShowPreview] = useState(false);
-
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
   useEffect(() => {
     fetchContent();

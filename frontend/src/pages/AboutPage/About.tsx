@@ -44,8 +44,8 @@ import ucddLogo from '../../assets/logos/ucdd.png';
 import utkcswLogo from '../../assets/logos/utkcsw.png';
 import vumcLogo from '../../assets/logos/vumc.png';
 import wehfLogo from '../../assets/logos/wehf.png';
+import { API_BASE_URL } from '../../config/api';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 interface MapOrganization {

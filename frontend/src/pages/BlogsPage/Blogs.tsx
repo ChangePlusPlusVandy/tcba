@@ -2,6 +2,7 @@ import axios from 'axios';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoFunnelOutline, IoSearchOutline } from 'react-icons/io5';
+import { API_BASE_URL } from '../../config/api';
 
 type Tag = {
   id: string;
@@ -41,7 +42,7 @@ const BlogsPage = () => {
 
   const getBlogs = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/blogs');
+      const response = await axios.get(`${API_BASE_URL}/api/blogs`);
       setBlogs(response.data);
       setError(null);
     } catch (error) {
@@ -53,7 +54,7 @@ const BlogsPage = () => {
 
   const getTags = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/blogs/tags');
+      const response = await axios.get(`${API_BASE_URL}/api/blogs/tags`);
       setAllTags(response.data);
     } catch (error) {
       console.error('Error fetching tags:', error);

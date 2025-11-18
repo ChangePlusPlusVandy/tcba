@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
+import { API_BASE_URL } from '../../../config/api';
 
 interface Alert {
   id: string;
@@ -17,8 +18,6 @@ interface Survey {
   isActive: boolean;
   isPublished: boolean;
 }
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 const DashboardPage = () => {
   const [alert, setAlert] = useState<Alert | null>(null);

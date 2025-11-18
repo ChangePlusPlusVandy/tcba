@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config/api';
 
 export default function Announcement() {
   const { slug } = useParams<{ slug: string }>();
@@ -11,7 +12,7 @@ export default function Announcement() {
   useEffect(() => {
     const fetchAnnouncement = async () => {
       try {
-        const res = await axios.get(`http://localhost:8000/api/announcements/slug/${slug}`);
+        const res = await axios.get(`${API_BASE_URL}/api/announcements/slug/${slug}`);
         setAnnouncement(res.data);
       } catch (error) {
         console.error('Error fetching announcement:', error);

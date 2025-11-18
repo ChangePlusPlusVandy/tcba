@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
 import Toast from '../../../components/Toast';
+import { API_BASE_URL } from '../../../config/api';
 
 interface Tag {
   id: string;
@@ -68,8 +69,6 @@ const ProfilePage = () => {
     organizationSize: '' as 'SMALL' | 'MEDIUM' | 'LARGE' | 'EXTRA_LARGE' | '',
     tags: [] as string[],
   });
-
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
   useEffect(() => {
     fetchOrganizationData();

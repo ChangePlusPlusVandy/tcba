@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 
 interface S3ImageProps {
   src: string;
@@ -6,8 +7,6 @@ interface S3ImageProps {
   className?: string;
   fallbackSrc?: string;
 }
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
 const S3Image = ({ src, alt, className, fallbackSrc }: S3ImageProps) => {
   const [imageSrc, setImageSrc] = useState<string>('');

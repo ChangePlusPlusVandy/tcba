@@ -3,6 +3,7 @@ import { useAuth, useClerk } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
 import Toast from '../../../components/Toast';
+import { API_BASE_URL } from '../../../config/api';
 
 interface Organization {
   id: string;
@@ -36,8 +37,6 @@ const OrgSettingsPage = () => {
   const [privacySettings, setPrivacySettings] = useState({
     visibleInDirectory: true,
   });
-
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
   useEffect(() => {
     fetchOrganizationSettings();

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { IoClose, IoNotifications } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../config/api';
 
 interface Notification {
   id: string;
@@ -14,8 +15,6 @@ interface NotificationsSidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 const NotificationsSidebar = ({ isOpen, onClose }: NotificationsSidebarProps) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);

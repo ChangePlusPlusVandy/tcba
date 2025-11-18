@@ -2,6 +2,7 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
+import { API_BASE_URL } from '../../config/api';
 
 type Tag = {
   id: string;
@@ -32,7 +33,7 @@ const Blog = () => {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/api/blogs/slug/${slug}`);
+        const response = await axios.get(`${API_BASE_URL}/api/blogs/slug/${slug}`);
         setBlog(response.data);
       } catch (error) {
         console.error('Error fetching blog:', error);

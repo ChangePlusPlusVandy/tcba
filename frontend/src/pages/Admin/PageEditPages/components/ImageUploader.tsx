@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
+import { API_BASE_URL } from '../../../../config/api';
 
 interface ImageUploaderProps {
   label: string;
@@ -21,8 +22,6 @@ const ImageUploader = ({
   const [preview, setPreview] = useState<string | null>(null);
   const [loadingPresignedUrl, setLoadingPresignedUrl] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
   useEffect(() => {
     const loadImage = async () => {

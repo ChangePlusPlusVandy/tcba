@@ -1,5 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import Toast from '../../components/Toast';
+import { API_BASE_URL } from '../../config/api';
 
 interface PageContent {
   [key: string]: { id: string; value: string; type: string };
@@ -8,8 +9,6 @@ interface PageContent {
 interface ContactPageProps {
   previewContent?: PageContent;
 }
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
 const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
   const [formData, setFormData] = useState({

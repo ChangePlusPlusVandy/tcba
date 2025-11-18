@@ -2,6 +2,7 @@ import axios from 'axios';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoFunnelOutline, IoSearchOutline } from 'react-icons/io5';
+import { API_BASE_URL } from '../../config/api';
 
 type Announcement = {
   id: string;
@@ -45,7 +46,7 @@ const AnnouncementsPage = () => {
   // GET ALL ANNOUNCEMENTS
   const getAnnouncements = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/announcements');
+      const response = await axios.get(`${API_BASE_URL}/api/announcements`);
       console.log('API Response:', response.data);
       setAnnouncements(response.data);
       setError(null);
@@ -59,7 +60,7 @@ const AnnouncementsPage = () => {
   // GET ALL TAGS
   const getTags = async () => {
     try {
-      const tags = await axios.get('http://localhost:8000/api/tags');
+      const tags = await axios.get(`${API_BASE_URL}/api/tags`);
       console.log('API Response:', tags.data);
       setTags(tags.data);
       setError(null);

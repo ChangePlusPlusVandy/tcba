@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Toast from '../../components/Toast';
 import getInvolvedImage from '../../assets/getInvolved.png';
+import { API_BASE_URL } from '../../config/api';
 
 interface PageContent {
   [key: string]: { id: string; value: string; type: string };
@@ -22,8 +23,6 @@ const RegisterPage = ({ previewContent }: RegisterPageProps = {}) => {
     </main>
   );
 };
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
 interface RegisterFormProps {
   previewContent?: PageContent;

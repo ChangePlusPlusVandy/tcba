@@ -4,8 +4,7 @@ import tncbaLogo from '../assets/tcba.jpg';
 import { IoPersonSharp, IoNotifications } from 'react-icons/io5';
 import { useState, useEffect } from 'react';
 import NotificationsSidebar from './NotificationsSidebar';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+import { API_BASE_URL } from '../config/api';
 
 const Navbar = () => {
   const { user } = useUser();

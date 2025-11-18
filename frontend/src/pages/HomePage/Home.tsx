@@ -6,6 +6,7 @@ import tcbaGroupPhoto from '../../assets/TCBAGroupPhoto.png';
 import { FaHandshake, FaBullhorn, FaPeopleArrows, FaChartLine } from 'react-icons/fa';
 import { MdHealthAndSafety, MdFamilyRestroom } from 'react-icons/md';
 import S3Image from '../../components/S3Image';
+import { API_BASE_URL } from '../../config/api';
 
 type Announcement = {
   id: string;
@@ -23,8 +24,6 @@ interface PageContent {
 interface HomePageProps {
   previewContent?: PageContent;
 }
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
 const HomePage = ({ previewContent }: HomePageProps = {}) => {
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
