@@ -22,7 +22,6 @@ import { clerkClient, clerkMiddleware } from '@clerk/express';
 
 const app = express();
 
-
 const allowedOrigins = [
   'http://localhost:5173',
   'https://tcba-frontend.vercel.app',
