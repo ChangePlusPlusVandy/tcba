@@ -533,17 +533,12 @@ const OrganizationManagement = () => {
     }
   };
 
-  const pendingOrgs = organizations.filter(org => org.status === 'PENDING');
-  const activeOrgs = organizations.filter(org => org.status === 'ACTIVE');
-  const inactiveOrgs = organizations.filter(org => org.status === 'INACTIVE');
-
   const uniqueOrgTypes = Array.from(
     new Set(organizations.map(org => org.organizationType).filter(Boolean))
   ) as string[];
 
   const allTags = Array.from(new Set(organizations.flatMap(org => org.tags || [])));
 
-  // Combine availableTags from API with allTags from organizations
   const combinedTags = Array.from(new Set([...availableTags, ...allTags]));
 
   useEffect(() => {
@@ -688,7 +683,7 @@ const OrganizationManagement = () => {
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  All ({organizations.length})
+                  All
                 </button>
                 <button
                   onClick={() => setFilter('PENDING')}
@@ -698,7 +693,7 @@ const OrganizationManagement = () => {
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  Pending ({pendingOrgs.length})
+                  Pending
                 </button>
                 <button
                   onClick={() => setFilter('ACTIVE')}
@@ -708,7 +703,7 @@ const OrganizationManagement = () => {
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  Active ({activeOrgs.length})
+                  Active
                 </button>
                 <button
                   onClick={() => setFilter('INACTIVE')}
@@ -718,7 +713,7 @@ const OrganizationManagement = () => {
                       : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  Inactive ({inactiveOrgs.length})
+                  Inactive
                 </button>
               </div>
 

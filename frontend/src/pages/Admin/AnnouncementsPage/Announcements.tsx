@@ -484,11 +484,6 @@ const AdminAnnouncements = () => {
                   <h4 className='font-semibold text-base text-gray-800 mb-2'>Basic Information</h4>
                   <div className='grid grid-cols-2 gap-3'>
                     <div>
-                      <span className='text-sm font-bold text-gray-600'>Slug:</span>
-                      <p className='text-sm text-gray-900'>{selectedAnnouncement.slug}</p>
-                    </div>
-
-                    <div>
                       <span className='text-sm font-bold text-gray-600'>Status:</span>
                       <p className='text-sm'>
                         <span
@@ -523,9 +518,12 @@ const AdminAnnouncements = () => {
 
                 <div>
                   <h4 className='font-semibold text-base text-gray-800 mb-2'>Content</h4>
-                  <p className='text-sm text-gray-900 whitespace-pre-line'>
-                    {selectedAnnouncement.content || 'No content'}
-                  </p>
+                  <div
+                    className='prose max-w-none text-sm text-gray-900'
+                    dangerouslySetInnerHTML={{
+                      __html: selectedAnnouncement.content || 'No content',
+                    }}
+                  />
                 </div>
 
                 <div>
