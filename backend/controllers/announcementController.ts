@@ -194,7 +194,7 @@ export const createAnnouncement = async (req: AuthenticatedRequest, res: Respons
     if (newAnnouncement.isPublished) {
       try {
         await createNotification('ANNOUNCEMENT', newAnnouncement.title, newAnnouncement.slug);
-        // Send email notifications to organizations with announcement notifications enabled
+        
         await sendAnnouncementEmails(newAnnouncement.id);
         console.log('Announcement notifications sent successfully');
       } catch (notifError) {
@@ -300,12 +300,8 @@ export const publishAnnouncement = async (req: AuthenticatedRequest, res: Respon
     });
 
     try {
-      await createNotification(
-        'ANNOUNCEMENT',
-        publishedAnnouncement.title,
-        publishedAnnouncement.slug
-      );
-      // Send email notifications to organizations with announcement notifications enabled
+      await createNotification('ANNOUNCEMENT', publishedAnnouncement.title, publishedAnnouncement.slug);
+      
       await sendAnnouncementEmails(publishedAnnouncement.id);
       console.log('Announcement notifications sent successfully');
     } catch (notifError) {

@@ -154,7 +154,7 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(400).json({ error: 'title, content, and author are required' });
     }
 
-    // Create blog with temporary slug
+    
     const tempBlog = await prisma.blog.create({
       data: {
         title,
@@ -163,18 +163,18 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
         slug: 'temp',
         featuredImageUrl: featuredImageUrl || null,
         isPublished: isPublished || false,
-        publishedDate: isPublished ? publishedDate || new Date() : null,
+        publishedDate: isPublished ? (publishedDate || new Date()) : null,
       },
     });
 
-    // Generate unique slug using the ID
+    
     const slug = await generateSlug(title, tempBlog.id);
 
-    // Prepare tag connection data
+    
     const tagIds = tags || [];
     const tagConnections = tagIds.map((id: string) => ({ id }));
 
-    // Update with the proper slug and tags
+    
     const blog = await prisma.blog.update({
       where: { id: tempBlog.id },
       data: {
@@ -184,7 +184,7 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
       include: { tags: true },
     });
 
-    // If published immediately, send notifications
+    
     if (blog.isPublished) {
       try {
         await createNotification('BLOG', blog.title, blog.slug || blog.id);
