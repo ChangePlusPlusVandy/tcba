@@ -73,10 +73,7 @@ const AdminAnnouncements = () => {
   };
 
   const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    let token = await getToken({
-      skipCache: true,
-      template: 'jwt-template-tcba',
-    });
+    let token = await getToken();
 
     if (!token) {
       throw new Error('No authentication token available');
@@ -84,7 +81,7 @@ const AdminAnnouncements = () => {
 
     if (isTokenExpiringSoon(token)) {
       console.log('Token expiring soon, proactively refreshing...');
-      token = await getToken({ skipCache: true, template: 'jwt-template-tcba' });
+      token = await getToken({ skipCache: true });
 
       if (!token) {
         throw new Error('No authentication token available');
@@ -102,7 +99,7 @@ const AdminAnnouncements = () => {
     if (response.status === 401) {
       console.log('Token expired, refreshing and retrying...');
 
-      token = await getToken({ skipCache: true, template: 'jwt-template-tcba' });
+      token = await getToken({ skipCache: true });
 
       if (!token) {
         throw new Error('No authentication token available');

@@ -67,7 +67,7 @@ const AdminBlogs = () => {
   } | null>(null);
 
   const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    const token = await getToken({ template: 'jwt-template-tcba' });
+    const token = await getToken();
     if (!token) throw new Error('Authentication required');
 
     const response = await fetch(url, {

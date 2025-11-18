@@ -94,9 +94,10 @@ const Blog = () => {
             </>
           )}
         </div>
-        <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-[#3C3C3C] py-8'>
-          {blog.content}
-        </p>
+        <div
+          className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-[#3C3C3C] py-8 prose prose-lg max-w-none'
+          dangerouslySetInnerHTML={{ __html: blog.content }}
+        />
       </div>
     </div>
   );

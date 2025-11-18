@@ -101,10 +101,7 @@ const OrganizationManagement = () => {
   };
 
   const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    let token = await getToken({
-      skipCache: true,
-      template: 'jwt-template-tcba',
-    });
+    let token = await getToken();
 
     if (!token) {
       throw new Error('No authentication token available');

@@ -148,7 +148,8 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
-    const { title, content, author, tags, featuredImageUrl, isPublished, publishedDate } = req.body;
+    const { title, content, author, tags, tagIds, featuredImageUrl, isPublished, publishedDate } =
+      req.body;
 
     if (!title || !content || !author) {
       return res.status(400).json({ error: 'title, content, and author are required' });
@@ -168,8 +169,8 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
 
     const slug = await generateSlug(title, tempBlog.id);
 
-    const tagIds = tags || [];
-    const tagConnections = tagIds.map((id: string) => ({ id }));
+    const tagIdsToUse = tagIds || tags || [];
+    const tagConnections = tagIdsToUse.map((id: string) => ({ id }));
 
     const blog = await prisma.blog.update({
       where: { id: tempBlog.id },
@@ -209,7 +210,7 @@ export const updateBlog = async (req: AuthenticatedRequest, res: Response) => {
     });
     if (!blogToUpdate) return res.status(404).json({ error: 'Blog not found' });
 
-    const { title, content, author, tags, featuredImageUrl } = req.body;
+    const { title, content, author, tags, tagIds, featuredImageUrl } = req.body;
 
     const updateData: any = {
       ...(title && { title }),
@@ -218,10 +219,11 @@ export const updateBlog = async (req: AuthenticatedRequest, res: Response) => {
       ...(featuredImageUrl !== undefined && { featuredImageUrl }),
     };
 
-    // Handle tags update if provided
-    if (tags) {
+    // Handle tags update if provided (accept both 'tags' and 'tagIds')
+    const tagIdsToUse = tagIds || tags;
+    if (tagIdsToUse) {
       const currentTagIds = blogToUpdate.tags.map(t => t.id);
-      const newTagIds = tags;
+      const newTagIds = tagIdsToUse;
       const toDisconnect = currentTagIds.filter((id: string) => !newTagIds.includes(id));
       const toConnect = newTagIds.filter((id: string) => !currentTagIds.includes(id));
 
