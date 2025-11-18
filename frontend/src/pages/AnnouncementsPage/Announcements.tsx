@@ -45,7 +45,7 @@ const AnnouncementsPage = () => {
   // GET ALL ANNOUNCEMENTS
   const getAnnouncements = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/announcements');
+      const response = await axios.get('https://tcba-backend.vercel.app/api/announcements');
       console.log('API Response:', response.data);
       setAnnouncements(response.data);
       setError(null);
