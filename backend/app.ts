@@ -21,7 +21,28 @@ import { prisma } from './config/prisma';
 import { clerkClient, clerkMiddleware } from '@clerk/express';
 
 const app = express();
-app.use(cors());
+
+
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://tcba-frontend.vercel.app',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 app.use(clerkMiddleware());
