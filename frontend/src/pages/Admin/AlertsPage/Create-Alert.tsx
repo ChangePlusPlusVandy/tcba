@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
+import React, { forwardRef, useEffect, useRef, useLayoutEffect, useState } from 'react';
 import AdminSidebar from '../../../components/AdminSidebar';
-import Quill from 'quill';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
+import QuillEditor from '../../../components/QuillEditor';
 
 const CreateAlert = () => {
   const [loading, setLoading] = useState(false); //TODO: handle loading in the form submission
+  const [value, setValue] = useState<string>('');
 
+  const handleChange = (content: string) => {
+    setValue(content);
+  };
+
+  const tags: string[] = ['Tag1', 'Tag2', 'Tag3']; // TODO: add preset tags later
   return (
     <div className='flex min-h-screen bg-gray-50'>
       <AdminSidebar />
@@ -31,17 +39,21 @@ const CreateAlert = () => {
               className='p-4 h-12 bg-white border-[1px] border-[#717171] rounded-[10px]'
             />
           </div>
+
+          <div className='flex space-x-2'>
+            {tags.map(tag => (
+              <label key={tag} className='cursor-pointer'>
+                <input type='checkbox' className='peer hidden' />
+                <div className='flex h-12 min-w-18 justify-center items-center w-fit bg-white rounded-[15px] shadow-md shadow-x1/15 shadow-[#84848226] px-4 transition-all peer-checked:bg-[#EBF3FF] peer-checked:text-[#194B90] hover:text-[#194B90]'>
+                  {tag}
+                </div>
+              </label>
+            ))}
+          </div>
+
           <div className='flex flex-col space-y-2'>
             <label>Content</label>
-            {/* <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
-                        <script>
-                            const quill = new Quill('#editor', {
-                                modules: {
-                                    toolbar: true,
-                                },
-                                theme: 'snow'
-                            });
-                        </script> */}
+            <QuillEditor />
           </div>
 
           <div className='flex justify-center items-center space-x-8'>

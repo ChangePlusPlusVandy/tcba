@@ -50,3 +50,34 @@ body {
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out;
 }
+
+.ql-toolbar.ql-snow {
+  border-bottom: 1px !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-left: none !important;
+  border-color: gray !important;
+}
+
+.ql-container.ql-snow {
+  border: none !important;
+  height: 100% !important;
+  display: flex !important;
+}
+
+.ql-container {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.ql-editor {
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+}
+
+.ql-tooltip {
+  z-index: 9999 !important;
+}

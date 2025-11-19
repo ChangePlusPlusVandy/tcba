@@ -1,4 +1,10 @@
-import { useState } from 'react';
+import {
+  useState,
+  type JSXElementConstructor,
+  type ReactElement,
+  type ReactNode,
+  type ReactPortal,
+} from 'react';
 import AdminSidebar from '../../../components/AdminSidebar';
 
 const AdminAlerts = () => {
@@ -7,20 +13,21 @@ const AdminAlerts = () => {
       title: 'Title',
       content: 'content aspodfiejpaosdifjepoijdfpoeis',
       date: new Date('2024-06-01T10:00:00Z'),
+      tags: ['Tag1', 'Tag2'],
     },
     {
       title: 'Title',
       content: 'content aspodfiejpaosdifjepoijdfpoeis',
       date: new Date('2024-06-01T10:00:00Z'),
+      tags: ['Tag3'],
     },
     {
       title: 'Title',
       content: 'content aspodfiejpaosdifjepoijdfpoeis',
       date: new Date('2024-06-01T10:00:00Z'),
+      tags: [],
     },
   ]; // TODO: Fetch alerts from backend
-
-  const tags: string[] = ['Tag1', 'Tag2', 'Tag3']; // TODO: add preset tags later + filtering
 
   return (
     <div className='flex min-h-screen bg-gray-50'>
@@ -36,28 +43,30 @@ const AdminAlerts = () => {
           </a>
         </div>
 
-        <div className='flex space-x-2'>
-          {tags.map(tag => (
-            <label key={tag} className='cursor-pointer'>
-              <input type='checkbox' className='peer hidden' />
-              <div className='flex h-12 min-w-18 justify-center items-center w-fit bg-white rounded-[15px] shadow-md shadow-x1/15 shadow-[#84848226] px-4 transition-all peer-checked:bg-[#EBF3FF] peer-checked:text-[#194B90] hover:text-[#194B90]'>
-                {tag}
-              </div>
-            </label>
-          ))}
-        </div>
-
-        <div className='flex flex-col w-full bg-white rounded-[15px] shadow-lg shadow-x1/15 shadow-[#84848226]'>
+        <div className='flex flex-col min-h-screen w-full bg-white rounded-[15px] shadow-lg shadow-x1/15 shadow-[#84848226]'>
           {alerts.map((alert, index) => {
             return (
               <a
                 key={index}
-                className='w-full items-center hover:bg-[#EBF3FF] text-black hover:text-[#194B90] first:rounded-t-[15px] last:[&>div]:border-b-0'
+                className='w-full items-center px-5 hover:bg-[#EBF3FF] text-black hover:text-[#194B90] first:rounded-t-[15px]'
               >
                 <div className='p-5 border-b border-[#848482]'>
                   <div className='flex justify-between items-center'>
-                    <p className='font-semibold text-4'>{alert.title}</p>
-                    <p className='text-gray-400 mt-2 text-sm'>{alert.date.toDateString()}</p>
+                    <div className='flex items-center space-x-5'>
+                      <p className='font-semibold text-4'>{alert.title}</p>
+                      <div className='flex space-x-2  '>
+                        {alert.tags.map((tag: string) => {
+                          return (
+                            <div className='bg-[#D9D9D9] h-5 rounded-[5px] px-4 py-[0.5px] text-[12px] justify-center text-center'>
+                              {tag.toLowerCase()}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <p className='text-gray-400 mt-2 text-sm text-[16px]'>
+                      {alert.date.toDateString()}
+                    </p>
                   </div>
                   <p className='mt-2'>{alert.content}</p>
                 </div>
