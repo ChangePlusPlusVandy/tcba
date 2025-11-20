@@ -132,6 +132,58 @@ export const getPublicImageUrl = async (req: Request, res: Response) => {
   }
 };
 
+export const getAuthenticatedDownloadUrl = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const { fileKey } = req.params;
+    if (!fileKey) {
+      return res.status(400).json({ error: 'fileKey parameter is required' });
+    }
+
+    const bucketName = process.env.AWS_S3_BUCKET_NAME;
+
+    const params = {
+      Bucket: bucketName,
+      Key: fileKey,
+      Expires: 600,
+    };
+
+    const url = s3.getSignedUrl('getObject', params);
+
+    return res.status(200).json({ downloadUrl: url });
+  } catch (error) {
+    console.error('Error generating authenticated download URL:', error);
+    res.status(500).json({ error: 'Failed to generate download URL' });
+  }
+};
+
+export const getPublicDownloadUrl = async (req: Request, res: Response) => {
+  try {
+    const { fileKey } = req.params;
+    if (!fileKey) {
+      return res.status(400).json({ error: 'fileKey parameter is required' });
+    }
+
+    const bucketName = process.env.AWS_S3_BUCKET_NAME;
+
+    const params = {
+      Bucket: bucketName,
+      Key: fileKey,
+      Expires: 600,
+    };
+
+    const url = s3.getSignedUrl('getObject', params);
+
+    return res.status(200).json({ downloadUrl: url });
+  } catch (error) {
+    console.error('Error generating public download URL:', error);
+    res.status(500).json({ error: 'Failed to generate download URL' });
+  }
+};
+
 export const deleteDocument = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -148,10 +200,10 @@ export const deleteDocument = async (req: AuthenticatedRequest, res: Response) =
     if (!resourceType || !resourceId) {
       return res.status(400).json({ error: 'resourceType and resourceId are required' });
     }
-    if (resourceType !== 'alert' && resourceType !== 'announcement') {
+    if (resourceType !== 'alert' && resourceType !== 'announcement' && resourceType !== 'blog') {
       return res
         .status(400)
-        .json({ error: 'Invalid resourceType. Must be "alert" or "announcement"' });
+        .json({ error: 'Invalid resourceType. Must be "alert", "announcement", or "blog"' });
     }
     const bucketName = process.env.AWS_S3_BUCKET_NAME;
     if (!bucketName) {
@@ -201,6 +253,29 @@ export const deleteDocument = async (req: AuthenticatedRequest, res: Response) =
         where: { id: resourceId },
         data: {
           attachmentUrls: announcement.attachmentUrls.filter(url => url !== fileKey),
+        },
+      });
+    } else if (resourceType === 'blog') {
+      const blog = await prisma.blog.findUnique({
+        where: { id: resourceId },
+        select: { attachmentUrls: true },
+      });
+      if (!blog) {
+        return res.status(404).json({ error: 'Blog not found' });
+      }
+      if (!blog.attachmentUrls || !blog.attachmentUrls.includes(fileKey)) {
+        return res.status(404).json({ error: 'File not found in blog attachments' });
+      }
+      await s3
+        .deleteObject({
+          Bucket: bucketName,
+          Key: fileKey,
+        })
+        .promise();
+      await prisma.blog.update({
+        where: { id: resourceId },
+        data: {
+          attachmentUrls: blog.attachmentUrls.filter(url => url !== fileKey),
         },
       });
     }

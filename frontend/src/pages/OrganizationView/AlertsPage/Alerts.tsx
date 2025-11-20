@@ -90,10 +90,10 @@ const AlertsPage = () => {
   };
 
   const filteredAlerts = alerts.filter(alert => {
-    // Filter by priority
+    
     if (priorityFilter !== 'ALL' && alert.priority !== priorityFilter) return false;
 
-    // Filter by search query
+    
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return (

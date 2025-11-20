@@ -6,6 +6,8 @@ import 'react-quill-new/dist/quill.snow.css';
 import AdminSidebar from '../../../components/AdminSidebar';
 import Toast from '../../../components/Toast';
 import ConfirmModal from '../../../components/ConfirmModal';
+import FileUpload from '../../../components/FileUpload';
+import AttachmentList from '../../../components/AttachmentList';
 import { API_BASE_URL } from '../../../config/api';
 
 type Tag = {
@@ -27,6 +29,7 @@ type Blog = {
   publishedDate?: string;
   createdAt: string;
   updatedAt: string;
+  attachmentUrls?: string[];
 };
 
 type Filter = 'ALL' | 'PUBLISHED' | 'DRAFTS';
@@ -44,6 +47,11 @@ const AdminBlogs = () => {
   const [tagsFilter, setTagsFilter] = useState<string[]>([]);
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
 
+  type SortField = 'title' | 'author' | 'publishedDate' | 'tags' | 'createdAt';
+  type SortDirection = 'asc' | 'desc';
+  const [sortField, setSortField] = useState<SortField>('createdAt');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
@@ -54,7 +62,11 @@ const AdminBlogs = () => {
     author: '',
     tagIds: [] as string[],
     isPublished: false,
+    attachmentUrls: [] as string[],
   });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [toast, setToast] = useState<{
     message: string;
@@ -159,6 +171,7 @@ const AdminBlogs = () => {
     }
 
     try {
+      setIsSubmitting(true);
       setError('');
       const blogData = {
         ...newBlog,
@@ -181,12 +194,15 @@ const AdminBlogs = () => {
         author: '',
         tagIds: [],
         isPublished: false,
+        attachmentUrls: [],
       });
 
       const successMessage = publish ? 'Blog created successfully' : 'Blog saved successfully';
       setToast({ message: successMessage, type: 'success' });
     } catch (err: any) {
       setToast({ message: err.message || 'Failed to create blog', type: 'error' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -200,6 +216,7 @@ const AdminBlogs = () => {
       confirmText: 'Delete',
       onConfirm: async () => {
         try {
+          setIsDeleting(true);
           setError('');
           await Promise.all(
             selectedBlogIds.map(id =>
@@ -218,6 +235,7 @@ const AdminBlogs = () => {
         } catch (err: any) {
           setToast({ message: err.message || 'Failed to delete blogs', type: 'error' });
         } finally {
+          setIsDeleting(false);
           setConfirmModal(null);
         }
       },
@@ -226,7 +244,7 @@ const AdminBlogs = () => {
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedBlogIds(filteredBlogs.map(b => b.id));
+      setSelectedBlogIds(sortedBlogs.map(b => b.id));
     } else {
       setSelectedBlogIds([]);
     }
@@ -268,6 +286,71 @@ const AdminBlogs = () => {
 
     return matchesTags;
   });
+
+  const sortedBlogs = [...filteredBlogs].sort((a, b) => {
+    let aValue: any;
+    let bValue: any;
+
+    switch (sortField) {
+      case 'title':
+        aValue = a.title.toLowerCase();
+        bValue = b.title.toLowerCase();
+        break;
+      case 'author':
+        aValue = a.author.toLowerCase();
+        bValue = b.author.toLowerCase();
+        break;
+      case 'publishedDate':
+        aValue = a.publishedDate ? new Date(a.publishedDate).getTime() : 0;
+        bValue = b.publishedDate ? new Date(b.publishedDate).getTime() : 0;
+        break;
+      case 'tags':
+        aValue = a.tags?.length || 0;
+        bValue = b.tags?.length || 0;
+        break;
+      case 'createdAt':
+        aValue = new Date(a.createdAt).getTime();
+        bValue = new Date(b.createdAt).getTime();
+        break;
+      default:
+        return 0;
+    }
+
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return (
+        <svg className='w-4 h-4 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+        </svg>
+      );
+    }
+    if (sortDirection === 'asc') {
+      return (
+        <svg className='w-4 h-4 text-[#D54242]' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 15l7-7 7 7' />
+        </svg>
+      );
+    }
+    return (
+      <svg className='w-4 h-4 text-[#D54242]' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+      </svg>
+    );
+  };
 
   const modules = {
     toolbar: [
@@ -457,27 +540,55 @@ const AdminBlogs = () => {
                     <input
                       type='checkbox'
                       checked={
-                        filteredBlogs.length > 0 && selectedBlogIds.length === filteredBlogs.length
+                        sortedBlogs.length > 0 && selectedBlogIds.length === sortedBlogs.length
                       }
                       onChange={handleSelectAll}
                       className='w-4 h-4'
                     />
                   </th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>Title</th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
-                    Author
+                  <th
+                    className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('title')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Title
+                      <SortIcon field='title' />
+                    </div>
+                  </th>
+                  <th
+                    className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('author')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Author
+                      <SortIcon field='author' />
+                    </div>
                   </th>
                   <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
                     Status
                   </th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>Tags</th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
-                    Published
+                  <th
+                    className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('tags')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Tags
+                      <SortIcon field='tags' />
+                    </div>
+                  </th>
+                  <th
+                    className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('publishedDate')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Published
+                      <SortIcon field='publishedDate' />
+                    </div>
                   </th>
                 </tr>
               </thead>
               <tbody className='divide-y divide-gray-200'>
-                {filteredBlogs.map(blog => (
+                {sortedBlogs.map(blog => (
                   <tr key={blog.id} className='hover:bg-gray-50'>
                     <td className='px-6 py-4' onClick={e => e.stopPropagation()}>
                       <input
@@ -508,20 +619,26 @@ const AdminBlogs = () => {
                       </span>
                     </td>
                     <td className='px-6 py-4'>
-                      <div className='flex gap-2 flex-wrap'>
-                        {blog.tags.map(tag => (
-                          <span
-                            key={tag.id}
-                            className='px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
-                          >
-                            {tag.name}
-                          </span>
-                        ))}
-                      </div>
+                      {blog.tags && blog.tags.length > 0 ? (
+                        <div className='flex flex-wrap gap-1'>
+                          {blog.tags.map(tag => (
+                            <span
+                              key={tag.id}
+                              className='px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
+                            >
+                              {tag.name}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className='text-sm text-gray-400'>-</span>
+                      )}
                     </td>
                     <td className='px-6 py-4'>
                       <span className='text-sm text-gray-600'>
-                        {new Date(blog.createdAt).toLocaleDateString()}
+                        {blog.publishedDate
+                          ? new Date(blog.publishedDate).toLocaleDateString()
+                          : '-'}
                       </span>
                     </td>
                   </tr>
@@ -631,20 +748,27 @@ const AdminBlogs = () => {
                   )}
                 </div>
 
+                <FileUpload
+                  attachmentUrls={newBlog.attachmentUrls}
+                  onFilesChange={files => setNewBlog({ ...newBlog, attachmentUrls: files })}
+                />
+
                 <div className='flex gap-3 pt-4'>
                   <button
                     type='button'
                     onClick={() => handleCreateBlog(true)}
-                    className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-lg font-medium'
+                    disabled={isSubmitting}
+                    className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] disabled:bg-[#e88888] text-white rounded-lg font-medium disabled:cursor-not-allowed'
                   >
-                    Publish
+                    {isSubmitting ? 'Publishing...' : 'Publish'}
                   </button>
                   <button
                     type='button'
                     onClick={() => handleCreateBlog(false)}
-                    className='px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium'
+                    disabled={isSubmitting}
+                    className='px-6 py-2.5 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white rounded-lg font-medium disabled:cursor-not-allowed'
                   >
-                    Save to Drafts
+                    {isSubmitting ? 'Drafting...' : 'Save to Drafts'}
                   </button>
                   <button
                     type='button'
@@ -656,6 +780,7 @@ const AdminBlogs = () => {
                         author: '',
                         tagIds: [],
                         isPublished: false,
+                        attachmentUrls: [],
                       });
                     }}
                     className='px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium'
@@ -709,6 +834,10 @@ const AdminBlogs = () => {
                     dangerouslySetInnerHTML={{ __html: selectedBlog.content }}
                   />
                 </div>
+
+                {selectedBlog.attachmentUrls && selectedBlog.attachmentUrls.length > 0 && (
+                  <AttachmentList attachmentUrls={selectedBlog.attachmentUrls} />
+                )}
 
                 <div>
                   <h4 className='font-semibold text-base text-gray-800 mb-2'>Tags</h4>
@@ -794,6 +923,8 @@ const AdminBlogs = () => {
           confirmText={confirmModal.confirmText}
           onConfirm={confirmModal.onConfirm}
           onCancel={() => setConfirmModal(null)}
+          isLoading={isDeleting}
+          loadingText="Deleting..."
         />
       )}
     </div>

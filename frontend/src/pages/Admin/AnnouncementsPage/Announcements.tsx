@@ -5,6 +5,8 @@ import 'react-quill-new/dist/quill.snow.css';
 import AdminSidebar from '../../../components/AdminSidebar';
 import Toast from '../../../components/Toast';
 import ConfirmModal from '../../../components/ConfirmModal';
+import FileUpload from '../../../components/FileUpload';
+import AttachmentList from '../../../components/AttachmentList';
 import { API_BASE_URL } from '../../../config/api';
 
 type Announcement = {
@@ -39,6 +41,11 @@ const AdminAnnouncements = () => {
   const [tagsFilter, setTagsFilter] = useState<string[]>([]);
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
 
+  type SortField = 'title' | 'publishedDate' | 'tags' | 'createdAt';
+  type SortDirection = 'asc' | 'desc';
+  const [sortField, setSortField] = useState<SortField>('createdAt');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newAnnouncement, setNewAnnouncement] = useState({
     title: '',
@@ -46,8 +53,10 @@ const AdminAnnouncements = () => {
     content: '',
     isPublished: false,
     tags: [] as string[],
+    attachmentUrls: [] as string[],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
   const [selectedAnnouncementIds, setSelectedAnnouncementIds] = useState<string[]>([]);
@@ -179,6 +188,7 @@ const AdminAnnouncements = () => {
         isPublished: newAnnouncement.isPublished,
         tagIds: newAnnouncement.tags,
         publishedDate: newAnnouncement.isPublished ? new Date().toISOString() : null,
+        attachmentUrls: newAnnouncement.attachmentUrls,
       };
 
       const response = await fetchWithAuth(`${API_BASE_URL}/api/announcements`, {
@@ -208,6 +218,7 @@ const AdminAnnouncements = () => {
         content: '',
         isPublished: false,
         tags: [],
+        attachmentUrls: [],
       });
     } catch (err: any) {
       console.error('Create announcement error:', err);
@@ -227,6 +238,7 @@ const AdminAnnouncements = () => {
       confirmText: 'Delete',
       onConfirm: async () => {
         try {
+          setIsDeleting(true);
           setError('');
           await Promise.all(
             selectedAnnouncementIds.map(id =>
@@ -245,6 +257,7 @@ const AdminAnnouncements = () => {
         } catch (err: any) {
           setToast({ message: err.message || 'Failed to delete announcements', type: 'error' });
         } finally {
+          setIsDeleting(false);
           setConfirmModal(null);
         }
       },
@@ -302,6 +315,67 @@ const AdminAnnouncements = () => {
       matchesTags
     );
   });
+
+  const sortedAnnouncements = [...searchedAnnouncements].sort((a, b) => {
+    let aValue: any;
+    let bValue: any;
+
+    switch (sortField) {
+      case 'title':
+        aValue = a.title.toLowerCase();
+        bValue = b.title.toLowerCase();
+        break;
+      case 'publishedDate':
+        aValue = a.publishedDate ? new Date(a.publishedDate).getTime() : 0;
+        bValue = b.publishedDate ? new Date(b.publishedDate).getTime() : 0;
+        break;
+      case 'tags':
+        aValue = a.tags?.length || 0;
+        bValue = b.tags?.length || 0;
+        break;
+      case 'createdAt':
+        aValue = new Date(a.createdAt).getTime();
+        bValue = new Date(b.createdAt).getTime();
+        break;
+      default:
+        return 0;
+    }
+
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return (
+        <svg className='w-4 h-4 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+        </svg>
+      );
+    }
+    if (sortDirection === 'asc') {
+      return (
+        <svg className='w-4 h-4 text-[#D54242]' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 15l7-7 7 7' />
+        </svg>
+      );
+    }
+    return (
+      <svg className='w-4 h-4 text-[#D54242]' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+      </svg>
+    );
+  };
 
   const currentFilterCount =
     filter === 'ALL'
@@ -471,12 +545,12 @@ const AdminAnnouncements = () => {
                     <input
                       type='checkbox'
                       checked={
-                        selectedAnnouncementIds.length === searchedAnnouncements.length &&
-                        searchedAnnouncements.length > 0
+                        selectedAnnouncementIds.length === sortedAnnouncements.length &&
+                        sortedAnnouncements.length > 0
                       }
                       onChange={e => {
                         if (e.target.checked) {
-                          setSelectedAnnouncementIds(searchedAnnouncements.map(a => a.id));
+                          setSelectedAnnouncementIds(sortedAnnouncements.map(a => a.id));
                         } else {
                           setSelectedAnnouncementIds([]);
                         }
@@ -484,19 +558,41 @@ const AdminAnnouncements = () => {
                       className='w-4 h-4'
                     />
                   </th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>Title</th>
+                  <th
+                    className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('title')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Title
+                      <SortIcon field='title' />
+                    </div>
+                  </th>
                   <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
                     Status
                   </th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>Tags</th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
-                    Published
+                  <th
+                    className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('tags')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Tags
+                      <SortIcon field='tags' />
+                    </div>
+                  </th>
+                  <th
+                    className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('publishedDate')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Published
+                      <SortIcon field='publishedDate' />
+                    </div>
                   </th>
                 </tr>
               </thead>
 
               <tbody className='divide-y divide-gray-200'>
-                {searchedAnnouncements.map(a => (
+                {sortedAnnouncements.map(a => (
                   <tr key={a.id} className='hover:bg-gray-50'>
                     <td className='px-6 py-4' onClick={e => e.stopPropagation()}>
                       <input
@@ -534,20 +630,20 @@ const AdminAnnouncements = () => {
                     </td>
 
                     <td className='px-6 py-4'>
-                      <div className='flex gap-2 flex-wrap'>
-                        {a.tags.length === 0 ? (
-                          <span className='text-gray-500 text-sm'>None</span>
-                        ) : (
-                          a.tags.map(t => (
+                      {a.tags && a.tags.length > 0 ? (
+                        <div className='flex flex-wrap gap-1'>
+                          {a.tags.map(t => (
                             <span
                               key={t.id}
-                              className='px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
+                              className='px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
                             >
                               {t.name}
                             </span>
-                          ))
-                        )}
-                      </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className='text-sm text-gray-400'>-</span>
+                      )}
                     </td>
 
                     <td className='px-6 py-4 text-sm text-gray-600'>
@@ -615,25 +711,9 @@ const AdminAnnouncements = () => {
                   />
                 </div>
 
-                <div>
-                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Attachments</h4>
-                  {selectedAnnouncement.attachmentUrls?.length > 0 ? (
-                    <ul className='space-y-1'>
-                      {selectedAnnouncement.attachmentUrls.map((url, i) => (
-                        <li key={i} className='text-sm flex justify-between items-center'>
-                          <a
-                            href={`/admin/announcements/`}
-                            className='text-[#194B90] hover:underline'
-                          >
-                            {url}
-                          </a>{' '}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className='text-sm text-gray-900'>No attachments</p>
-                  )}
-                </div>
+                {selectedAnnouncement.attachmentUrls && selectedAnnouncement.attachmentUrls.length > 0 && (
+                  <AttachmentList attachmentUrls={selectedAnnouncement.attachmentUrls} />
+                )}
 
                 <div>
                   <h4 className='font-semibold text-base text-gray-800 mb-2'>Tags</h4>
@@ -819,6 +899,11 @@ const AdminAnnouncements = () => {
                   )}
                 </div>
 
+                <FileUpload
+                  attachmentUrls={newAnnouncement.attachmentUrls}
+                  onFilesChange={files => setNewAnnouncement({ ...newAnnouncement, attachmentUrls: files })}
+                />
+
                 <div className='flex gap-3 pt-4'>
                   <button
                     type='button'
@@ -843,6 +928,7 @@ const AdminAnnouncements = () => {
                           isPublished: true,
                           tagIds: newAnnouncement.tags,
                           publishedDate: new Date().toISOString(),
+                          attachmentUrls: newAnnouncement.attachmentUrls,
                         };
 
                         console.log('Publishing announcement with payload:', payload);
@@ -869,6 +955,7 @@ const AdminAnnouncements = () => {
                           content: '',
                           isPublished: false,
                           tags: [],
+                          attachmentUrls: [],
                         });
                         setToast({
                           message: 'Announcement published successfully!',
@@ -913,6 +1000,7 @@ const AdminAnnouncements = () => {
                           isPublished: false,
                           tagIds: newAnnouncement.tags,
                           publishedDate: null,
+                          attachmentUrls: newAnnouncement.attachmentUrls,
                         };
 
                         console.log('Saving to drafts with payload:', payload);
@@ -939,6 +1027,7 @@ const AdminAnnouncements = () => {
                           content: '',
                           isPublished: false,
                           tags: [],
+                          attachmentUrls: [],
                         });
                         setToast({ message: 'Announcement saved to drafts!', type: 'success' });
                       } catch (err: any) {
@@ -966,6 +1055,7 @@ const AdminAnnouncements = () => {
                         content: '',
                         isPublished: false,
                         tags: [],
+                        attachmentUrls: [],
                       });
                     }}
                     className='px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium'
@@ -986,6 +1076,7 @@ const AdminAnnouncements = () => {
                   content: '',
                   isPublished: false,
                   tags: [],
+                  attachmentUrls: [],
                 });
               }}
             ></div>
@@ -1002,6 +1093,8 @@ const AdminAnnouncements = () => {
           confirmText={confirmModal.confirmText}
           onConfirm={confirmModal.onConfirm}
           onCancel={() => setConfirmModal(null)}
+          isLoading={isDeleting}
+          loadingText="Deleting..."
         />
       )}
     </div>
