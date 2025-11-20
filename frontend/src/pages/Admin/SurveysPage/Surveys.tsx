@@ -30,7 +30,7 @@ type Survey = {
   updatedAt: string;
 };
 
-type Filter = 'ALL' | 'PUBLISHED' | 'DRAFTS';
+type Filter = 'ALL' | 'ACTIVE' | 'INACTIVE' | 'DRAFTS';
 
 const AdminSurveys = () => {
   const { getToken } = useAuth();
@@ -185,7 +185,12 @@ const AdminSurveys = () => {
   };
 
   const filteredSurveys = surveys.filter(survey => {
-    if (filter === 'PUBLISHED' && !survey.isPublished) return false;
+    const now = new Date();
+    const isInactive = survey.dueDate && new Date(survey.dueDate) < now;
+    const isActive = survey.isPublished && (!survey.dueDate || new Date(survey.dueDate) >= now);
+
+    if (filter === 'ACTIVE' && !isActive) return false;
+    if (filter === 'INACTIVE' && (!survey.isPublished || !isInactive)) return false;
     if (filter === 'DRAFTS' && survey.isPublished) return false;
 
     if (searchQuery) {
@@ -272,8 +277,9 @@ const AdminSurveys = () => {
 
       <div className='flex-1 p-8'>
         <h1 className='text-3xl font-bold text-gray-800 mb-6'>
-          {filter === 'ALL' && `All Surveys (${surveys.length})`}
-          {filter === 'PUBLISHED' && `Published Surveys (${filteredSurveys.length})`}
+          {filter === 'ALL' && `All Surveys (${filteredSurveys.length})`}
+          {filter === 'ACTIVE' && `Active Surveys (${filteredSurveys.length})`}
+          {filter === 'INACTIVE' && `Inactive Surveys (${filteredSurveys.length})`}
           {filter === 'DRAFTS' && `Draft Surveys (${filteredSurveys.length})`}
         </h1>
 
@@ -290,14 +296,24 @@ const AdminSurveys = () => {
               All
             </button>
             <button
-              onClick={() => setFilter('PUBLISHED')}
+              onClick={() => setFilter('ACTIVE')}
               className={`px-6 py-2.5 rounded-[10px] font-medium transition ${
-                filter === 'PUBLISHED'
+                filter === 'ACTIVE'
                   ? 'bg-[#EBF3FF] text-[#194B90] border border-[#194B90]'
                   : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
               } cursor-pointer`}
             >
-              Published
+              Active
+            </button>
+            <button
+              onClick={() => setFilter('INACTIVE')}
+              className={`px-6 py-2.5 rounded-[10px] font-medium transition ${
+                filter === 'INACTIVE'
+                  ? 'bg-[#EBF3FF] text-[#194B90] border border-[#194B90]'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              } cursor-pointer`}
+            >
+              Inactive
             </button>
             <button
               onClick={() => setFilter('DRAFTS')}
