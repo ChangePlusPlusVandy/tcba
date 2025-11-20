@@ -11,7 +11,7 @@ const resolveTargetId = (id: string, userId?: string) => (id === 'profile' ? use
 export const getAllSurveys = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const surveys = await prisma.survey.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
     res.json(surveys);
   } catch (error) {
@@ -165,7 +165,7 @@ export const getActiveSurveys = async (req: AuthenticatedRequest, res: Response)
     const surveys = await prisma.survey.findMany({
       where: {
         isActive: true,
-        isPublished: true
+        isPublished: true,
       },
       orderBy: { createdAt: 'desc' },
     });

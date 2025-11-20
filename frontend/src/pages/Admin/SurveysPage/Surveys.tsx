@@ -376,7 +376,8 @@ const AdminSurveys = () => {
                     <input
                       type='checkbox'
                       checked={
-                        sortedSurveys.length > 0 && selectedSurveyIds.length === sortedSurveys.length
+                        sortedSurveys.length > 0 &&
+                        selectedSurveyIds.length === sortedSurveys.length
                       }
                       onChange={handleSelectAll}
                       className='w-4 h-4'
@@ -505,7 +506,9 @@ const AdminSurveys = () => {
 
                 <div>
                   <h4 className='font-semibold text-base text-gray-800 mb-2'>Description</h4>
-                  <p className='text-sm text-gray-900'>{selectedSurvey.description || 'No description'}</p>
+                  <p className='text-sm text-gray-900'>
+                    {selectedSurvey.description || 'No description'}
+                  </p>
                 </div>
 
                 <div>
@@ -519,33 +522,40 @@ const AdminSurveys = () => {
                           <div className='flex-1'>
                             <p className='font-medium text-gray-900'>
                               {index + 1}. {question.text}
-                              {question.required && (
-                                <span className='text-red-500 ml-1'>*</span>
-                              )}
+                              {question.required && <span className='text-red-500 ml-1'>*</span>}
                             </p>
                             <p className='text-xs text-gray-500 mt-1'>
-                              Type: {question.type === 'multipleChoice' ? 'Multiple Choice' :
-                                     question.type === 'checkbox' ? 'Checkboxes' :
-                                     question.type === 'text' ? 'Text' : 'Rating'}
+                              Type:{' '}
+                              {question.type === 'multipleChoice'
+                                ? 'Multiple Choice'
+                                : question.type === 'checkbox'
+                                  ? 'Checkboxes'
+                                  : question.type === 'text'
+                                    ? 'Text'
+                                    : 'Rating'}
                             </p>
                           </div>
                         </div>
 
-                        {(question.type === 'multipleChoice' || question.type === 'checkbox') && question.options && (
-                          <div className='mt-2 ml-4'>
-                            <p className='text-xs text-gray-600 mb-1'>Options:</p>
-                            <ul className='list-disc list-inside space-y-1'>
-                              {question.options.map((option, idx) => (
-                                <li key={idx} className='text-sm text-gray-700'>{option}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
+                        {(question.type === 'multipleChoice' || question.type === 'checkbox') &&
+                          question.options && (
+                            <div className='mt-2 ml-4'>
+                              <p className='text-xs text-gray-600 mb-1'>Options:</p>
+                              <ul className='list-disc list-inside space-y-1'>
+                                {question.options.map((option, idx) => (
+                                  <li key={idx} className='text-sm text-gray-700'>
+                                    {option}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
 
                         {question.type === 'text' && question.textType && (
                           <div className='mt-2 ml-4'>
                             <p className='text-xs text-gray-600'>
-                              Response Type: {question.textType === 'short' ? 'Short Response' : 'Long Response'}
+                              Response Type:{' '}
+                              {question.textType === 'short' ? 'Short Response' : 'Long Response'}
                             </p>
                           </div>
                         )}

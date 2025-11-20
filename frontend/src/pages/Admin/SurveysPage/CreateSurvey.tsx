@@ -168,7 +168,10 @@ const CreateSurvey = () => {
         setToast({ message: `Question ${i + 1} text is required`, type: 'error' });
         return;
       }
-      if ((q.type === 'multipleChoice' || q.type === 'checkbox') && (!q.options || q.options.length < 2)) {
+      if (
+        (q.type === 'multipleChoice' || q.type === 'checkbox') &&
+        (!q.options || q.options.length < 2)
+      ) {
         setToast({ message: `Question ${i + 1} must have at least 2 options`, type: 'error' });
         return;
       }
@@ -184,9 +187,7 @@ const CreateSurvey = () => {
         isPublished: publish,
       };
 
-      const url = isEditMode
-        ? `${API_BASE_URL}/api/surveys/${id}`
-        : `${API_BASE_URL}/api/surveys`;
+      const url = isEditMode ? `${API_BASE_URL}/api/surveys/${id}` : `${API_BASE_URL}/api/surveys`;
       const method = isEditMode ? 'PUT' : 'POST';
 
       await fetchWithAuth(url, {
@@ -286,7 +287,9 @@ const CreateSurvey = () => {
               </div>
 
               <div>
-                <label className='block text-sm font-semibold text-gray-700 mb-1'>Description</label>
+                <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                  Description
+                </label>
                 <textarea
                   value={description}
                   onChange={e => setDescription(e.target.value)}
@@ -379,9 +382,7 @@ const CreateSurvey = () => {
                             <input
                               type='text'
                               value={option}
-                              onChange={e =>
-                                updateOption(question.id, optionIndex, e.target.value)
-                              }
+                              onChange={e => updateOption(question.id, optionIndex, e.target.value)}
                               className='flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
                               placeholder={`Option ${optionIndex + 1}`}
                             />

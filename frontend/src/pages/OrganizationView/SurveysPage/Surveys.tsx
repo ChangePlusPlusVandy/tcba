@@ -117,8 +117,10 @@ const OrgSurveysPage = () => {
 
   const filteredSurveys = surveys
     .filter(survey => {
-      const matchesSearch = survey.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (survey.description && survey.description.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesSearch =
+        survey.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (survey.description &&
+          survey.description.toLowerCase().includes(searchQuery.toLowerCase()));
       const responded = hasResponded(survey.id);
 
       if (statusFilter === 'ACTIVE') {
@@ -343,155 +345,160 @@ const OrgSurveysPage = () => {
         )}
       </div>
 
-      
       {isResponseModalOpen && selectedSurvey && (
         <>
           <input type='checkbox' checked readOnly className='modal-toggle' />
           <div className='modal modal-open'>
             <div className='modal-box max-w-3xl w-full max-h-[90vh] bg-white overflow-y-auto p-0'>
-            <div className='sticky top-0 bg-white border-b border-gray-200 p-6 z-10'>
-              <div className='flex justify-between items-start'>
-                <div>
-                  <h2 className='text-2xl font-bold text-gray-800'>{selectedSurvey.title}</h2>
-                  {selectedSurvey.description && (
-                    <p className='text-gray-600 mt-2'>{selectedSurvey.description}</p>
-                  )}
+              <div className='sticky top-0 bg-white border-b border-gray-200 p-6 z-10'>
+                <div className='flex justify-between items-start'>
+                  <div>
+                    <h2 className='text-2xl font-bold text-gray-800'>{selectedSurvey.title}</h2>
+                    {selectedSurvey.description && (
+                      <p className='text-gray-600 mt-2'>{selectedSurvey.description}</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={closeResponseModal}
+                    className='text-gray-400 hover:text-gray-600'
+                    disabled={isSubmitting}
+                  >
+                    <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M6 18L18 6M6 6l12 12'
+                      />
+                    </svg>
+                  </button>
                 </div>
-                <button
-                  onClick={closeResponseModal}
-                  className='text-gray-400 hover:text-gray-600'
-                  disabled={isSubmitting}
-                >
-                  <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M6 18L18 6M6 6l12 12'
-                    />
-                  </svg>
-                </button>
               </div>
-            </div>
 
-            <div className='p-6 space-y-6'>
-              {selectedSurvey.questions.map((question, index) => (
-                <div key={question.id} className='border-b border-gray-200 pb-6 last:border-b-0'>
-                  <label className='block text-lg font-semibold text-gray-800 mb-3'>
-                    {index + 1}. {question.text}
-                    {question.required && <span className='text-red-500 ml-1'>*</span>}
-                  </label>
+              <div className='p-6 space-y-6'>
+                {selectedSurvey.questions.map((question, index) => (
+                  <div key={question.id} className='border-b border-gray-200 pb-6 last:border-b-0'>
+                    <label className='block text-lg font-semibold text-gray-800 mb-3'>
+                      {index + 1}. {question.text}
+                      {question.required && <span className='text-red-500 ml-1'>*</span>}
+                    </label>
 
-                  {question.type === 'multipleChoice' && (
-                    <div className='space-y-2'>
-                      {question.options?.map(option => (
-                        <label key={option} className='flex items-center space-x-3 cursor-pointer'>
-                          <input
-                            type='radio'
-                            name={question.id}
-                            value={option}
-                            checked={currentResponses[question.id] === option}
-                            onChange={e => handleResponseChange(question.id, e.target.value)}
-                            className='w-4 h-4 text-[#D54242] focus:ring-[#D54242]'
-                          />
-                          <span className='text-gray-700'>{option}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-
-                  {question.type === 'checkbox' && (
-                    <div className='space-y-2'>
-                      {question.options?.map(option => (
-                        <label key={option} className='flex items-center space-x-3 cursor-pointer'>
-                          <input
-                            type='checkbox'
-                            value={option}
-                            checked={(currentResponses[question.id] as string[] || []).includes(
-                              option
-                            )}
-                            onChange={e => {
-                              const current = (currentResponses[question.id] as string[]) || [];
-                              const updated = e.target.checked
-                                ? [...current, option]
-                                : current.filter(v => v !== option);
-                              handleResponseChange(question.id, updated);
-                            }}
-                            className='w-4 h-4 text-[#D54242] focus:ring-[#D54242] rounded'
-                          />
-                          <span className='text-gray-700'>{option}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-
-                  {question.type === 'text' && (
-                    <>
-                      {question.textType === 'short' ? (
-                        <input
-                          type='text'
-                          value={currentResponses[question.id] || ''}
-                          onChange={e => handleResponseChange(question.id, e.target.value)}
-                          className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
-                          placeholder='Your answer'
-                        />
-                      ) : (
-                        <textarea
-                          value={currentResponses[question.id] || ''}
-                          onChange={e => handleResponseChange(question.id, e.target.value)}
-                          rows={4}
-                          className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
-                          placeholder='Your answer'
-                        />
-                      )}
-                    </>
-                  )}
-
-                  {question.type === 'rating' && (
-                    <div className='flex gap-2 items-center'>
-                      <span className='text-sm text-gray-600'>{question.minValue || 1}</span>
-                      <div className='flex gap-2'>
-                        {Array.from(
-                          { length: (question.maxValue || 5) - (question.minValue || 1) + 1 },
-                          (_, i) => (question.minValue || 1) + i
-                        ).map(value => (
-                          <button
-                            key={value}
-                            type='button'
-                            onClick={() => handleResponseChange(question.id, value)}
-                            className={`w-10 h-10 rounded-lg border-2 font-medium transition ${
-                              currentResponses[question.id] === value
-                                ? 'bg-[#D54242] text-white border-[#D54242]'
-                                : 'bg-white text-gray-700 border-gray-300 hover:border-[#D54242]'
-                            }`}
+                    {question.type === 'multipleChoice' && (
+                      <div className='space-y-2'>
+                        {question.options?.map(option => (
+                          <label
+                            key={option}
+                            className='flex items-center space-x-3 cursor-pointer'
                           >
-                            {value}
-                          </button>
+                            <input
+                              type='radio'
+                              name={question.id}
+                              value={option}
+                              checked={currentResponses[question.id] === option}
+                              onChange={e => handleResponseChange(question.id, e.target.value)}
+                              className='w-4 h-4 text-[#D54242] focus:ring-[#D54242]'
+                            />
+                            <span className='text-gray-700'>{option}</span>
+                          </label>
                         ))}
                       </div>
-                      <span className='text-sm text-gray-600'>{question.maxValue || 5}</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                    )}
 
-            <div className='sticky bottom-0 bg-white border-t border-gray-200 p-6 flex justify-end gap-3'>
-              <button
-                onClick={closeResponseModal}
-                disabled={isSubmitting}
-                className='px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed'
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmitResponse}
-                disabled={isSubmitting}
-                className='px-6 py-2 bg-[#D54242] hover:bg-[#b53a3a] disabled:bg-[#e88888] text-white rounded-lg disabled:cursor-not-allowed'
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit Response'}
-              </button>
-            </div>
+                    {question.type === 'checkbox' && (
+                      <div className='space-y-2'>
+                        {question.options?.map(option => (
+                          <label
+                            key={option}
+                            className='flex items-center space-x-3 cursor-pointer'
+                          >
+                            <input
+                              type='checkbox'
+                              value={option}
+                              checked={((currentResponses[question.id] as string[]) || []).includes(
+                                option
+                              )}
+                              onChange={e => {
+                                const current = (currentResponses[question.id] as string[]) || [];
+                                const updated = e.target.checked
+                                  ? [...current, option]
+                                  : current.filter(v => v !== option);
+                                handleResponseChange(question.id, updated);
+                              }}
+                              className='w-4 h-4 text-[#D54242] focus:ring-[#D54242] rounded'
+                            />
+                            <span className='text-gray-700'>{option}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+
+                    {question.type === 'text' && (
+                      <>
+                        {question.textType === 'short' ? (
+                          <input
+                            type='text'
+                            value={currentResponses[question.id] || ''}
+                            onChange={e => handleResponseChange(question.id, e.target.value)}
+                            className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                            placeholder='Your answer'
+                          />
+                        ) : (
+                          <textarea
+                            value={currentResponses[question.id] || ''}
+                            onChange={e => handleResponseChange(question.id, e.target.value)}
+                            rows={4}
+                            className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                            placeholder='Your answer'
+                          />
+                        )}
+                      </>
+                    )}
+
+                    {question.type === 'rating' && (
+                      <div className='flex gap-2 items-center'>
+                        <span className='text-sm text-gray-600'>{question.minValue || 1}</span>
+                        <div className='flex gap-2'>
+                          {Array.from(
+                            { length: (question.maxValue || 5) - (question.minValue || 1) + 1 },
+                            (_, i) => (question.minValue || 1) + i
+                          ).map(value => (
+                            <button
+                              key={value}
+                              type='button'
+                              onClick={() => handleResponseChange(question.id, value)}
+                              className={`w-10 h-10 rounded-lg border-2 font-medium transition ${
+                                currentResponses[question.id] === value
+                                  ? 'bg-[#D54242] text-white border-[#D54242]'
+                                  : 'bg-white text-gray-700 border-gray-300 hover:border-[#D54242]'
+                              }`}
+                            >
+                              {value}
+                            </button>
+                          ))}
+                        </div>
+                        <span className='text-sm text-gray-600'>{question.maxValue || 5}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className='sticky bottom-0 bg-white border-t border-gray-200 p-6 flex justify-end gap-3'>
+                <button
+                  onClick={closeResponseModal}
+                  disabled={isSubmitting}
+                  className='px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed'
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitResponse}
+                  disabled={isSubmitting}
+                  className='px-6 py-2 bg-[#D54242] hover:bg-[#b53a3a] disabled:bg-[#e88888] text-white rounded-lg disabled:cursor-not-allowed'
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Response'}
+                </button>
+              </div>
             </div>
           </div>
         </>

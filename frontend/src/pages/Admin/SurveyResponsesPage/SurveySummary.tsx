@@ -194,7 +194,11 @@ const SurveySummary = () => {
     }
   }, [surveyId]);
 
-  const renderPieChart = (questionId: string, statsData: ResponseStats['questionStats'][string]['stats'], colors: string[]) => {
+  const renderPieChart = (
+    questionId: string,
+    statsData: ResponseStats['questionStats'][string]['stats'],
+    colors: string[]
+  ) => {
     const sortedEntries = Object.entries(statsData).sort((a, b) => b[1].count - a[1].count);
     const total = sortedEntries.reduce((sum, [, data]) => sum + data.count, 0);
     if (total === 0) return null;
@@ -217,7 +221,12 @@ const SurveySummary = () => {
                   onMouseLeave={() => setHoveredSegment(null)}
                   className='cursor-pointer transition-opacity'
                   style={{
-                    opacity: hoveredSegment && hoveredSegment.questionId === questionId && hoveredSegment.answer !== answer ? 0.3 : 1
+                    opacity:
+                      hoveredSegment &&
+                      hoveredSegment.questionId === questionId &&
+                      hoveredSegment.answer !== answer
+                        ? 0.3
+                        : 1,
                   }}
                 >
                   <circle
@@ -235,12 +244,12 @@ const SurveySummary = () => {
             })}
           </svg>
 
-          
           {hoveredSegment && hoveredSegment.questionId === questionId && (
             <div className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white border-2 border-gray-300 rounded-lg shadow-xl p-4 max-w-xs z-10 pointer-events-none'>
               <p className='font-semibold text-gray-900 mb-2'>{hoveredSegment.answer}</p>
               <p className='text-sm text-gray-600 mb-2'>
-                {statsData[hoveredSegment.answer].count} response{statsData[hoveredSegment.answer].count !== 1 ? 's' : ''}
+                {statsData[hoveredSegment.answer].count} response
+                {statsData[hoveredSegment.answer].count !== 1 ? 's' : ''}
               </p>
               <div className='max-h-32 overflow-y-auto'>
                 <p className='text-xs font-semibold text-gray-700 mb-1'>Organizations:</p>
@@ -255,9 +264,7 @@ const SurveySummary = () => {
         </div>
 
         <div className='flex-1 space-y-2'>
-          <p className='text-sm font-semibold text-gray-700 mb-3'>
-            Total Responses: {total}
-          </p>
+          <p className='text-sm font-semibold text-gray-700 mb-3'>Total Responses: {total}</p>
           {sortedEntries.map(([answer, data], index) => (
             <div
               key={answer}
@@ -280,7 +287,11 @@ const SurveySummary = () => {
     );
   };
 
-  const renderBarChart = (questionId: string, statsData: ResponseStats['questionStats'][string]['stats'], colors: string[]) => {
+  const renderBarChart = (
+    questionId: string,
+    statsData: ResponseStats['questionStats'][string]['stats'],
+    colors: string[]
+  ) => {
     const sortedEntries = Object.entries(statsData).sort((a, b) => Number(a[0]) - Number(b[0]));
     const maxCount = Math.max(...sortedEntries.map(([, data]) => data.count));
 
@@ -288,7 +299,8 @@ const SurveySummary = () => {
       <div className='space-y-3'>
         {sortedEntries.map(([answer, data], index) => {
           const percentage = maxCount > 0 ? (data.count / maxCount) * 100 : 0;
-          const isHovered = hoveredSegment?.questionId === questionId && hoveredSegment?.answer === answer;
+          const isHovered =
+            hoveredSegment?.questionId === questionId && hoveredSegment?.answer === answer;
 
           return (
             <div
@@ -299,7 +311,9 @@ const SurveySummary = () => {
             >
               <div className='flex justify-between text-sm'>
                 <span className='font-medium text-gray-700'>Rating {answer}</span>
-                <span className='text-gray-600'>{data.count} response{data.count !== 1 ? 's' : ''}</span>
+                <span className='text-gray-600'>
+                  {data.count} response{data.count !== 1 ? 's' : ''}
+                </span>
               </div>
               <div className='w-full bg-gray-200 rounded-full h-6 overflow-hidden relative'>
                 <div
@@ -313,10 +327,11 @@ const SurveySummary = () => {
                 </div>
               </div>
 
-              
               {isHovered && data.organizations.length > 0 && (
                 <div className='absolute left-0 top-full mt-2 bg-white border-2 border-gray-300 rounded-lg shadow-xl p-3 max-w-xs z-10'>
-                  <p className='text-xs font-semibold text-gray-700 mb-1'>Organizations ({data.count}):</p>
+                  <p className='text-xs font-semibold text-gray-700 mb-1'>
+                    Organizations ({data.count}):
+                  </p>
                   <ul className='text-xs text-gray-600 space-y-1 max-h-32 overflow-y-auto'>
                     {data.organizations.map((org, idx) => (
                       <li key={idx}>• {org}</li>
@@ -342,7 +357,12 @@ const SurveySummary = () => {
             className='flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4'
           >
             <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 19l-7-7 7-7' />
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M15 19l-7-7 7-7'
+              />
             </svg>
             Back to Responses
           </button>
@@ -397,10 +417,7 @@ const SurveySummary = () => {
                           <span className='text-3xl text-[#D54242] font-bold'>
                             {questionStat.averageRating?.toFixed(2) || 'N/A'}
                           </span>
-                          <span className='text-gray-600 text-xl'>
-                            {' '}
-                            / {question.maxValue || 5}
-                          </span>
+                          <span className='text-gray-600 text-xl'> / {question.maxValue || 5}</span>
                         </p>
                       </div>
                       {renderBarChart(question.id, questionStat.stats, COLORS)}
@@ -414,7 +431,10 @@ const SurveySummary = () => {
                       </p>
                       <div className='max-h-96 overflow-y-auto space-y-2'>
                         {questionStat.textResponses.map((response, idx) => (
-                          <div key={idx} className='p-3 bg-gray-50 rounded-lg border border-gray-200'>
+                          <div
+                            key={idx}
+                            className='p-3 bg-gray-50 rounded-lg border border-gray-200'
+                          >
                             <p className='text-sm text-gray-900 mb-1'>{response.text}</p>
                             <p className='text-xs text-gray-500'>— {response.orgName}</p>
                           </div>

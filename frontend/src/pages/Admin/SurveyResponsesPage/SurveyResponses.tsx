@@ -140,8 +140,11 @@ const SurveyResponses = () => {
   const allTags = Array.from(new Set(responses.flatMap(r => r.organization.tags || [])));
 
   const filteredResponses = responses.filter(response => {
-    const matchesSearch = response.organization.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTags = tagsFilter.length === 0 || tagsFilter.some(tag => response.organization.tags?.includes(tag));
+    const matchesSearch = response.organization.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesTags =
+      tagsFilter.length === 0 || tagsFilter.some(tag => response.organization.tags?.includes(tag));
     return matchesSearch && matchesTags;
   });
 
@@ -151,7 +154,11 @@ const SurveyResponses = () => {
     }
 
     if (question.type === 'checkbox' && Array.isArray(answer)) {
-      return answer.length > 0 ? answer.join(', ') : <span className='text-gray-400 italic'>No answer</span>;
+      return answer.length > 0 ? (
+        answer.join(', ')
+      ) : (
+        <span className='text-gray-400 italic'>No answer</span>
+      );
     }
 
     if (question.type === 'rating') {
@@ -172,7 +179,12 @@ const SurveyResponses = () => {
             className='flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4'
           >
             <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 19l-7-7 7-7' />
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M15 19l-7-7 7-7'
+              />
             </svg>
             Back to Surveys
           </button>
@@ -308,11 +320,17 @@ const SurveyResponses = () => {
               </thead>
               <tbody className='divide-y divide-gray-200'>
                 {filteredResponses.map(response => (
-                  <tr key={response.id} className='hover:bg-gray-50 cursor-pointer' onClick={() => openDetailModal(response)}>
+                  <tr
+                    key={response.id}
+                    className='hover:bg-gray-50 cursor-pointer'
+                    onClick={() => openDetailModal(response)}
+                  >
                     <td className='px-6 py-4 text-[#194B90] font-medium hover:underline'>
                       {response.organization.name}
                     </td>
-                    <td className='px-6 py-4 text-sm text-gray-600'>{response.organization.email}</td>
+                    <td className='px-6 py-4 text-sm text-gray-600'>
+                      {response.organization.email}
+                    </td>
                     <td className='px-6 py-4 text-sm text-gray-600'>
                       {response.submittedDate
                         ? new Date(response.submittedDate).toLocaleDateString()
@@ -343,7 +361,6 @@ const SurveyResponses = () => {
         )}
       </div>
 
-      
       {isDetailModalOpen && selectedResponse && survey && (
         <>
           <input type='checkbox' checked readOnly className='modal-toggle' />
@@ -362,7 +379,14 @@ const SurveyResponses = () => {
                         {question.required && <span className='text-red-500 ml-1'>*</span>}
                       </p>
                       <p className='text-xs text-gray-500 mt-1'>
-                        Type: {question.type === 'multipleChoice' ? 'Multiple Choice' : question.type === 'checkbox' ? 'Checkbox' : question.type === 'text' ? 'Text' : 'Rating'}
+                        Type:{' '}
+                        {question.type === 'multipleChoice'
+                          ? 'Multiple Choice'
+                          : question.type === 'checkbox'
+                            ? 'Checkbox'
+                            : question.type === 'text'
+                              ? 'Text'
+                              : 'Rating'}
                       </p>
                     </div>
 
@@ -371,20 +395,33 @@ const SurveyResponses = () => {
                         <p className='text-sm text-gray-600 mb-2'>Options:</p>
                         {question.options?.map(option => {
                           const answer = selectedResponse.responses[question.id];
-                          const isSelected = question.type === 'checkbox'
-                            ? Array.isArray(answer) && answer.includes(option)
-                            : answer === option;
+                          const isSelected =
+                            question.type === 'checkbox'
+                              ? Array.isArray(answer) && answer.includes(option)
+                              : answer === option;
 
                           return (
                             <div key={option} className='flex items-center gap-2'>
-                              <span className={`w-4 h-4 rounded ${question.type === 'checkbox' ? '' : 'rounded-full'} border-2 flex items-center justify-center ${isSelected ? 'bg-[#194B90] border-[#194B90]' : 'border-gray-300'}`}>
+                              <span
+                                className={`w-4 h-4 rounded ${question.type === 'checkbox' ? '' : 'rounded-full'} border-2 flex items-center justify-center ${isSelected ? 'bg-[#194B90] border-[#194B90]' : 'border-gray-300'}`}
+                              >
                                 {isSelected && (
-                                  <svg className='w-3 h-3 text-white' fill='currentColor' viewBox='0 0 20 20'>
-                                    <path fillRule='evenodd' d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z' clipRule='evenodd' />
+                                  <svg
+                                    className='w-3 h-3 text-white'
+                                    fill='currentColor'
+                                    viewBox='0 0 20 20'
+                                  >
+                                    <path
+                                      fillRule='evenodd'
+                                      d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
+                                      clipRule='evenodd'
+                                    />
                                   </svg>
                                 )}
                               </span>
-                              <span className={`text-sm ${isSelected ? 'font-medium text-gray-900' : 'text-gray-600'}`}>
+                              <span
+                                className={`text-sm ${isSelected ? 'font-medium text-gray-900' : 'text-gray-600'}`}
+                              >
                                 {option}
                               </span>
                             </div>
