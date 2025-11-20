@@ -9,19 +9,17 @@ import {
   publishSurvey,
   closeSurvey,
 } from '../controllers/surveyController.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
 
 router.get('/', getAllSurveys);
 router.get('/active/list', getActiveSurveys);
 router.get('/:id', getSurveyById);
-
-router.post('/', createSurvey);
-router.put('/:id', updateSurvey);
-
-router.patch('/:id/publish', publishSurvey);
-router.patch('/:id/close', closeSurvey);
-
-router.delete('/:id', deleteSurvey);
+router.post('/', authenticateToken, createSurvey);
+router.put('/:id', authenticateToken, updateSurvey);
+router.patch('/:id/publish', authenticateToken, publishSurvey);
+router.patch('/:id/close', authenticateToken, closeSurvey);
+router.delete('/:id', authenticateToken, deleteSurvey);
 
 export default router;

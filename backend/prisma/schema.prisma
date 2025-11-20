@@ -132,15 +132,16 @@ model Survey {
   id              String           @id @default(cuid())
   title           String
   description     String?
-  questions       Json?
-  createdDate     DateTime         @default(now())
+  questions       Json
   dueDate         DateTime?
-  isActive        Boolean
-  isPublished     Boolean
+  isActive        Boolean          @default(false)
+  isPublished     Boolean          @default(false)
   status          SurveyStatus     @default(DRAFT)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
   surveyResponses SurveyResponse[]
 
-  @@map("survey")
+  @@map("surveys")
 }
 
 model AdminUser {

@@ -25,6 +25,9 @@ import AdminAnnouncements from '../pages/Admin/AnnouncementsPage/Announcements';
 import AdminBlogs from '../pages/Admin/BlogsPage/Blogs';
 import AdminAlerts from '../pages/Admin/AlertsPage/Alerts';
 import AdminSurveys from '../pages/Admin/SurveysPage/Surveys';
+import CreateSurvey from '../pages/Admin/SurveysPage/CreateSurvey';
+import SurveyResponses from '../pages/Admin/SurveyResponsesPage/SurveyResponses';
+import SurveySummary from '../pages/Admin/SurveyResponsesPage/SurveySummary';
 import Blog from '../pages/BlogPage/Blog';
 import BlogsPage from '../pages/BlogsPage/Blogs';
 import HomePageEdit from '../pages/Admin/PageEditPages/HomePage/HomePageEdit';
@@ -178,6 +181,38 @@ const AppRoutes = () => {
         element={
           <AdminRoute>
             <AdminSurveys />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/surveys/create'
+        element={
+          <AdminRoute>
+            <CreateSurvey />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/surveys/edit/:id'
+        element={
+          <AdminRoute>
+            <CreateSurvey />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/surveys/:surveyId/responses'
+        element={
+          <AdminRoute>
+            <SurveyResponses />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/surveys/:surveyId/responses/summary'
+        element={
+          <AdminRoute>
+            <SurveySummary />
           </AdminRoute>
         }
       />
