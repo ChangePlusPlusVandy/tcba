@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoFunnelOutline, IoSearchOutline } from 'react-icons/io5';
+import { IoFunnelOutline } from 'react-icons/io5';
 import 'react-quill-new/dist/quill.snow.css';
 import { API_BASE_URL } from '../../config/api';
 
@@ -210,7 +210,7 @@ const AnnouncementsPage = () => {
               >
                 Last Year
               </button>
-              <div className='relative' ref={filterRef}>
+              <div className='relative tag-dropdown-container' ref={filterRef}>
                 <button
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
                   className={`px-6 py-3 ${isFilterOpen ? 'bg-[#b53a3a]' : 'bg-[#D54242]'} text-white rounded-lg shadow-sm hover:bg-[#b53a3a] transition-colors flex items-center gap-2`}
@@ -218,54 +218,74 @@ const AnnouncementsPage = () => {
                   Filter
                   <IoFunnelOutline className='w-5 h-5' />
                 </button>
+
                 {isFilterOpen && (
-                  <div
-                    className={`${selectedTags.length > 0 ? 'max-h-70' : 'max-h-60'} absolute overflow-y-auto left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-10`}
-                  >
-                    {tags.length === 0 && (
-                      <button className='w-full text-left px-4 py-2 hover:bg-[#EBF3FF] text-[#3C3C3C] font-[Open_Sans]'>
-                        No Tags Available
-                      </button>
+                  <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[200px] max-h-[300px] overflow-y-auto'>
+                    {tags.length === 0 ? (
+                      <div className='px-4 py-3 text-sm text-gray-500'>No tags available</div>
+                    ) : (
+                      <div className='py-2'>
+                        {tags.map(tag => (
+                          <label
+                            key={tag.id}
+                            className='flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer'
+                          >
+                            <input
+                              type='checkbox'
+                              checked={selectedTags.some(t => t.id === tag.id)}
+                              onChange={e => {
+                                if (e.target.checked) {
+                                  setSelectedTags([...selectedTags, tag]);
+                                } else {
+                                  setSelectedTags(selectedTags.filter(t => t.id !== tag.id));
+                                }
+                              }}
+                              className='w-4 h-4 text-[#194B90] border-gray-300 rounded focus:ring-[#194B90]'
+                            />
+                            <span className='ml-2 text-sm text-gray-700'>{tag.name}</span>
+                          </label>
+                        ))}
+                      </div>
                     )}
                     {selectedTags.length > 0 && (
-                      <button
-                        onClick={() => setSelectedTags([])}
-                        className='w-full text-left px-4 py-2 border-b hover:bg-[#EBF3FF] text-[#3C3C3C] font-[Open_Sans]'
-                      >
-                        Clear All
-                      </button>
+                      <div className='border-t border-gray-200 px-4 py-2'>
+                        <button
+                          onClick={() => {
+                            setSelectedTags([]);
+                            setIsFilterOpen(false);
+                          }}
+                          className='text-sm text-[#D54242] hover:text-[#b53a3a] font-medium'
+                        >
+                          Clear All
+                        </button>
+                      </div>
                     )}
-                    {tags.map(tag => (
-                      <button
-                        key={tag.id}
-                        onClick={() => {
-                          setSelectedTags(prev =>
-                            prev.some(t => t.id === tag.id)
-                              ? prev.filter(t => t.id !== tag.id)
-                              : [...prev, tag]
-                          );
-                        }}
-                        className={`w-full text-left px-4 py-2 hover:bg-[#EBF3FF] text-[#3C3C3C] font-[Open_Sans] ${
-                          selectedTags.some(t => t.id === tag.id) && 'bg-[#EBF3FF] font-semibold'
-                        }`}
-                      >
-                        {tag.name}
-                      </button>
-                    ))}
                   </div>
                 )}
               </div>
             </div>
 
-            <div className='relative'>
+            <div className='relative flex-1 max-w-xl' style={{ marginLeft: '12px' }}>
               <input
                 type='text'
-                placeholder='Search...'
+                placeholder='Search announcements...'
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className='px-4 py-3 pl-10 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#194B90] focus:border-transparent'
+                className='w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#194B90]'
               />
-              <IoSearchOutline className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5' />
+              <svg
+                className='absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
+                />
+              </svg>
             </div>
           </div>
         </div>

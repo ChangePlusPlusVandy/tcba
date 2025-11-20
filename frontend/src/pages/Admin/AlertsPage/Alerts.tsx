@@ -34,6 +34,10 @@ const AdminAlerts = () => {
   const [selectedAlertIds, setSelectedAlertIds] = useState<string[]>([]);
   const [filter, setFilter] = useState<Filter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [tagsFilter, setTagsFilter] = useState<string[]>([]);
+  const [priorityFilter, setPriorityFilter] = useState<AlertPriority[]>([]);
+  const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
+  const [priorityDropdownOpen, setPriorityDropdownOpen] = useState(false);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -107,6 +111,27 @@ const AdminAlerts = () => {
   useEffect(() => {
     fetchAlerts();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+
+      if (!target.closest('.tag-dropdown-container')) {
+        setTagDropdownOpen(false);
+      }
+      if (!target.closest('.priority-dropdown-container')) {
+        setPriorityDropdownOpen(false);
+      }
+    };
+
+    if (tagDropdownOpen || priorityDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [tagDropdownOpen, priorityDropdownOpen]);
 
   const handleCreateAlert = async (publish: boolean) => {
     if (!newAlert.title.trim()) {
@@ -207,18 +232,27 @@ const AdminAlerts = () => {
     setSelectedAlert(null);
   };
 
+  const allTags = Array.from(new Set(alerts.flatMap(alert => alert.tags || [])));
+
   const filteredAlerts = alerts.filter(alert => {
     if (filter === 'PUBLISHED' && !alert.isPublished) return false;
     if (filter === 'DRAFTS' && alert.isPublished) return false;
 
+    const matchesTags =
+      tagsFilter.length === 0 || tagsFilter.some(tag => alert.tags?.includes(tag));
+    const matchesPriority = priorityFilter.length === 0 || priorityFilter.includes(alert.priority);
+
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return (
-        alert.title.toLowerCase().includes(query) || alert.content.toLowerCase().includes(query)
+        (alert.title.toLowerCase().includes(query) ||
+          alert.content.toLowerCase().includes(query)) &&
+        matchesTags &&
+        matchesPriority
       );
     }
 
-    return true;
+    return matchesTags && matchesPriority;
   });
 
   const getPriorityColor = (priority: AlertPriority) => {
@@ -249,7 +283,11 @@ const AdminAlerts = () => {
       <AdminSidebar />
 
       <div className='flex-1 p-8'>
-        <h1 className='text-3xl font-bold text-gray-800 mb-6'>All Alerts ({alerts.length})</h1>
+        <h1 className='text-3xl font-bold text-gray-800 mb-6'>
+          {filter === 'ALL' && `All Alerts (${alerts.length})`}
+          {filter === 'PUBLISHED' && `Published Alerts (${filteredAlerts.length})`}
+          {filter === 'DRAFTS' && `Draft Alerts (${filteredAlerts.length})`}
+        </h1>
 
         <div className='flex items-center gap-4 mb-6'>
           <div className='flex gap-2'>
@@ -285,6 +323,140 @@ const AdminAlerts = () => {
             </button>
           </div>
 
+          <div className='relative tag-dropdown-container'>
+            <button
+              onClick={() => setTagDropdownOpen(!tagDropdownOpen)}
+              className='px-4 py-2 border border-gray-300 rounded-[10px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#194B90] hover:bg-gray-50 flex items-center gap-2'
+            >
+              <span>
+                {tagsFilter.length > 0 ? `Tags (${tagsFilter.length})` : 'Filter by Tags'}
+              </span>
+              <svg
+                className={`w-4 h-4 transition-transform ${tagDropdownOpen ? 'rotate-180' : ''}`}
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M19 9l-7 7-7-7'
+                />
+              </svg>
+            </button>
+
+            {tagDropdownOpen && (
+              <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[200px] max-h-[300px] overflow-y-auto'>
+                {allTags.length === 0 ? (
+                  <div className='px-4 py-3 text-sm text-gray-500'>No tags available</div>
+                ) : (
+                  <div className='py-2'>
+                    {allTags.map(tag => (
+                      <label
+                        key={tag}
+                        className='flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer'
+                      >
+                        <input
+                          type='checkbox'
+                          checked={tagsFilter.includes(tag)}
+                          onChange={e => {
+                            if (e.target.checked) {
+                              setTagsFilter([...tagsFilter, tag]);
+                            } else {
+                              setTagsFilter(tagsFilter.filter(t => t !== tag));
+                            }
+                          }}
+                          className='w-4 h-4 text-[#194B90] border-gray-300 rounded focus:ring-[#194B90]'
+                        />
+                        <span className='ml-2 text-sm text-gray-700'>{tag}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+                {tagsFilter.length > 0 && (
+                  <div className='border-t border-gray-200 px-4 py-2'>
+                    <button
+                      onClick={() => {
+                        setTagsFilter([]);
+                        setTagDropdownOpen(false);
+                      }}
+                      className='text-sm text-[#D54242] hover:text-[#b53a3a] font-medium'
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className='relative priority-dropdown-container'>
+            <button
+              onClick={() => setPriorityDropdownOpen(!priorityDropdownOpen)}
+              className='px-4 py-2 border border-gray-300 rounded-[10px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#194B90] hover:bg-gray-50 flex items-center gap-2'
+            >
+              <span>
+                {priorityFilter.length > 0
+                  ? `Priority (${priorityFilter.length})`
+                  : 'Filter by Priority'}
+              </span>
+              <svg
+                className={`w-4 h-4 transition-transform ${priorityDropdownOpen ? 'rotate-180' : ''}`}
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M19 9l-7 7-7-7'
+                />
+              </svg>
+            </button>
+
+            {priorityDropdownOpen && (
+              <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[200px]'>
+                <div className='py-2'>
+                  {(['URGENT', 'MEDIUM', 'LOW'] as AlertPriority[]).map(priority => (
+                    <label
+                      key={priority}
+                      className='flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer'
+                    >
+                      <input
+                        type='checkbox'
+                        checked={priorityFilter.includes(priority)}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            setPriorityFilter([...priorityFilter, priority]);
+                          } else {
+                            setPriorityFilter(priorityFilter.filter(p => p !== priority));
+                          }
+                        }}
+                        className='w-4 h-4 text-[#194B90] border-gray-300 rounded focus:ring-[#194B90]'
+                      />
+                      <span className='ml-2 text-sm text-gray-700'>{priority}</span>
+                    </label>
+                  ))}
+                </div>
+                {priorityFilter.length > 0 && (
+                  <div className='border-t border-gray-200 px-4 py-2'>
+                    <button
+                      onClick={() => {
+                        setPriorityFilter([]);
+                        setPriorityDropdownOpen(false);
+                      }}
+                      className='text-sm text-[#D54242] hover:text-[#b53a3a] font-medium'
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <button
             onClick={() => setIsCreateModalOpen(true)}
             className='px-6 py-2.5 rounded-[10px] font-medium transition bg-[#D54242] text-white hover:bg-[#b53a3a] cursor-pointer'
@@ -305,7 +477,7 @@ const AdminAlerts = () => {
             <div className='relative'>
               <input
                 type='text'
-                placeholder='Search alerts'
+                placeholder='Search alerts...'
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className='w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#194B90]'

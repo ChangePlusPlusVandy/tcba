@@ -36,6 +36,8 @@ const AdminAnnouncements = () => {
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<'ALL' | 'PUBLISHED' | 'DRAFTS'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [tagsFilter, setTagsFilter] = useState<string[]>([]);
+  const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newAnnouncement, setNewAnnouncement] = useState({
@@ -263,6 +265,24 @@ const AdminAnnouncements = () => {
     fetchTags();
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+
+      if (!target.closest('.tag-dropdown-container')) {
+        setTagDropdownOpen(false);
+      }
+    };
+
+    if (tagDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [tagDropdownOpen]);
+
   const published = announcements.filter(a => a.isPublished === true);
   const drafts = announcements.filter(a => a.isPublished === false);
 
@@ -270,11 +290,16 @@ const AdminAnnouncements = () => {
     filter === 'PUBLISHED' ? published : filter === 'DRAFTS' ? drafts : announcements;
 
   const searchedAnnouncements = filtered.filter(a => {
+    const matchesTags =
+      tagsFilter.length === 0 ||
+      tagsFilter.some(tagName => a.tags?.some(announcementTag => announcementTag.name === tagName));
+
     const q = searchQuery.toLowerCase();
     return (
-      a.title.toLowerCase().includes(q) ||
-      a.content.toLowerCase().includes(q) ||
-      a.tags.some(t => t.name.toLowerCase().includes(q))
+      (a.title.toLowerCase().includes(q) ||
+        a.content.toLowerCase().includes(q) ||
+        a.tags.some(t => t.name.toLowerCase().includes(q))) &&
+      matchesTags
     );
   });
 
@@ -313,6 +338,74 @@ const AdminAnnouncements = () => {
             ))}
           </div>
 
+          <div className='relative tag-dropdown-container'>
+            <button
+              onClick={() => setTagDropdownOpen(!tagDropdownOpen)}
+              className='px-4 py-2 border border-gray-300 rounded-[10px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#194B90] hover:bg-gray-50 flex items-center gap-2'
+            >
+              <span>
+                {tagsFilter.length > 0 ? `Tags (${tagsFilter.length})` : 'Filter by Tags'}
+              </span>
+              <svg
+                className={`w-4 h-4 transition-transform ${tagDropdownOpen ? 'rotate-180' : ''}`}
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M19 9l-7 7-7-7'
+                />
+              </svg>
+            </button>
+
+            {tagDropdownOpen && (
+              <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[200px] max-h-[300px] overflow-y-auto'>
+                {tags.length === 0 ? (
+                  <div className='px-4 py-3 text-sm text-gray-500'>No tags available</div>
+                ) : (
+                  <div className='py-2'>
+                    {tags.map(tag => (
+                      <label
+                        key={tag.id}
+                        className='flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer'
+                      >
+                        <input
+                          type='checkbox'
+                          checked={tagsFilter.includes(tag.name)}
+                          onChange={e => {
+                            if (e.target.checked) {
+                              setTagsFilter([...tagsFilter, tag.name]);
+                            } else {
+                              setTagsFilter(tagsFilter.filter(t => t !== tag.name));
+                            }
+                          }}
+                          className='w-4 h-4 text-[#194B90] border-gray-300 rounded focus:ring-[#194B90]'
+                        />
+                        <span className='ml-2 text-sm text-gray-700'>{tag.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+                {tagsFilter.length > 0 && (
+                  <div className='border-t border-gray-200 px-4 py-2'>
+                    <button
+                      onClick={() => {
+                        setTagsFilter([]);
+                        setTagDropdownOpen(false);
+                      }}
+                      className='text-sm text-[#D54242] hover:text-[#b53a3a] font-medium'
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <button
             onClick={() => setIsCreateModalOpen(true)}
             className='px-6 py-2.5 rounded-[10px] font-medium transition bg-[#D54242] text-white hover:bg-[#b53a3a] cursor-pointer'
@@ -333,7 +426,7 @@ const AdminAnnouncements = () => {
             <div className='relative'>
               <input
                 type='text'
-                placeholder='Search announcements'
+                placeholder='Search announcements...'
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className='w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#194B90]'
