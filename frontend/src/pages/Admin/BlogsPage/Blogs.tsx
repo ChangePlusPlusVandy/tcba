@@ -333,14 +333,24 @@ const AdminBlogs = () => {
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
       return (
-        <svg className='w-4 h-4 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+        <svg
+          className='w-4 h-4 text-gray-400'
+          fill='none'
+          stroke='currentColor'
+          viewBox='0 0 24 24'
+        >
           <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
         </svg>
       );
     }
     if (sortDirection === 'asc') {
       return (
-        <svg className='w-4 h-4 text-[#D54242]' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+        <svg
+          className='w-4 h-4 text-[#D54242]'
+          fill='none'
+          stroke='currentColor'
+          viewBox='0 0 24 24'
+        >
           <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 15l7-7 7 7' />
         </svg>
       );
@@ -924,7 +934,7 @@ const AdminBlogs = () => {
           onConfirm={confirmModal.onConfirm}
           onCancel={() => setConfirmModal(null)}
           isLoading={isDeleting}
-          loadingText="Deleting..."
+          loadingText='Deleting...'
         />
       )}
     </div>

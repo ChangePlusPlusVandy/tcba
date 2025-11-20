@@ -358,14 +358,24 @@ const AdminAnnouncements = () => {
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
       return (
-        <svg className='w-4 h-4 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+        <svg
+          className='w-4 h-4 text-gray-400'
+          fill='none'
+          stroke='currentColor'
+          viewBox='0 0 24 24'
+        >
           <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
         </svg>
       );
     }
     if (sortDirection === 'asc') {
       return (
-        <svg className='w-4 h-4 text-[#D54242]' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+        <svg
+          className='w-4 h-4 text-[#D54242]'
+          fill='none'
+          stroke='currentColor'
+          viewBox='0 0 24 24'
+        >
           <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 15l7-7 7 7' />
         </svg>
       );
@@ -711,9 +721,10 @@ const AdminAnnouncements = () => {
                   />
                 </div>
 
-                {selectedAnnouncement.attachmentUrls && selectedAnnouncement.attachmentUrls.length > 0 && (
-                  <AttachmentList attachmentUrls={selectedAnnouncement.attachmentUrls} />
-                )}
+                {selectedAnnouncement.attachmentUrls &&
+                  selectedAnnouncement.attachmentUrls.length > 0 && (
+                    <AttachmentList attachmentUrls={selectedAnnouncement.attachmentUrls} />
+                  )}
 
                 <div>
                   <h4 className='font-semibold text-base text-gray-800 mb-2'>Tags</h4>
@@ -901,7 +912,9 @@ const AdminAnnouncements = () => {
 
                 <FileUpload
                   attachmentUrls={newAnnouncement.attachmentUrls}
-                  onFilesChange={files => setNewAnnouncement({ ...newAnnouncement, attachmentUrls: files })}
+                  onFilesChange={files =>
+                    setNewAnnouncement({ ...newAnnouncement, attachmentUrls: files })
+                  }
                 />
 
                 <div className='flex gap-3 pt-4'>
@@ -1094,7 +1107,7 @@ const AdminAnnouncements = () => {
           onConfirm={confirmModal.onConfirm}
           onCancel={() => setConfirmModal(null)}
           isLoading={isDeleting}
-          loadingText="Deleting..."
+          loadingText='Deleting...'
         />
       )}
     </div>

@@ -29,7 +29,6 @@ const FileUpload = ({ attachmentUrls, onFilesChange, maxFiles }: FileUploadProps
       const uploadedKeys: string[] = [];
 
       for (const file of Array.from(files)) {
-        
         const token = await getToken();
         const response = await fetch(
           `${API_BASE_URL}/api/files/presigned-upload?fileName=${encodeURIComponent(
@@ -48,7 +47,6 @@ const FileUpload = ({ attachmentUrls, onFilesChange, maxFiles }: FileUploadProps
 
         const { uploadUrl, key } = await response.json();
 
-        
         const uploadResponse = await fetch(uploadUrl, {
           method: 'PUT',
           body: file,
@@ -70,7 +68,7 @@ const FileUpload = ({ attachmentUrls, onFilesChange, maxFiles }: FileUploadProps
       setUploadError('Failed to upload files. Please try again.');
     } finally {
       setUploading(false);
-      
+
       event.target.value = '';
     }
   };
@@ -82,7 +80,7 @@ const FileUpload = ({ attachmentUrls, onFilesChange, maxFiles }: FileUploadProps
   const getFileName = (fileKey: string) => {
     const parts = fileKey.split('/');
     const fileName = parts[parts.length - 1];
-    
+
     return fileName.replace(/^\d+-/, '');
   };
 
@@ -90,7 +88,6 @@ const FileUpload = ({ attachmentUrls, onFilesChange, maxFiles }: FileUploadProps
     <div>
       <label className='block text-sm font-semibold text-gray-700 mb-1'>Attachments</label>
 
-      
       <div className='mb-4'>
         <label className='inline-block cursor-pointer'>
           <input
@@ -121,14 +118,12 @@ const FileUpload = ({ attachmentUrls, onFilesChange, maxFiles }: FileUploadProps
         </p>
       </div>
 
-      
       {uploadError && (
         <div className='text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 mb-2'>
           {uploadError}
         </div>
       )}
 
-      
       {attachmentUrls.length > 0 && (
         <div className='space-y-2'>
           {attachmentUrls.map((fileKey, index) => (

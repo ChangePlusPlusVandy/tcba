@@ -127,7 +127,9 @@ const OrgAnnouncementsPage = () => {
   const filteredAnnouncements = announcements.filter(announcement => {
     const matchesTags =
       tagsFilter.length === 0 ||
-      tagsFilter.some(tagName => announcement.tags?.some(announcementTag => announcementTag.name === tagName));
+      tagsFilter.some(tagName =>
+        announcement.tags?.some(announcementTag => announcementTag.name === tagName)
+      );
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -183,14 +185,24 @@ const OrgAnnouncementsPage = () => {
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
       return (
-        <svg className='w-4 h-4 text-gray-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+        <svg
+          className='w-4 h-4 text-gray-400'
+          fill='none'
+          stroke='currentColor'
+          viewBox='0 0 24 24'
+        >
           <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
         </svg>
       );
     }
     if (sortDirection === 'asc') {
       return (
-        <svg className='w-4 h-4 text-[#D54242]' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+        <svg
+          className='w-4 h-4 text-[#D54242]'
+          fill='none'
+          stroke='currentColor'
+          viewBox='0 0 24 24'
+        >
           <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 15l7-7 7 7' />
         </svg>
       );
@@ -399,9 +411,7 @@ const OrgAnnouncementsPage = () => {
           <input type='checkbox' checked readOnly className='modal-toggle' />
           <div className='modal modal-open'>
             <div className='modal-box max-w-2xl max-h-[80vh] bg-white overflow-y-auto m-8'>
-              <h3 className='font-bold text-xl text-gray-900 mb-3'>
-                {selectedAnnouncement.title}
-              </h3>
+              <h3 className='font-bold text-xl text-gray-900 mb-3'>{selectedAnnouncement.title}</h3>
 
               <div className='space-y-4'>
                 <div>

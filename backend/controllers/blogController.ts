@@ -148,10 +148,26 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
-    const { title, content, author, tags, tagIds, featuredImageUrl, isPublished, publishedDate, attachmentUrls } =
-      req.body;
+    const {
+      title,
+      content,
+      author,
+      tags,
+      tagIds,
+      featuredImageUrl,
+      isPublished,
+      publishedDate,
+      attachmentUrls,
+    } = req.body;
 
-    console.log('createBlog - Received data:', { title, author, tags, tagIds, isPublished, attachmentUrls });
+    console.log('createBlog - Received data:', {
+      title,
+      author,
+      tags,
+      tagIds,
+      isPublished,
+      attachmentUrls,
+    });
 
     if (!title || !content || !author) {
       return res.status(400).json({ error: 'title, content, and author are required' });
