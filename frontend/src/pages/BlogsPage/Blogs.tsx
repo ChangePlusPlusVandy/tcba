@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoFunnelOutline } from 'react-icons/io5';
 import 'react-quill-new/dist/quill.snow.css';
+import S3Image from '../../components/S3Image';
 import { API_BASE_URL } from '../../config/api';
 
 type Tag = {
@@ -26,7 +27,15 @@ type Blog = {
   updatedAt: string;
 };
 
-const BlogsPage = () => {
+interface PageContent {
+  [key: string]: { id: string; value: string; type: string };
+}
+
+interface BlogsPageProps {
+  previewContent?: PageContent;
+}
+
+const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +44,8 @@ const BlogsPage = () => {
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [content, setContent] = useState<PageContent>({});
+  const [pageLoading, setPageLoading] = useState(true);
 
   const filterRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -61,6 +72,27 @@ const BlogsPage = () => {
       console.error('Error fetching tags:', error);
     }
   };
+
+  useEffect(() => {
+    if (previewContent) {
+      setContent(previewContent);
+      setPageLoading(false);
+    } else {
+      const loadContent = async () => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/page-content/blogs`);
+          if (!response.ok) throw new Error('Failed to fetch page content');
+          const data = await response.json();
+          setContent(data);
+        } catch (error) {
+          console.error('Error loading page content:', error);
+        } finally {
+          setPageLoading(false);
+        }
+      };
+      loadContent();
+    }
+  }, [previewContent]);
 
   useEffect(() => {
     getBlogs();
@@ -136,6 +168,16 @@ const BlogsPage = () => {
     return true;
   });
 
+  if (pageLoading) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='text-lg'>Loading...</div>
+      </div>
+    );
+  }
+
+  const headerImageSrc = content['header_image']?.value || '';
+
   return (
     <div className='mt-8'>
       <section>
@@ -143,16 +185,27 @@ const BlogsPage = () => {
           <div className='bg-white px-8 sm:px-12 py-20 flex items-center'>
             <div className='p-8'>
               <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
-                Blogs
+                {content['header_title']?.value || 'Blogs'}
               </h2>
-              <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
-                Read the latest insights, stories, and updates from the Tennessee Coalition for
-                Better Aging. Our blog features expert perspectives on senior wellness, policy
-                updates, and community highlights.
-              </p>
+              <div
+                className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'
+                dangerouslySetInnerHTML={{
+                  __html:
+                    content['header_description']?.value ||
+                    'Read the latest insights, stories, and updates from the Tennessee Coalition for Better Aging. Our blog features expert perspectives on senior wellness, policy updates, and community highlights.',
+                }}
+              />
             </div>
           </div>
-          <div className='h-[400px] bg-slate-200 mr-12 rounded-lg' />
+          <div className='h-[400px] bg-slate-200 mr-12 rounded-lg overflow-hidden'>
+            {headerImageSrc && (
+              <S3Image
+                src={headerImageSrc}
+                alt='Blogs Header'
+                className='w-full h-full object-cover'
+              />
+            )}
+          </div>
         </div>
       </section>
 

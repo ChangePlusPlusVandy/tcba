@@ -35,6 +35,8 @@ import AboutPageEdit from '../pages/Admin/PageEditPages/AboutPage/AboutPageEdit'
 import RegisterPageEdit from '../pages/Admin/PageEditPages/RegisterPage/RegisterPageEdit';
 import ContactPageEdit from '../pages/Admin/PageEditPages/ContactPage/ContactPageEdit';
 import EmailSignupPageEdit from '../pages/Admin/PageEditPages/EmailSignupPage/EmailSignupPageEdit';
+import AnnouncementsPageEdit from '../pages/Admin/PageEditPages/AnnouncementsPage/AnnouncementsPageEdit';
+import BlogsPageEdit from '../pages/Admin/PageEditPages/BlogsPage/BlogsPageEdit';
 import CustomEmail from '../pages/Admin/CustomEmailPage/CustomEmail';
 import AdminMessages from '../pages/Admin/MessagesPage/Messages';
 import OrganizationMessages from '../pages/OrganizationView/MessagesPage/Messages';
@@ -269,6 +271,22 @@ const AppRoutes = () => {
         element={
           <AdminRoute>
             <EmailSignupPageEdit />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/page-edit/announcements'
+        element={
+          <AdminRoute>
+            <AnnouncementsPageEdit />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/page-edit/blogs'
+        element={
+          <AdminRoute>
+            <BlogsPageEdit />
           </AdminRoute>
         }
       />

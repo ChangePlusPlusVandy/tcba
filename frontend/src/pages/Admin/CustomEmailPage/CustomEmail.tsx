@@ -62,7 +62,7 @@ const CustomEmail = () => {
         const fileType = file.type;
 
         const presignedResponse = await fetch(
-          `${API_BASE_URL}/api/uploads/presigned-upload?fileName=${encodeURIComponent(fileName)}&fileType=${encodeURIComponent(fileType)}`,
+          `${API_BASE_URL}/api/files/presigned-upload?fileName=${encodeURIComponent(fileName)}&fileType=${encodeURIComponent(fileType)}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

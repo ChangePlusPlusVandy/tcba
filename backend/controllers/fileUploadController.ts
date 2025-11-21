@@ -14,6 +14,9 @@ export const getPresignedUploadUrl = async (req: AuthenticatedRequest, res: Resp
     if (!req.user) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
+    if (!isAdmin(req.user.role)) {
+      return res.status(403).json({ error: 'Admin access required to upload files' });
+    }
     const { fileName, fileType } = req.query;
     if (!fileName || typeof fileName !== 'string') {
       return res.status(400).json({ error: 'Valid file name is required' });

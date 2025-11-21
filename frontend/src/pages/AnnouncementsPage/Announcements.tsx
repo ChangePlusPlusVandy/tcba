@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoFunnelOutline } from 'react-icons/io5';
 import 'react-quill-new/dist/quill.snow.css';
+import S3Image from '../../components/S3Image';
 import { API_BASE_URL } from '../../config/api';
 
 type Announcement = {
@@ -26,7 +27,15 @@ type Tag = {
   updatedAt: string;
 };
 
-const AnnouncementsPage = () => {
+interface PageContent {
+  [key: string]: { id: string; value: string; type: string };
+}
+
+interface AnnouncementsPageProps {
+  previewContent?: PageContent;
+}
+
+const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
   // ALL ANNOUNCEMENTS AND TAGS STATES
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
@@ -39,6 +48,9 @@ const AnnouncementsPage = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const filterRef = useRef<HTMLDivElement>(null);
+  // PAGE CONTENT STATE
+  const [content, setContent] = useState<PageContent>({});
+  const [pageLoading, setPageLoading] = useState(true);
 
   const navigate = useNavigate();
 
@@ -71,6 +83,27 @@ const AnnouncementsPage = () => {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (previewContent) {
+      setContent(previewContent);
+      setPageLoading(false);
+    } else {
+      const loadContent = async () => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/page-content/announcements`);
+          if (!response.ok) throw new Error('Failed to fetch page content');
+          const data = await response.json();
+          setContent(data);
+        } catch (error) {
+          console.error('Error loading page content:', error);
+        } finally {
+          setPageLoading(false);
+        }
+      };
+      loadContent();
+    }
+  }, [previewContent]);
 
   useEffect(() => {
     getAnnouncements();
@@ -143,6 +176,16 @@ const AnnouncementsPage = () => {
     return true;
   });
 
+  if (pageLoading) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='text-lg'>Loading...</div>
+      </div>
+    );
+  }
+
+  const headerImageSrc = content['header_image']?.value || '';
+
   return (
     <div className='mt-8'>
       <section>
@@ -150,16 +193,27 @@ const AnnouncementsPage = () => {
           <div className='bg-white px-8 sm:px-12 py-20 flex items-center'>
             <div className='p-8'>
               <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
-                Announcements
+                {content['header_title']?.value || 'Announcements'}
               </h2>
-              <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
-                The Tennessee Coalition for Better Aging exists to promote the general welfare of
-                older Tennesseans and their families through partnerships that mobilize resources to
-                educate and advocate for important policies and programs.
-              </p>
+              <div
+                className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'
+                dangerouslySetInnerHTML={{
+                  __html:
+                    content['header_description']?.value ||
+                    'The Tennessee Coalition for Better Aging exists to promote the general welfare of older Tennesseans and their families through partnerships that mobilize resources to educate and advocate for important policies and programs.',
+                }}
+              />
             </div>
           </div>
-          <div className='h-[400px] bg-slate-200 mr-12 rounded-lg' />
+          <div className='h-[400px] bg-slate-200 mr-12 rounded-lg overflow-hidden'>
+            {headerImageSrc && (
+              <S3Image
+                src={headerImageSrc}
+                alt='Announcements Header'
+                className='w-full h-full object-cover'
+              />
+            )}
+          </div>
         </div>
       </section>
       <section className='mt-8'>
