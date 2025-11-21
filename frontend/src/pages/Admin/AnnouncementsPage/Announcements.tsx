@@ -249,15 +249,6 @@ const AdminAnnouncements = () => {
     });
   };
 
-  const generateSlug = (title: string): string => {
-    const baseSlug = title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
-    const timestamp = Date.now().toString(36);
-    return `${baseSlug}-${timestamp}`;
-  };
-
   useEffect(() => {
     fetchAnnouncement();
     fetchTags();
@@ -646,7 +637,6 @@ const AdminAnnouncements = () => {
                       setNewAnnouncement({
                         ...newAnnouncement,
                         title,
-                        slug: generateSlug(title),
                       });
                     }}
                     className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
