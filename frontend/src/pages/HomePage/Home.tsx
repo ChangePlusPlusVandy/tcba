@@ -8,13 +8,14 @@ import { MdHealthAndSafety, MdFamilyRestroom } from 'react-icons/md';
 import S3Image from '../../components/S3Image';
 import { API_BASE_URL } from '../../config/api';
 
-type Announcement = {
+type NotificationType = 'ANNOUNCEMENT' | 'BLOG' | 'ALERT' | 'SURVEY';
+
+type NotificationBanner = {
   id: string;
-  slug: string;
+  type: NotificationType;
   title: string;
-  content: string;
+  slug?: string;
   publishedDate?: string | null;
-  isPublished?: boolean;
 };
 
 interface PageContent {
@@ -26,8 +27,8 @@ interface HomePageProps {
 }
 
 const HomePage = ({ previewContent }: HomePageProps = {}) => {
-  const [announcement, setAnnouncement] = useState<Announcement | null>(null);
-  const [isAnnouncementClosed, setIsAnnouncementClosed] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationBanner[]>([]);
+  const [dismissedIds, setDismissedIds] = useState<string[]>([]);
   const [content, setContent] = useState<PageContent>({});
   const [loading, setLoading] = useState(true);
 
@@ -57,32 +58,99 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
       }
     };
 
-    const loadAnnouncements = async () => {
+    const loadNotifications = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/announcements`);
-        if (!response.ok) throw new Error(`Failed to fetch announcements: ${response.statusText}`);
-        const data: Announcement[] = await response.json();
-        const publishedFirst =
-          data.find(item => item.isPublished) ?? (data.length ? data[0] : null);
-        if (isMounted) {
-          setAnnouncement(publishedFirst ?? null);
+        const allNotifications: NotificationBanner[] = [];
 
-          if (publishedFirst) {
-            const closedAnnouncements = JSON.parse(
-              localStorage.getItem('closedAnnouncements') || '[]'
-            );
-            setIsAnnouncementClosed(closedAnnouncements.includes(publishedFirst.id));
-          }
+        const announcementsRes = await fetch(`${API_BASE_URL}/api/announcements`);
+        if (announcementsRes.ok) {
+          const announcements = await announcementsRes.json();
+          announcements
+            .filter((a: any) => a.isPublished)
+            .slice(0, 3)
+            .forEach((a: any) => {
+              allNotifications.push({
+                id: `announcement-${a.id}`,
+                type: 'ANNOUNCEMENT',
+                title: a.title,
+                slug: a.slug,
+                publishedDate: a.publishedDate,
+              });
+            });
+        }
+
+        const blogsRes = await fetch(`${API_BASE_URL}/api/blogs`);
+        if (blogsRes.ok) {
+          const blogs = await blogsRes.json();
+          blogs
+            .filter((b: any) => b.isPublished)
+            .slice(0, 2)
+            .forEach((b: any) => {
+              allNotifications.push({
+                id: `blog-${b.id}`,
+                type: 'BLOG',
+                title: b.title,
+                slug: b.slug,
+                publishedDate: b.publishedDate,
+              });
+            });
+        }
+
+        // Load alerts
+        const alertsRes = await fetch(`${API_BASE_URL}/api/alerts`);
+        if (alertsRes.ok) {
+          const alerts = await alertsRes.json();
+          alerts
+            .filter((a: any) => a.isPublished)
+            .slice(0, 2)
+            .forEach((a: any) => {
+              allNotifications.push({
+                id: `alert-${a.id}`,
+                type: 'ALERT',
+                title: a.title,
+                publishedDate: a.publishedDate,
+              });
+            });
+        }
+
+        const surveysRes = await fetch(`${API_BASE_URL}/api/surveys`);
+        if (surveysRes.ok) {
+          const surveys = await surveysRes.json();
+          surveys
+            .filter((s: any) => s.isPublished)
+            .slice(0, 2)
+            .forEach((s: any) => {
+              allNotifications.push({
+                id: `survey-${s.id}`,
+                type: 'SURVEY',
+                title: s.title,
+                publishedDate: s.createdAt,
+              });
+            });
+        }
+
+        allNotifications.sort((a, b) => {
+          const dateA = a.publishedDate ? new Date(a.publishedDate).getTime() : 0;
+          const dateB = b.publishedDate ? new Date(b.publishedDate).getTime() : 0;
+          return dateB - dateA;
+        });
+
+        if (isMounted) {
+          setNotifications(allNotifications);
+
+          const closedNotifications = JSON.parse(
+            localStorage.getItem('closedNotifications') || '[]'
+          );
+          setDismissedIds(closedNotifications);
         }
       } catch (error) {
-        console.error('Error loading announcements banner:', error);
-        if (isMounted) setAnnouncement(null);
+        console.error('Error loading notifications:', error);
       }
     };
 
     loadContent();
     if (!previewContent) {
-      loadAnnouncements();
+      loadNotifications();
     }
 
     return () => {
@@ -90,14 +158,67 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
     };
   }, [previewContent]);
 
-  const handleCloseAnnouncement = () => {
-    if (announcement) {
-      const closedAnnouncements = JSON.parse(localStorage.getItem('closedAnnouncements') || '[]');
-      if (!closedAnnouncements.includes(announcement.id)) {
-        closedAnnouncements.push(announcement.id);
-        localStorage.setItem('closedAnnouncements', JSON.stringify(closedAnnouncements));
-      }
-      setIsAnnouncementClosed(true);
+  const handleDismissNotification = (notificationId: string) => {
+    const updatedDismissed = [...dismissedIds, notificationId];
+    setDismissedIds(updatedDismissed);
+    localStorage.setItem('closedNotifications', JSON.stringify(updatedDismissed));
+  };
+
+  const visibleNotifications = notifications.filter(n => !dismissedIds.includes(n.id));
+
+  const getNotificationRoute = (notification: NotificationBanner) => {
+    switch (notification.type) {
+      case 'ANNOUNCEMENT':
+        return `/announcement/${notification.slug}`;
+      case 'BLOG':
+        return `/blog/${notification.slug}`;
+      case 'ALERT':
+        return '/alerts';
+      case 'SURVEY':
+        return '/surveys';
+      default:
+        return '/';
+    }
+  };
+
+  const getNotificationStyles = (type: NotificationType) => {
+    switch (type) {
+      case 'ANNOUNCEMENT':
+        return {
+          bg: 'bg-rose-100/90',
+          border: 'border-rose-200/80',
+          label: 'text-rose-900',
+          title: 'text-rose-950',
+          date: 'text-rose-900/70',
+          closeBtn: 'text-rose-900 hover:text-rose-950',
+        };
+      case 'BLOG':
+        return {
+          bg: 'bg-blue-100/90',
+          border: 'border-blue-200/80',
+          label: 'text-blue-900',
+          title: 'text-blue-950',
+          date: 'text-blue-900/70',
+          closeBtn: 'text-blue-900 hover:text-blue-950',
+        };
+      case 'ALERT':
+        return {
+          bg: 'bg-amber-100/90',
+          border: 'border-amber-200/80',
+          label: 'text-amber-900',
+          title: 'text-amber-950',
+          date: 'text-amber-900/70',
+          closeBtn: 'text-amber-900 hover:text-amber-950',
+        };
+      case 'SURVEY':
+        return {
+          bg: 'bg-emerald-100/90',
+          border: 'border-emerald-200/80',
+          label: 'text-emerald-900',
+          title: 'text-emerald-950',
+          date: 'text-emerald-900/70',
+          closeBtn: 'text-emerald-900 hover:text-emerald-950',
+        };
     }
   };
 
@@ -122,50 +243,113 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
         />
         <div className='absolute inset-0 bg-slate-950/60' />
 
-        {announcement && !isAnnouncementClosed && (
+        {visibleNotifications.length > 0 && (
           <div className='absolute top-1 left-0 right-0 z-10 px-2'>
-            <div className='bg-rose-100/90 border border-rose-200/80 shadow-lg rounded-3xl px-6 sm:px-10 py-3 relative backdrop-blur-sm'>
-              <div className='max-w-7xl mx-auto'>
-                <button
-                  onClick={handleCloseAnnouncement}
-                  className='absolute top-3 right-6 sm:right-10 text-rose-900 hover:text-rose-950 transition z-10'
-                  aria-label='Close announcement'
-                >
-                  <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M6 18L18 6M6 6l12 12'
-                    />
-                  </svg>
-                </button>
-                <Link
-                  to={`/announcement/${announcement.slug}`}
-                  onClick={handleCloseAnnouncement}
-                  className='absolute bottom-3 right-6 sm:right-10 text-white px-4 py-2 rounded-full text-sm font-semibold shadow transition whitespace-nowrap'
-                  style={{ backgroundColor: '#D54242' }}
-                >
-                  Read More
-                </Link>
-                <div className='pr-32'>
-                  <div className='mb-1'>
-                    <p className='text-sm font-semibold uppercase tracking-wide text-rose-900'>
-                      Announcements
-                    </p>
-                    {announcement.publishedDate && (
-                      <p className='text-xs text-rose-900/70'>
-                        {new Date(announcement.publishedDate).toLocaleDateString(undefined, {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
-                      </p>
-                    )}
+            <div className='relative'>
+              {visibleNotifications.slice(1, 3).map((notification, index) => {
+                const styles = getNotificationStyles(notification.type);
+                const offset = (index + 1) * 6;
+                const scale = 1 - (index + 1) * 0.02;
+                return (
+                  <div
+                    key={notification.id}
+                    className={`absolute left-0 right-0 ${styles.bg} border ${styles.border} rounded-3xl px-6 sm:px-10 py-3 backdrop-blur-sm`}
+                    style={{
+                      top: `${offset}px`,
+                      transform: `scale(${scale})`,
+                      transformOrigin: 'top center',
+                      zIndex: 10 - index - 1,
+                      opacity: 0.7 - index * 0.2,
+                    }}
+                  >
+                    <div className='max-w-7xl mx-auto opacity-0'>
+                      <div className='pr-32'>
+                        <div className='mb-1'>
+                          <p className='text-sm font-semibold uppercase tracking-wide'>
+                            {notification.type}
+                          </p>
+                        </div>
+                        <h2 className='text-lg font-semibold'>{notification.title}</h2>
+                      </div>
+                    </div>
                   </div>
-                  <h2 className='text-lg font-semibold text-rose-950'>{announcement.title}</h2>
-                </div>
-              </div>
+                );
+              })}
+
+              {(() => {
+                const notification = visibleNotifications[0];
+                const styles = getNotificationStyles(notification.type);
+                return (
+                  <div
+                    className={`${styles.bg} border ${styles.border} shadow-lg rounded-3xl px-6 sm:px-10 py-3 relative backdrop-blur-sm transition-all duration-300`}
+                    style={{ zIndex: 10 }}
+                  >
+                    <div className='max-w-7xl mx-auto'>
+                      <button
+                        onClick={() => handleDismissNotification(notification.id)}
+                        className={`absolute top-3 right-6 sm:right-10 ${styles.closeBtn} transition z-10`}
+                        aria-label='Close notification'
+                      >
+                        <svg
+                          className='w-5 h-5'
+                          fill='none'
+                          stroke='currentColor'
+                          viewBox='0 0 24 24'
+                        >
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth={2}
+                            d='M6 18L18 6M6 6l12 12'
+                          />
+                        </svg>
+                      </button>
+                      <Link
+                        to={getNotificationRoute(notification)}
+                        onClick={() => handleDismissNotification(notification.id)}
+                        className='absolute bottom-3 right-6 sm:right-10 text-white px-4 py-2 rounded-full text-sm font-semibold shadow transition whitespace-nowrap'
+                        style={{ backgroundColor: '#D54242' }}
+                      >
+                        {notification.type === 'SURVEY' ? 'Take Survey' : 'Read More'}
+                      </Link>
+                      <div className='pr-32'>
+                        <div className='mb-1 flex items-center gap-3'>
+                          <p
+                            className={`text-sm font-semibold uppercase tracking-wide ${styles.label}`}
+                          >
+                            {notification.type === 'ANNOUNCEMENT'
+                              ? 'Announcement'
+                              : notification.type === 'BLOG'
+                                ? 'New Blog'
+                                : notification.type === 'ALERT'
+                                  ? 'Alert'
+                                  : 'Survey'}
+                          </p>
+                          {visibleNotifications.length > 1 && (
+                            <span
+                              className={`text-xs ${styles.date} bg-white/50 px-2 py-0.5 rounded-full`}
+                            >
+                              +{visibleNotifications.length - 1} more
+                            </span>
+                          )}
+                        </div>
+                        {notification.publishedDate && (
+                          <p className={`text-xs ${styles.date}`}>
+                            {new Date(notification.publishedDate).toLocaleDateString(undefined, {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            })}
+                          </p>
+                        )}
+                        <h2 className={`text-lg font-semibold ${styles.title}`}>
+                          {notification.title}
+                        </h2>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}

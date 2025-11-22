@@ -148,10 +148,26 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
-    const { title, content, author, tags, tagIds, featuredImageUrl, isPublished, publishedDate } =
-      req.body;
+    const {
+      title,
+      content,
+      author,
+      tags,
+      tagIds,
+      featuredImageUrl,
+      isPublished,
+      publishedDate,
+      attachmentUrls,
+    } = req.body;
 
-    console.log('createBlog - Received data:', { title, author, tags, tagIds, isPublished });
+    console.log('createBlog - Received data:', {
+      title,
+      author,
+      tags,
+      tagIds,
+      isPublished,
+      attachmentUrls,
+    });
 
     if (!title || !content || !author) {
       return res.status(400).json({ error: 'title, content, and author are required' });
@@ -166,6 +182,7 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
         featuredImageUrl: featuredImageUrl || null,
         isPublished: isPublished || false,
         publishedDate: isPublished ? publishedDate || new Date() : null,
+        attachmentUrls: attachmentUrls || [],
       },
     });
 
@@ -214,13 +231,14 @@ export const updateBlog = async (req: AuthenticatedRequest, res: Response) => {
     });
     if (!blogToUpdate) return res.status(404).json({ error: 'Blog not found' });
 
-    const { title, content, author, tags, tagIds, featuredImageUrl } = req.body;
+    const { title, content, author, tags, tagIds, featuredImageUrl, attachmentUrls } = req.body;
 
     const updateData: any = {
       ...(title && { title }),
       ...(content && { content }),
       ...(author && { author }),
       ...(featuredImageUrl !== undefined && { featuredImageUrl }),
+      ...(attachmentUrls !== undefined && { attachmentUrls }),
     };
 
     // Handle tags update if provided (accept both 'tags' and 'tagIds')

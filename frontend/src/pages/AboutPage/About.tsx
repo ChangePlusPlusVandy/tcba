@@ -4,6 +4,7 @@ import tcbaDDABill from '../../assets/TCBADDABill.jpeg';
 import { FaHandHoldingHeart, FaUserNurse, FaHome } from 'react-icons/fa';
 import { HiUserGroup } from 'react-icons/hi';
 import GoogleMap from '../../components/GoogleMap';
+import S3Image from '../../components/S3Image';
 
 interface PageContent {
   [key: string]: { id: string; value: string; type: string };
@@ -300,7 +301,12 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
             </div>
           </div>
           <div className='bg-slate-300 h-[400px] mr-12 overflow-hidden rounded-lg relative group'>
-            <img src={missionImageSrc} alt='TCBA DDA Bill' className='w-full h-full object-cover' />
+            <S3Image
+              src={missionImageSrc}
+              fallbackSrc={tcbaDDABill}
+              alt='TCBA DDA Bill'
+              className='w-full h-full object-cover'
+            />
             <div className='absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-6'>
               <div
                 className='text-white text-sm leading-relaxed'

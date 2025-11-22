@@ -128,8 +128,10 @@ const AdminSidebar = () => {
   ];
 
   const pageEditItems = [
-    { name: 'Home Page', path: '/admin/page-edit/home' },
-    { name: 'About Page', path: '/admin/page-edit/about' },
+    { name: 'Home', path: '/admin/page-edit/home' },
+    { name: 'About', path: '/admin/page-edit/about' },
+    { name: 'Announcements', path: '/admin/page-edit/announcements' },
+    { name: 'Blogs', path: '/admin/page-edit/blogs' },
     { name: 'Get Involved', path: '/admin/page-edit/register' },
     { name: 'Contact Us', path: '/admin/page-edit/contact' },
     { name: 'Email Signup', path: '/admin/page-edit/signup' },

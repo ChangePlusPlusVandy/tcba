@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Toast from '../../components/Toast';
 import getInvolvedImage from '../../assets/getInvolved.png';
+import S3Image from '../../components/S3Image';
 import { API_BASE_URL } from '../../config/api';
 
 interface PageContent {
@@ -226,8 +227,9 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='h-[400px] bg-slate-200 mr-12 overflow-hidden rounded-lg'>
-            <img
+            <S3Image
               src={heroImageSrc}
+              fallbackSrc={getInvolvedImage}
               alt='Get Involved with TCBA'
               className='w-full h-full object-cover'
             />

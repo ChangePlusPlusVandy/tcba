@@ -6,6 +6,8 @@ import 'react-quill-new/dist/quill.snow.css';
 import AdminSidebar from '../../../components/AdminSidebar';
 import Toast from '../../../components/Toast';
 import ConfirmModal from '../../../components/ConfirmModal';
+import FileUpload from '../../../components/FileUpload';
+import AttachmentList from '../../../components/AttachmentList';
 import { API_BASE_URL } from '../../../config/api';
 
 type Tag = {
@@ -27,6 +29,7 @@ type Blog = {
   publishedDate?: string;
   createdAt: string;
   updatedAt: string;
+  attachmentUrls?: string[];
 };
 
 type Filter = 'ALL' | 'PUBLISHED' | 'DRAFTS';
@@ -41,6 +44,13 @@ const AdminBlogs = () => {
   const [selectedBlogIds, setSelectedBlogIds] = useState<string[]>([]);
   const [filter, setFilter] = useState<Filter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [tagsFilter, setTagsFilter] = useState<string[]>([]);
+  const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
+
+  type SortField = 'title' | 'author' | 'publishedDate' | 'tags' | 'createdAt';
+  type SortDirection = 'asc' | 'desc';
+  const [sortField, setSortField] = useState<SortField>('createdAt');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -52,7 +62,11 @@ const AdminBlogs = () => {
     author: '',
     tagIds: [] as string[],
     isPublished: false,
+    attachmentUrls: [] as string[],
   });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [toast, setToast] = useState<{
     message: string;
@@ -124,6 +138,24 @@ const AdminBlogs = () => {
     fetchTags();
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+
+      if (!target.closest('.tag-dropdown-container')) {
+        setTagDropdownOpen(false);
+      }
+    };
+
+    if (tagDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [tagDropdownOpen]);
+
   const handleCreateBlog = async (publish: boolean) => {
     if (!newBlog.title.trim()) {
       setToast({ message: 'Title is required', type: 'error' });
@@ -139,6 +171,7 @@ const AdminBlogs = () => {
     }
 
     try {
+      setIsSubmitting(true);
       setError('');
       const blogData = {
         ...newBlog,
@@ -161,12 +194,15 @@ const AdminBlogs = () => {
         author: '',
         tagIds: [],
         isPublished: false,
+        attachmentUrls: [],
       });
 
       const successMessage = publish ? 'Blog created successfully' : 'Blog saved successfully';
       setToast({ message: successMessage, type: 'success' });
     } catch (err: any) {
       setToast({ message: err.message || 'Failed to create blog', type: 'error' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -180,6 +216,7 @@ const AdminBlogs = () => {
       confirmText: 'Delete',
       onConfirm: async () => {
         try {
+          setIsDeleting(true);
           setError('');
           await Promise.all(
             selectedBlogIds.map(id =>
@@ -198,6 +235,7 @@ const AdminBlogs = () => {
         } catch (err: any) {
           setToast({ message: err.message || 'Failed to delete blogs', type: 'error' });
         } finally {
+          setIsDeleting(false);
           setConfirmModal(null);
         }
       },
@@ -206,7 +244,7 @@ const AdminBlogs = () => {
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedBlogIds(filteredBlogs.map(b => b.id));
+      setSelectedBlogIds(sortedBlogs.map(b => b.id));
     } else {
       setSelectedBlogIds([]);
     }
@@ -232,17 +270,97 @@ const AdminBlogs = () => {
     if (filter === 'PUBLISHED' && !blog.isPublished) return false;
     if (filter === 'DRAFTS' && blog.isPublished) return false;
 
+    const matchesTags =
+      tagsFilter.length === 0 ||
+      tagsFilter.some(tagName => blog.tags?.some(blogTag => blogTag.name === tagName));
+
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return (
-        blog.title.toLowerCase().includes(query) ||
-        blog.content.toLowerCase().includes(query) ||
-        blog.author.toLowerCase().includes(query)
+        (blog.title.toLowerCase().includes(query) ||
+          blog.content.toLowerCase().includes(query) ||
+          blog.author.toLowerCase().includes(query)) &&
+        matchesTags
       );
     }
 
-    return true;
+    return matchesTags;
   });
+
+  const sortedBlogs = [...filteredBlogs].sort((a, b) => {
+    let aValue: any;
+    let bValue: any;
+
+    switch (sortField) {
+      case 'title':
+        aValue = a.title.toLowerCase();
+        bValue = b.title.toLowerCase();
+        break;
+      case 'author':
+        aValue = a.author.toLowerCase();
+        bValue = b.author.toLowerCase();
+        break;
+      case 'publishedDate':
+        aValue = a.publishedDate ? new Date(a.publishedDate).getTime() : 0;
+        bValue = b.publishedDate ? new Date(b.publishedDate).getTime() : 0;
+        break;
+      case 'tags':
+        aValue = a.tags?.length || 0;
+        bValue = b.tags?.length || 0;
+        break;
+      case 'createdAt':
+        aValue = new Date(a.createdAt).getTime();
+        bValue = new Date(b.createdAt).getTime();
+        break;
+      default:
+        return 0;
+    }
+
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return (
+        <svg
+          className='w-4 h-4 text-gray-400'
+          fill='none'
+          stroke='currentColor'
+          viewBox='0 0 24 24'
+        >
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+        </svg>
+      );
+    }
+    if (sortDirection === 'asc') {
+      return (
+        <svg
+          className='w-4 h-4 text-[#D54242]'
+          fill='none'
+          stroke='currentColor'
+          viewBox='0 0 24 24'
+        >
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 15l7-7 7 7' />
+        </svg>
+      );
+    }
+    return (
+      <svg className='w-4 h-4 text-[#D54242]' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+      </svg>
+    );
+  };
 
   const modules = {
     toolbar: [
@@ -259,7 +377,11 @@ const AdminBlogs = () => {
       <AdminSidebar />
 
       <div className='flex-1 p-8'>
-        <h1 className='text-3xl font-bold text-gray-800 mb-6'>All Blogs ({blogs.length})</h1>
+        <h1 className='text-3xl font-bold text-gray-800 mb-6'>
+          {filter === 'ALL' && `All Blogs (${blogs.length})`}
+          {filter === 'PUBLISHED' && `Published Blogs (${filteredBlogs.length})`}
+          {filter === 'DRAFTS' && `Draft Blogs (${filteredBlogs.length})`}
+        </h1>
 
         <div className='flex items-center gap-4 mb-6'>
           <div className='flex gap-2'>
@@ -295,6 +417,74 @@ const AdminBlogs = () => {
             </button>
           </div>
 
+          <div className='relative tag-dropdown-container'>
+            <button
+              onClick={() => setTagDropdownOpen(!tagDropdownOpen)}
+              className='px-4 py-2 border border-gray-300 rounded-[10px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#194B90] hover:bg-gray-50 flex items-center gap-2'
+            >
+              <span>
+                {tagsFilter.length > 0 ? `Tags (${tagsFilter.length})` : 'Filter by Tags'}
+              </span>
+              <svg
+                className={`w-4 h-4 transition-transform ${tagDropdownOpen ? 'rotate-180' : ''}`}
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M19 9l-7 7-7-7'
+                />
+              </svg>
+            </button>
+
+            {tagDropdownOpen && (
+              <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[200px] max-h-[300px] overflow-y-auto'>
+                {allTags.length === 0 ? (
+                  <div className='px-4 py-3 text-sm text-gray-500'>No tags available</div>
+                ) : (
+                  <div className='py-2'>
+                    {allTags.map(tag => (
+                      <label
+                        key={tag.id}
+                        className='flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer'
+                      >
+                        <input
+                          type='checkbox'
+                          checked={tagsFilter.includes(tag.name)}
+                          onChange={e => {
+                            if (e.target.checked) {
+                              setTagsFilter([...tagsFilter, tag.name]);
+                            } else {
+                              setTagsFilter(tagsFilter.filter(t => t !== tag.name));
+                            }
+                          }}
+                          className='w-4 h-4 text-[#194B90] border-gray-300 rounded focus:ring-[#194B90]'
+                        />
+                        <span className='ml-2 text-sm text-gray-700'>{tag.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+                {tagsFilter.length > 0 && (
+                  <div className='border-t border-gray-200 px-4 py-2'>
+                    <button
+                      onClick={() => {
+                        setTagsFilter([]);
+                        setTagDropdownOpen(false);
+                      }}
+                      className='text-sm text-[#D54242] hover:text-[#b53a3a] font-medium'
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <button
             onClick={() => setIsCreateModalOpen(true)}
             className='px-6 py-2.5 rounded-[10px] font-medium transition bg-[#D54242] text-white hover:bg-[#b53a3a] cursor-pointer'
@@ -315,7 +505,7 @@ const AdminBlogs = () => {
             <div className='relative'>
               <input
                 type='text'
-                placeholder='Search blogs'
+                placeholder='Search blogs...'
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className='w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#194B90]'
@@ -360,27 +550,55 @@ const AdminBlogs = () => {
                     <input
                       type='checkbox'
                       checked={
-                        filteredBlogs.length > 0 && selectedBlogIds.length === filteredBlogs.length
+                        sortedBlogs.length > 0 && selectedBlogIds.length === sortedBlogs.length
                       }
                       onChange={handleSelectAll}
                       className='w-4 h-4'
                     />
                   </th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>Title</th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
-                    Author
+                  <th
+                    className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('title')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Title
+                      <SortIcon field='title' />
+                    </div>
+                  </th>
+                  <th
+                    className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('author')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Author
+                      <SortIcon field='author' />
+                    </div>
                   </th>
                   <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
                     Status
                   </th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>Tags</th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
-                    Published
+                  <th
+                    className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('tags')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Tags
+                      <SortIcon field='tags' />
+                    </div>
+                  </th>
+                  <th
+                    className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('publishedDate')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Published
+                      <SortIcon field='publishedDate' />
+                    </div>
                   </th>
                 </tr>
               </thead>
               <tbody className='divide-y divide-gray-200'>
-                {filteredBlogs.map(blog => (
+                {sortedBlogs.map(blog => (
                   <tr key={blog.id} className='hover:bg-gray-50'>
                     <td className='px-6 py-4' onClick={e => e.stopPropagation()}>
                       <input
@@ -411,20 +629,26 @@ const AdminBlogs = () => {
                       </span>
                     </td>
                     <td className='px-6 py-4'>
-                      <div className='flex gap-2 flex-wrap'>
-                        {blog.tags.map(tag => (
-                          <span
-                            key={tag.id}
-                            className='px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
-                          >
-                            {tag.name}
-                          </span>
-                        ))}
-                      </div>
+                      {blog.tags && blog.tags.length > 0 ? (
+                        <div className='flex flex-wrap gap-1'>
+                          {blog.tags.map(tag => (
+                            <span
+                              key={tag.id}
+                              className='px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
+                            >
+                              {tag.name}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className='text-sm text-gray-400'>-</span>
+                      )}
                     </td>
                     <td className='px-6 py-4'>
                       <span className='text-sm text-gray-600'>
-                        {new Date(blog.createdAt).toLocaleDateString()}
+                        {blog.publishedDate
+                          ? new Date(blog.publishedDate).toLocaleDateString()
+                          : '-'}
                       </span>
                     </td>
                   </tr>
@@ -534,20 +758,27 @@ const AdminBlogs = () => {
                   )}
                 </div>
 
+                <FileUpload
+                  attachmentUrls={newBlog.attachmentUrls}
+                  onFilesChange={files => setNewBlog({ ...newBlog, attachmentUrls: files })}
+                />
+
                 <div className='flex gap-3 pt-4'>
                   <button
                     type='button'
                     onClick={() => handleCreateBlog(true)}
-                    className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-lg font-medium'
+                    disabled={isSubmitting}
+                    className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] disabled:bg-[#e88888] text-white rounded-lg font-medium disabled:cursor-not-allowed'
                   >
-                    Publish
+                    {isSubmitting ? 'Publishing...' : 'Publish'}
                   </button>
                   <button
                     type='button'
                     onClick={() => handleCreateBlog(false)}
-                    className='px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium'
+                    disabled={isSubmitting}
+                    className='px-6 py-2.5 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white rounded-lg font-medium disabled:cursor-not-allowed'
                   >
-                    Save to Drafts
+                    {isSubmitting ? 'Drafting...' : 'Save to Drafts'}
                   </button>
                   <button
                     type='button'
@@ -559,6 +790,7 @@ const AdminBlogs = () => {
                         author: '',
                         tagIds: [],
                         isPublished: false,
+                        attachmentUrls: [],
                       });
                     }}
                     className='px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium'
@@ -568,6 +800,20 @@ const AdminBlogs = () => {
                 </div>
               </div>
             </div>
+            <div
+              className='modal-backdrop bg-black/30'
+              onClick={() => {
+                setIsCreateModalOpen(false);
+                setNewBlog({
+                  title: '',
+                  content: '',
+                  author: '',
+                  tagIds: [],
+                  isPublished: false,
+                  attachmentUrls: [],
+                });
+              }}
+            ></div>
           </div>
         </>
       )}
@@ -612,6 +858,10 @@ const AdminBlogs = () => {
                     dangerouslySetInnerHTML={{ __html: selectedBlog.content }}
                   />
                 </div>
+
+                {selectedBlog.attachmentUrls && selectedBlog.attachmentUrls.length > 0 && (
+                  <AttachmentList attachmentUrls={selectedBlog.attachmentUrls} />
+                )}
 
                 <div>
                   <h4 className='font-semibold text-base text-gray-800 mb-2'>Tags</h4>
@@ -671,19 +921,20 @@ const AdminBlogs = () => {
                         });
                       }
                     }}
-                    className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
+                    className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
                   >
                     Publish
                   </button>
                 )}
                 <button
                   onClick={closeDetailModal}
-                  className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
+                  className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
                 >
                   Close
                 </button>
               </div>
             </div>
+            <div className='modal-backdrop bg-black/30' onClick={closeDetailModal}></div>
           </div>
         </>
       )}
@@ -697,6 +948,8 @@ const AdminBlogs = () => {
           confirmText={confirmModal.confirmText}
           onConfirm={confirmModal.onConfirm}
           onCancel={() => setConfirmModal(null)}
+          isLoading={isDeleting}
+          loadingText='Deleting...'
         />
       )}
     </div>

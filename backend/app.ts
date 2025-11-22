@@ -63,7 +63,7 @@ app.use('/api/blogs', blogRoutes);
 app.use('/api/notifications', inAppNotificationRoutes);
 app.use('/api/email-notifications', notificationRoutes);
 app.use('/api/contact', contactRoutes);
-app.use('/api/uploads', fileUploadRoutes);
+app.use('/api/files', fileUploadRoutes);
 app.use('/api/page-content', pageContentRoutes);
 app.use('/api/map', mapRoutes);
 

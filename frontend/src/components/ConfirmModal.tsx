@@ -6,6 +6,8 @@ interface ConfirmModalProps {
   onConfirm: () => void;
   onCancel: () => void;
   type?: 'danger' | 'warning' | 'info';
+  isLoading?: boolean;
+  loadingText?: string;
 }
 
 const ConfirmModal = ({
@@ -16,6 +18,8 @@ const ConfirmModal = ({
   onConfirm,
   onCancel,
   type = 'warning',
+  isLoading = false,
+  loadingText = 'Processing...',
 }: ConfirmModalProps) => {
   return (
     <>
@@ -27,15 +31,17 @@ const ConfirmModal = ({
           <div className='modal-action'>
             <button
               onClick={onCancel}
-              className='btn bg-gray-200 hover:bg-gray-300 text-gray-800 border-gray-300'
+              disabled={isLoading}
+              className='btn bg-gray-200 hover:bg-gray-300 text-gray-800 border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed'
             >
               {cancelText}
             </button>
             <button
               onClick={onConfirm}
-              className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
+              disabled={isLoading}
+              className='btn bg-[#D54242] hover:bg-[#b53a3a] disabled:bg-[#e88888] text-white border-none disabled:cursor-not-allowed'
             >
-              {confirmText}
+              {isLoading ? loadingText : confirmText}
             </button>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
+import PublicAttachmentList from '../../components/PublicAttachmentList';
 import 'react-quill-new/dist/quill.snow.css';
 
 export default function Announcement() {
@@ -79,6 +80,9 @@ export default function Announcement() {
           className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-[#3C3C3C] py-8 ql-editor'
           dangerouslySetInnerHTML={{ __html: announcement.content }}
         />
+        {announcement.attachmentUrls && announcement.attachmentUrls.length > 0 && (
+          <PublicAttachmentList attachmentUrls={announcement.attachmentUrls} className='mt-6' />
+        )}
       </div>
     </div>
   );

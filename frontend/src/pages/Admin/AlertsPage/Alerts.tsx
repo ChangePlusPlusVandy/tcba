@@ -5,6 +5,8 @@ import 'react-quill-new/dist/quill.snow.css';
 import AdminSidebar from '../../../components/AdminSidebar';
 import Toast from '../../../components/Toast';
 import ConfirmModal from '../../../components/ConfirmModal';
+import FileUpload from '../../../components/FileUpload';
+import AttachmentList from '../../../components/AttachmentList';
 import { API_BASE_URL } from '../../../config/api';
 
 type AlertPriority = 'URGENT' | 'LOW' | 'MEDIUM';
@@ -34,6 +36,13 @@ const AdminAlerts = () => {
   const [selectedAlertIds, setSelectedAlertIds] = useState<string[]>([]);
   const [filter, setFilter] = useState<Filter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState<AlertPriority[]>([]);
+  const [priorityDropdownOpen, setPriorityDropdownOpen] = useState(false);
+
+  type SortField = 'title' | 'priority' | 'publishedDate' | 'createdAt';
+  type SortDirection = 'asc' | 'desc';
+  const [sortField, setSortField] = useState<SortField>('createdAt');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -44,9 +53,12 @@ const AdminAlerts = () => {
     content: '',
     priority: 'MEDIUM' as AlertPriority,
     isPublished: false,
+    attachmentUrls: [] as string[],
   });
 
   const [isPriorityDropdownOpen, setIsPriorityDropdownOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [toast, setToast] = useState<{
     message: string;
@@ -108,6 +120,24 @@ const AdminAlerts = () => {
     fetchAlerts();
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+
+      if (!target.closest('.priority-dropdown-container')) {
+        setPriorityDropdownOpen(false);
+      }
+    };
+
+    if (priorityDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [priorityDropdownOpen]);
+
   const handleCreateAlert = async (publish: boolean) => {
     if (!newAlert.title.trim()) {
       setToast({ message: 'Title is required', type: 'error' });
@@ -119,6 +149,7 @@ const AdminAlerts = () => {
     }
 
     try {
+      setIsSubmitting(true);
       setError('');
       const alertData = {
         ...newAlert,
@@ -140,12 +171,15 @@ const AdminAlerts = () => {
         content: '',
         priority: 'MEDIUM',
         isPublished: false,
+        attachmentUrls: [],
       });
 
       const successMessage = publish ? 'Alert created successfully' : 'Alert saved successfully';
       setToast({ message: successMessage, type: 'success' });
     } catch (err: any) {
       setToast({ message: err.message || 'Failed to create alert', type: 'error' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -159,6 +193,7 @@ const AdminAlerts = () => {
       confirmText: 'Delete',
       onConfirm: async () => {
         try {
+          setIsDeleting(true);
           setError('');
           await Promise.all(
             selectedAlertIds.map(id =>
@@ -177,6 +212,7 @@ const AdminAlerts = () => {
         } catch (err: any) {
           setToast({ message: err.message || 'Failed to delete alerts', type: 'error' });
         } finally {
+          setIsDeleting(false);
           setConfirmModal(null);
         }
       },
@@ -211,15 +247,91 @@ const AdminAlerts = () => {
     if (filter === 'PUBLISHED' && !alert.isPublished) return false;
     if (filter === 'DRAFTS' && alert.isPublished) return false;
 
+    const matchesPriority = priorityFilter.length === 0 || priorityFilter.includes(alert.priority);
+
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return (
-        alert.title.toLowerCase().includes(query) || alert.content.toLowerCase().includes(query)
+        (alert.title.toLowerCase().includes(query) ||
+          alert.content.toLowerCase().includes(query)) &&
+        matchesPriority
       );
     }
 
-    return true;
+    return matchesPriority;
   });
+
+  const sortedAlerts = [...filteredAlerts].sort((a, b) => {
+    let aValue: any;
+    let bValue: any;
+
+    switch (sortField) {
+      case 'title':
+        aValue = a.title.toLowerCase();
+        bValue = b.title.toLowerCase();
+        break;
+      case 'priority':
+        const priorityOrder = { URGENT: 3, MEDIUM: 2, LOW: 1 };
+        aValue = priorityOrder[a.priority];
+        bValue = priorityOrder[b.priority];
+        break;
+      case 'publishedDate':
+        aValue = a.publishedDate ? new Date(a.publishedDate).getTime() : 0;
+        bValue = b.publishedDate ? new Date(b.publishedDate).getTime() : 0;
+        break;
+      case 'createdAt':
+        aValue = new Date(a.createdAt).getTime();
+        bValue = new Date(b.createdAt).getTime();
+        break;
+      default:
+        return 0;
+    }
+
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return (
+        <svg
+          className='w-4 h-4 text-gray-400'
+          fill='none'
+          stroke='currentColor'
+          viewBox='0 0 24 24'
+        >
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+        </svg>
+      );
+    }
+    if (sortDirection === 'asc') {
+      return (
+        <svg
+          className='w-4 h-4 text-[#D54242]'
+          fill='none'
+          stroke='currentColor'
+          viewBox='0 0 24 24'
+        >
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 15l7-7 7 7' />
+        </svg>
+      );
+    }
+    return (
+      <svg className='w-4 h-4 text-[#D54242]' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+      </svg>
+    );
+  };
 
   const getPriorityColor = (priority: AlertPriority) => {
     switch (priority) {
@@ -249,7 +361,11 @@ const AdminAlerts = () => {
       <AdminSidebar />
 
       <div className='flex-1 p-8'>
-        <h1 className='text-3xl font-bold text-gray-800 mb-6'>All Alerts ({alerts.length})</h1>
+        <h1 className='text-3xl font-bold text-gray-800 mb-6'>
+          {filter === 'ALL' && `All Alerts (${alerts.length})`}
+          {filter === 'PUBLISHED' && `Published Alerts (${filteredAlerts.length})`}
+          {filter === 'DRAFTS' && `Draft Alerts (${filteredAlerts.length})`}
+        </h1>
 
         <div className='flex items-center gap-4 mb-6'>
           <div className='flex gap-2'>
@@ -285,6 +401,72 @@ const AdminAlerts = () => {
             </button>
           </div>
 
+          <div className='relative priority-dropdown-container'>
+            <button
+              onClick={() => setPriorityDropdownOpen(!priorityDropdownOpen)}
+              className='px-4 py-2 border border-gray-300 rounded-[10px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#194B90] hover:bg-gray-50 flex items-center gap-2'
+            >
+              <span>
+                {priorityFilter.length > 0
+                  ? `Priority (${priorityFilter.length})`
+                  : 'Filter by Priority'}
+              </span>
+              <svg
+                className={`w-4 h-4 transition-transform ${priorityDropdownOpen ? 'rotate-180' : ''}`}
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M19 9l-7 7-7-7'
+                />
+              </svg>
+            </button>
+
+            {priorityDropdownOpen && (
+              <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[200px]'>
+                <div className='py-2'>
+                  {(['URGENT', 'MEDIUM', 'LOW'] as AlertPriority[]).map(priority => (
+                    <label
+                      key={priority}
+                      className='flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer'
+                    >
+                      <input
+                        type='checkbox'
+                        checked={priorityFilter.includes(priority)}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            setPriorityFilter([...priorityFilter, priority]);
+                          } else {
+                            setPriorityFilter(priorityFilter.filter(p => p !== priority));
+                          }
+                        }}
+                        className='w-4 h-4 text-[#194B90] border-gray-300 rounded focus:ring-[#194B90]'
+                      />
+                      <span className='ml-2 text-sm text-gray-700'>{priority}</span>
+                    </label>
+                  ))}
+                </div>
+                {priorityFilter.length > 0 && (
+                  <div className='border-t border-gray-200 px-4 py-2'>
+                    <button
+                      onClick={() => {
+                        setPriorityFilter([]);
+                        setPriorityDropdownOpen(false);
+                      }}
+                      className='text-sm text-[#D54242] hover:text-[#b53a3a] font-medium'
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <button
             onClick={() => setIsCreateModalOpen(true)}
             className='px-6 py-2.5 rounded-[10px] font-medium transition bg-[#D54242] text-white hover:bg-[#b53a3a] cursor-pointer'
@@ -305,7 +487,7 @@ const AdminAlerts = () => {
             <div className='relative'>
               <input
                 type='text'
-                placeholder='Search alerts'
+                placeholder='Search alerts...'
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className='w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#194B90]'
@@ -350,27 +532,46 @@ const AdminAlerts = () => {
                     <input
                       type='checkbox'
                       checked={
-                        filteredAlerts.length > 0 &&
-                        selectedAlertIds.length === filteredAlerts.length
+                        sortedAlerts.length > 0 && selectedAlertIds.length === sortedAlerts.length
                       }
                       onChange={handleSelectAll}
                       className='w-4 h-4'
                     />
                   </th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>Title</th>
+                  <th
+                    className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('title')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Title
+                      <SortIcon field='title' />
+                    </div>
+                  </th>
                   <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
                     Status
                   </th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
-                    Priority
+                  <th
+                    className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('priority')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Priority
+                      <SortIcon field='priority' />
+                    </div>
                   </th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
-                    Published
+                  <th
+                    className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('publishedDate')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Published
+                      <SortIcon field='publishedDate' />
+                    </div>
                   </th>
                 </tr>
               </thead>
               <tbody className='divide-y divide-gray-200'>
-                {filteredAlerts.map(alert => (
+                {sortedAlerts.map(alert => (
                   <tr key={alert.id} className='hover:bg-gray-50'>
                     <td className='px-6 py-4' onClick={e => e.stopPropagation()}>
                       <input
@@ -408,7 +609,9 @@ const AdminAlerts = () => {
                     </td>
                     <td className='px-6 py-4'>
                       <span className='text-sm text-gray-600'>
-                        {new Date(alert.createdAt).toLocaleDateString()}
+                        {alert.publishedDate
+                          ? new Date(alert.publishedDate).toLocaleDateString()
+                          : '-'}
                       </span>
                     </td>
                   </tr>
@@ -503,20 +706,27 @@ const AdminAlerts = () => {
                   </div>
                 </div>
 
+                <FileUpload
+                  attachmentUrls={newAlert.attachmentUrls}
+                  onFilesChange={files => setNewAlert({ ...newAlert, attachmentUrls: files })}
+                />
+
                 <div className='flex gap-3 pt-4'>
                   <button
                     type='button'
                     onClick={() => handleCreateAlert(true)}
-                    className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-lg font-medium'
+                    disabled={isSubmitting}
+                    className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] disabled:bg-[#e88888] text-white rounded-lg font-medium disabled:cursor-not-allowed'
                   >
-                    Publish
+                    {isSubmitting ? 'Publishing...' : 'Publish'}
                   </button>
                   <button
                     type='button'
                     onClick={() => handleCreateAlert(false)}
-                    className='px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium'
+                    disabled={isSubmitting}
+                    className='px-6 py-2.5 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white rounded-lg font-medium disabled:cursor-not-allowed'
                   >
-                    Save to Drafts
+                    {isSubmitting ? 'Drafting...' : 'Save to Drafts'}
                   </button>
                   <button
                     type='button'
@@ -527,6 +737,7 @@ const AdminAlerts = () => {
                         content: '',
                         priority: 'MEDIUM',
                         isPublished: false,
+                        attachmentUrls: [],
                       });
                     }}
                     className='px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium'
@@ -536,6 +747,19 @@ const AdminAlerts = () => {
                 </div>
               </div>
             </div>
+            <div
+              className='modal-backdrop bg-black/30'
+              onClick={() => {
+                setIsCreateModalOpen(false);
+                setNewAlert({
+                  title: '',
+                  content: '',
+                  priority: 'MEDIUM',
+                  isPublished: false,
+                  attachmentUrls: [],
+                });
+              }}
+            ></div>
           </div>
         </>
       )}
@@ -589,6 +813,10 @@ const AdminAlerts = () => {
                   />
                 </div>
 
+                {selectedAlert.attachmentUrls && selectedAlert.attachmentUrls.length > 0 && (
+                  <AttachmentList attachmentUrls={selectedAlert.attachmentUrls} />
+                )}
+
                 <div>
                   <h4 className='font-semibold text-base text-gray-800 mb-2'>Dates</h4>
                   <div className='grid grid-cols-2 gap-3'>
@@ -629,19 +857,20 @@ const AdminAlerts = () => {
                         });
                       }
                     }}
-                    className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
+                    className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
                   >
                     Publish
                   </button>
                 )}
                 <button
                   onClick={closeDetailModal}
-                  className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
+                  className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
                 >
                   Close
                 </button>
               </div>
             </div>
+            <div className='modal-backdrop bg-black/30' onClick={closeDetailModal}></div>
           </div>
         </>
       )}
@@ -655,6 +884,8 @@ const AdminAlerts = () => {
           confirmText={confirmModal.confirmText}
           onConfirm={confirmModal.onConfirm}
           onCancel={() => setConfirmModal(null)}
+          isLoading={isDeleting}
+          loadingText='Deleting...'
         />
       )}
     </div>

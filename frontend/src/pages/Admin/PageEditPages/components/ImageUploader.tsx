@@ -36,22 +36,16 @@ const ImageUploader = ({
         return;
       }
 
-      // Otherwise, it's an S3 key - get presigned URL
+      // Otherwise, it's an S3 key - get public image URL (no auth needed)
       setLoadingPresignedUrl(true);
       try {
-        const token = await getToken();
         const response = await fetch(
-          `${API_BASE_URL}/api/uploads/presigned-download/${encodeURIComponent(currentImageUrl)}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          `${API_BASE_URL}/api/files/public-image/${encodeURIComponent(currentImageUrl)}`
         );
 
         if (response.ok) {
-          const { downloadUrl } = await response.json();
-          setPreview(downloadUrl);
+          const { url } = await response.json();
+          setPreview(url);
         } else {
           console.error('Failed to get presigned URL for image');
           setPreview(null);
@@ -99,7 +93,7 @@ const ImageUploader = ({
       const fileType = file.type;
 
       const presignedResponse = await fetch(
-        `${API_BASE_URL}/api/uploads/presigned-upload?fileName=${encodeURIComponent(fileName)}&fileType=${encodeURIComponent(fileType)}`,
+        `${API_BASE_URL}/api/files/presigned-upload?fileName=${encodeURIComponent(fileName)}&fileType=${encodeURIComponent(fileType)}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

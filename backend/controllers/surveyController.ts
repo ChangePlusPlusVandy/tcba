@@ -10,17 +10,13 @@ const resolveTargetId = (id: string, userId?: string) => (id === 'profile' ? use
 
 export const getAllSurveys = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { title, isActive, isPublished } = req.body;
-    const where: any = {
-      ...(title ? { title } : {}),
-      ...(isActive !== undefined ? { isActive } : {}),
-      ...(isPublished !== undefined ? { isPublished } : {}),
-    };
-    const surveys = await prisma.survey.findMany({ where, orderBy: { title: 'asc' } });
+    const surveys = await prisma.survey.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
     res.json(surveys);
   } catch (error) {
-    console.error('Error fetching survey:', error);
-    res.status(500).json({ error: 'Failed to fetch survey' });
+    console.error('Error fetching surveys:', error);
+    res.status(500).json({ error: 'Failed to fetch surveys' });
   }
 };
 
@@ -42,15 +38,22 @@ export const createSurvey = async (req: AuthenticatedRequest, res: Response) => 
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
-    const { title, isActive, isPublished } = req.body;
-    if (!title || isActive === undefined || isPublished === undefined) {
+    const { title, description, questions, dueDate, isPublished = false } = req.body;
+    if (!title) {
       return res.status(400).json({
-        error: 'Title, isActive, and isPublished are required',
+        error: 'Title is required',
       });
     }
+
     const survey = await prisma.survey.create({
       data: {
-        ...req.body,
+        title,
+        description,
+        questions,
+        dueDate: dueDate ? new Date(dueDate) : null,
+        isPublished,
+        isActive: isPublished,
+        status: isPublished ? 'ACTIVE' : 'DRAFT',
       },
     });
 
@@ -111,8 +114,21 @@ export const updateSurvey = async (req: AuthenticatedRequest, res: Response) => 
     if (questions !== undefined) dataToUpdate.questions = questions;
     if (dueDate !== undefined) dataToUpdate.dueDate = dueDate ? new Date(dueDate) : null;
     if (isActive !== undefined) dataToUpdate.isActive = isActive;
-    if (isPublished !== undefined) dataToUpdate.isPublished = isPublished;
-    if (status !== undefined) dataToUpdate.status = status;
+    if (isPublished !== undefined) {
+      dataToUpdate.isPublished = isPublished;
+      // Automatically set isActive and status when isPublished changes
+      if (isPublished) {
+        dataToUpdate.isActive = true;
+        dataToUpdate.status = 'ACTIVE';
+      } else {
+        dataToUpdate.isActive = false;
+        dataToUpdate.status = 'DRAFT';
+      }
+    }
+    if (status !== undefined && isPublished === undefined) {
+      // Only set status if isPublished wasn't already handled above
+      dataToUpdate.status = status;
+    }
 
     if (Object.keys(dataToUpdate).length === 0) {
       return res.status(400).json({ error: 'No changes provided' });
@@ -150,8 +166,11 @@ export const updateSurvey = async (req: AuthenticatedRequest, res: Response) => 
 export const getActiveSurveys = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const surveys = await prisma.survey.findMany({
-      where: { isActive: true },
-      orderBy: { title: 'asc' },
+      where: {
+        isActive: true,
+        isPublished: true,
+      },
+      orderBy: { createdAt: 'desc' },
     });
     res.json(surveys);
   } catch (error) {
