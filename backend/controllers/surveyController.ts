@@ -38,7 +38,7 @@ export const createSurvey = async (req: AuthenticatedRequest, res: Response) => 
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
-    const { title, isPublished = false } = req.body;
+    const { title, description, questions, dueDate, isPublished = false } = req.body;
     if (!title) {
       return res.status(400).json({
         error: 'Title is required',
@@ -47,7 +47,10 @@ export const createSurvey = async (req: AuthenticatedRequest, res: Response) => 
 
     const survey = await prisma.survey.create({
       data: {
-        ...req.body,
+        title,
+        description,
+        questions,
+        dueDate: dueDate ? new Date(dueDate) : null,
         isPublished,
         isActive: isPublished,
         status: isPublished ? 'ACTIVE' : 'DRAFT',

@@ -613,7 +613,7 @@ const AdminSurveys = () => {
                     closeDetailModal();
                     navigate(`/admin/surveys/${selectedSurvey.id}/responses`);
                   }}
-                  className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
+                  className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
                 >
                   View Responses
                 </button>
@@ -621,7 +621,7 @@ const AdminSurveys = () => {
                   <button
                     onClick={handlePublishSurvey}
                     disabled={isPublishing}
-                    className={`btn text-white border-none ${
+                    className={`px-6 py-2.5 text-white rounded-xl font-medium transition ${
                       isPublishing
                         ? 'bg-[#E57373] cursor-not-allowed'
                         : 'bg-[#D54242] hover:bg-[#b53a3a]'
@@ -635,18 +635,19 @@ const AdminSurveys = () => {
                     closeDetailModal();
                     navigate(`/admin/surveys/edit/${selectedSurvey.id}`);
                   }}
-                  className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
+                  className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
                 >
                   Edit
                 </button>
                 <button
                   onClick={closeDetailModal}
-                  className='btn bg-gray-500 hover:bg-gray-600 text-white border-none'
+                  className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
                 >
                   Close
                 </button>
               </div>
             </div>
+            <div className='modal-backdrop bg-black/30' onClick={closeDetailModal}></div>
           </div>
         </>
       )}

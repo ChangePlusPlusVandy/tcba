@@ -787,14 +787,14 @@ const AdminAnnouncements = () => {
                         });
                       }
                     }}
-                    className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
+                    className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
                   >
                     Publish
                   </button>
                 )}
                 <button
                   onClick={() => setSelectedAnnouncement(null)}
-                  className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
+                  className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
                 >
                   Close
                 </button>

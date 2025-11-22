@@ -31,6 +31,11 @@ const AlertsPage = () => {
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
+  type SortField = 'title' | 'priority' | 'publishedDate';
+  type SortDirection = 'asc' | 'desc';
+  const [sortField, setSortField] = useState<SortField>('publishedDate');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
 
@@ -101,6 +106,78 @@ const AlertsPage = () => {
 
     return true;
   });
+
+  const sortedAlerts = [...filteredAlerts].sort((a, b) => {
+    let aValue: any;
+    let bValue: any;
+
+    switch (sortField) {
+      case 'title':
+        aValue = a.title.toLowerCase();
+        bValue = b.title.toLowerCase();
+        break;
+      case 'priority':
+        const priorityOrder = { URGENT: 3, MEDIUM: 2, LOW: 1 };
+        aValue = priorityOrder[a.priority];
+        bValue = priorityOrder[b.priority];
+        break;
+      case 'publishedDate':
+        aValue = a.publishedDate
+          ? new Date(a.publishedDate).getTime()
+          : new Date(a.createdAt).getTime();
+        bValue = b.publishedDate
+          ? new Date(b.publishedDate).getTime()
+          : new Date(b.createdAt).getTime();
+        break;
+      default:
+        return 0;
+    }
+
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return (
+        <svg
+          className='w-4 h-4 text-gray-400'
+          fill='none'
+          stroke='currentColor'
+          viewBox='0 0 24 24'
+        >
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+        </svg>
+      );
+    }
+    if (sortDirection === 'asc') {
+      return (
+        <svg
+          className='w-4 h-4 text-[#D54242]'
+          fill='none'
+          stroke='currentColor'
+          viewBox='0 0 24 24'
+        >
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 15l7-7 7 7' />
+        </svg>
+      );
+    }
+    return (
+      <svg className='w-4 h-4 text-[#D54242]' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+      </svg>
+    );
+  };
 
   const getPriorityColor = (priority: AlertPriority) => {
     switch (priority) {
@@ -207,7 +284,7 @@ const AlertsPage = () => {
           <div className='text-center py-12'>
             <p className='text-gray-600'>Loading alerts...</p>
           </div>
-        ) : filteredAlerts.length === 0 ? (
+        ) : sortedAlerts.length === 0 ? (
           <div className='text-center py-12'>
             <p className='text-gray-600'>No alerts found</p>
           </div>
@@ -216,17 +293,37 @@ const AlertsPage = () => {
             <table className='min-w-full'>
               <thead className='bg-gray-50 border-b border-gray-200'>
                 <tr>
-                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>Title</th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
-                    Priority
+                  <th
+                    className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('title')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Title
+                      <SortIcon field='title' />
+                    </div>
                   </th>
-                  <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
-                    Published
+                  <th
+                    className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('priority')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Priority
+                      <SortIcon field='priority' />
+                    </div>
+                  </th>
+                  <th
+                    className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('publishedDate')}
+                  >
+                    <div className='flex items-center gap-2'>
+                      Published
+                      <SortIcon field='publishedDate' />
+                    </div>
                   </th>
                 </tr>
               </thead>
               <tbody className='divide-y divide-gray-200'>
-                {filteredAlerts.map(alert => (
+                {sortedAlerts.map(alert => (
                   <tr key={alert.id} className='hover:bg-gray-50'>
                     <td
                       className='px-6 py-4 text-[#194B90] font-medium hover:underline cursor-pointer'
@@ -346,12 +443,13 @@ const AlertsPage = () => {
               <div className='modal-action'>
                 <button
                   onClick={closeDetailModal}
-                  className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
+                  className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
                 >
                   Close
                 </button>
               </div>
             </div>
+            <div className='modal-backdrop bg-black/30' onClick={closeDetailModal}></div>
           </div>
         </>
       )}

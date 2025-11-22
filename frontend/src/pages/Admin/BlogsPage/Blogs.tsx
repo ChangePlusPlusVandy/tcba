@@ -800,6 +800,20 @@ const AdminBlogs = () => {
                 </div>
               </div>
             </div>
+            <div
+              className='modal-backdrop bg-black/30'
+              onClick={() => {
+                setIsCreateModalOpen(false);
+                setNewBlog({
+                  title: '',
+                  content: '',
+                  author: '',
+                  tagIds: [],
+                  isPublished: false,
+                  attachmentUrls: [],
+                });
+              }}
+            ></div>
           </div>
         </>
       )}
@@ -907,19 +921,20 @@ const AdminBlogs = () => {
                         });
                       }
                     }}
-                    className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
+                    className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
                   >
                     Publish
                   </button>
                 )}
                 <button
                   onClick={closeDetailModal}
-                  className='btn bg-[#D54242] hover:bg-[#b53a3a] text-white border-none'
+                  className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
                 >
                   Close
                 </button>
               </div>
             </div>
+            <div className='modal-backdrop bg-black/30' onClick={closeDetailModal}></div>
           </div>
         </>
       )}
