@@ -270,233 +270,231 @@ const CreateSurvey = () => {
           </div>
         </div>
 
-          <div className='bg-white rounded-lg border border-gray-200 p-6 mb-6'>
-            <div className='space-y-4'>
-              <div>
-                <label className='block text-sm font-semibold text-gray-700 mb-1'>
-                  Title <span className='text-red-500'>*</span>
-                </label>
-                <input
-                  type='text'
-                  value={title}
-                  onChange={e => setTitle(e.target.value)}
-                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
-                  placeholder='Enter survey title'
-                />
-              </div>
+        <div className='bg-white rounded-lg border border-gray-200 p-6 mb-6'>
+          <div className='space-y-4'>
+            <div>
+              <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                Title <span className='text-red-500'>*</span>
+              </label>
+              <input
+                type='text'
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                placeholder='Enter survey title'
+              />
+            </div>
 
-              <div>
-                <label className='block text-sm font-semibold text-gray-700 mb-1'>
-                  Description
-                </label>
-                <textarea
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  rows={3}
-                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
-                  placeholder='Enter survey description (optional)'
-                />
-              </div>
+            <div>
+              <label className='block text-sm font-semibold text-gray-700 mb-1'>Description</label>
+              <textarea
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                rows={3}
+                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                placeholder='Enter survey description (optional)'
+              />
+            </div>
 
-              <div>
-                <label className='block text-sm font-semibold text-gray-700 mb-1'>Due Date</label>
-                <input
-                  type='date'
-                  value={dueDate}
-                  onChange={e => setDueDate(e.target.value)}
-                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
-                />
-              </div>
+            <div>
+              <label className='block text-sm font-semibold text-gray-700 mb-1'>Due Date</label>
+              <input
+                type='date'
+                value={dueDate}
+                onChange={e => setDueDate(e.target.value)}
+                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+              />
             </div>
           </div>
+        </div>
 
-          <div className='space-y-4 mb-6'>
-            {questions.map((question, index) => (
-              <div key={question.id} className='bg-white rounded-lg border border-gray-200 p-6'>
-                <div className='flex items-start justify-between mb-4'>
-                  <h3 className='text-lg font-semibold text-gray-800'>Question {index + 1}</h3>
-                  <button
-                    onClick={() => deleteQuestion(question.id)}
-                    className='text-red-600 hover:text-red-800'
-                  >
-                    <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth={2}
-                        d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
-                      />
-                    </svg>
-                  </button>
+        <div className='space-y-4 mb-6'>
+          {questions.map((question, index) => (
+            <div key={question.id} className='bg-white rounded-lg border border-gray-200 p-6'>
+              <div className='flex items-start justify-between mb-4'>
+                <h3 className='text-lg font-semibold text-gray-800'>Question {index + 1}</h3>
+                <button
+                  onClick={() => deleteQuestion(question.id)}
+                  className='text-red-600 hover:text-red-800'
+                >
+                  <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <div className='space-y-4'>
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                    Question Text <span className='text-red-500'>*</span>
+                  </label>
+                  <input
+                    type='text'
+                    value={question.text}
+                    onChange={e => updateQuestion(question.id, { text: e.target.value })}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                    placeholder='Enter your question'
+                  />
                 </div>
 
-                <div className='space-y-4'>
-                  <div>
-                    <label className='block text-sm font-semibold text-gray-700 mb-1'>
-                      Question Text <span className='text-red-500'>*</span>
-                    </label>
-                    <input
-                      type='text'
-                      value={question.text}
-                      onChange={e => updateQuestion(question.id, { text: e.target.value })}
-                      className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
-                      placeholder='Enter your question'
-                    />
+                <div>
+                  <label className='block text-sm font-semibold text-gray-700 mb-2'>
+                    Question Type
+                  </label>
+                  <div className='flex gap-2'>
+                    {[
+                      { type: 'multipleChoice', label: 'Multiple Choice' },
+                      { type: 'checkbox', label: 'Checkboxes' },
+                      { type: 'text', label: 'Text' },
+                      { type: 'rating', label: 'Rating' },
+                    ].map(({ type, label }) => (
+                      <button
+                        key={type}
+                        onClick={() => changeQuestionType(question.id, type as QuestionType)}
+                        className={`px-4 py-2 rounded-lg font-medium transition ${
+                          question.type === type
+                            ? 'bg-[#D54242] text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
+                </div>
 
+                {(question.type === 'multipleChoice' || question.type === 'checkbox') && (
                   <div>
                     <label className='block text-sm font-semibold text-gray-700 mb-2'>
-                      Question Type
+                      Options
                     </label>
-                    <div className='flex gap-2'>
-                      {[
-                        { type: 'multipleChoice', label: 'Multiple Choice' },
-                        { type: 'checkbox', label: 'Checkboxes' },
-                        { type: 'text', label: 'Text' },
-                        { type: 'rating', label: 'Rating' },
-                      ].map(({ type, label }) => (
-                        <button
-                          key={type}
-                          onClick={() => changeQuestionType(question.id, type as QuestionType)}
-                          className={`px-4 py-2 rounded-lg font-medium transition ${
-                            question.type === type
-                              ? 'bg-[#D54242] text-white'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
-                        >
-                          {label}
-                        </button>
+                    <div className='space-y-2'>
+                      {question.options?.map((option, optionIndex) => (
+                        <div key={optionIndex} className='flex items-center gap-2'>
+                          <input
+                            type='text'
+                            value={option}
+                            onChange={e => updateOption(question.id, optionIndex, e.target.value)}
+                            className='flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                            placeholder={`Option ${optionIndex + 1}`}
+                          />
+                          {question.options && question.options.length > 2 && (
+                            <button
+                              onClick={() => removeOption(question.id, optionIndex)}
+                              className='text-red-600 hover:text-red-800'
+                            >
+                              <svg
+                                className='w-5 h-5'
+                                fill='none'
+                                stroke='currentColor'
+                                viewBox='0 0 24 24'
+                              >
+                                <path
+                                  strokeLinecap='round'
+                                  strokeLinejoin='round'
+                                  strokeWidth={2}
+                                  d='M6 18L18 6M6 6l12 12'
+                                />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
                       ))}
+                      <button
+                        onClick={() => addOption(question.id)}
+                        className='text-sm text-[#194B90] hover:text-[#0f3464] font-medium'
+                      >
+                        + Add Option
+                      </button>
                     </div>
                   </div>
+                )}
 
-                  {(question.type === 'multipleChoice' || question.type === 'checkbox') && (
-                    <div>
-                      <label className='block text-sm font-semibold text-gray-700 mb-2'>
-                        Options
-                      </label>
-                      <div className='space-y-2'>
-                        {question.options?.map((option, optionIndex) => (
-                          <div key={optionIndex} className='flex items-center gap-2'>
-                            <input
-                              type='text'
-                              value={option}
-                              onChange={e => updateOption(question.id, optionIndex, e.target.value)}
-                              className='flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
-                              placeholder={`Option ${optionIndex + 1}`}
-                            />
-                            {question.options && question.options.length > 2 && (
-                              <button
-                                onClick={() => removeOption(question.id, optionIndex)}
-                                className='text-red-600 hover:text-red-800'
-                              >
-                                <svg
-                                  className='w-5 h-5'
-                                  fill='none'
-                                  stroke='currentColor'
-                                  viewBox='0 0 24 24'
-                                >
-                                  <path
-                                    strokeLinecap='round'
-                                    strokeLinejoin='round'
-                                    strokeWidth={2}
-                                    d='M6 18L18 6M6 6l12 12'
-                                  />
-                                </svg>
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                        <button
-                          onClick={() => addOption(question.id)}
-                          className='text-sm text-[#194B90] hover:text-[#0f3464] font-medium'
-                        >
-                          + Add Option
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                {question.type === 'text' && (
+                  <div>
+                    <label className='block text-sm font-semibold text-gray-700 mb-2'>
+                      Response Type
+                    </label>
+                    <select
+                      value={question.textType || 'short'}
+                      onChange={e =>
+                        updateQuestion(question.id, {
+                          textType: e.target.value as 'short' | 'long',
+                        })
+                      }
+                      className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                    >
+                      <option value='short'>Short Response</option>
+                      <option value='long'>Long Response</option>
+                    </select>
+                  </div>
+                )}
 
-                  {question.type === 'text' && (
+                {question.type === 'rating' && (
+                  <div className='grid grid-cols-2 gap-4'>
                     <div>
-                      <label className='block text-sm font-semibold text-gray-700 mb-2'>
-                        Response Type
+                      <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                        Min Value
                       </label>
                       <select
-                        value={question.textType || 'short'}
+                        value={question.minValue || 1}
                         onChange={e =>
-                          updateQuestion(question.id, {
-                            textType: e.target.value as 'short' | 'long',
-                          })
+                          updateQuestion(question.id, { minValue: Number(e.target.value) })
                         }
                         className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
                       >
-                        <option value='short'>Short Response</option>
-                        <option value='long'>Long Response</option>
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                          <option key={num} value={num}>
+                            {num}
+                          </option>
+                        ))}
                       </select>
                     </div>
-                  )}
-
-                  {question.type === 'rating' && (
-                    <div className='grid grid-cols-2 gap-4'>
-                      <div>
-                        <label className='block text-sm font-semibold text-gray-700 mb-1'>
-                          Min Value
-                        </label>
-                        <select
-                          value={question.minValue || 1}
-                          onChange={e =>
-                            updateQuestion(question.id, { minValue: Number(e.target.value) })
-                          }
-                          className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
-                        >
-                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                            <option key={num} value={num}>
-                              {num}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className='block text-sm font-semibold text-gray-700 mb-1'>
-                          Max Value
-                        </label>
-                        <select
-                          value={question.maxValue || 5}
-                          onChange={e =>
-                            updateQuestion(question.id, { maxValue: Number(e.target.value) })
-                          }
-                          className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
-                        >
-                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                            <option key={num} value={num}>
-                              {num}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                    <div>
+                      <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                        Max Value
+                      </label>
+                      <select
+                        value={question.maxValue || 5}
+                        onChange={e =>
+                          updateQuestion(question.id, { maxValue: Number(e.target.value) })
+                        }
+                        className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                      >
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                          <option key={num} value={num}>
+                            {num}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                  )}
-
-                  <div className='flex items-center'>
-                    <input
-                      type='checkbox'
-                      id={`required-${question.id}`}
-                      checked={question.required}
-                      onChange={e => updateQuestion(question.id, { required: e.target.checked })}
-                      className='w-4 h-4 text-[#D54242] border-gray-300 rounded focus:ring-[#D54242]'
-                    />
-                    <label
-                      htmlFor={`required-${question.id}`}
-                      className='ml-2 text-sm font-medium text-gray-700'
-                    >
-                      Make required
-                    </label>
                   </div>
+                )}
+
+                <div className='flex items-center'>
+                  <input
+                    type='checkbox'
+                    id={`required-${question.id}`}
+                    checked={question.required}
+                    onChange={e => updateQuestion(question.id, { required: e.target.checked })}
+                    className='w-4 h-4 text-[#D54242] border-gray-300 rounded focus:ring-[#D54242]'
+                  />
+                  <label
+                    htmlFor={`required-${question.id}`}
+                    className='ml-2 text-sm font-medium text-gray-700'
+                  >
+                    Make required
+                  </label>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
+        </div>
 
         <div className='flex justify-center mb-8'>
           <button
