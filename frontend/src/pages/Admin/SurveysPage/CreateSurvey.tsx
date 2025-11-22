@@ -230,46 +230,45 @@ const CreateSurvey = () => {
       <AdminSidebar />
 
       <div className='flex-1 p-8'>
-        <div className='max-w-4xl mx-auto'>
-          <div className='mb-6'>
-            <button
-              onClick={() => navigate('/admin/surveys')}
-              className='flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4'
-            >
-              <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M15 19l-7-7 7-7'
-                />
-              </svg>
-              Back to Surveys
-            </button>
+        <div className='mb-6'>
+          <button
+            onClick={() => navigate('/admin/surveys')}
+            className='flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4'
+          >
+            <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M15 19l-7-7 7-7'
+              />
+            </svg>
+            Back to Surveys
+          </button>
 
-            <div className='flex justify-between items-center mb-6'>
-              <h1 className='text-3xl font-bold text-gray-800'>
-                {isEditMode ? 'Edit Survey' : 'Create New Survey'}
-              </h1>
+          <div className='flex justify-between items-center mb-6'>
+            <h1 className='text-3xl font-bold text-gray-800'>
+              {isEditMode ? 'Edit Survey' : 'Create New Survey'}
+            </h1>
 
-              <div className='flex gap-3'>
-                <button
-                  onClick={() => handleSubmit(false)}
-                  disabled={isSubmitting}
-                  className='px-6 py-2.5 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white rounded-lg font-medium disabled:cursor-not-allowed'
-                >
-                  {isSubmitting ? 'Saving...' : 'Save to Drafts'}
-                </button>
-                <button
-                  onClick={() => handleSubmit(true)}
-                  disabled={isSubmitting}
-                  className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] disabled:bg-[#e88888] text-white rounded-lg font-medium disabled:cursor-not-allowed'
-                >
-                  {isSubmitting ? 'Publishing...' : 'Publish'}
-                </button>
-              </div>
+            <div className='flex gap-3'>
+              <button
+                onClick={() => handleSubmit(false)}
+                disabled={isSubmitting}
+                className='px-6 py-2.5 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white rounded-lg font-medium disabled:cursor-not-allowed'
+              >
+                {isSubmitting ? 'Saving...' : 'Save to Drafts'}
+              </button>
+              <button
+                onClick={() => handleSubmit(true)}
+                disabled={isSubmitting}
+                className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] disabled:bg-[#e88888] text-white rounded-lg font-medium disabled:cursor-not-allowed'
+              >
+                {isSubmitting ? 'Publishing...' : 'Publish'}
+              </button>
             </div>
           </div>
+        </div>
 
           <div className='bg-white rounded-lg border border-gray-200 p-6 mb-6'>
             <div className='space-y-4'>
@@ -499,21 +498,20 @@ const CreateSurvey = () => {
             ))}
           </div>
 
-          <div className='flex justify-center mb-8'>
-            <button
-              onClick={addQuestion}
-              className='flex items-center justify-center w-12 h-12 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-full shadow-lg transition'
-            >
-              <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M12 4v16m8-8H4'
-                />
-              </svg>
-            </button>
-          </div>
+        <div className='flex justify-center mb-8'>
+          <button
+            onClick={addQuestion}
+            className='flex items-center justify-center w-12 h-12 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-full shadow-lg transition'
+          >
+            <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M12 4v16m8-8H4'
+              />
+            </svg>
+          </button>
         </div>
       </div>
 

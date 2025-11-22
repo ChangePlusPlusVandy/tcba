@@ -881,7 +881,7 @@ const AdminDashboard = () => {
               <div className='modal-action'>
                 <button
                   onClick={closeModal}
-                  className='btn bg-[#D54242] hover:bg-[#b93939] text-white border-none'
+                  className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
                 >
                   Close
                 </button>
