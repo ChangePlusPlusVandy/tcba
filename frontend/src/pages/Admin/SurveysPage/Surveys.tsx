@@ -630,15 +630,17 @@ const AdminSurveys = () => {
                     {isPublishing ? 'Publishing...' : 'Publish'}
                   </button>
                 )}
-                <button
-                  onClick={() => {
-                    closeDetailModal();
-                    navigate(`/admin/surveys/edit/${selectedSurvey.id}`);
-                  }}
-                  className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
-                >
-                  Edit
-                </button>
+                {!selectedSurvey.isPublished && (
+                  <button
+                    onClick={() => {
+                      closeDetailModal();
+                      navigate(`/admin/surveys/edit/${selectedSurvey.id}`);
+                    }}
+                    className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
+                  >
+                    Edit
+                  </button>
+                )}
                 <button
                   onClick={closeDetailModal}
                   className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
