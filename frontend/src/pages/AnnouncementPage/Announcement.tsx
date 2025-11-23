@@ -58,7 +58,7 @@ export default function Announcement() {
         <h1 className='font-[Open_Sans] text-[40px] font-bold mb-4'>{announcement.title}</h1>
         <div className='flex items-center gap-3 mb-4'>
           <h3 className='font-[Open_Sans] text-[16px] font-normal leading-[150%] text-[#717171]'>
-            {getTimeAgo(announcement.createdAt)}
+            {getTimeAgo(announcement.publishedDate || announcement.createdAt)}
           </h3>
           {announcement.tags && announcement.tags.length > 0 && (
             <>

@@ -142,39 +142,47 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
     return `${Math.floor(diffInMinutes / 1440)} ${Math.floor(diffInMinutes / 1440) === 1 ? 'day' : 'days'} ago`;
   };
 
-  const filterAnnouncements = announcements.filter(a => {
-    const now = new Date();
+  const filterAnnouncements = announcements
+    .filter(a => {
+      const now = new Date();
 
-    // TIME FILTER
-    if (timeFilter) {
-      const createdAt = new Date(a.createdAt);
-      const diffInHours = (now.getTime() - createdAt.getTime()) / 1000 / 3600;
-      if (
-        (timeFilter === '24h' && diffInHours > 24) ||
-        (timeFilter === 'week' && diffInHours > 24 * 7) ||
-        (timeFilter === 'month' && diffInHours > 24 * 30) ||
-        (timeFilter === 'year' && diffInHours > 24 * 365)
-      ) {
-        return false;
+      // TIME FILTER
+      if (timeFilter) {
+        const publishedDate = new Date(a.publishedDate || a.createdAt);
+        const diffInHours = (now.getTime() - publishedDate.getTime()) / 1000 / 3600;
+        if (
+          (timeFilter === '24h' && diffInHours > 24) ||
+          (timeFilter === 'week' && diffInHours > 24 * 7) ||
+          (timeFilter === 'month' && diffInHours > 24 * 30) ||
+          (timeFilter === 'year' && diffInHours > 24 * 365)
+        ) {
+          return false;
+        }
       }
-    }
 
-    // TAG FILTER
-    if (selectedTags.length > 0) {
-      const selectedTagNames = selectedTags.map(t => t.name);
-      const announcementTagNames = a.tags.map(t => t.name);
-      if (!announcementTagNames.some(tag => selectedTagNames.includes(tag))) {
-        return false;
+      // TAG FILTER
+      if (selectedTags.length > 0) {
+        const selectedTagNames = selectedTags.map(t => t.name);
+        const announcementTagNames = a.tags.map(t => t.name);
+        if (!announcementTagNames.some(tag => selectedTagNames.includes(tag))) {
+          return false;
+        }
       }
-    }
 
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return a.title.toLowerCase().includes(query) || a.content.toLowerCase().includes(query);
-    }
+      // SEARCH FILTER
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        return a.title.toLowerCase().includes(query) || a.content.toLowerCase().includes(query);
+      }
 
-    return true;
-  });
+      return true;
+    })
+    .sort((a, b) => {
+      // sort by publishedDate descending (most recent first)
+      const dateA = new Date(a.publishedDate || a.createdAt).getTime();
+      const dateB = new Date(b.publishedDate || b.createdAt).getTime();
+      return dateB - dateA;
+    });
 
   if (pageLoading) {
     return (
@@ -375,7 +383,7 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
                     </h2>
                     <div className='flex items-center gap-3 mb-4'>
                       <h3 className='font-[Open_Sans] text-[14px] font-normal leading-[150%] text-[#717171]'>
-                        {getTimeAgo(a.createdAt)}
+                        {getTimeAgo(a.publishedDate || a.createdAt)}
                       </h3>
                       {a.tags.length > 0 && (
                         <>
