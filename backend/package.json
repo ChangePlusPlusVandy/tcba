@@ -4,8 +4,9 @@
   "type": "module",
   "main": "server.ts",
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "cross-env NODE_ENV=development tsx server.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "start": "cross-env NODE_ENV=production node dist/server.js",
     "test": "cross-env NODE_ENV=test jest",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
