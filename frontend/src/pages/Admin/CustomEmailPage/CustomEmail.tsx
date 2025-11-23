@@ -15,10 +15,26 @@ type Organization = {
   tags: string[];
 };
 
+type EmailHistoryItem = {
+  id: string;
+  subject: string;
+  body: string;
+  recipientEmails: string[];
+  recipientCount: number;
+  filters?: Record<string, unknown>;
+  scheduledFor?: string;
+  sentAt?: string;
+  status: 'SCHEDULED' | 'SENT' | 'FAILED';
+  createdByAdminId: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 const CustomEmail = () => {
   const { getToken } = useAuth();
   const quillRef = useRef<ReactQuill>(null);
 
+  const [activeTab, setActiveTab] = useState<'compose' | 'history'>('compose');
   const [emailTitle, setEmailTitle] = useState('');
   const [emailBody, setEmailBody] = useState('');
 
@@ -33,6 +49,13 @@ const CustomEmail = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const [emailHistory, setEmailHistory] = useState<EmailHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [expandedEmailId, setExpandedEmailId] = useState<string | null>(null);
+
+  const [isScheduled, setIsScheduled] = useState(false);
+  const [scheduledDateTime, setScheduledDateTime] = useState('');
 
   const handleImageUpload = () => {
     const input = document.createElement('input');
@@ -128,6 +151,12 @@ const CustomEmail = () => {
   }, []);
 
   useEffect(() => {
+    if (activeTab === 'history') {
+      fetchEmailHistory();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
     setManuallyExcludedOrgs([]);
   }, [selectedTags, selectedRegion, selectedOrgSize]);
 
@@ -168,6 +197,40 @@ const CustomEmail = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchEmailHistory = async () => {
+    try {
+      setHistoryLoading(true);
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/api/email-notifications/history`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch email history');
+      }
+
+      const data = await response.json();
+      setEmailHistory(data);
+    } catch (err: any) {
+      console.error('Error fetching email history:', err);
+      setToast({ message: err.message || 'Failed to load email history', type: 'error' });
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   const getFilteredOrganizations = () => {
@@ -237,6 +300,16 @@ const CustomEmail = () => {
       return;
     }
 
+    if (isScheduled && !scheduledDateTime) {
+      setToast({ message: 'Please select a date and time for the scheduled email', type: 'error' });
+      return;
+    }
+
+    if (isScheduled && new Date(scheduledDateTime) <= new Date()) {
+      setToast({ message: 'Scheduled time must be in the future', type: 'error' });
+      return;
+    }
+
     try {
       setSending(true);
       setToast(null);
@@ -246,9 +319,12 @@ const CustomEmail = () => {
       const requestData: any = {
         subject: emailTitle,
         html: emailBody,
+        recipientEmails: recipients.map(org => org.email),
       };
 
-      requestData.recipientEmails = recipients.map(org => org.email);
+      if (isScheduled && scheduledDateTime) {
+        requestData.scheduledFor = new Date(scheduledDateTime).toISOString();
+      }
 
       const response = await fetch(`${API_BASE_URL}/api/email-notifications/send`, {
         method: 'POST',
@@ -260,11 +336,15 @@ const CustomEmail = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send email');
+        throw new Error(isScheduled ? 'Failed to schedule email' : 'Failed to send email');
       }
 
+      const successMessage = isScheduled
+        ? `Email scheduled for ${new Date(scheduledDateTime).toLocaleString()} to ${recipients.length} organization(s)!`
+        : `Email sent successfully to ${recipients.length} organization(s)!`;
+
       setToast({
-        message: `Email sent successfully to ${recipients.length} organization(s)!`,
+        message: successMessage,
         type: 'success',
       });
 
@@ -275,6 +355,8 @@ const CustomEmail = () => {
       setSelectedOrgSize('');
       setManuallyExcludedOrgs([]);
       setOrgSearchQuery('');
+      setIsScheduled(false);
+      setScheduledDateTime('');
     } catch (err: any) {
       console.error('Error sending email:', err);
       setToast({ message: err.message || 'Failed to send email', type: 'error' });
@@ -310,180 +392,387 @@ const CustomEmail = () => {
             <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
           )}
 
-          <div className='bg-white rounded-lg shadow-md p-6 mb-6'>
-            <h2 className='text-xl font-semibold text-gray-800 mb-4'>Select Recipients</h2>
+          {/* Tabs */}
+          <div className='flex border-b border-gray-200 mb-6'>
+            <button
+              onClick={() => setActiveTab('compose')}
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'compose'
+                  ? 'border-[#D54242] text-[#D54242]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Compose Email
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'history'
+                  ? 'border-[#D54242] text-[#D54242]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Past Emails
+            </button>
+          </div>
 
-            <div className='mb-6'>
-              <label className='text-sm font-semibold text-gray-700 mb-2 block'>
-                Filter by Tags
-              </label>
-              {availableTags.length > 0 ? (
-                <div className='flex flex-wrap gap-2'>
-                  {availableTags.map(tag => (
-                    <button
-                      key={tag}
-                      type='button'
-                      onClick={() => handleTagToggle(tag)}
-                      className={`px-3 py-1 rounded-full text-sm transition cursor-pointer ${
-                        selectedTags.includes(tag)
-                          ? 'bg-[#D54242] text-white'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  ))}
+          {activeTab === 'compose' && (
+            <>
+              <div className='bg-white rounded-lg shadow-md p-6 mb-6'>
+                <h2 className='text-xl font-semibold text-gray-800 mb-4'>Select Recipients</h2>
+
+                <div className='mb-6'>
+                  <label className='text-sm font-semibold text-gray-700 mb-2 block'>
+                    Filter by Tags
+                  </label>
+                  {availableTags.length > 0 ? (
+                    <div className='flex flex-wrap gap-2'>
+                      {availableTags.map(tag => (
+                        <button
+                          key={tag}
+                          type='button'
+                          onClick={() => handleTagToggle(tag)}
+                          className={`px-3 py-1 rounded-full text-sm transition cursor-pointer ${
+                            selectedTags.includes(tag)
+                              ? 'bg-[#D54242] text-white'
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className='text-sm text-gray-500'>No tags available</p>
+                  )}
                 </div>
-              ) : (
-                <p className='text-sm text-gray-500'>No tags available</p>
-              )}
-            </div>
 
-            <div className='mb-6'>
-              <label className='text-sm font-semibold text-gray-700 mb-2 block'>
-                Filter by Region
-              </label>
-              <select
-                value={selectedRegion}
-                onChange={e => setSelectedRegion(e.target.value)}
-                className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
-              >
-                <option value=''>None</option>
-                <option value='EAST'>East</option>
-                <option value='MIDDLE'>Middle</option>
-                <option value='WEST'>West</option>
-              </select>
-            </div>
+                <div className='mb-6'>
+                  <label className='text-sm font-semibold text-gray-700 mb-2 block'>
+                    Filter by Region
+                  </label>
+                  <select
+                    value={selectedRegion}
+                    onChange={e => setSelectedRegion(e.target.value)}
+                    className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  >
+                    <option value=''>None</option>
+                    <option value='EAST'>East</option>
+                    <option value='MIDDLE'>Middle</option>
+                    <option value='WEST'>West</option>
+                  </select>
+                </div>
 
-            <div className='mb-6'>
-              <label className='text-sm font-semibold text-gray-700 mb-2 block'>
-                Filter by Organization Size
-              </label>
-              <select
-                value={selectedOrgSize}
-                onChange={e => setSelectedOrgSize(e.target.value)}
-                className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
-              >
-                <option value=''>None</option>
-                <option value='SMALL'>Small (1-50 employees)</option>
-                <option value='MEDIUM'>Medium (51-200 employees)</option>
-                <option value='LARGE'>Large (201-1000 employees)</option>
-                <option value='EXTRA_LARGE'>Extra Large (1000+ employees)</option>
-              </select>
-            </div>
+                <div className='mb-6'>
+                  <label className='text-sm font-semibold text-gray-700 mb-2 block'>
+                    Filter by Organization Size
+                  </label>
+                  <select
+                    value={selectedOrgSize}
+                    onChange={e => setSelectedOrgSize(e.target.value)}
+                    className='w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  >
+                    <option value=''>None</option>
+                    <option value='SMALL'>Small (1-50 employees)</option>
+                    <option value='MEDIUM'>Medium (51-200 employees)</option>
+                    <option value='LARGE'>Large (201-1000 employees)</option>
+                    <option value='EXTRA_LARGE'>Extra Large (1000+ employees)</option>
+                  </select>
+                </div>
 
-            <div className='mb-4'>
-              <label className='text-sm font-semibold text-gray-700 mb-2 block'>
-                Refine Selection
-              </label>
-
-              <input
-                type='text'
-                value={orgSearchQuery}
-                onChange={e => setOrgSearchQuery(e.target.value)}
-                placeholder='Search organizations...'
-                className='w-full px-4 py-2 mb-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
-              />
-              <div className='border border-gray-300 rounded-md p-4 max-h-64 overflow-y-auto'>
-                {getBaseFilteredOrganizations()
-                  .filter(org => org.name.toLowerCase().includes(orgSearchQuery.toLowerCase()))
-                  .map(org => (
-                    <label
-                      key={org.id}
-                      className='flex items-center gap-2 py-2 hover:bg-gray-50 px-2 rounded cursor-pointer'
+                <div className='mb-4'>
+                  <div className='flex items-center justify-between mb-2'>
+                    <label className='text-sm font-semibold text-gray-700'>Refine Selection</label>
+                    <button
+                      type='button'
+                      onClick={() => {
+                        const allOrgIds = getBaseFilteredOrganizations().map(org => org.id);
+                        setManuallyExcludedOrgs(allOrgIds);
+                      }}
+                      className='text-sm text-[#D54242] hover:text-[#b53a3a] font-medium'
                     >
-                      <input
-                        type='checkbox'
-                        checked={!manuallyExcludedOrgs.includes(org.id)}
-                        onChange={() => handleOrgToggle(org.id)}
-                        className='w-4 h-4 text-[#D54242] border-gray-300 rounded focus:ring-[#D54242]'
-                      />
-                      <span className='text-gray-700'>{org.name}</span>
-                      {org.region && <span className='text-xs text-gray-500'>({org.region})</span>}
-                    </label>
-                  ))}
-                {getBaseFilteredOrganizations().filter(org =>
-                  org.name.toLowerCase().includes(orgSearchQuery.toLowerCase())
-                ).length === 0 && (
-                  <p className='text-sm text-gray-500 text-center py-4'>No organizations found</p>
-                )}
-              </div>
-            </div>
+                      Unselect All
+                    </button>
+                  </div>
 
-            <div className='bg-blue-50 border border-blue-200 rounded-md p-4'>
-              <p className='text-sm font-semibold text-gray-700 mb-2'>
-                Selected Recipients: {filteredOrganizations.length}
-              </p>
-              {filteredOrganizations.length > 0 && (
-                <div className='text-sm text-gray-600'>
-                  {filteredOrganizations.slice(0, 5).map(org => (
-                    <div key={org.id}>• {org.name}</div>
-                  ))}
-                  {filteredOrganizations.length > 5 && (
-                    <div className='text-gray-500 mt-1'>
-                      ... and {filteredOrganizations.length - 5} more
+                  <input
+                    type='text'
+                    value={orgSearchQuery}
+                    onChange={e => setOrgSearchQuery(e.target.value)}
+                    placeholder='Search organizations...'
+                    className='w-full px-4 py-2 mb-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  />
+                  <div className='border border-gray-300 rounded-md p-4 max-h-64 overflow-y-auto'>
+                    {getBaseFilteredOrganizations()
+                      .filter(org => org.name.toLowerCase().includes(orgSearchQuery.toLowerCase()))
+                      .map(org => (
+                        <label
+                          key={org.id}
+                          className='flex items-center gap-2 py-2 hover:bg-gray-50 px-2 rounded cursor-pointer'
+                        >
+                          <input
+                            type='checkbox'
+                            checked={!manuallyExcludedOrgs.includes(org.id)}
+                            onChange={() => handleOrgToggle(org.id)}
+                            className='w-4 h-4 text-[#D54242] border-gray-300 rounded focus:ring-[#D54242]'
+                          />
+                          <span className='text-gray-700'>{org.name}</span>
+                          {org.region && (
+                            <span className='text-xs text-gray-500'>({org.region})</span>
+                          )}
+                        </label>
+                      ))}
+                    {getBaseFilteredOrganizations().filter(org =>
+                      org.name.toLowerCase().includes(orgSearchQuery.toLowerCase())
+                    ).length === 0 && (
+                      <p className='text-sm text-gray-500 text-center py-4'>
+                        No organizations found
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className='bg-blue-50 border border-blue-200 rounded-md p-4'>
+                  <p className='text-sm font-semibold text-gray-700 mb-2'>
+                    Selected Recipients: {filteredOrganizations.length}
+                  </p>
+                  {filteredOrganizations.length > 0 && (
+                    <div className='text-sm text-gray-600'>
+                      {filteredOrganizations.slice(0, 5).map(org => (
+                        <div key={org.id}>• {org.name}</div>
+                      ))}
+                      {filteredOrganizations.length > 5 && (
+                        <div className='text-gray-500 mt-1'>
+                          ... and {filteredOrganizations.length - 5} more
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
+              </div>
+
+              <div className='bg-white rounded-lg shadow-md p-6 mb-6'>
+                <h2 className='text-xl font-semibold text-gray-800 mb-4'>Email Content</h2>
+
+                <div className='flex flex-col space-y-2 mb-6'>
+                  <label className='text-sm font-semibold text-gray-700'>Email Subject</label>
+                  <input
+                    type='text'
+                    value={emailTitle}
+                    onChange={e => setEmailTitle(e.target.value)}
+                    placeholder='Enter email subject'
+                    className='px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  />
+                </div>
+
+                <div className='flex flex-col space-y-2 mb-6'>
+                  <label className='text-sm font-semibold text-gray-700'>Email Body</label>
+                  <div className='border border-gray-300 rounded-md overflow-hidden'>
+                    <ReactQuill
+                      ref={quillRef}
+                      theme='snow'
+                      value={emailBody}
+                      onChange={setEmailBody}
+                      modules={modules}
+                      formats={formats}
+                      placeholder='Enter email content...'
+                    />
+                  </div>
+                </div>
+
+                {/* Schedule Email Section */}
+                <div className='border-t border-gray-200 pt-6'>
+                  <div className='flex items-center gap-3 mb-4'>
+                    <label className='relative inline-flex items-center cursor-pointer'>
+                      <input
+                        type='checkbox'
+                        checked={isScheduled}
+                        onChange={e => {
+                          setIsScheduled(e.target.checked);
+                          if (!e.target.checked) {
+                            setScheduledDateTime('');
+                          }
+                        }}
+                        className='sr-only peer'
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-100 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#D54242]"></div>
+                    </label>
+                    <span className='text-sm font-semibold text-gray-700'>Schedule for later</span>
+                  </div>
+
+                  {isScheduled && (
+                    <div className='flex flex-col space-y-2'>
+                      <label className='text-sm font-medium text-gray-600'>Send Date & Time</label>
+                      <input
+                        type='datetime-local'
+                        value={scheduledDateTime}
+                        onChange={e => setScheduledDateTime(e.target.value)}
+                        min={new Date().toISOString().slice(0, 16)}
+                        className='px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D54242] max-w-xs'
+                      />
+                      <p className='text-xs text-gray-500'>
+                        The email will be sent at the scheduled time. Times are in your local
+                        timezone.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className='flex justify-end space-x-4'>
+                <button
+                  onClick={() => {
+                    setEmailTitle('');
+                    setEmailBody('');
+                    setSelectedTags([]);
+                    setSelectedRegion('');
+                    setSelectedOrgSize('');
+                    setManuallyExcludedOrgs([]);
+                    setOrgSearchQuery('');
+                    setIsScheduled(false);
+                    setScheduledDateTime('');
+                    setToast(null);
+                  }}
+                  disabled={sending}
+                  className='px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50'
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={handleSend}
+                  disabled={
+                    sending ||
+                    filteredOrganizations.length === 0 ||
+                    (isScheduled && !scheduledDateTime)
+                  }
+                  className='px-6 py-2 bg-[#D54242] text-white rounded-md hover:bg-[#b53a3a] disabled:opacity-50 disabled:cursor-not-allowed'
+                >
+                  {sending
+                    ? isScheduled
+                      ? 'Scheduling...'
+                      : 'Sending...'
+                    : isScheduled
+                      ? `Schedule Email (${filteredOrganizations.length})`
+                      : `Send Email (${filteredOrganizations.length})`}
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* Past Emails Tab */}
+          {activeTab === 'history' && (
+            <div className='bg-white rounded-lg shadow-md'>
+              {historyLoading ? (
+                <div className='p-8 text-center'>
+                  <div className='text-lg text-gray-500'>Loading email history...</div>
+                </div>
+              ) : emailHistory.length === 0 ? (
+                <div className='p-8 text-center'>
+                  <div className='text-gray-500'>No emails have been sent yet.</div>
+                </div>
+              ) : (
+                <div className='divide-y divide-gray-200'>
+                  {emailHistory.map(email => (
+                    <div key={email.id} className='p-4'>
+                      <div
+                        className='cursor-pointer'
+                        onClick={() =>
+                          setExpandedEmailId(expandedEmailId === email.id ? null : email.id)
+                        }
+                      >
+                        <div className='flex items-center justify-between'>
+                          <div className='flex-1'>
+                            <h3 className='text-lg font-semibold text-gray-800'>{email.subject}</h3>
+                            <div className='flex items-center gap-4 mt-1 text-sm text-gray-500'>
+                              <span>
+                                {email.sentAt
+                                  ? formatDate(email.sentAt)
+                                  : formatDate(email.createdAt)}
+                              </span>
+                              <span className='flex items-center gap-1'>
+                                <svg
+                                  className='w-4 h-4'
+                                  fill='none'
+                                  stroke='currentColor'
+                                  viewBox='0 0 24 24'
+                                >
+                                  <path
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                    strokeWidth={2}
+                                    d='M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'
+                                  />
+                                </svg>
+                                {email.recipientCount} recipient
+                                {email.recipientCount !== 1 ? 's' : ''}
+                              </span>
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  email.status === 'SENT'
+                                    ? 'bg-green-100 text-green-800'
+                                    : email.status === 'FAILED'
+                                      ? 'bg-red-100 text-red-800'
+                                      : 'bg-yellow-100 text-yellow-800'
+                                }`}
+                              >
+                                {email.status}
+                              </span>
+                            </div>
+                          </div>
+                          <svg
+                            className={`w-5 h-5 text-gray-400 transition-transform ${
+                              expandedEmailId === email.id ? 'transform rotate-180' : ''
+                            }`}
+                            fill='none'
+                            stroke='currentColor'
+                            viewBox='0 0 24 24'
+                          >
+                            <path
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                              strokeWidth={2}
+                              d='M19 9l-7 7-7-7'
+                            />
+                          </svg>
+                        </div>
+                      </div>
+
+                      {expandedEmailId === email.id && (
+                        <div className='mt-4 pt-4 border-t border-gray-200'>
+                          <div className='mb-4'>
+                            <h4 className='text-sm font-semibold text-gray-700 mb-2'>
+                              Email Content
+                            </h4>
+                            <div
+                              className='prose prose-sm max-w-none bg-gray-50 p-4 rounded-md'
+                              dangerouslySetInnerHTML={{ __html: email.body }}
+                            />
+                          </div>
+                          <div>
+                            <h4 className='text-sm font-semibold text-gray-700 mb-2'>
+                              Recipients ({email.recipientEmails.length})
+                            </h4>
+                            <div className='bg-gray-50 p-4 rounded-md max-h-48 overflow-y-auto'>
+                              <div className='flex flex-wrap gap-2'>
+                                {email.recipientEmails.map((recipientEmail, index) => (
+                                  <span
+                                    key={index}
+                                    className='px-2 py-1 bg-white border border-gray-200 rounded text-sm text-gray-600'
+                                  >
+                                    {recipientEmail}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
-          </div>
-
-          <div className='bg-white rounded-lg shadow-md p-6 mb-6'>
-            <h2 className='text-xl font-semibold text-gray-800 mb-4'>Email Content</h2>
-
-            <div className='flex flex-col space-y-2 mb-6'>
-              <label className='text-sm font-semibold text-gray-700'>Email Subject</label>
-              <input
-                type='text'
-                value={emailTitle}
-                onChange={e => setEmailTitle(e.target.value)}
-                placeholder='Enter email subject'
-                className='px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
-              />
-            </div>
-
-            <div className='flex flex-col space-y-2 mb-6'>
-              <label className='text-sm font-semibold text-gray-700'>Email Body</label>
-              <div className='border border-gray-300 rounded-md overflow-hidden'>
-                <ReactQuill
-                  ref={quillRef}
-                  theme='snow'
-                  value={emailBody}
-                  onChange={setEmailBody}
-                  modules={modules}
-                  formats={formats}
-                  placeholder='Enter email content...'
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className='flex justify-end space-x-4'>
-            <button
-              onClick={() => {
-                setEmailTitle('');
-                setEmailBody('');
-                setSelectedTags([]);
-                setSelectedRegion('');
-                setSelectedOrgSize('');
-                setManuallyExcludedOrgs([]);
-                setOrgSearchQuery('');
-                setToast(null);
-              }}
-              disabled={sending}
-              className='px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50'
-            >
-              Clear
-            </button>
-            <button
-              onClick={handleSend}
-              disabled={sending || filteredOrganizations.length === 0}
-              className='px-6 py-2 bg-[#D54242] text-white rounded-md hover:bg-[#b53a3a] disabled:opacity-50 disabled:cursor-not-allowed'
-            >
-              {sending ? 'Sending...' : `Send Email (${filteredOrganizations.length})`}
-            </button>
-          </div>
+          )}
         </div>
       </div>
     </div>

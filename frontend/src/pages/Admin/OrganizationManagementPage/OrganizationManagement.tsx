@@ -659,245 +659,67 @@ const OrganizationManagement = () => {
     <div className='flex min-h-screen bg-gray-50'>
       <AdminSidebar />
 
-      <div className='flex-1'>
-        <div className='p-8'>
-          <h1 className='text-3xl font-bold text-gray-800 mb-6'>
-            {filter === 'ALL' && `All Organizations (${currentFilterCount})`}
-            {filter === 'PENDING' && `Pending (${currentFilterCount})`}
-            {filter === 'ACTIVE' && `Active (${currentFilterCount})`}
-            {filter === 'INACTIVE' && `Inactive (${currentFilterCount})`}
-          </h1>
+      <div className='flex-1 p-8'>
+        <h1 className='text-3xl font-bold text-gray-800 mb-6'>
+          {filter === 'ALL' && `All Organizations (${currentFilterCount})`}
+          {filter === 'PENDING' && `Pending (${currentFilterCount})`}
+          {filter === 'ACTIVE' && `Active (${currentFilterCount})`}
+          {filter === 'INACTIVE' && `Inactive (${currentFilterCount})`}
+        </h1>
 
-          <div className='space-y-4 mb-6'>
-            <div className='flex items-center gap-3 flex-wrap'>
-              <div className='flex gap-2'>
-                <button
-                  onClick={() => setFilter('ALL')}
-                  className={`px-4 py-2 rounded-[10px] font-medium transition ${
-                    filter === 'ALL'
-                      ? 'bg-[#D54242] text-white'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => setFilter('PENDING')}
-                  className={`px-4 py-2 rounded-[10px] font-medium transition ${
-                    filter === 'PENDING'
-                      ? 'bg-[#D54242] text-white'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  Pending
-                </button>
-                <button
-                  onClick={() => setFilter('ACTIVE')}
-                  className={`px-4 py-2 rounded-[10px] font-medium transition ${
-                    filter === 'ACTIVE'
-                      ? 'bg-[#D54242] text-white'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  Active
-                </button>
-                <button
-                  onClick={() => setFilter('INACTIVE')}
-                  className={`px-4 py-2 rounded-[10px] font-medium transition ${
-                    filter === 'INACTIVE'
-                      ? 'bg-[#D54242] text-white'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  Inactive
-                </button>
-              </div>
-
-              <div className='relative region-dropdown-container'>
-                <button
-                  onClick={() => setRegionDropdownOpen(!regionDropdownOpen)}
-                  className='px-4 py-2 border border-gray-300 rounded-[10px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#194B90] hover:bg-gray-50 flex items-center gap-2'
-                >
-                  <span>{regionFilter === 'all' ? 'All Regions' : regionFilter}</span>
-                  <svg
-                    className={`w-4 h-4 transition-transform ${regionDropdownOpen ? 'rotate-180' : ''}`}
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M19 9l-7 7-7-7'
-                    />
-                  </svg>
-                </button>
-
-                {regionDropdownOpen && (
-                  <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[160px]'>
-                    <div className='py-2'>
-                      {['all', 'East', 'Middle', 'West'].map(region => (
-                        <button
-                          key={region}
-                          onClick={() => {
-                            setRegionFilter(region);
-                            setRegionDropdownOpen(false);
-                          }}
-                          className={`w-full text-left px-4 py-2 hover:bg-gray-50 text-sm ${
-                            regionFilter === region
-                              ? 'bg-blue-50 text-[#194B90] font-medium'
-                              : 'text-gray-700'
-                          }`}
-                        >
-                          {region === 'all' ? 'All Regions' : region}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className='relative type-dropdown-container'>
-                <button
-                  onClick={() => setTypeDropdownOpen(!typeDropdownOpen)}
-                  className='px-4 py-2 border border-gray-300 rounded-[10px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#194B90] hover:bg-gray-50 flex items-center gap-2'
-                >
-                  <span>{typeFilter === 'all' ? 'All Types' : typeFilter}</span>
-                  <svg
-                    className={`w-4 h-4 transition-transform ${typeDropdownOpen ? 'rotate-180' : ''}`}
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M19 9l-7 7-7-7'
-                    />
-                  </svg>
-                </button>
-
-                {typeDropdownOpen && (
-                  <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[200px] max-h-[300px] overflow-y-auto'>
-                    <div className='py-2'>
-                      <button
-                        onClick={() => {
-                          setTypeFilter('all');
-                          setTypeDropdownOpen(false);
-                        }}
-                        className={`w-full text-left px-4 py-2 hover:bg-gray-50 text-sm ${
-                          typeFilter === 'all'
-                            ? 'bg-blue-50 text-[#194B90] font-medium'
-                            : 'text-gray-700'
-                        }`}
-                      >
-                        All Types
-                      </button>
-                      {uniqueOrgTypes.map(type => (
-                        <button
-                          key={type}
-                          onClick={() => {
-                            setTypeFilter(type);
-                            setTypeDropdownOpen(false);
-                          }}
-                          className={`w-full text-left px-4 py-2 hover:bg-gray-50 text-sm ${
-                            typeFilter === type
-                              ? 'bg-blue-50 text-[#194B90] font-medium'
-                              : 'text-gray-700'
-                          }`}
-                        >
-                          {type}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className='flex items-center gap-2'>
-                <div className='relative tag-dropdown-container'>
-                  <button
-                    onClick={() => setTagDropdownOpen(!tagDropdownOpen)}
-                    className='px-4 py-2 border border-gray-300 rounded-[10px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#194B90] hover:bg-gray-50 flex items-center gap-2'
-                  >
-                    <span>
-                      {tagsFilter.length > 0 ? `Tags (${tagsFilter.length})` : 'Filter by Tags'}
-                    </span>
-                    <svg
-                      className={`w-4 h-4 transition-transform ${tagDropdownOpen ? 'rotate-180' : ''}`}
-                      fill='none'
-                      stroke='currentColor'
-                      viewBox='0 0 24 24'
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth={2}
-                        d='M19 9l-7 7-7-7'
-                      />
-                    </svg>
-                  </button>
-
-                  {tagDropdownOpen && (
-                    <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[200px] max-h-[300px] overflow-y-auto'>
-                      {allTags.length === 0 ? (
-                        <div className='px-4 py-3 text-sm text-gray-500'>No tags available</div>
-                      ) : (
-                        <div className='py-2'>
-                          {allTags.map(tag => (
-                            <label
-                              key={tag}
-                              className='flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer'
-                            >
-                              <input
-                                type='checkbox'
-                                checked={tagsFilter.includes(tag)}
-                                onChange={e => {
-                                  if (e.target.checked) {
-                                    setTagsFilter([...tagsFilter, tag]);
-                                  } else {
-                                    setTagsFilter(tagsFilter.filter(t => t !== tag));
-                                  }
-                                }}
-                                className='w-4 h-4 text-[#194B90] border-gray-300 rounded focus:ring-[#194B90]'
-                              />
-                              <span className='ml-2 text-sm text-gray-700'>{tag}</span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
-                      {tagsFilter.length > 0 && (
-                        <div className='border-t border-gray-200 px-4 py-2'>
-                          <button
-                            onClick={() => {
-                              setTagsFilter([]);
-                              setTagDropdownOpen(false);
-                            }}
-                            className='text-sm text-[#D54242] hover:text-[#b53a3a] font-medium'
-                          >
-                            Clear All
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
+        <div className='space-y-4 mb-6'>
+          <div className='flex items-center gap-3 flex-wrap'>
+            <div className='flex gap-2'>
+              <button
+                onClick={() => setFilter('ALL')}
+                className={`px-4 py-2 rounded-[10px] font-medium transition ${
+                  filter === 'ALL'
+                    ? 'bg-[#D54242] text-white'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setFilter('PENDING')}
+                className={`px-4 py-2 rounded-[10px] font-medium transition ${
+                  filter === 'PENDING'
+                    ? 'bg-[#D54242] text-white'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                Pending
+              </button>
+              <button
+                onClick={() => setFilter('ACTIVE')}
+                className={`px-4 py-2 rounded-[10px] font-medium transition ${
+                  filter === 'ACTIVE'
+                    ? 'bg-[#D54242] text-white'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                Active
+              </button>
+              <button
+                onClick={() => setFilter('INACTIVE')}
+                className={`px-4 py-2 rounded-[10px] font-medium transition ${
+                  filter === 'INACTIVE'
+                    ? 'bg-[#D54242] text-white'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                Inactive
+              </button>
             </div>
 
-            <div className='flex items-center'>
-              <div className='relative flex-1 max-w-xl'>
-                <input
-                  type='text'
-                  placeholder='Search organizations...'
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className='w-full px-4 py-2 pl-10 border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#194B90]'
-                />
+            <div className='relative region-dropdown-container'>
+              <button
+                onClick={() => setRegionDropdownOpen(!regionDropdownOpen)}
+                className='px-4 py-2 border border-gray-300 rounded-[10px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#194B90] hover:bg-gray-50 flex items-center gap-2'
+              >
+                <span>{regionFilter === 'all' ? 'Filter by Regions' : regionFilter}</span>
                 <svg
-                  className='absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400'
+                  className={`w-4 h-4 transition-transform ${regionDropdownOpen ? 'rotate-180' : ''}`}
                   fill='none'
                   stroke='currentColor'
                   viewBox='0 0 24 24'
@@ -906,311 +728,476 @@ const OrganizationManagement = () => {
                     strokeLinecap='round'
                     strokeLinejoin='round'
                     strokeWidth={2}
-                    d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
+                    d='M19 9l-7 7-7-7'
                   />
                 </svg>
-              </div>
-            </div>
+              </button>
 
-            {tagsFilter.length > 0 && (
-              <div className='flex items-center gap-2 flex-wrap'>
-                {tagsFilter.map(tag => (
-                  <span
-                    key={tag}
-                    className='px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full flex items-center gap-2'
-                  >
-                    {tag}
-                    <button
-                      onClick={() => setTagsFilter(tagsFilter.filter(t => t !== tag))}
-                      className='text-blue-600 hover:text-blue-800'
-                    >
-                      <svg
-                        className='w-4 h-4'
-                        fill='none'
-                        stroke='currentColor'
-                        viewBox='0 0 24 24'
+              {regionDropdownOpen && (
+                <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[160px]'>
+                  <div className='py-2'>
+                    {['all', 'East', 'Middle', 'West'].map(region => (
+                      <button
+                        key={region}
+                        onClick={() => {
+                          setRegionFilter(region);
+                          setRegionDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 hover:bg-gray-50 text-sm ${
+                          regionFilter === region
+                            ? 'bg-blue-50 text-[#194B90] font-medium'
+                            : 'text-gray-700'
+                        }`}
                       >
-                        <path
-                          strokeLinecap='round'
-                          strokeLinejoin='round'
-                          strokeWidth={2}
-                          d='M6 18L18 6M6 6l12 12'
-                        />
-                      </svg>
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {loading ? (
-            <div className='text-center py-12'>
-              <p className='text-gray-600'>Loading organizations...</p>
-            </div>
-          ) : sortedOrganizations.length === 0 ? (
-            <div className='text-center py-12'>
-              <p className='text-gray-600'>No organizations found.</p>
-            </div>
-          ) : (
-            <>
-              <div className='bg-white rounded-lg border border-gray-200 overflow-visible'>
-                <table className='min-w-full'>
-                  <thead className='bg-gray-50 border-b border-gray-200'>
-                    <tr>
-                      <th
-                        className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
-                        onClick={() => handleSort('name')}
-                      >
-                        <div className='flex items-center gap-1'>
-                          Name
-                          <SortIcon field='name' />
-                        </div>
-                      </th>
-                      <th
-                        className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
-                        onClick={() => handleSort('region')}
-                      >
-                        <div className='flex items-center gap-1'>
-                          Region
-                          <SortIcon field='region' />
-                        </div>
-                      </th>
-                      <th
-                        className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
-                        onClick={() => handleSort('primaryContactName')}
-                      >
-                        <div className='flex items-center gap-1'>
-                          Primary Contact
-                          <SortIcon field='primaryContactName' />
-                        </div>
-                      </th>
-                      <th
-                        className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
-                        onClick={() => handleSort('website')}
-                      >
-                        <div className='flex items-center gap-1'>
-                          Website
-                          <SortIcon field='website' />
-                        </div>
-                      </th>
-                      <th
-                        className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
-                        onClick={() => handleSort('organizationType')}
-                      >
-                        <div className='flex items-center gap-1'>
-                          Type
-                          <SortIcon field='organizationType' />
-                        </div>
-                      </th>
-                      <th
-                        className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
-                        onClick={() => handleSort('status')}
-                      >
-                        <div className='flex items-center gap-1'>
-                          Status
-                          <SortIcon field='status' />
-                        </div>
-                      </th>
-                      <th
-                        className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
-                        onClick={() => handleSort('createdAt')}
-                      >
-                        <div className='flex items-center gap-1'>
-                          Joined
-                          <SortIcon field='createdAt' />
-                        </div>
-                      </th>
-                      <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className='divide-y divide-gray-200'>
-                    {sortedOrganizations.map(org => (
-                      <tr key={org.id} className='hover:bg-gray-50'>
-                        <td
-                          className='px-6 py-4 cursor-pointer'
-                          onClick={() => setEditingOrg({ ...org })}
-                        >
-                          <div className='text-sm font-medium text-[#194B90] hover:underline'>
-                            {org.name}
-                          </div>
-                        </td>
-                        <td className='px-6 py-4'>
-                          <div className='text-sm text-gray-900'>{org.region || 'N/A'}</div>
-                        </td>
-                        <td className='px-6 py-4'>
-                          <div className='text-sm text-gray-900'>
-                            <div>{org.primaryContactName || 'N/A'}</div>
-                            {org.primaryContactEmail && (
-                              <div className='text-xs text-gray-600'>{org.primaryContactEmail}</div>
-                            )}
-                          </div>
-                        </td>
-                        <td className='px-6 py-4'>
-                          {org.website ? (
-                            <a
-                              href={org.website}
-                              target='_blank'
-                              rel='noopener noreferrer'
-                              className='text-sm text-[#194B90] hover:underline'
-                              onClick={e => e.stopPropagation()}
-                            >
-                              Link
-                            </a>
-                          ) : (
-                            <div className='text-sm text-gray-500'>N/A</div>
-                          )}
-                        </td>
-                        <td className='px-6 py-4'>
-                          <div className='text-sm text-gray-900'>
-                            {org.organizationType || 'N/A'}
-                          </div>
-                        </td>
-                        <td className='px-6 py-4'>
-                          <span
-                            className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              org.status === 'PENDING'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : org.status === 'ACTIVE'
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-gray-100 text-gray-800'
-                            }`}
-                          >
-                            {org.status}
-                          </span>
-                        </td>
-                        <td className='px-6 py-4'>
-                          <div className='text-sm text-gray-900'>
-                            {new Date(org.createdAt).toLocaleDateString()}
-                          </div>
-                        </td>
-                        <td className='px-6 py-4 text-sm' onClick={e => e.stopPropagation()}>
-                          <div className='relative inline-block action-dropdown-container'>
-                            <button
-                              onClick={() =>
-                                setActionDropdownOpen(actionDropdownOpen === org.id ? null : org.id)
-                              }
-                              disabled={actioningOrg === org.id}
-                              className='bg-[#D54242] border border-[#D54242] text-white px-4 py-2 rounded-[10px] hover:bg-[#b53a3a] transition disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#D54242] flex items-center gap-2'
-                            >
-                              <span>{actioningOrg === org.id ? 'Processing...' : 'Actions'}</span>
-                              <svg
-                                className={`w-4 h-4 transition-transform ${actionDropdownOpen === org.id ? 'rotate-180' : ''}`}
-                                fill='none'
-                                stroke='currentColor'
-                                viewBox='0 0 24 24'
-                              >
-                                <path
-                                  strokeLinecap='round'
-                                  strokeLinejoin='round'
-                                  strokeWidth={2}
-                                  d='M19 9l-7 7-7-7'
-                                />
-                              </svg>
-                            </button>
-
-                            {actionDropdownOpen === org.id && (
-                              <div className='absolute right-0 top-full mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[140px]'>
-                                <div className='py-2'>
-                                  {org.status === 'PENDING' && (
-                                    <>
-                                      <button
-                                        onClick={() => {
-                                          handleActionClick('approve', org.id, org.name);
-                                          setActionDropdownOpen(null);
-                                        }}
-                                        className='w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-gray-700'
-                                      >
-                                        Approve
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          handleActionClick('decline', org.id, org.name);
-                                          setActionDropdownOpen(null);
-                                        }}
-                                        className='w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-red-600'
-                                      >
-                                        Decline
-                                      </button>
-                                    </>
-                                  )}
-                                  {org.status === 'ACTIVE' && (
-                                    <>
-                                      <button
-                                        onClick={() => {
-                                          handleActionClick('archive', org.id, org.name);
-                                          setActionDropdownOpen(null);
-                                        }}
-                                        className='w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-gray-700'
-                                      >
-                                        Archive
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          handleActionClick('delete', org.id, org.name);
-                                          setActionDropdownOpen(null);
-                                        }}
-                                        className='w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-red-600'
-                                      >
-                                        Delete
-                                      </button>
-                                    </>
-                                  )}
-                                  {org.status === 'INACTIVE' && (
-                                    <>
-                                      <button
-                                        onClick={() => {
-                                          handleActionClick('unarchive', org.id, org.name);
-                                          setActionDropdownOpen(null);
-                                        }}
-                                        className='w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-gray-700'
-                                      >
-                                        Unarchive
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          handleActionClick('delete', org.id, org.name);
-                                          setActionDropdownOpen(null);
-                                        }}
-                                        className='w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-red-600'
-                                      >
-                                        Delete
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
+                        {region === 'all' ? 'All Regions' : region}
+                      </button>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
-              <div className='flex justify-end mt-6'>
-                <button
-                  onClick={exportToCSV}
-                  disabled={sortedOrganizations.length === 0}
-                  className='flex items-center gap-2 px-4 py-2 rounded-[10px] transition bg-white text-[#D54242] border border-[#D54242] hover:bg-[#D54242] hover:text-white disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed'
+            <div className='relative type-dropdown-container'>
+              <button
+                onClick={() => setTypeDropdownOpen(!typeDropdownOpen)}
+                className='px-4 py-2 border border-gray-300 rounded-[10px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#194B90] hover:bg-gray-50 flex items-center gap-2'
+              >
+                <span>{typeFilter === 'all' ? 'Filter by Types' : typeFilter}</span>
+                <svg
+                  className={`w-4 h-4 transition-transform ${typeDropdownOpen ? 'rotate-180' : ''}`}
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
                 >
-                  <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M19 9l-7 7-7-7'
+                  />
+                </svg>
+              </button>
+
+              {typeDropdownOpen && (
+                <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[200px] max-h-[300px] overflow-y-auto'>
+                  <div className='py-2'>
+                    <button
+                      onClick={() => {
+                        setTypeFilter('all');
+                        setTypeDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 hover:bg-gray-50 text-sm ${
+                        typeFilter === 'all'
+                          ? 'bg-blue-50 text-[#194B90] font-medium'
+                          : 'text-gray-700'
+                      }`}
+                    >
+                      All Types
+                    </button>
+                    {uniqueOrgTypes.map(type => (
+                      <button
+                        key={type}
+                        onClick={() => {
+                          setTypeFilter(type);
+                          setTypeDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 hover:bg-gray-50 text-sm ${
+                          typeFilter === type
+                            ? 'bg-blue-50 text-[#194B90] font-medium'
+                            : 'text-gray-700'
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className='flex items-center gap-2'>
+              <div className='relative tag-dropdown-container'>
+                <button
+                  onClick={() => setTagDropdownOpen(!tagDropdownOpen)}
+                  className='px-4 py-2 border border-gray-300 rounded-[10px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#194B90] hover:bg-gray-50 flex items-center gap-2'
+                >
+                  <span>
+                    {tagsFilter.length > 0 ? `Tags (${tagsFilter.length})` : 'Filter by Tags'}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${tagDropdownOpen ? 'rotate-180' : ''}`}
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
                     <path
                       strokeLinecap='round'
                       strokeLinejoin='round'
                       strokeWidth={2}
-                      d='M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+                      d='M19 9l-7 7-7-7'
                     />
                   </svg>
-                  Export ({sortedOrganizations.length})
                 </button>
+
+                {tagDropdownOpen && (
+                  <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[200px] max-h-[300px] overflow-y-auto'>
+                    {allTags.length === 0 ? (
+                      <div className='px-4 py-3 text-sm text-gray-500'>No tags available</div>
+                    ) : (
+                      <div className='py-2'>
+                        {allTags.map(tag => (
+                          <label
+                            key={tag}
+                            className='flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer'
+                          >
+                            <input
+                              type='checkbox'
+                              checked={tagsFilter.includes(tag)}
+                              onChange={e => {
+                                if (e.target.checked) {
+                                  setTagsFilter([...tagsFilter, tag]);
+                                } else {
+                                  setTagsFilter(tagsFilter.filter(t => t !== tag));
+                                }
+                              }}
+                              className='w-4 h-4 text-[#194B90] border-gray-300 rounded focus:ring-[#194B90]'
+                            />
+                            <span className='ml-2 text-sm text-gray-700'>{tag}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    {tagsFilter.length > 0 && (
+                      <div className='border-t border-gray-200 px-4 py-2'>
+                        <button
+                          onClick={() => {
+                            setTagsFilter([]);
+                            setTagDropdownOpen(false);
+                          }}
+                          className='text-sm text-[#D54242] hover:text-[#b53a3a] font-medium'
+                        >
+                          Clear All
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            </>
+            </div>
+
+            <button
+              onClick={exportToCSV}
+              disabled={sortedOrganizations.length === 0}
+              className='flex items-center gap-2 px-4 py-2 rounded-[10px] transition bg-white text-[#D54242] border border-[#D54242] hover:bg-[#D54242] hover:text-white disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed whitespace-nowrap'
+            >
+              <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+                />
+              </svg>
+              Export ({sortedOrganizations.length})
+            </button>
+          </div>
+
+          <div className='relative'>
+            <input
+              type='text'
+              placeholder='Search organizations...'
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className='w-full px-4 py-2 pl-10 border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+            />
+            <svg
+              className='absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
+              />
+            </svg>
+          </div>
+
+          {tagsFilter.length > 0 && (
+            <div className='flex items-center gap-2 flex-wrap'>
+              {tagsFilter.map(tag => (
+                <span
+                  key={tag}
+                  className='px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full flex items-center gap-2'
+                >
+                  {tag}
+                  <button
+                    onClick={() => setTagsFilter(tagsFilter.filter(t => t !== tag))}
+                    className='text-blue-600 hover:text-blue-800'
+                  >
+                    <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M6 18L18 6M6 6l12 12'
+                      />
+                    </svg>
+                  </button>
+                </span>
+              ))}
+            </div>
           )}
         </div>
+
+        {loading ? (
+          <div className='text-center py-12'>
+            <p className='text-gray-600'>Loading organizations...</p>
+          </div>
+        ) : sortedOrganizations.length === 0 ? (
+          <div className='text-center py-12'>
+            <p className='text-gray-600'>No organizations found.</p>
+          </div>
+        ) : (
+          <>
+            <div className='bg-white rounded-lg border border-gray-200 overflow-visible'>
+              <table className='min-w-full'>
+                <thead className='bg-gray-50 border-b border-gray-200'>
+                  <tr>
+                    <th
+                      className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                      onClick={() => handleSort('name')}
+                    >
+                      <div className='flex items-center gap-1'>
+                        Name
+                        <SortIcon field='name' />
+                      </div>
+                    </th>
+                    <th
+                      className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                      onClick={() => handleSort('region')}
+                    >
+                      <div className='flex items-center gap-1'>
+                        Region
+                        <SortIcon field='region' />
+                      </div>
+                    </th>
+                    <th
+                      className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                      onClick={() => handleSort('primaryContactName')}
+                    >
+                      <div className='flex items-center gap-1'>
+                        Primary Contact
+                        <SortIcon field='primaryContactName' />
+                      </div>
+                    </th>
+                    <th
+                      className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                      onClick={() => handleSort('website')}
+                    >
+                      <div className='flex items-center gap-1'>
+                        Website
+                        <SortIcon field='website' />
+                      </div>
+                    </th>
+                    <th
+                      className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                      onClick={() => handleSort('organizationType')}
+                    >
+                      <div className='flex items-center gap-1'>
+                        Type
+                        <SortIcon field='organizationType' />
+                      </div>
+                    </th>
+                    <th
+                      className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                      onClick={() => handleSort('status')}
+                    >
+                      <div className='flex items-center gap-1'>
+                        Status
+                        <SortIcon field='status' />
+                      </div>
+                    </th>
+                    <th
+                      className='px-6 py-4 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100'
+                      onClick={() => handleSort('createdAt')}
+                    >
+                      <div className='flex items-center gap-1'>
+                        Joined
+                        <SortIcon field='createdAt' />
+                      </div>
+                    </th>
+                    <th className='px-6 py-4 text-left text-sm font-semibold text-gray-700'>
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className='divide-y divide-gray-200'>
+                  {sortedOrganizations.map(org => (
+                    <tr key={org.id} className='hover:bg-gray-50'>
+                      <td
+                        className='px-6 py-4 cursor-pointer'
+                        onClick={() => setEditingOrg({ ...org })}
+                      >
+                        <div className='text-sm font-medium text-[#194B90] hover:underline'>
+                          {org.name}
+                        </div>
+                      </td>
+                      <td className='px-6 py-4'>
+                        <div className='text-sm text-gray-900'>{org.region || 'N/A'}</div>
+                      </td>
+                      <td className='px-6 py-4'>
+                        <div className='text-sm text-gray-900'>
+                          <div>{org.primaryContactName || 'N/A'}</div>
+                          {org.primaryContactEmail && (
+                            <div className='text-xs text-gray-600'>{org.primaryContactEmail}</div>
+                          )}
+                        </div>
+                      </td>
+                      <td className='px-6 py-4'>
+                        {org.website ? (
+                          <a
+                            href={org.website}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='text-sm text-[#194B90] hover:underline'
+                            onClick={e => e.stopPropagation()}
+                          >
+                            Link
+                          </a>
+                        ) : (
+                          <div className='text-sm text-gray-500'>N/A</div>
+                        )}
+                      </td>
+                      <td className='px-6 py-4'>
+                        <div className='text-sm text-gray-900'>{org.organizationType || 'N/A'}</div>
+                      </td>
+                      <td className='px-6 py-4'>
+                        <span
+                          className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            org.status === 'PENDING'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : org.status === 'ACTIVE'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {org.status}
+                        </span>
+                      </td>
+                      <td className='px-6 py-4'>
+                        <div className='text-sm text-gray-900'>
+                          {new Date(org.createdAt).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className='px-6 py-4 text-sm' onClick={e => e.stopPropagation()}>
+                        <div className='relative inline-block action-dropdown-container'>
+                          <button
+                            onClick={() =>
+                              setActionDropdownOpen(actionDropdownOpen === org.id ? null : org.id)
+                            }
+                            disabled={actioningOrg === org.id}
+                            className='bg-[#D54242] border border-[#D54242] text-white px-4 py-2 rounded-[10px] hover:bg-[#b53a3a] transition disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#D54242] flex items-center gap-2'
+                          >
+                            <span>{actioningOrg === org.id ? 'Processing...' : 'Actions'}</span>
+                            <svg
+                              className={`w-4 h-4 transition-transform ${actionDropdownOpen === org.id ? 'rotate-180' : ''}`}
+                              fill='none'
+                              stroke='currentColor'
+                              viewBox='0 0 24 24'
+                            >
+                              <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M19 9l-7 7-7-7'
+                              />
+                            </svg>
+                          </button>
+
+                          {actionDropdownOpen === org.id && (
+                            <div className='absolute right-0 top-full mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[140px]'>
+                              <div className='py-2'>
+                                {org.status === 'PENDING' && (
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        handleActionClick('approve', org.id, org.name);
+                                        setActionDropdownOpen(null);
+                                      }}
+                                      className='w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-gray-700'
+                                    >
+                                      Approve
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        handleActionClick('decline', org.id, org.name);
+                                        setActionDropdownOpen(null);
+                                      }}
+                                      className='w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-red-600'
+                                    >
+                                      Decline
+                                    </button>
+                                  </>
+                                )}
+                                {org.status === 'ACTIVE' && (
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        handleActionClick('archive', org.id, org.name);
+                                        setActionDropdownOpen(null);
+                                      }}
+                                      className='w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-gray-700'
+                                    >
+                                      Archive
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        handleActionClick('delete', org.id, org.name);
+                                        setActionDropdownOpen(null);
+                                      }}
+                                      className='w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-red-600'
+                                    >
+                                      Delete
+                                    </button>
+                                  </>
+                                )}
+                                {org.status === 'INACTIVE' && (
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        handleActionClick('unarchive', org.id, org.name);
+                                        setActionDropdownOpen(null);
+                                      }}
+                                      className='w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-gray-700'
+                                    >
+                                      Unarchive
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        handleActionClick('delete', org.id, org.name);
+                                        setActionDropdownOpen(null);
+                                      }}
+                                      className='w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-red-600'
+                                    >
+                                      Delete
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </div>
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
