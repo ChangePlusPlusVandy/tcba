@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
 import { API_BASE_URL } from '../../config/api';
+import PublicAttachmentList from '../../components/PublicAttachmentList';
 import 'react-quill-new/dist/quill.snow.css';
 
 type Tag = {
@@ -24,6 +25,7 @@ type BlogType = {
   publishedDate?: string;
   createdAt: string;
   updatedAt: string;
+  attachmentUrls?: string[];
 };
 
 const Blog = () => {
@@ -99,6 +101,9 @@ const Blog = () => {
           className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-[#3C3C3C] py-8 ql-editor'
           dangerouslySetInnerHTML={{ __html: blog.content }}
         />
+        {blog.attachmentUrls && blog.attachmentUrls.length > 0 && (
+          <PublicAttachmentList attachmentUrls={blog.attachmentUrls} className='mt-6' />
+        )}
       </div>
     </div>
   );

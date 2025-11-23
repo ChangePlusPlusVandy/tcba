@@ -888,7 +888,7 @@ const OrganizationManagement = () => {
             </div>
 
             <div className='flex items-center'>
-              <div className='relative flex-1 max-w-md'>
+              <div className='relative flex-1 max-w-xl'>
                 <input
                   type='text'
                   placeholder='Search organizations...'

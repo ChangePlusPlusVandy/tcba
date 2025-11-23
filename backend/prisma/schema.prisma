@@ -10,15 +10,15 @@ datasource db {
 
 model Announcements {
   id               String            @id @default(cuid())
-  slug             String            @unique
   title            String
-  content          String            @db.Text
+  content          String
   publishedDate    DateTime?
   isPublished      Boolean           @default(false)
   attachmentUrls   String[]
   createdByAdminId String
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
+  slug             String            @unique
   AnnouncementTag  AnnouncementTag[]
   tags             Tag[]             @relation("AnnouncementsToTag")
 
@@ -101,13 +101,13 @@ model Organization {
   role                  OrganizationRole   @default(MEMBER)
   status                OrganizationStatus @default(PENDING)
   tags                  String[]
-  notifyAnnouncements   Boolean            @default(true)
-  notifySurveys         Boolean            @default(true)
-  notifyAlerts          Boolean            @default(true)
-  notifyBlogs           Boolean            @default(true)
-  visibleInDirectory    Boolean            @default(true)
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
+  notifyAlerts          Boolean            @default(true)
+  notifyAnnouncements   Boolean            @default(true)
+  notifyBlogs           Boolean            @default(true)
+  notifySurveys         Boolean            @default(true)
+  visibleInDirectory    Boolean            @default(true)
   surveyResponses       SurveyResponse[]
 
   @@map("organizations")
@@ -132,15 +132,16 @@ model Survey {
   id              String           @id @default(cuid())
   title           String
   description     String?
-  questions       Json?
-  createdDate     DateTime         @default(now())
+  questions       Json
   dueDate         DateTime?
-  isActive        Boolean
-  isPublished     Boolean
+  isActive        Boolean          @default(false)
+  isPublished     Boolean          @default(false)
   status          SurveyStatus     @default(DRAFT)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
   surveyResponses SurveyResponse[]
 
-  @@map("survey")
+  @@map("surveys")
 }
 
 model AdminUser {
@@ -168,15 +169,16 @@ model EmailSubscription {
 
 model Blog {
   id               String    @id @default(cuid())
-  slug             String    @unique
   title            String
   content          String
   author           String
   featuredImageUrl String?
   isPublished      Boolean   @default(false)
   publishedDate    DateTime?
+  attachmentUrls   String[]
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+  slug             String    @unique
   BlogTag          BlogTag[]
   tags             Tag[]     @relation("BlogsToTag")
 
@@ -195,9 +197,9 @@ model Notification {
 }
 
 model EmailHistory {
-  id               String    @id @default(cuid())
+  id               String      @id @default(cuid())
   subject          String
-  body             String    @db.Text
+  body             String
   recipientEmails  String[]
   recipientCount   Int
   filters          Json?
@@ -205,30 +207,30 @@ model EmailHistory {
   sentAt           DateTime?
   status           EmailStatus @default(SCHEDULED)
   createdByAdminId String
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
 
   @@map("email_history")
+}
+
+model PageContent {
+  id           String   @id @default(cuid())
+  page         String
+  section      String
+  contentKey   String
+  contentValue String
+  contentType  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([page, section, contentKey])
+  @@map("page_content")
 }
 
 enum EmailStatus {
   SCHEDULED
   SENT
   FAILED
-}
-
-model PageContent {
-  id           String   @id @default(cuid())
-  page         String   
-  section      String   
-  contentKey   String   
-  contentValue String   @db.Text 
-  contentType  String   
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@unique([page, section, contentKey])
-  @@map("page_content")
 }
 
 enum OrganizationRole {

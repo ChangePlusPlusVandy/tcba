@@ -299,79 +299,75 @@ const OrganizationsList = () => {
                 )}
               </div>
 
-              <div className='flex items-center gap-2'>
-                <div className='relative tag-dropdown-container'>
-                  <button
-                    onClick={() => setTagDropdownOpen(!tagDropdownOpen)}
-                    className='px-4 py-2 border border-gray-300 rounded-[10px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#194B90] hover:bg-gray-50 flex items-center gap-2'
+              <div className='relative tag-dropdown-container'>
+                <button
+                  onClick={() => setTagDropdownOpen(!tagDropdownOpen)}
+                  className='px-4 py-2 border border-gray-300 rounded-[10px] bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#194B90] hover:bg-gray-50 flex items-center gap-2'
+                >
+                  <span>
+                    {tagsFilter.length > 0 ? `Tags (${tagsFilter.length})` : 'Filter by Tags'}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${tagDropdownOpen ? 'rotate-180' : ''}`}
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
                   >
-                    <span>
-                      {tagsFilter.length > 0 ? `Tags (${tagsFilter.length})` : 'Filter by Tags'}
-                    </span>
-                    <svg
-                      className={`w-4 h-4 transition-transform ${tagDropdownOpen ? 'rotate-180' : ''}`}
-                      fill='none'
-                      stroke='currentColor'
-                      viewBox='0 0 24 24'
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth={2}
-                        d='M19 9l-7 7-7-7'
-                      />
-                    </svg>
-                  </button>
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M19 9l-7 7-7-7'
+                    />
+                  </svg>
+                </button>
 
-                  {tagDropdownOpen && (
-                    <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[200px] max-h-[300px] overflow-y-auto'>
-                      {allTags.length === 0 ? (
-                        <div className='px-4 py-3 text-sm text-gray-500'>No tags available</div>
-                      ) : (
-                        <div className='py-2'>
-                          {allTags.map(tag => (
-                            <label
-                              key={tag}
-                              className='flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer'
-                            >
-                              <input
-                                type='checkbox'
-                                checked={tagsFilter.includes(tag)}
-                                onChange={e => {
-                                  if (e.target.checked) {
-                                    setTagsFilter([...tagsFilter, tag]);
-                                  } else {
-                                    setTagsFilter(tagsFilter.filter(t => t !== tag));
-                                  }
-                                }}
-                                className='w-4 h-4 text-[#194B90] border-gray-300 rounded focus:ring-[#194B90]'
-                              />
-                              <span className='ml-2 text-sm text-gray-700'>{tag}</span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
-                      {tagsFilter.length > 0 && (
-                        <div className='border-t border-gray-200 px-4 py-2'>
-                          <button
-                            onClick={() => {
-                              setTagsFilter([]);
-                              setTagDropdownOpen(false);
-                            }}
-                            className='text-sm text-[#D54242] hover:text-[#b53a3a] font-medium'
+                {tagDropdownOpen && (
+                  <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[200px] max-h-[300px] overflow-y-auto'>
+                    {allTags.length === 0 ? (
+                      <div className='px-4 py-3 text-sm text-gray-500'>No tags available</div>
+                    ) : (
+                      <div className='py-2'>
+                        {allTags.map(tag => (
+                          <label
+                            key={tag}
+                            className='flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer'
                           >
-                            Clear All
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                            <input
+                              type='checkbox'
+                              checked={tagsFilter.includes(tag)}
+                              onChange={e => {
+                                if (e.target.checked) {
+                                  setTagsFilter([...tagsFilter, tag]);
+                                } else {
+                                  setTagsFilter(tagsFilter.filter(t => t !== tag));
+                                }
+                              }}
+                              className='w-4 h-4 text-[#194B90] border-gray-300 rounded focus:ring-[#194B90]'
+                            />
+                            <span className='ml-2 text-sm text-gray-700'>{tag}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    {tagsFilter.length > 0 && (
+                      <div className='border-t border-gray-200 px-4 py-2'>
+                        <button
+                          onClick={() => {
+                            setTagsFilter([]);
+                            setTagDropdownOpen(false);
+                          }}
+                          className='text-sm text-[#D54242] hover:text-[#b53a3a] font-medium'
+                        >
+                          Clear All
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            </div>
 
-            <div className='flex items-center'>
-              <div className='relative flex-1 max-w-md'>
+              <div className='relative flex-1 max-w-xl ml-auto'>
                 <input
                   type='text'
                   placeholder='Search organizations...'

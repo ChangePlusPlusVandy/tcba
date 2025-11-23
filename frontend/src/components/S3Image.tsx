@@ -29,7 +29,7 @@ const S3Image = ({ src, alt, className, fallbackSrc }: S3ImageProps) => {
 
       try {
         const response = await fetch(
-          `${API_BASE_URL}/api/uploads/public-image/${encodeURIComponent(src)}`
+          `${API_BASE_URL}/api/files/public-image/${encodeURIComponent(src)}`
         );
 
         if (response.ok) {

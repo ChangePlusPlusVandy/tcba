@@ -25,6 +25,9 @@ import AdminAnnouncements from '../pages/Admin/AnnouncementsPage/Announcements';
 import AdminBlogs from '../pages/Admin/BlogsPage/Blogs';
 import AdminAlerts from '../pages/Admin/AlertsPage/Alerts';
 import AdminSurveys from '../pages/Admin/SurveysPage/Surveys';
+import CreateSurvey from '../pages/Admin/SurveysPage/CreateSurvey';
+import SurveyResponses from '../pages/Admin/SurveyResponsesPage/SurveyResponses';
+import SurveySummary from '../pages/Admin/SurveyResponsesPage/SurveySummary';
 import Blog from '../pages/BlogPage/Blog';
 import BlogsPage from '../pages/BlogsPage/Blogs';
 import HomePageEdit from '../pages/Admin/PageEditPages/HomePage/HomePageEdit';
@@ -32,6 +35,8 @@ import AboutPageEdit from '../pages/Admin/PageEditPages/AboutPage/AboutPageEdit'
 import RegisterPageEdit from '../pages/Admin/PageEditPages/RegisterPage/RegisterPageEdit';
 import ContactPageEdit from '../pages/Admin/PageEditPages/ContactPage/ContactPageEdit';
 import EmailSignupPageEdit from '../pages/Admin/PageEditPages/EmailSignupPage/EmailSignupPageEdit';
+import AnnouncementsPageEdit from '../pages/Admin/PageEditPages/AnnouncementsPage/AnnouncementsPageEdit';
+import BlogsPageEdit from '../pages/Admin/PageEditPages/BlogsPage/BlogsPageEdit';
 import CustomEmail from '../pages/Admin/CustomEmailPage/CustomEmail';
 import AdminMessages from '../pages/Admin/MessagesPage/Messages';
 import OrganizationMessages from '../pages/OrganizationView/MessagesPage/Messages';
@@ -182,6 +187,38 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path='/admin/surveys/create'
+        element={
+          <AdminRoute>
+            <CreateSurvey />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/surveys/edit/:id'
+        element={
+          <AdminRoute>
+            <CreateSurvey />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/surveys/:surveyId/responses'
+        element={
+          <AdminRoute>
+            <SurveyResponses />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/surveys/:surveyId/responses/summary'
+        element={
+          <AdminRoute>
+            <SurveySummary />
+          </AdminRoute>
+        }
+      />
+      <Route
         path='/admin/email'
         element={
           <AdminRoute>
@@ -234,6 +271,22 @@ const AppRoutes = () => {
         element={
           <AdminRoute>
             <EmailSignupPageEdit />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/page-edit/announcements'
+        element={
+          <AdminRoute>
+            <AnnouncementsPageEdit />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/page-edit/blogs'
+        element={
+          <AdminRoute>
+            <BlogsPageEdit />
           </AdminRoute>
         }
       />

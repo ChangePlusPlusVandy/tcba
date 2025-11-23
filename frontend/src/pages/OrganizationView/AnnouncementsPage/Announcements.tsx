@@ -6,6 +6,30 @@ import Toast from '../../../components/Toast';
 import ConfirmModal from '../../../components/ConfirmModal';
 import { API_BASE_URL } from '../../../config/api';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
+import Toast from '../../../components/Toast';
+import PublicAttachmentList from '../../../components/PublicAttachmentList';
+import { API_BASE_URL } from '../../../config/api';
+
+type Tag = {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type Announcement = {
+  id: string;
+  slug: string;
+  title: string;
+  content: string;
+  publishedDate?: string;
+  isPublished: boolean;
+  attachmentUrls: string[];
+  tags: Tag[];
+  createdByAdminId: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
 type Announcement = {
   id: string;
