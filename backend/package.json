@@ -10,7 +10,8 @@
     "test": "cross-env NODE_ENV=test jest",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
-    "seed:test-content": "tsx prisma/seeds/testContentSeed.ts"
+    "seed:test-content": "tsx prisma/seeds/testContentSeed.ts",
+    "seed:demo-data": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.922.0",
