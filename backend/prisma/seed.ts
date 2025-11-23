@@ -69,7 +69,8 @@ async function main() {
     {
       name: "Alzheimer's Association Tennessee Chapter",
       email: 'tennessee@alz.org',
-      description: "Leading voluntary health organization in Alzheimer's care, support and research.",
+      description:
+        "Leading voluntary health organization in Alzheimer's care, support and research.",
       website: 'https://www.alz.org',
       address: '478 Craighead St, Suite 200',
       city: 'Nashville',
@@ -172,7 +173,8 @@ async function main() {
     {
       name: 'Mid-Cumberland Human Resource Agency',
       email: 'info@mchra.com',
-      description: 'Providing services to enhance the quality of life for individuals and families.',
+      description:
+        'Providing services to enhance the quality of life for individuals and families.',
       website: 'https://www.mchra.com/',
       address: '1000 North Dixie Ave',
       city: 'Cookeville',
@@ -549,61 +551,71 @@ async function main() {
   const announcements = [
     {
       title: 'New Partnership with Tennessee Health Department',
-      content: '<p>We are excited to announce a new partnership with the Tennessee Health Department to improve senior healthcare access across the state. This collaboration will bring new resources and programs to our member organizations.</p>',
+      content:
+        '<p>We are excited to announce a new partnership with the Tennessee Health Department to improve senior healthcare access across the state. This collaboration will bring new resources and programs to our member organizations.</p>',
       isPublished: true,
       publishedDate: new Date('2024-01-15'),
     },
     {
       title: 'Annual Conference Registration Now Open',
-      content: '<p>Registration for our 2024 Annual Conference is now open! Join us in Nashville for three days of workshops, networking, and keynote speakers focused on aging services in Tennessee.</p>',
+      content:
+        '<p>Registration for our 2024 Annual Conference is now open! Join us in Nashville for three days of workshops, networking, and keynote speakers focused on aging services in Tennessee.</p>',
       isPublished: true,
       publishedDate: new Date('2024-02-01'),
     },
     {
       title: 'Grant Opportunities for Member Organizations',
-      content: '<p>New grant opportunities are available for member organizations focused on transportation services for seniors. Applications are due by March 31st.</p>',
+      content:
+        '<p>New grant opportunities are available for member organizations focused on transportation services for seniors. Applications are due by March 31st.</p>',
       isPublished: true,
       publishedDate: new Date('2024-02-15'),
     },
     {
       title: 'Legislative Update: Senior Care Bill Passes',
-      content: '<p>The Tennessee Senior Care Improvement Act has passed the state legislature. This bill will provide additional funding for home-based care services across all three regions.</p>',
+      content:
+        '<p>The Tennessee Senior Care Improvement Act has passed the state legislature. This bill will provide additional funding for home-based care services across all three regions.</p>',
       isPublished: true,
       publishedDate: new Date('2024-03-01'),
     },
     {
       title: 'New Resources for Caregiver Support',
-      content: '<p>We have launched a new resource hub for family caregivers, including educational materials, support group information, and respite care options.</p>',
+      content:
+        '<p>We have launched a new resource hub for family caregivers, including educational materials, support group information, and respite care options.</p>',
       isPublished: true,
       publishedDate: new Date('2024-03-15'),
     },
     {
       title: 'Volunteer Appreciation Month',
-      content: '<p>April is Volunteer Appreciation Month! Join us in celebrating the dedicated volunteers who make our programs possible. Special recognition events will be held throughout the state.</p>',
+      content:
+        '<p>April is Volunteer Appreciation Month! Join us in celebrating the dedicated volunteers who make our programs possible. Special recognition events will be held throughout the state.</p>',
       isPublished: true,
       publishedDate: new Date('2024-04-01'),
     },
     {
       title: 'Summer Program Schedule Released',
-      content: '<p>Our summer program schedule is now available. Check out the workshops, seminars, and community events planned for June through August.</p>',
+      content:
+        '<p>Our summer program schedule is now available. Check out the workshops, seminars, and community events planned for June through August.</p>',
       isPublished: true,
       publishedDate: new Date('2024-05-01'),
     },
     {
       title: 'Technology Training Initiative Launch',
-      content: '<p>We are launching a new technology training initiative to help seniors stay connected. Free workshops on smartphones, video calls, and online safety will be offered at partner locations.</p>',
+      content:
+        '<p>We are launching a new technology training initiative to help seniors stay connected. Free workshops on smartphones, video calls, and online safety will be offered at partner locations.</p>',
       isPublished: true,
       publishedDate: new Date('2024-06-01'),
     },
     {
       title: 'Fall Prevention Awareness Campaign',
-      content: '<p>September marks the start of our Fall Prevention Awareness Campaign. Resources and training materials are now available for member organizations.</p>',
+      content:
+        '<p>September marks the start of our Fall Prevention Awareness Campaign. Resources and training materials are now available for member organizations.</p>',
       isPublished: false,
       publishedDate: null,
     },
     {
       title: 'Holiday Programs and Resources',
-      content: '<p>Information about holiday programs, including meal delivery services and social events, will be shared soon. Stay tuned for updates from your regional coordinators.</p>',
+      content:
+        '<p>Information about holiday programs, including meal delivery services and social events, will be shared soon. Stay tuned for updates from your regional coordinators.</p>',
       isPublished: false,
       publishedDate: null,
     },
@@ -627,70 +639,80 @@ async function main() {
   const blogs = [
     {
       title: 'Understanding Medicare Changes for 2024',
-      content: '<p>This comprehensive guide explains the key changes to Medicare coverage for 2024, including new benefits, cost adjustments, and enrollment deadlines that seniors need to know.</p><p>Open enrollment runs from October 15 to December 7, giving beneficiaries time to review and adjust their coverage.</p>',
+      content:
+        '<p>This comprehensive guide explains the key changes to Medicare coverage for 2024, including new benefits, cost adjustments, and enrollment deadlines that seniors need to know.</p><p>Open enrollment runs from October 15 to December 7, giving beneficiaries time to review and adjust their coverage.</p>',
       author: 'Dr. Jane Williams',
       isPublished: true,
       publishedDate: new Date('2024-01-20'),
     },
     {
       title: 'The Importance of Social Connections in Aging',
-      content: '<p>Research continues to show that maintaining strong social connections is crucial for healthy aging. This article explores ways seniors can stay connected and the health benefits of social engagement.</p>',
+      content:
+        '<p>Research continues to show that maintaining strong social connections is crucial for healthy aging. This article explores ways seniors can stay connected and the health benefits of social engagement.</p>',
       author: 'Sarah Mitchell',
       isPublished: true,
       publishedDate: new Date('2024-02-10'),
     },
     {
       title: 'Navigating Long-Term Care Options in Tennessee',
-      content: '<p>From in-home care to assisted living facilities, Tennessee offers various long-term care options. Learn about the differences, costs, and how to choose the right option for your family.</p>',
+      content:
+        '<p>From in-home care to assisted living facilities, Tennessee offers various long-term care options. Learn about the differences, costs, and how to choose the right option for your family.</p>',
       author: 'Michael Chen',
       isPublished: true,
       publishedDate: new Date('2024-02-25'),
     },
     {
       title: 'Healthy Eating Tips for Seniors',
-      content: '<p>Nutrition needs change as we age. This article provides practical tips for maintaining a healthy diet, including meal planning ideas and information about nutrition assistance programs.</p>',
+      content:
+        '<p>Nutrition needs change as we age. This article provides practical tips for maintaining a healthy diet, including meal planning ideas and information about nutrition assistance programs.</p>',
       author: 'Nutritionist Lisa Park',
       isPublished: true,
       publishedDate: new Date('2024-03-10'),
     },
     {
       title: 'Exercise Programs Designed for Older Adults',
-      content: '<p>Staying active is key to healthy aging. Discover exercise programs specifically designed for older adults, from gentle yoga to strength training, available at community centers across Tennessee.</p>',
+      content:
+        '<p>Staying active is key to healthy aging. Discover exercise programs specifically designed for older adults, from gentle yoga to strength training, available at community centers across Tennessee.</p>',
       author: 'Coach Robert Taylor',
       isPublished: true,
       publishedDate: new Date('2024-03-25'),
     },
     {
       title: 'Financial Planning for Retirement',
-      content: '<p>Whether you are approaching retirement or already retired, financial planning remains important. This guide covers budgeting, managing healthcare costs, and protecting your assets.</p>',
+      content:
+        '<p>Whether you are approaching retirement or already retired, financial planning remains important. This guide covers budgeting, managing healthcare costs, and protecting your assets.</p>',
       author: 'Financial Advisor Amy Ross',
       isPublished: true,
       publishedDate: new Date('2024-04-15'),
     },
     {
       title: 'Technology Made Easy: A Guide for Seniors',
-      content: '<p>Technology can help seniors stay connected and independent. This beginner-friendly guide covers smartphones, video calling, and online safety basics.</p>',
+      content:
+        '<p>Technology can help seniors stay connected and independent. This beginner-friendly guide covers smartphones, video calling, and online safety basics.</p>',
       author: 'Tech Educator David Kim',
       isPublished: true,
       publishedDate: new Date('2024-05-05'),
     },
     {
       title: 'Caregiver Self-Care: Taking Time for Yourself',
-      content: '<p>Caregiving can be rewarding but also challenging. Learn about the importance of self-care for caregivers and find resources for respite and support in Tennessee.</p>',
+      content:
+        '<p>Caregiving can be rewarding but also challenging. Learn about the importance of self-care for caregivers and find resources for respite and support in Tennessee.</p>',
       author: 'Social Worker Maria Garcia',
       isPublished: true,
       publishedDate: new Date('2024-05-20'),
     },
     {
       title: 'Understanding Dementia: Signs, Support, and Resources',
-      content: '<p>Early detection and proper support can make a significant difference for those living with dementia. This article covers warning signs, support options, and Tennessee resources.</p>',
+      content:
+        '<p>Early detection and proper support can make a significant difference for those living with dementia. This article covers warning signs, support options, and Tennessee resources.</p>',
       author: 'Dr. James Anderson',
       isPublished: false,
       publishedDate: null,
     },
     {
       title: 'Housing Options for Aging in Place',
-      content: '<p>Many seniors prefer to age in their own homes. Explore home modification options, community programs, and services that support safe and comfortable aging in place.</p>',
+      content:
+        '<p>Many seniors prefer to age in their own homes. Explore home modification options, community programs, and services that support safe and comfortable aging in place.</p>',
       author: 'Housing Specialist Carol White',
       isPublished: false,
       publishedDate: null,
@@ -714,7 +736,8 @@ async function main() {
   const surveys = [
     {
       title: 'Q1 2023 Member Satisfaction Survey',
-      description: 'Quarterly survey to assess member satisfaction and gather feedback on our services.',
+      description:
+        'Quarterly survey to assess member satisfaction and gather feedback on our services.',
       isPublished: true,
       isActive: false,
       status: 'CLOSED' as const,
@@ -722,7 +745,8 @@ async function main() {
     },
     {
       title: 'Q2 2023 Member Satisfaction Survey',
-      description: 'Quarterly survey to assess member satisfaction and gather feedback on our services.',
+      description:
+        'Quarterly survey to assess member satisfaction and gather feedback on our services.',
       isPublished: true,
       isActive: false,
       status: 'CLOSED' as const,
@@ -730,7 +754,8 @@ async function main() {
     },
     {
       title: 'Q3 2023 Member Satisfaction Survey',
-      description: 'Quarterly survey to assess member satisfaction and gather feedback on our services.',
+      description:
+        'Quarterly survey to assess member satisfaction and gather feedback on our services.',
       isPublished: true,
       isActive: false,
       status: 'CLOSED' as const,
@@ -738,7 +763,8 @@ async function main() {
     },
     {
       title: 'Q4 2023 Member Satisfaction Survey',
-      description: 'Quarterly survey to assess member satisfaction and gather feedback on our services.',
+      description:
+        'Quarterly survey to assess member satisfaction and gather feedback on our services.',
       isPublished: true,
       isActive: false,
       status: 'CLOSED' as const,
@@ -746,7 +772,8 @@ async function main() {
     },
     {
       title: 'Q1 2024 Member Satisfaction Survey',
-      description: 'Quarterly survey to assess member satisfaction and gather feedback on our services.',
+      description:
+        'Quarterly survey to assess member satisfaction and gather feedback on our services.',
       isPublished: true,
       isActive: false,
       status: 'CLOSED' as const,
@@ -754,7 +781,8 @@ async function main() {
     },
     {
       title: 'Q2 2024 Member Satisfaction Survey',
-      description: 'Quarterly survey to assess member satisfaction and gather feedback on our services.',
+      description:
+        'Quarterly survey to assess member satisfaction and gather feedback on our services.',
       isPublished: true,
       isActive: false,
       status: 'CLOSED' as const,
@@ -762,7 +790,8 @@ async function main() {
     },
     {
       title: 'Q3 2024 Member Satisfaction Survey',
-      description: 'Quarterly survey to assess member satisfaction and gather feedback on our services.',
+      description:
+        'Quarterly survey to assess member satisfaction and gather feedback on our services.',
       isPublished: true,
       isActive: true,
       status: 'ACTIVE' as const,
@@ -770,7 +799,8 @@ async function main() {
     },
     {
       title: 'Q4 2024 Member Satisfaction Survey',
-      description: 'Quarterly survey to assess member satisfaction and gather feedback on our services.',
+      description:
+        'Quarterly survey to assess member satisfaction and gather feedback on our services.',
       isPublished: true,
       isActive: true,
       status: 'ACTIVE' as const,
@@ -778,7 +808,8 @@ async function main() {
     },
     {
       title: 'Q1 2025 Member Satisfaction Survey',
-      description: 'Quarterly survey to assess member satisfaction and gather feedback on our services.',
+      description:
+        'Quarterly survey to assess member satisfaction and gather feedback on our services.',
       isPublished: false,
       isActive: false,
       status: 'DRAFT' as const,
@@ -786,7 +817,8 @@ async function main() {
     },
     {
       title: 'Q2 2025 Member Satisfaction Survey',
-      description: 'Quarterly survey to assess member satisfaction and gather feedback on our services.',
+      description:
+        'Quarterly survey to assess member satisfaction and gather feedback on our services.',
       isPublished: false,
       isActive: false,
       status: 'DRAFT' as const,
@@ -815,7 +847,13 @@ async function main() {
       type: 'checkbox',
       text: 'Which services have you used? (Select all that apply)',
       required: false,
-      options: ['Newsletter', 'Workshops', 'Advocacy Support', 'Networking Events', 'Resource Library'],
+      options: [
+        'Newsletter',
+        'Workshops',
+        'Advocacy Support',
+        'Networking Events',
+        'Resource Library',
+      ],
     },
     {
       id: 'q4',
@@ -839,35 +877,40 @@ async function main() {
   const alerts = [
     {
       title: 'Severe Weather Advisory for Middle Tennessee',
-      content: '<p>The National Weather Service has issued a severe weather advisory for Middle Tennessee. Please ensure all programs have emergency protocols in place and check on vulnerable seniors in your community.</p>',
+      content:
+        '<p>The National Weather Service has issued a severe weather advisory for Middle Tennessee. Please ensure all programs have emergency protocols in place and check on vulnerable seniors in your community.</p>',
       priority: 'URGENT' as const,
       isPublished: true,
       publishedDate: new Date('2024-04-10'),
     },
     {
       title: 'Medicare Scam Alert',
-      content: '<p>There have been reports of phone scammers posing as Medicare representatives. Remind seniors never to give out personal information over the phone. Medicare will never call to ask for personal information.</p>',
+      content:
+        '<p>There have been reports of phone scammers posing as Medicare representatives. Remind seniors never to give out personal information over the phone. Medicare will never call to ask for personal information.</p>',
       priority: 'URGENT' as const,
       isPublished: true,
       publishedDate: new Date('2024-05-15'),
     },
     {
       title: 'Updated COVID-19 Guidelines',
-      content: '<p>The Tennessee Department of Health has updated COVID-19 guidelines for senior care facilities. Please review the new protocols and ensure your organization is in compliance.</p>',
+      content:
+        '<p>The Tennessee Department of Health has updated COVID-19 guidelines for senior care facilities. Please review the new protocols and ensure your organization is in compliance.</p>',
       priority: 'MEDIUM' as const,
       isPublished: true,
       publishedDate: new Date('2024-06-01'),
     },
     {
       title: 'Summer Heat Safety Reminder',
-      content: '<p>With temperatures rising, please remind seniors about heat safety. Ensure adequate hydration, air conditioning access, and check on neighbors who may be at risk.</p>',
+      content:
+        '<p>With temperatures rising, please remind seniors about heat safety. Ensure adequate hydration, air conditioning access, and check on neighbors who may be at risk.</p>',
       priority: 'MEDIUM' as const,
       isPublished: true,
       publishedDate: new Date('2024-06-20'),
     },
     {
       title: 'System Maintenance Scheduled',
-      content: '<p>Our member portal will undergo scheduled maintenance this weekend. The system will be unavailable Saturday from 2 AM to 6 AM. We apologize for any inconvenience.</p>',
+      content:
+        '<p>Our member portal will undergo scheduled maintenance this weekend. The system will be unavailable Saturday from 2 AM to 6 AM. We apologize for any inconvenience.</p>',
       priority: 'LOW' as const,
       isPublished: true,
       publishedDate: new Date('2024-07-05'),
@@ -890,7 +933,7 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error('Error during seed:', e);
     process.exit(1);
   })
