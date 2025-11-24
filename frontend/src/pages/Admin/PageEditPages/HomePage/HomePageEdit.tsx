@@ -188,6 +188,7 @@ const HomePageEdit = () => {
               label='Hero Background Image'
               currentImageUrl={content['hero_image']?.value}
               onChange={val => handleContentChange('hero_image', val)}
+              folder='pages/homepage'
             />
           </div>
 
@@ -225,6 +226,7 @@ const HomePageEdit = () => {
                   label='Image'
                   currentImageUrl={content['working_image1']?.value}
                   onChange={val => handleContentChange('working_image1', val)}
+                  folder='pages/homepage'
                 />
                 <ContentEditor
                   label='Hover Text'
@@ -241,6 +243,7 @@ const HomePageEdit = () => {
                   label='Image'
                   currentImageUrl={content['working_image2']?.value}
                   onChange={val => handleContentChange('working_image2', val)}
+                  folder='pages/homepage'
                 />
                 <ContentEditor
                   label='Hover Text'

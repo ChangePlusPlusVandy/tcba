@@ -185,6 +185,7 @@ const RegisterPageEdit = () => {
               label='Hero Image'
               currentImageUrl={content['hero_image']?.value}
               onChange={val => handleContentChange('hero_image', val)}
+              folder='pages/getinvolved'
             />
           </div>
 

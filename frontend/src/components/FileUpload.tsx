@@ -6,9 +6,11 @@ interface FileUploadProps {
   attachmentUrls: string[];
   onFilesChange: (files: string[]) => void;
   maxFiles?: number;
+  folder?: string;
+  resourceId?: string;
 }
 
-const FileUpload = ({ attachmentUrls, onFilesChange, maxFiles }: FileUploadProps) => {
+const FileUpload = ({ attachmentUrls, onFilesChange, maxFiles, folder, resourceId }: FileUploadProps) => {
   const { getToken } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -30,16 +32,22 @@ const FileUpload = ({ attachmentUrls, onFilesChange, maxFiles }: FileUploadProps
 
       for (const file of Array.from(files)) {
         const token = await getToken();
-        const response = await fetch(
-          `${API_BASE_URL}/api/files/presigned-upload?fileName=${encodeURIComponent(
-            file.name
-          )}&fileType=${encodeURIComponent(file.type)}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        let presignedRequestUrl = `${API_BASE_URL}/api/files/presigned-upload?fileName=${encodeURIComponent(
+          file.name
+        )}&fileType=${encodeURIComponent(file.type)}`;
+
+        if (folder) {
+          presignedRequestUrl += `&folder=${encodeURIComponent(folder)}`;
+        }
+        if (resourceId) {
+          presignedRequestUrl += `&resourceId=${encodeURIComponent(resourceId)}`;
+        }
+
+        const response = await fetch(presignedRequestUrl, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (!response.ok) {
           throw new Error('Failed to get upload URL');

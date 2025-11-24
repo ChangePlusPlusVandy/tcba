@@ -182,6 +182,7 @@ const AboutPageEdit = () => {
                 label='Mission Image'
                 currentImageUrl={content['mission_image']?.value}
                 onChange={val => handleContentChange('mission_image', val)}
+                folder='pages/about'
               />
               <ContentEditor
                 label='Image Hover Text'

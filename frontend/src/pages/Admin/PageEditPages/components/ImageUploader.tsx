@@ -7,6 +7,7 @@ interface ImageUploaderProps {
   currentImageUrl?: string;
   onChange: (imageUrl: string) => void;
   disabled?: boolean;
+  folder?: string;
 }
 
 const ImageUploader = ({
@@ -14,6 +15,7 @@ const ImageUploader = ({
   currentImageUrl,
   onChange,
   disabled = false,
+  folder,
 }: ImageUploaderProps) => {
   const { getToken } = useAuth();
   const [uploading, setUploading] = useState(false);
@@ -92,14 +94,16 @@ const ImageUploader = ({
       const fileName = file.name;
       const fileType = file.type;
 
-      const presignedResponse = await fetch(
-        `${API_BASE_URL}/api/files/presigned-upload?fileName=${encodeURIComponent(fileName)}&fileType=${encodeURIComponent(fileType)}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      let presignedUrl = `${API_BASE_URL}/api/files/presigned-upload?fileName=${encodeURIComponent(fileName)}&fileType=${encodeURIComponent(fileType)}`;
+      if (folder) {
+        presignedUrl += `&folder=${encodeURIComponent(folder)}`;
+      }
+
+      const presignedResponse = await fetch(presignedUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!presignedResponse.ok) {
         throw new Error('Failed to get upload URL');

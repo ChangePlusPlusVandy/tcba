@@ -17,14 +17,14 @@ export const getPresignedUploadUrl = async (req: AuthenticatedRequest, res: Resp
     if (!isAdmin(req.user.role)) {
       return res.status(403).json({ error: 'Admin access required to upload files' });
     }
-    const { fileName, fileType } = req.query;
+    const { fileName, fileType, folder, resourceId } = req.query;
     if (!fileName || typeof fileName !== 'string') {
       return res.status(400).json({ error: 'Valid file name is required' });
     }
     if (!fileType || typeof fileType !== 'string') {
       return res.status(400).json({ error: 'Valid file type is required' });
     }
-    const allowedExtensions = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.gif', '.txt'];
+    const allowedExtensions = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.gif', '.txt', '.webp'];
     const fileExt = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
     if (!allowedExtensions.includes(fileExt)) {
       return res.status(400).json({ error: 'File type not allowed' });
@@ -37,6 +37,7 @@ export const getPresignedUploadUrl = async (req: AuthenticatedRequest, res: Resp
       'image/jpg',
       'image/png',
       'image/gif',
+      'image/webp',
       'text/plain',
     ];
     if (!allowedMimeTypes.includes(fileType as string)) {
@@ -51,11 +52,24 @@ export const getPresignedUploadUrl = async (req: AuthenticatedRequest, res: Resp
       return res.status(500).json({ error: 'S3 bucket not configured' });
     }
 
-    // Create a unique key (path + filename) - sanitize fileName
     const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const key = `uploads/${Date.now()}-${sanitizedFileName}`;
+    let key: string;
+    if (folder && typeof folder === 'string') {
+      const validFolders = ['announcements', 'blogs', 'alerts', 'pages/homepage', 'pages/about', 'pages/getinvolved', 'pages/directory', 'emails'];
+      const isValidFolder = validFolders.some(f => folder === f || folder.startsWith(f + '/'));
 
-    // Define parameters for S3 upload
+      if (!isValidFolder && !folder.startsWith('pages/')) {
+        return res.status(400).json({ error: 'Invalid folder specified' });
+      }
+      if (resourceId && typeof resourceId === 'string') {
+        key = `${folder}/${resourceId}/${Date.now()}-${sanitizedFileName}`;
+      } else {
+        key = `${folder}/${Date.now()}-${sanitizedFileName}`;
+      }
+    } else {
+      key = `uploads/${Date.now()}-${sanitizedFileName}`;
+    }
+
     const params = {
       Bucket: bucketName,
       Key: key,
@@ -71,8 +85,6 @@ export const getPresignedUploadUrl = async (req: AuthenticatedRequest, res: Resp
   }
 };
 
-// Get presigned URL for downloading/viewing file from private S3 bucket
-// create GetObjectCommand with fileKey, use getSignedUrl for download
 export const getPresignedDownloadUrl = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user || !isAdmin(req.user.role)) {

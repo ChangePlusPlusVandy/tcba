@@ -143,6 +143,7 @@ const BlogsPageEdit = () => {
               label='Header Image'
               currentImageUrl={content['header_image']?.value}
               onChange={val => handleContentChange('header_image', val)}
+              folder='pages/blogs'
             />
           </div>
 

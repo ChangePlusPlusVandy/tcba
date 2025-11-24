@@ -1,6 +1,6 @@
 import { useAuth } from '@clerk/clerk-react';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import AdminSidebar from '../../../components/AdminSidebar';
@@ -321,6 +321,87 @@ const AdminBlogs = () => {
     return 0;
   });
 
+  const quillRef = useRef<ReactQuill>(null);
+
+  const handleImageUpload = useCallback(() => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please select a valid image file (JPG, PNG, GIF, or WebP)');
+        return;
+      }
+
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        alert('File size must be less than 5MB');
+        return;
+      }
+
+      try {
+        const token = await getToken();
+        const fileName = file.name;
+        const fileType = file.type;
+
+        const presignedResponse = await fetch(
+          `${API_BASE_URL}/api/files/presigned-upload?fileName=${encodeURIComponent(fileName)}&fileType=${encodeURIComponent(fileType)}&folder=blogs`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!presignedResponse.ok) {
+          throw new Error('Failed to get upload URL');
+        }
+
+        const { uploadUrl, key } = await presignedResponse.json();
+
+        const uploadResponse = await fetch(uploadUrl, {
+          method: 'PUT',
+          body: file,
+          headers: {
+            'Content-Type': fileType,
+          },
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload file');
+        }
+
+        // Get presigned URL for the uploaded image
+        const publicImageResponse = await fetch(
+          `${API_BASE_URL}/api/files/public-image/${encodeURIComponent(key)}`
+        );
+
+        if (!publicImageResponse.ok) {
+          throw new Error('Failed to get image URL');
+        }
+
+        const { url: imageUrl } = await publicImageResponse.json();
+
+        const quill = quillRef.current?.getEditor();
+        if (quill) {
+          const range = quill.getSelection(true);
+          const index = range ? range.index : quill.getLength();
+          quill.insertEmbed(index, 'image', imageUrl);
+          quill.setSelection(index + 1);
+        }
+      } catch (err: any) {
+        console.error('Upload error:', err);
+        alert(err.message || 'Failed to upload image');
+      }
+    };
+  }, [getToken]);
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -362,15 +443,23 @@ const AdminBlogs = () => {
     );
   };
 
-  const modules = {
-    toolbar: [
-      [{ header: [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ list: 'ordered' }, { list: 'bullet' }],
-      ['link'],
-      ['clean'],
-    ],
-  };
+  const modules = useMemo(
+    () => ({
+      toolbar: {
+        container: [
+          [{ header: [1, 2, 3, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ list: 'ordered' }, { list: 'bullet' }],
+          ['link', 'image'],
+          ['clean'],
+        ],
+        handlers: {
+          image: handleImageUpload,
+        },
+      },
+    }),
+    [handleImageUpload]
+  );
 
   return (
     <div className='flex min-h-screen bg-gray-50'>
@@ -701,6 +790,7 @@ const AdminBlogs = () => {
                   </label>
                   <div style={{ height: '250px' }}>
                     <ReactQuill
+                      ref={quillRef}
                       theme='snow'
                       value={newBlog.content}
                       onChange={value => setNewBlog({ ...newBlog, content: value })}
