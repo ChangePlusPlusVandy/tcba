@@ -65,7 +65,7 @@ const AppRoutes = () => {
         path='/alerts'
         element={
           // <ProtectedRoute>
-            <OrgAlertsPage />
+          <OrgAlertsPage />
           // </ProtectedRoute>
         }
       />

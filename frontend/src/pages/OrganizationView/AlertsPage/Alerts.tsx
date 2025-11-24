@@ -2,11 +2,11 @@ import OrganizationSidebar from '../../../components/OrganizationSidebar';
 
 const AlertsPage = () => {
   const alerts: any[] = [
-      {
-        title: 'Title',
-        content: 'line clamp\ntest\ncontent',
-        date: new Date('2024-06-01T10:00:00Z'),
-        tags: ['Tag1', 'Tag2'],
+    {
+      title: 'Title',
+      content: 'line clamp\ntest\ncontent',
+      date: new Date('2024-06-01T10:00:00Z'),
+      tags: ['Tag1', 'Tag2'],
     },
     {
       title: 'Title',
@@ -21,8 +21,6 @@ const AlertsPage = () => {
       tags: [],
     },
   ]; // TODO: Fetch alerts from backend
-
-  
 
   return (
     <div className='flex min-h-screen bg-gray-50'>

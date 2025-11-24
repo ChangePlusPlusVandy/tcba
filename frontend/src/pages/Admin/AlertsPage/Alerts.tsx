@@ -11,7 +11,8 @@ const AdminAlerts = () => {
   const alerts: any[] = [
     {
       title: 'Title',
-      content: 'content aspodfiejpaosdifjepoijdfpoeisa asodifjeo aiosdjf oeijsdo jfoe siodjf eoisjdoif eoijsdoifj eoisjodfje oisdfoiejsoijdf oei\n aosijfeoijsodifjeoisjdiofjeoisjdoifjeois',
+      content:
+        'content aspodfiejpaosdifjepoijdfpoeisa asodifjeo aiosdjf oeijsdo jfoe siodjf eoisjdoif eoijsdoifj eoisjodfje oisdfoiejsoijdf oei\n aosijfeoijsodifjeoisjdiofjeoisjdoifjeois',
       date: new Date('2024-06-01T10:00:00Z'),
       tags: ['Tag1', 'Tag2'],
     },
