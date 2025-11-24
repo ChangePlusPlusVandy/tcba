@@ -8,10 +8,10 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   return (
     <>
-      <SignedIn>{children}</SignedIn>
+      {/* <SignedIn>{children}</SignedIn>
       <SignedOut>
         <RedirectToSignIn />
-      </SignedOut>
+      </SignedOut> */}
     </>
   );
 };

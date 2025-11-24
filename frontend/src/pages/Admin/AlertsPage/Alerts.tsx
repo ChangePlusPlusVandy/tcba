@@ -11,7 +11,7 @@ const AdminAlerts = () => {
   const alerts: any[] = [
     {
       title: 'Title',
-      content: 'content aspodfiejpaosdifjepoijdfpoeis',
+      content: 'content aspodfiejpaosdifjepoijdfpoeisa asodifjeo aiosdjf oeijsdo jfoe siodjf eoisjdoif eoijsdoifj eoisjodfje oisdfoiejsoijdf oei\n aosijfeoijsodifjeoisjdiofjeoisjdoifjeois',
       date: new Date('2024-06-01T10:00:00Z'),
       tags: ['Tag1', 'Tag2'],
     },
@@ -48,7 +48,7 @@ const AdminAlerts = () => {
             return (
               <a
                 key={index}
-                className='w-full items-center px-5 hover:bg-[#EBF3FF] text-black hover:text-[#194B90] first:rounded-t-[15px]'
+                className='w-full line-clamp-2 items-center px-5 hover:bg-[#EBF3FF] text-black hover:text-[#194B90] first:rounded-t-[15px]'
               >
                 <div className='p-5 border-b border-[#848482]'>
                   <div className='flex justify-between items-center'>
