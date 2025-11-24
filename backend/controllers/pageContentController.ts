@@ -69,19 +69,25 @@ export const bulkUpdatePageContent = async (req: Request, res: Response): Promis
   try {
     const { updates } = req.body;
 
-    if (!Array.isArray(updates) || updates.length === 0) {
+    if (!Array.isArray(updates)) {
       res.status(400).json({ error: 'Updates array is required' });
       return;
     }
 
-    for (const update of updates) {
-      if (!update.id || (!update.contentValue && update.contentValue !== '')) {
-        res.status(400).json({ error: 'Each update must have id and contentValue' });
-        return;
-      }
+    const validUpdates = updates.filter(
+      update => update.id && (update.contentValue || update.contentValue === '')
+    );
+
+    if (validUpdates.length === 0) {
+      res.status(200).json({
+        message: 'No valid updates to process',
+        updatedCount: 0,
+        updates: [],
+      });
+      return;
     }
 
-    const updatePromises = updates.map(update =>
+    const updatePromises = validUpdates.map(update =>
       prisma.pageContent.update({
         where: { id: update.id },
         data: { contentValue: update.contentValue },
