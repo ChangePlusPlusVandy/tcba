@@ -10,7 +10,13 @@ interface FileUploadProps {
   resourceId?: string;
 }
 
-const FileUpload = ({ attachmentUrls, onFilesChange, maxFiles, folder, resourceId }: FileUploadProps) => {
+const FileUpload = ({
+  attachmentUrls,
+  onFilesChange,
+  maxFiles,
+  folder,
+  resourceId,
+}: FileUploadProps) => {
   const { getToken } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);

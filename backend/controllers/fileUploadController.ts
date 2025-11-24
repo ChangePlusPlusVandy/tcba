@@ -24,7 +24,17 @@ export const getPresignedUploadUrl = async (req: AuthenticatedRequest, res: Resp
     if (!fileType || typeof fileType !== 'string') {
       return res.status(400).json({ error: 'Valid file type is required' });
     }
-    const allowedExtensions = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.gif', '.txt', '.webp'];
+    const allowedExtensions = [
+      '.pdf',
+      '.doc',
+      '.docx',
+      '.jpg',
+      '.jpeg',
+      '.png',
+      '.gif',
+      '.txt',
+      '.webp',
+    ];
     const fileExt = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
     if (!allowedExtensions.includes(fileExt)) {
       return res.status(400).json({ error: 'File type not allowed' });
@@ -55,7 +65,16 @@ export const getPresignedUploadUrl = async (req: AuthenticatedRequest, res: Resp
     const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
     let key: string;
     if (folder && typeof folder === 'string') {
-      const validFolders = ['announcements', 'blogs', 'alerts', 'pages/homepage', 'pages/about', 'pages/getinvolved', 'pages/directory', 'emails'];
+      const validFolders = [
+        'announcements',
+        'blogs',
+        'alerts',
+        'pages/homepage',
+        'pages/about',
+        'pages/getinvolved',
+        'pages/directory',
+        'emails',
+      ];
       const isValidFolder = validFolders.some(f => folder === f || folder.startsWith(f + '/'));
 
       if (!isValidFolder && !folder.startsWith('pages/')) {
