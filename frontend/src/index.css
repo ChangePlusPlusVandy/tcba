@@ -109,7 +109,6 @@ body {
   cursor: se-resize;
 }
 
-
 .ql-image-module-toolbar {
   position: absolute;
   background: white;
@@ -133,28 +132,26 @@ body {
   background: #f5f5f5;
 }
 
-
-.ql-editor img[style*="float: left"],
+.ql-editor img[style*='float: left'],
 .ql-editor .ql-align-left img {
   float: left;
   margin-right: 1rem;
   margin-bottom: 0.5rem;
 }
 
-.ql-editor img[style*="float: right"],
+.ql-editor img[style*='float: right'],
 .ql-editor .ql-align-right img {
   float: right;
   margin-left: 1rem;
   margin-bottom: 0.5rem;
 }
 
-.ql-editor img[style*="display: block"],
+.ql-editor img[style*='display: block'],
 .ql-editor .ql-align-center img {
   display: block;
   margin-left: auto;
   margin-right: auto;
 }
-
 
 .ql-toolbar .ql-align-image-left::before {
   content: '⇤';
