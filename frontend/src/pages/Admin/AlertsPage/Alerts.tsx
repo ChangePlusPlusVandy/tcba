@@ -1,13 +1,16 @@
 import { useAuth } from '@clerk/clerk-react';
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import ReactQuill from 'react-quill-new';
+import ReactQuill, { Quill } from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
+import ImageResize from 'quill-image-resize-module-react';
 import AdminSidebar from '../../../components/AdminSidebar';
 import Toast from '../../../components/Toast';
 import ConfirmModal from '../../../components/ConfirmModal';
 import FileUpload from '../../../components/FileUpload';
 import AttachmentList from '../../../components/AttachmentList';
 import { API_BASE_URL } from '../../../config/api';
+
+Quill.register('modules/imageResize', ImageResize);
 
 type AlertPriority = 'URGENT' | 'LOW' | 'MEDIUM';
 
@@ -348,6 +351,42 @@ const AdminAlerts = () => {
 
   const quillRef = useRef<ReactQuill>(null);
 
+  const alignImage = useCallback((alignment: 'left' | 'center' | 'right') => {
+    const quill = quillRef.current?.getEditor();
+    if (!quill) return;
+
+    const range = quill.getSelection();
+    if (!range) return;
+
+    const [leaf] = quill.getLeaf(range.index);
+    if (leaf && leaf.domNode && (leaf.domNode as Element).tagName === 'IMG') {
+      const img = leaf.domNode as HTMLImageElement;
+
+      img.style.float = '';
+      img.style.display = '';
+      img.style.marginLeft = '';
+      img.style.marginRight = '';
+
+      switch (alignment) {
+        case 'left':
+          img.style.float = 'left';
+          img.style.marginRight = '1rem';
+          img.style.marginBottom = '0.5rem';
+          break;
+        case 'right':
+          img.style.float = 'right';
+          img.style.marginLeft = '1rem';
+          img.style.marginBottom = '0.5rem';
+          break;
+        case 'center':
+          img.style.display = 'block';
+          img.style.marginLeft = 'auto';
+          img.style.marginRight = 'auto';
+          break;
+      }
+    }
+  }, []);
+
   const handleImageUpload = useCallback(() => {
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
@@ -435,14 +474,22 @@ const AdminAlerts = () => {
           ['bold', 'italic', 'underline', 'strike'],
           [{ list: 'ordered' }, { list: 'bullet' }],
           ['link', 'image'],
+          ['align-image-left', 'align-image-center', 'align-image-right'],
           ['clean'],
         ],
         handlers: {
           image: handleImageUpload,
+          'align-image-left': () => alignImage('left'),
+          'align-image-center': () => alignImage('center'),
+          'align-image-right': () => alignImage('right'),
         },
       },
+      imageResize: {
+        parchment: Quill.import('parchment'),
+        modules: ['Resize', 'DisplaySize'],
+      },
     }),
-    [handleImageUpload]
+    [handleImageUpload, alignImage]
   );
 
   return (

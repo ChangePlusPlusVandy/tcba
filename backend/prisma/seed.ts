@@ -793,8 +793,8 @@ async function main() {
       description:
         'Quarterly survey to assess member satisfaction and gather feedback on our services.',
       isPublished: true,
-      isActive: true,
-      status: 'ACTIVE' as const,
+      isActive: false,
+      status: 'CLOSED' as const,
       dueDate: new Date('2024-09-30'),
     },
     {
@@ -802,17 +802,17 @@ async function main() {
       description:
         'Quarterly survey to assess member satisfaction and gather feedback on our services.',
       isPublished: true,
-      isActive: true,
-      status: 'ACTIVE' as const,
+      isActive: false,
+      status: 'CLOSED' as const,
       dueDate: new Date('2024-12-31'),
     },
     {
       title: 'Q1 2025 Member Satisfaction Survey',
       description:
         'Quarterly survey to assess member satisfaction and gather feedback on our services.',
-      isPublished: false,
-      isActive: false,
-      status: 'DRAFT' as const,
+      isPublished: true,
+      isActive: true,
+      status: 'ACTIVE' as const,
       dueDate: new Date('2025-03-31'),
     },
     {
@@ -914,6 +914,46 @@ async function main() {
       priority: 'LOW' as const,
       isPublished: true,
       publishedDate: new Date('2024-07-05'),
+    },
+    {
+      title: 'Emergency: Power Outages Across East Tennessee',
+      content:
+        '<p>Widespread power outages have been reported across East Tennessee due to severe storms. Emergency shelters have been opened in Johnson City, Knoxville, and Chattanooga. Please check on elderly neighbors and ensure vulnerable seniors have access to cooling centers and emergency supplies.</p>',
+      priority: 'URGENT' as const,
+      isPublished: true,
+      publishedDate: new Date('2024-07-15'),
+    },
+    {
+      title: 'Medication Disposal Event This Weekend',
+      content:
+        '<p>Free medication disposal events will be held at participating pharmacies across Tennessee this Saturday. Seniors can safely dispose of expired or unused medications. Check our website for locations near you.</p>',
+      priority: 'MEDIUM' as const,
+      isPublished: true,
+      publishedDate: new Date('2024-08-01'),
+    },
+    {
+      title: 'New Transportation Service Available in West Tennessee',
+      content:
+        '<p>A new transportation service for seniors has launched in West Tennessee, providing rides to medical appointments, grocery stores, and community centers. Service is available Monday through Friday. Contact your local Area Agency on Aging for more information.</p>',
+      priority: 'LOW' as const,
+      isPublished: true,
+      publishedDate: new Date('2024-08-10'),
+    },
+    {
+      title: 'Flu Vaccine Shortage Warning',
+      content:
+        '<p>Health officials are warning of a potential flu vaccine shortage this season. We urge member organizations to help seniors schedule appointments early. High-dose vaccines for seniors aged 65+ may be especially limited. Contact healthcare providers now to ensure availability.</p>',
+      priority: 'URGENT' as const,
+      isPublished: true,
+      publishedDate: new Date('2024-09-05'),
+    },
+    {
+      title: 'Updated Newsletter Format Coming in October',
+      content:
+        '<p>Starting in October, our monthly newsletter will feature a new design with easier navigation and mobile-friendly formatting. Members can preview the new layout on our website. Feedback is welcome as we continue to improve our communications.</p>',
+      priority: 'LOW' as const,
+      isPublished: true,
+      publishedDate: new Date('2024-09-20'),
     },
   ];
 

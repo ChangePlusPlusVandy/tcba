@@ -185,15 +185,6 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
     switch (type) {
       case 'ANNOUNCEMENT':
         return {
-          bg: 'bg-rose-100/90',
-          border: 'border-rose-200/80',
-          label: 'text-rose-900',
-          title: 'text-rose-950',
-          date: 'text-rose-900/70',
-          closeBtn: 'text-rose-900 hover:text-rose-950',
-        };
-      case 'BLOG':
-        return {
           bg: 'bg-blue-100/90',
           border: 'border-blue-200/80',
           label: 'text-blue-900',
@@ -201,23 +192,32 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
           date: 'text-blue-900/70',
           closeBtn: 'text-blue-900 hover:text-blue-950',
         };
+      case 'BLOG':
+        return {
+          bg: 'bg-green-100/90',
+          border: 'border-green-200/80',
+          label: 'text-green-900',
+          title: 'text-green-950',
+          date: 'text-green-900/70',
+          closeBtn: 'text-green-900 hover:text-green-950',
+        };
       case 'ALERT':
         return {
-          bg: 'bg-amber-100/90',
-          border: 'border-amber-200/80',
-          label: 'text-amber-900',
-          title: 'text-amber-950',
-          date: 'text-amber-900/70',
-          closeBtn: 'text-amber-900 hover:text-amber-950',
+          bg: 'bg-red-100/90',
+          border: 'border-red-200/80',
+          label: 'text-red-900',
+          title: 'text-red-950',
+          date: 'text-red-900/70',
+          closeBtn: 'text-red-900 hover:text-red-950',
         };
       case 'SURVEY':
         return {
-          bg: 'bg-emerald-100/90',
-          border: 'border-emerald-200/80',
-          label: 'text-emerald-900',
-          title: 'text-emerald-950',
-          date: 'text-emerald-900/70',
-          closeBtn: 'text-emerald-900 hover:text-emerald-950',
+          bg: 'bg-yellow-100/90',
+          border: 'border-yellow-200/80',
+          label: 'text-yellow-900',
+          title: 'text-yellow-950',
+          date: 'text-yellow-900/70',
+          closeBtn: 'text-yellow-900 hover:text-yellow-950',
         };
     }
   };

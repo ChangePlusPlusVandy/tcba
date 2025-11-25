@@ -456,7 +456,6 @@ const OrgSurveysPage = () => {
 
                     {question.type === 'rating' && (
                       <div className='flex gap-2 items-center'>
-                        <span className='text-sm text-gray-600'>{question.minValue || 1}</span>
                         <div className='flex gap-2'>
                           {Array.from(
                             { length: (question.maxValue || 5) - (question.minValue || 1) + 1 },
@@ -476,7 +475,6 @@ const OrgSurveysPage = () => {
                             </button>
                           ))}
                         </div>
-                        <span className='text-sm text-gray-600'>{question.maxValue || 5}</span>
                       </div>
                     )}
                   </div>
