@@ -90,7 +90,6 @@ const AnnouncementsPageEdit = () => {
         }
       });
 
-      // Create new items first
       for (const newItem of newItems) {
         const createResponse = await fetch(`${API_BASE_URL}/api/page-content`, {
           method: 'POST',
@@ -106,7 +105,6 @@ const AnnouncementsPageEdit = () => {
         }
       }
 
-      // Update existing items
       if (existingItems.length > 0) {
         const response = await fetch(`${API_BASE_URL}/api/page-content/bulk`, {
           method: 'PUT',
