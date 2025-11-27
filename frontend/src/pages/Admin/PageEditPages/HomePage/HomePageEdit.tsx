@@ -221,7 +221,7 @@ const HomePageEdit = () => {
 
             <div className='space-y-6'>
               <div className='space-y-4'>
-                <h3 className='text-lg font-semibold text-gray-700'>Image 1 (Capitol)</h3>
+                <h3 className='text-lg font-semibold text-gray-700'>Image 1</h3>
                 <ImageUploader
                   label='Image'
                   currentImageUrl={content['working_image1']?.value}
@@ -238,7 +238,7 @@ const HomePageEdit = () => {
               </div>
 
               <div className='space-y-4'>
-                <h3 className='text-lg font-semibold text-gray-700'>Image 2 (Group Photo)</h3>
+                <h3 className='text-lg font-semibold text-gray-700'>Image 2</h3>
                 <ImageUploader
                   label='Image'
                   currentImageUrl={content['working_image2']?.value}
@@ -256,7 +256,7 @@ const HomePageEdit = () => {
             </div>
 
             <div className='space-y-4'>
-              <h3 className='text-lg font-semibold text-gray-700'>Vision Section</h3>
+              <h3 className='text-lg font-semibold text-gray-700'>Section 1</h3>
               <ContentEditor
                 label='Section Title'
                 value={content['working_text_title']?.value || ''}
@@ -280,7 +280,7 @@ const HomePageEdit = () => {
           </div>
 
           <div className='bg-white rounded-lg shadow-md p-6 mb-6'>
-            <h2 className='text-xl font-semibold text-gray-800 mb-4'>How We Work Section</h2>
+            <h2 className='text-xl font-semibold text-gray-800 mb-4'>Section 2</h2>
 
             <ContentEditor
               label='Quote'

@@ -58,6 +58,14 @@ const AdminBlogs = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedBlog, setEditedBlog] = useState({
+    title: '',
+    content: '',
+    author: '',
+    tagIds: [] as string[],
+    attachmentUrls: [] as string[],
+  });
 
   const [newBlog, setNewBlog] = useState({
     title: '',
@@ -209,6 +217,38 @@ const AdminBlogs = () => {
     }
   };
 
+  const handleUpdateBlog = async () => {
+    if (!selectedBlog) return;
+
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      const payload = {
+        title: editedBlog.title,
+        content: editedBlog.content,
+        author: editedBlog.author,
+        tagIds: editedBlog.tagIds,
+        attachmentUrls: editedBlog.attachmentUrls,
+      };
+
+      await fetchWithAuth(`${API_BASE_URL}/api/blogs/${selectedBlog.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      });
+
+      await fetchBlogs();
+      setToast({ message: 'Blog updated successfully', type: 'success' });
+      closeDetailModal();
+      setIsEditMode(false);
+    } catch (err: any) {
+      console.error('Update blog error:', err);
+      setToast({ message: err.message || 'Failed to update blog', type: 'error' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleDeleteSelected = () => {
     if (selectedBlogIds.length === 0) return;
 
@@ -337,13 +377,11 @@ const AdminBlogs = () => {
     if (leaf && leaf.domNode && (leaf.domNode as Element).tagName === 'IMG') {
       const img = leaf.domNode as HTMLImageElement;
 
-      // Remove existing alignment styles
       img.style.float = '';
       img.style.display = '';
       img.style.marginLeft = '';
       img.style.marginRight = '';
 
-      // Apply new alignment
       switch (alignment) {
         case 'left':
           img.style.float = 'left';
@@ -962,118 +1000,272 @@ const AdminBlogs = () => {
           <input type='checkbox' checked readOnly className='modal-toggle' />
           <div className='modal modal-open'>
             <div className='modal-box max-w-2xl max-h-[80vh] bg-white overflow-y-auto m-8'>
-              <h3 className='font-bold text-xl text-gray-900 mb-3'>{selectedBlog.title}</h3>
+              <h3 className='font-bold text-xl text-gray-900 mb-3'>
+                {isEditMode ? 'Edit Blog' : selectedBlog.title}
+              </h3>
 
-              <div className='space-y-4'>
-                {/* Basic Info */}
-                <div>
-                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Basic Information</h4>
-                  <div className='grid grid-cols-2 gap-3'>
-                    <div>
-                      <span className='text-sm font-bold text-gray-600'>Author:</span>
-                      <p className='text-sm text-gray-900'>{selectedBlog.author}</p>
-                    </div>
+              {isEditMode ? (
+                <div className='space-y-4'>
+                  <div>
+                    <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                      Title <span className='text-red-500'>*</span>
+                    </label>
+                    <input
+                      type='text'
+                      required
+                      value={editedBlog.title}
+                      onChange={e => setEditedBlog({ ...editedBlog, title: e.target.value })}
+                      className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                      placeholder='Enter blog title'
+                    />
+                  </div>
 
-                    <div>
-                      <span className='text-sm font-bold text-gray-600'>Status:</span>
-                      <p className='text-sm'>
-                        <span
-                          className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full ${
-                            selectedBlog.isPublished
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {selectedBlog.isPublished ? 'Published' : 'Draft'}
-                        </span>
-                      </p>
+                  <div>
+                    <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                      Author <span className='text-red-500'>*</span>
+                    </label>
+                    <input
+                      type='text'
+                      required
+                      value={editedBlog.author}
+                      onChange={e => setEditedBlog({ ...editedBlog, author: e.target.value })}
+                      className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                      placeholder='Enter author name'
+                    />
+                  </div>
+
+                  <div className='mb-4'>
+                    <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                      Content <span className='text-red-500'>*</span>
+                    </label>
+                    <div style={{ height: '250px' }}>
+                      <ReactQuill
+                        ref={quillRef}
+                        theme='snow'
+                        value={editedBlog.content}
+                        onChange={value => setEditedBlog({ ...editedBlog, content: value })}
+                        placeholder='Enter blog content...'
+                        modules={modules}
+                        style={{ height: '200px' }}
+                      />
                     </div>
                   </div>
-                </div>
-                <div>
-                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Content</h4>
-                  <div
-                    className='prose max-w-none text-sm text-gray-900'
-                    dangerouslySetInnerHTML={{ __html: selectedBlog.content }}
+
+                  <div>
+                    <label className='block text-sm font-semibold text-gray-700 mb-2'>Tags</label>
+                    <div className='min-h-[80px]'>
+                      {allTags.length === 0 ? (
+                        <p className='text-sm text-gray-500'>No tags available</p>
+                      ) : (
+                        <div className='flex flex-wrap gap-2'>
+                          {allTags.map(tag => {
+                            const isSelected = editedBlog.tagIds.includes(tag.id);
+                            return (
+                              <button
+                                key={tag.id}
+                                type='button'
+                                onClick={() => {
+                                  if (isSelected) {
+                                    setEditedBlog({
+                                      ...editedBlog,
+                                      tagIds: editedBlog.tagIds.filter(id => id !== tag.id),
+                                    });
+                                  } else {
+                                    setEditedBlog({
+                                      ...editedBlog,
+                                      tagIds: [...editedBlog.tagIds, tag.id],
+                                    });
+                                  }
+                                }}
+                                className={`px-4 py-1 text-sm font-medium rounded-full transition-colors ${
+                                  isSelected
+                                    ? 'bg-[#D54242] text-white border-2 border-[#D54242]'
+                                    : 'bg-gray-100 text-gray-700 border-2 border-gray-300 hover:bg-gray-200'
+                                }`}
+                              >
+                                {tag.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <FileUpload
+                    attachmentUrls={editedBlog.attachmentUrls}
+                    onFilesChange={files => setEditedBlog({ ...editedBlog, attachmentUrls: files })}
                   />
+
+                  <div className='flex gap-3 pt-4'>
+                    <button
+                      type='button'
+                      onClick={handleUpdateBlog}
+                      disabled={isSubmitting}
+                      className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+                    >
+                      {isSubmitting ? 'Saving...' : 'Save Changes'}
+                    </button>
+                    <button
+                      type='button'
+                      onClick={() => {
+                        setIsEditMode(false);
+                        setEditedBlog({
+                          title: selectedBlog.title,
+                          content: selectedBlog.content,
+                          author: selectedBlog.author,
+                          tagIds: selectedBlog.tags.map(t => t.id),
+                          attachmentUrls: selectedBlog.attachmentUrls || [],
+                        });
+                      }}
+                      className='px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium'
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
+              ) : (
+                <div className='space-y-4'>
+                  {/* Basic Info */}
+                  <div>
+                    <h4 className='font-semibold text-base text-gray-800 mb-2'>
+                      Basic Information
+                    </h4>
+                    <div className='grid grid-cols-2 gap-3'>
+                      <div>
+                        <span className='text-sm font-bold text-gray-600'>Author:</span>
+                        <p className='text-sm text-gray-900'>{selectedBlog.author}</p>
+                      </div>
 
-                {selectedBlog.attachmentUrls && selectedBlog.attachmentUrls.length > 0 && (
-                  <AttachmentList attachmentUrls={selectedBlog.attachmentUrls} />
-                )}
-
-                <div>
-                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Tags</h4>
-                  {selectedBlog.tags && selectedBlog.tags.length > 0 ? (
-                    <div className='flex flex-wrap gap-2'>
-                      {selectedBlog.tags.map(tag => (
-                        <span
-                          key={tag.id}
-                          className='px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
-                        >
-                          {tag.name}
-                        </span>
-                      ))}
+                      <div>
+                        <span className='text-sm font-bold text-gray-600'>Status:</span>
+                        <p className='text-sm'>
+                          <span
+                            className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full ${
+                              selectedBlog.isPublished
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            {selectedBlog.isPublished ? 'Published' : 'Draft'}
+                          </span>
+                        </p>
+                      </div>
                     </div>
-                  ) : (
-                    <p className='text-sm text-gray-900'>No tags</p>
+                  </div>
+                  <div>
+                    <h4 className='font-semibold text-base text-gray-800 mb-2'>Content</h4>
+                    <div
+                      className='prose max-w-none text-sm text-gray-900'
+                      dangerouslySetInnerHTML={{ __html: selectedBlog.content }}
+                    />
+                  </div>
+
+                  {selectedBlog.attachmentUrls && selectedBlog.attachmentUrls.length > 0 && (
+                    <AttachmentList attachmentUrls={selectedBlog.attachmentUrls} />
                   )}
-                </div>
 
-                <div>
-                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Dates</h4>
-                  <div className='grid grid-cols-2 gap-3'>
-                    <div>
-                      <span className='text-sm font-bold text-gray-600'>Created:</span>
-                      <p className='text-sm text-gray-900'>
-                        {new Date(selectedBlog.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div>
-                      <span className='text-sm font-bold text-gray-600'>Updated:</span>
-                      <p className='text-sm text-gray-900'>
-                        {new Date(selectedBlog.updatedAt).toLocaleDateString()}
-                      </p>
+                  <div>
+                    <h4 className='font-semibold text-base text-gray-800 mb-2'>Tags</h4>
+                    {selectedBlog.tags && selectedBlog.tags.length > 0 ? (
+                      <div className='flex flex-wrap gap-2'>
+                        {selectedBlog.tags.map(tag => (
+                          <span
+                            key={tag.id}
+                            className='px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
+                          >
+                            {tag.name}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className='text-sm text-gray-900'>No tags</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <h4 className='font-semibold text-base text-gray-800 mb-2'>Dates</h4>
+                    <div className='grid grid-cols-2 gap-3'>
+                      <div>
+                        <span className='text-sm font-bold text-gray-600'>Created:</span>
+                        <p className='text-sm text-gray-900'>
+                          {new Date(selectedBlog.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div>
+                        <span className='text-sm font-bold text-gray-600'>Updated:</span>
+                        <p className='text-sm text-gray-900'>
+                          {new Date(selectedBlog.updatedAt).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              <div className='modal-action'>
-                {!selectedBlog.isPublished && (
-                  <button
-                    onClick={async () => {
-                      try {
-                        await fetchWithAuth(
-                          `${API_BASE_URL}/api/blogs/${selectedBlog.id}/publish`,
-                          {
-                            method: 'PUT',
+              {!isEditMode && (
+                <div className='modal-action'>
+                  {!selectedBlog.isPublished && (
+                    <>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await fetchWithAuth(
+                              `${API_BASE_URL}/api/blogs/${selectedBlog.id}/publish`,
+                              {
+                                method: 'PUT',
+                              }
+                            );
+                            setToast({ message: 'Blog published successfully', type: 'success' });
+                            await fetchBlogs();
+                            closeDetailModal();
+                          } catch (err: any) {
+                            setToast({
+                              message: err.message || 'Failed to publish blog',
+                              type: 'error',
+                            });
                           }
-                        );
-                        setToast({ message: 'Blog published successfully', type: 'success' });
-                        await fetchBlogs();
-                        closeDetailModal();
-                      } catch (err: any) {
-                        setToast({
-                          message: err.message || 'Failed to publish blog',
-                          type: 'error',
-                        });
-                      }
+                        }}
+                        className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
+                      >
+                        Publish
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsEditMode(true);
+                          setEditedBlog({
+                            title: selectedBlog.title,
+                            content: selectedBlog.content,
+                            author: selectedBlog.author,
+                            tagIds: selectedBlog.tags.map(t => t.id),
+                            attachmentUrls: selectedBlog.attachmentUrls || [],
+                          });
+                        }}
+                        className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
+                      >
+                        Edit
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={() => {
+                      closeDetailModal();
+                      setIsEditMode(false);
                     }}
                     className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
                   >
-                    Publish
+                    Close
                   </button>
-                )}
-                <button
-                  onClick={closeDetailModal}
-                  className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
-                >
-                  Close
-                </button>
-              </div>
+                </div>
+              )}
             </div>
-            <div className='modal-backdrop bg-black/30' onClick={closeDetailModal}></div>
+            <div
+              className='modal-backdrop bg-black/30'
+              onClick={() => {
+                closeDetailModal();
+                setIsEditMode(false);
+              }}
+            ></div>
           </div>
         </>
       )}

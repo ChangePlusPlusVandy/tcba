@@ -1,4 +1,6 @@
 import { type FormEvent, useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { IoArrowBack } from 'react-icons/io5';
 import Toast from '../../components/Toast';
 import { API_BASE_URL } from '../../config/api';
 
@@ -120,6 +122,13 @@ const SignupForm = ({ previewContent }: SignupFormProps = {}) => {
     <>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       <div className='mt-8 bg-white px-20 py-16'>
+        <Link
+          to='/register'
+          className='inline-flex items-center gap-2 text-[#3C3C3C] hover:text-black font-medium mb-6'
+        >
+          <IoArrowBack size={20} />
+          Back to Get Involved
+        </Link>
         <div className='grid md:grid-cols-2 gap-8 mb-12'>
           <div>
             <h1 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>

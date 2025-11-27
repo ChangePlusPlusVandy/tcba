@@ -96,39 +96,6 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
             });
         }
 
-        // Load alerts
-        const alertsRes = await fetch(`${API_BASE_URL}/api/alerts`);
-        if (alertsRes.ok) {
-          const alerts = await alertsRes.json();
-          alerts
-            .filter((a: any) => a.isPublished)
-            .slice(0, 2)
-            .forEach((a: any) => {
-              allNotifications.push({
-                id: `alert-${a.id}`,
-                type: 'ALERT',
-                title: a.title,
-                publishedDate: a.publishedDate,
-              });
-            });
-        }
-
-        const surveysRes = await fetch(`${API_BASE_URL}/api/surveys`);
-        if (surveysRes.ok) {
-          const surveys = await surveysRes.json();
-          surveys
-            .filter((s: any) => s.isPublished)
-            .slice(0, 2)
-            .forEach((s: any) => {
-              allNotifications.push({
-                id: `survey-${s.id}`,
-                type: 'SURVEY',
-                title: s.title,
-                publishedDate: s.createdAt,
-              });
-            });
-        }
-
         allNotifications.sort((a, b) => {
           const dateA = a.publishedDate ? new Date(a.publishedDate).getTime() : 0;
           const dateB = b.publishedDate ? new Date(b.publishedDate).getTime() : 0;

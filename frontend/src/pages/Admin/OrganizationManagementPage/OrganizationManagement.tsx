@@ -1935,7 +1935,7 @@ const OrganizationManagement = () => {
               <p className='text-sm text-gray-600 mb-4'>
                 You are about to permanently delete{' '}
                 <span className='font-semibold'>{deletionModal.orgName}</span>. You can optionally
-                provide a reason that will be sent to the organization via email.
+                provide a reason that will be sent to all other administrators via email.
               </p>
 
               <label className='block text-sm font-medium text-gray-700 mb-2'>

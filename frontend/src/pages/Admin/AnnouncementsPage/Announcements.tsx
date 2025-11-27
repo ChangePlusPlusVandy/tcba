@@ -62,6 +62,18 @@ const AdminAnnouncements = () => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedAnnouncement, setEditedAnnouncement] = useState<{
+    title: string;
+    content: string;
+    tags: string[];
+    attachmentUrls: string[];
+  }>({
+    title: '',
+    content: '',
+    tags: [],
+    attachmentUrls: [],
+  });
   const [selectedAnnouncementIds, setSelectedAnnouncementIds] = useState<string[]>([]);
   const [toast, setToast] = useState<{
     message: string;
@@ -87,13 +99,11 @@ const AdminAnnouncements = () => {
     if (leaf && leaf.domNode && (leaf.domNode as Element).tagName === 'IMG') {
       const img = leaf.domNode as HTMLImageElement;
 
-      // Remove existing alignment styles
       img.style.float = '';
       img.style.display = '';
       img.style.marginLeft = '';
       img.style.marginRight = '';
 
-      // Apply new alignment
       switch (alignment) {
         case 'left':
           img.style.float = 'left';
@@ -371,6 +381,48 @@ const AdminAnnouncements = () => {
     } catch (err: any) {
       console.error('Create announcement error:', err);
       setError(err.message || 'Failed to create announcement');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateAnnouncement = async () => {
+    if (!selectedAnnouncement) return;
+
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      const payload = {
+        title: editedAnnouncement.title,
+        content: editedAnnouncement.content,
+        tagIds: editedAnnouncement.tags,
+        attachmentUrls: editedAnnouncement.attachmentUrls,
+      };
+
+      const response = await fetchWithAuth(
+        `${API_BASE_URL}/api/announcements/${selectedAnnouncement.id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update announcement');
+      }
+
+      await fetchAnnouncement();
+      setToast({ message: 'Announcement updated successfully', type: 'success' });
+      setSelectedAnnouncement(null);
+      setIsEditMode(false);
+    } catch (err: any) {
+      console.error('Update announcement error:', err);
+      setToast({ message: err.message || 'Failed to update announcement', type: 'error' });
     } finally {
       setIsSubmitting(false);
     }
@@ -820,138 +872,279 @@ const AdminAnnouncements = () => {
           <input type='checkbox' checked readOnly className='modal-toggle' />
           <div className='modal modal-open'>
             <div className='modal-box max-w-2xl max-h-[80vh] bg-white overflow-y-auto m-8'>
-              <h3 className='font-bold text-xl text-gray-900 mb-3'>{selectedAnnouncement.title}</h3>
+              <h3 className='font-bold text-xl text-gray-900 mb-3'>
+                {isEditMode ? 'Edit Announcement' : selectedAnnouncement.title}
+              </h3>
 
-              <div className='space-y-4'>
-                <div>
-                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Basic Information</h4>
-                  <div className='grid grid-cols-2 gap-3'>
-                    <div>
-                      <span className='text-sm font-bold text-gray-600'>Status:</span>
-                      <p className='text-sm'>
-                        <span
-                          className={`px-2 py-1 inline-flex text-xs font-semibold rounded-full ${
-                            selectedAnnouncement.isPublished
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}
-                        >
-                          {selectedAnnouncement.isPublished ? 'Published' : 'Draft'}
-                        </span>
-                      </p>
-                    </div>
-
-                    <div>
-                      <span className='text-sm font-bold text-gray-600'>Published Date:</span>
-                      <p className='text-sm text-gray-900'>
-                        {selectedAnnouncement.publishedDate
-                          ? new Date(selectedAnnouncement.publishedDate).toLocaleDateString()
-                          : 'N/A'}
-                      </p>
-                    </div>
-
-                    <div>
-                      <span className='text-sm font-bold text-gray-600'>Created By:</span>
-                      <p className='text-sm text-gray-900'>
-                        {selectedAnnouncement.createdByAdminId || 'N/A'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Content</h4>
-                  <div
-                    className='prose max-w-none text-sm text-gray-900'
-                    dangerouslySetInnerHTML={{
-                      __html: selectedAnnouncement.content || 'No content',
-                    }}
-                  />
-                </div>
-
-                {selectedAnnouncement.attachmentUrls &&
-                  selectedAnnouncement.attachmentUrls.length > 0 && (
-                    <AttachmentList attachmentUrls={selectedAnnouncement.attachmentUrls} />
-                  )}
-
-                <div>
-                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Tags</h4>
-                  {selectedAnnouncement.tags && selectedAnnouncement.tags.length > 0 ? (
-                    <div className='flex flex-wrap gap-2'>
-                      {selectedAnnouncement.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className='px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
-                        >
-                          {tag.name}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className='text-sm text-gray-900'>No tags</p>
-                  )}
-                </div>
-
-                <div>
-                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Dates</h4>
-                  <div className='grid grid-cols-2 gap-3'>
-                    <div>
-                      <span className='text-sm font-bold text-gray-600'>Created:</span>
-                      <p className='text-sm text-gray-900'>
-                        {new Date(selectedAnnouncement.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div>
-                      <span className='text-sm font-bold text-gray-600'>Updated:</span>
-                      <p className='text-sm text-gray-900'>
-                        {new Date(selectedAnnouncement.updatedAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className='modal-action'>
-                {!selectedAnnouncement.isPublished && (
-                  <button
-                    onClick={async () => {
-                      try {
-                        await fetchWithAuth(
-                          `${API_BASE_URL}/api/announcements/${selectedAnnouncement.id}/publish`,
-                          {
-                            method: 'POST',
-                          }
-                        );
-                        setToast({
-                          message: 'Announcement published successfully',
-                          type: 'success',
-                        });
-                        await fetchAnnouncement();
-                        setSelectedAnnouncement(null);
-                      } catch (err: any) {
-                        setToast({
-                          message: err.message || 'Failed to publish announcement',
-                          type: 'error',
-                        });
+              {isEditMode ? (
+                <div className='space-y-4'>
+                  <div>
+                    <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                      Title <span className='text-red-500'>*</span>
+                    </label>
+                    <input
+                      type='text'
+                      required
+                      value={editedAnnouncement.title}
+                      onChange={e =>
+                        setEditedAnnouncement({ ...editedAnnouncement, title: e.target.value })
                       }
+                      className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                      placeholder='Enter announcement title'
+                    />
+                  </div>
+
+                  <div className='mb-4'>
+                    <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                      Content <span className='text-red-500'>*</span>
+                    </label>
+                    <div style={{ height: '250px' }}>
+                      <ReactQuill
+                        ref={quillRef}
+                        theme='snow'
+                        value={editedAnnouncement.content}
+                        onChange={value =>
+                          setEditedAnnouncement({ ...editedAnnouncement, content: value })
+                        }
+                        placeholder='Enter announcement content...'
+                        modules={quillModules}
+                        style={{ height: '200px' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className='block text-sm font-semibold text-gray-700 mb-2'>Tags</label>
+                    <div className='min-h-[80px]'>
+                      {tags.length === 0 ? (
+                        <p className='text-sm text-gray-500'>No tags available</p>
+                      ) : (
+                        <div className='flex flex-wrap gap-2'>
+                          {tags.map(tag => {
+                            const isSelected = editedAnnouncement.tags.includes(tag.id);
+                            return (
+                              <button
+                                key={tag.id}
+                                type='button'
+                                onClick={() => {
+                                  if (isSelected) {
+                                    setEditedAnnouncement({
+                                      ...editedAnnouncement,
+                                      tags: editedAnnouncement.tags.filter(id => id !== tag.id),
+                                    });
+                                  } else {
+                                    setEditedAnnouncement({
+                                      ...editedAnnouncement,
+                                      tags: [...editedAnnouncement.tags, tag.id],
+                                    });
+                                  }
+                                }}
+                                className={`px-4 py-1 text-sm font-medium rounded-full transition-colors ${
+                                  isSelected
+                                    ? 'bg-[#D54242] text-white border-2 border-[#D54242]'
+                                    : 'bg-gray-100 text-gray-700 border-2 border-gray-300 hover:bg-gray-200'
+                                }`}
+                              >
+                                {tag.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <FileUpload
+                    attachmentUrls={editedAnnouncement.attachmentUrls}
+                    onFilesChange={files =>
+                      setEditedAnnouncement({ ...editedAnnouncement, attachmentUrls: files })
+                    }
+                  />
+
+                  <div className='flex gap-3 pt-4'>
+                    <button
+                      type='button'
+                      onClick={handleUpdateAnnouncement}
+                      disabled={isSubmitting}
+                      className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+                    >
+                      {isSubmitting ? 'Saving...' : 'Save Changes'}
+                    </button>
+                    <button
+                      type='button'
+                      onClick={() => {
+                        setIsEditMode(false);
+                        setEditedAnnouncement({
+                          title: selectedAnnouncement.title,
+                          content: selectedAnnouncement.content,
+                          tags: selectedAnnouncement.tags.map(t => t.id),
+                          attachmentUrls: selectedAnnouncement.attachmentUrls,
+                        });
+                      }}
+                      className='px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium'
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className='space-y-4'>
+                  <div>
+                    <h4 className='font-semibold text-base text-gray-800 mb-2'>
+                      Basic Information
+                    </h4>
+                    <div className='grid grid-cols-2 gap-3'>
+                      <div>
+                        <span className='text-sm font-bold text-gray-600'>Status:</span>
+                        <p className='text-sm'>
+                          <span
+                            className={`px-2 py-1 inline-flex text-xs font-semibold rounded-full ${
+                              selectedAnnouncement.isPublished
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}
+                          >
+                            {selectedAnnouncement.isPublished ? 'Published' : 'Draft'}
+                          </span>
+                        </p>
+                      </div>
+
+                      <div>
+                        <span className='text-sm font-bold text-gray-600'>Published Date:</span>
+                        <p className='text-sm text-gray-900'>
+                          {selectedAnnouncement.publishedDate
+                            ? new Date(selectedAnnouncement.publishedDate).toLocaleDateString()
+                            : 'N/A'}
+                        </p>
+                      </div>
+
+                      <div>
+                        <span className='text-sm font-bold text-gray-600'>Created By:</span>
+                        <p className='text-sm text-gray-900'>
+                          {selectedAnnouncement.createdByAdminId || 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className='font-semibold text-base text-gray-800 mb-2'>Content</h4>
+                    <div
+                      className='prose max-w-none text-sm text-gray-900'
+                      dangerouslySetInnerHTML={{
+                        __html: selectedAnnouncement.content || 'No content',
+                      }}
+                    />
+                  </div>
+
+                  {selectedAnnouncement.attachmentUrls &&
+                    selectedAnnouncement.attachmentUrls.length > 0 && (
+                      <AttachmentList attachmentUrls={selectedAnnouncement.attachmentUrls} />
+                    )}
+
+                  <div>
+                    <h4 className='font-semibold text-base text-gray-800 mb-2'>Tags</h4>
+                    {selectedAnnouncement.tags && selectedAnnouncement.tags.length > 0 ? (
+                      <div className='flex flex-wrap gap-2'>
+                        {selectedAnnouncement.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className='px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
+                          >
+                            {tag.name}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className='text-sm text-gray-900'>No tags</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <h4 className='font-semibold text-base text-gray-800 mb-2'>Dates</h4>
+                    <div className='grid grid-cols-2 gap-3'>
+                      <div>
+                        <span className='text-sm font-bold text-gray-600'>Created:</span>
+                        <p className='text-sm text-gray-900'>
+                          {new Date(selectedAnnouncement.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div>
+                        <span className='text-sm font-bold text-gray-600'>Updated:</span>
+                        <p className='text-sm text-gray-900'>
+                          {new Date(selectedAnnouncement.updatedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!isEditMode && (
+                <div className='modal-action'>
+                  {!selectedAnnouncement.isPublished && (
+                    <>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await fetchWithAuth(
+                              `${API_BASE_URL}/api/announcements/${selectedAnnouncement.id}/publish`,
+                              {
+                                method: 'POST',
+                              }
+                            );
+                            setToast({
+                              message: 'Announcement published successfully',
+                              type: 'success',
+                            });
+                            await fetchAnnouncement();
+                            setSelectedAnnouncement(null);
+                          } catch (err: any) {
+                            setToast({
+                              message: err.message || 'Failed to publish announcement',
+                              type: 'error',
+                            });
+                          }
+                        }}
+                        className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
+                      >
+                        Publish
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsEditMode(true);
+                          setEditedAnnouncement({
+                            title: selectedAnnouncement.title,
+                            content: selectedAnnouncement.content,
+                            tags: selectedAnnouncement.tags.map(t => t.id),
+                            attachmentUrls: selectedAnnouncement.attachmentUrls,
+                          });
+                        }}
+                        className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
+                      >
+                        Edit
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={() => {
+                      setSelectedAnnouncement(null);
+                      setIsEditMode(false);
                     }}
                     className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
                   >
-                    Publish
+                    Close
                   </button>
-                )}
-                <button
-                  onClick={() => setSelectedAnnouncement(null)}
-                  className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
-                >
-                  Close
-                </button>
-              </div>
+                </div>
+              )}
             </div>
 
             <div
               className='modal-backdrop bg-black/30'
-              onClick={() => setSelectedAnnouncement(null)}
+              onClick={() => {
+                setSelectedAnnouncement(null);
+                setIsEditMode(false);
+              }}
             ></div>
           </div>
         </>

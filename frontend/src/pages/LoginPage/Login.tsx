@@ -33,7 +33,7 @@ const LoginPage = () => {
         console.log('User role after login:', userRole);
 
         if (userRole === 'ADMIN') {
-          navigate('/admin/organizations');
+          navigate('/admin/dashboard');
         } else {
           navigate('/dashboard');
         }

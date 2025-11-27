@@ -9,6 +9,8 @@ import { AuthenticatedRequest } from '../types/index.js';
 import { clerkClient } from '../config/clerk.js';
 import { prisma } from '../config/prisma.js';
 import { sendWelcomeEmail } from './notificationController.js';
+import { SendEmailCommand } from '@aws-sdk/client-ses';
+import { sesClient, sesConfig } from '../config/aws-ses.js';
 
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 const resolveTargetId = (id: string, userId?: string) => (id === 'profile' ? userId : id);
@@ -548,10 +550,115 @@ export const unarchiveOrganization = async (req: AuthenticatedRequest, res: Resp
 export const deleteOrganization = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const { reason } = req.body;
+
     if (!isAdmin(req.user?.role)) return res.status(403).json({ error: 'Admin access required' });
 
     const orgToDelete = await prisma.organization.findUnique({ where: { id } });
     if (!orgToDelete) return res.status(404).json({ error: 'Organization not found' });
+
+    console.log(
+      `Admin ${req.user?.id} is deleting organization ${orgToDelete.name} (${orgToDelete.id})`
+    );
+
+    // Get all admin emails (excluding the current admin performing the deletion)
+    const admins = await prisma.organization.findMany({
+      where: {
+        role: 'ADMIN',
+        id: { not: req.user?.id }, // Don't send email to the admin who deleted it
+      },
+      select: { email: true },
+    });
+
+    const adminEmails = admins.map(admin => admin.email);
+
+    // Send email notification to all other admins if reason is provided
+    if (adminEmails.length > 0 && reason) {
+      const htmlBody = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #D54242; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+            .reason-box { background-color: white; padding: 20px; border-left: 4px solid #D54242; margin: 20px 0; }
+            .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Organization Deleted by Admin</h1>
+            </div>
+            <div class="content">
+              <p>An organization has been deleted from the Tennessee Coalition for Better Aging by an administrator.</p>
+
+              <p><strong>Organization Name:</strong> ${orgToDelete.name}</p>
+
+              <div class="reason-box">
+                <h3>Reason for Deletion:</h3>
+                <p>${reason.replace(/\n/g, '<br>')}</p>
+              </div>
+
+              <p>This notification has been sent to all administrators.</p>
+            </div>
+            <div class="footer">
+              <p>Tennessee Coalition for Better Aging</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      const textBody = `
+Organization Deleted by Admin
+
+An organization has been deleted from the Tennessee Coalition for Better Aging by an administrator.
+
+Organization Name: ${orgToDelete.name}
+
+Reason for Deletion:
+${reason}
+
+This notification has been sent to all administrators.
+
+Tennessee Coalition for Better Aging
+      `;
+
+      const command = new SendEmailCommand({
+        Source: sesConfig.fromEmail,
+        Destination: {
+          ToAddresses: adminEmails,
+        },
+        Message: {
+          Subject: {
+            Data: `Org ${orgToDelete.name} deleted`,
+            Charset: 'UTF-8',
+          },
+          Body: {
+            Html: {
+              Data: htmlBody,
+              Charset: 'UTF-8',
+            },
+            Text: {
+              Data: textBody,
+              Charset: 'UTF-8',
+            },
+          },
+        },
+        ReplyToAddresses: [sesConfig.replyToEmail],
+      });
+
+      try {
+        await sesClient.send(command);
+        console.log(`Sent admin deletion notification to ${adminEmails.length} admins`);
+      } catch (emailError) {
+        console.error('Error sending admin deletion notification email:', emailError);
+        // Continue with deletion even if email fails
+      }
+    }
 
     if (orgToDelete.clerkId) {
       try {
@@ -589,6 +696,12 @@ export const deactivateAccount = async (req: AuthenticatedRequest, res: Response
       return res.status(401).json({ error: 'Not authenticated' });
     }
 
+    const { reason } = req.body;
+
+    if (!reason || typeof reason !== 'string' || !reason.trim()) {
+      return res.status(400).json({ error: 'Deactivation reason is required' });
+    }
+
     const orgToDelete = await prisma.organization.findUnique({
       where: { id: req.user.id },
     });
@@ -600,6 +713,102 @@ export const deactivateAccount = async (req: AuthenticatedRequest, res: Response
     console.log(
       `Organization ${orgToDelete.name} (${orgToDelete.id}) is requesting account deactivation`
     );
+
+    // Get all admin emails
+    const admins = await prisma.organization.findMany({
+      where: { role: 'ADMIN' },
+      select: { email: true },
+    });
+
+    const adminEmails = admins.map(admin => admin.email);
+
+    // Send email notification to all admins
+    if (adminEmails.length > 0) {
+      const htmlBody = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #D54242; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+            .reason-box { background-color: white; padding: 20px; border-left: 4px solid #D54242; margin: 20px 0; }
+            .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Organization Account Deleted</h1>
+            </div>
+            <div class="content">
+              <p>An organization has deleted their account from the Tennessee Coalition for Better Aging.</p>
+
+              <p><strong>Organization Name:</strong> ${orgToDelete.name}</p>
+
+              <div class="reason-box">
+                <h3>Reason for Deletion:</h3>
+                <p>${reason.replace(/\n/g, '<br>')}</p>
+              </div>
+
+              <p>This notification has been sent to all administrators.</p>
+            </div>
+            <div class="footer">
+              <p>Tennessee Coalition for Better Aging</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      const textBody = `
+Organization Account Deleted
+
+An organization has deleted their account from the Tennessee Coalition for Better Aging.
+
+Organization Name: ${orgToDelete.name}
+
+Reason for Deletion:
+${reason}
+
+This notification has been sent to all administrators.
+
+Tennessee Coalition for Better Aging
+      `;
+
+      const command = new SendEmailCommand({
+        Source: sesConfig.fromEmail,
+        Destination: {
+          ToAddresses: adminEmails,
+        },
+        Message: {
+          Subject: {
+            Data: `Org ${orgToDelete.name} deleted`,
+            Charset: 'UTF-8',
+          },
+          Body: {
+            Html: {
+              Data: htmlBody,
+              Charset: 'UTF-8',
+            },
+            Text: {
+              Data: textBody,
+              Charset: 'UTF-8',
+            },
+          },
+        },
+        ReplyToAddresses: [sesConfig.replyToEmail],
+      });
+
+      try {
+        await sesClient.send(command);
+        console.log(`Sent deactivation notification to ${adminEmails.length} admins`);
+      } catch (emailError) {
+        console.error('Error sending deactivation notification email:', emailError);
+        // Continue with deletion even if email fails
+      }
+    }
 
     if (orgToDelete.clerkId) {
       try {

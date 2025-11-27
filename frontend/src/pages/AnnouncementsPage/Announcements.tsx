@@ -226,6 +226,16 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
             <div className='flex gap-2 items-center'>
               <button
                 className={`px-8 py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap ${
+                  timeFilter === null
+                    ? 'bg-[#EBF3FF] text-[#194B90]'
+                    : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
+                }`}
+                onClick={() => setTimeFilter(null)}
+              >
+                All
+              </button>
+              <button
+                className={`px-8 py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap ${
                   timeFilter === '24h'
                     ? 'bg-[#EBF3FF] text-[#194B90]'
                     : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
