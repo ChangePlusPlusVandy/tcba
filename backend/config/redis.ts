@@ -3,7 +3,7 @@ import { createClient } from 'redis';
 const redisClient = createClient({
   url: process.env.REDIS_URL || 'redis://localhost:6379',
   socket: {
-    reconnectStrategy: (retries) => {
+    reconnectStrategy: retries => {
       if (retries > 10) {
         console.error('Redis: Max reconnection attempts reached');
         return new Error('Max reconnection attempts reached');
@@ -13,7 +13,7 @@ const redisClient = createClient({
   },
 });
 
-redisClient.on('error', (err) => {
+redisClient.on('error', err => {
   console.error('Redis Client Error:', err);
 });
 

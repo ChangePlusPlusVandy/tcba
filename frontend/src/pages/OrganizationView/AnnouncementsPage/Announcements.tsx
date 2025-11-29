@@ -74,12 +74,13 @@ const OrgAnnouncementsPage = () => {
   const fetchAnnouncements = async () => {
     try {
       setError('');
-      const responseData = await fetchWithAuth(`${API_BASE_URL}/api/announcements?page=1&limit=100`);
-      
+      const responseData = await fetchWithAuth(
+        `${API_BASE_URL}/api/announcements?page=1&limit=100`
+      );
+
       const announcements = responseData.data || responseData;
       const announcementsArray = Array.isArray(announcements) ? announcements : [];
 
-      
       const publishedAnnouncements = announcementsArray.filter(
         (announcement: Announcement) => announcement.isPublished
       );

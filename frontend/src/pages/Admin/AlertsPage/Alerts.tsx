@@ -101,7 +101,7 @@ const AdminAlerts = () => {
     try {
       setError('');
       const responseData = await fetchWithAuth(`${API_BASE_URL}/api/alerts?page=1&limit=1000`);
-      
+
       const alerts = responseData.data || responseData;
       const alertsArray = Array.isArray(alerts) ? alerts : [];
 

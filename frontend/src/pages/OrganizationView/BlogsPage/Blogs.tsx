@@ -76,11 +76,10 @@ const OrgBlogsPage = () => {
     try {
       setError('');
       const responseData = await fetchWithAuth(`${API_BASE_URL}/api/blogs?page=1&limit=100`);
-      
+
       const blogs = responseData.data || responseData;
       const blogsArray = Array.isArray(blogs) ? blogs : [];
 
-      
       const publishedBlogs = blogsArray.filter((blog: Blog) => blog.isPublished);
       setBlogs(publishedBlogs);
     } catch (err: any) {

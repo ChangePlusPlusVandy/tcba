@@ -117,7 +117,7 @@ const AdminBlogs = () => {
     try {
       setError('');
       const responseData = await fetchWithAuth(`${API_BASE_URL}/api/blogs?page=1&limit=1000`);
-      
+
       const blogs = responseData.data || responseData;
       const blogsArray = Array.isArray(blogs) ? blogs : [];
 

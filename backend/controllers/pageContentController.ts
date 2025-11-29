@@ -22,14 +22,12 @@ export const getPageContent = async (req: Request, res: Response): Promise<void>
     const { page } = req.params;
     const cacheKey = CacheKeys.pageContent(page);
 
-    
     const cachedContent = await CacheService.get<Record<string, any>>(cacheKey);
     if (cachedContent) {
       res.status(200).json(cachedContent);
       return;
     }
 
-    
     const content = await prisma.pageContent.findMany({
       where: { page },
       orderBy: [{ section: 'asc' }, { contentKey: 'asc' }],
@@ -46,7 +44,6 @@ export const getPageContent = async (req: Request, res: Response): Promise<void>
       };
     });
 
-    
     await CacheService.set(cacheKey, structuredContent, CacheTTL.PAGE_CONTENT);
 
     res.status(200).json(structuredContent);
@@ -71,7 +68,6 @@ export const updatePageContent = async (req: Request, res: Response): Promise<vo
       data: { contentValue },
     });
 
-    
     const cacheKey = CacheKeys.pageContent(updatedContent.page);
     await CacheService.delete(cacheKey);
 
@@ -113,7 +109,6 @@ export const bulkUpdatePageContent = async (req: Request, res: Response): Promis
 
     const results = await prisma.$transaction(updatePromises);
 
-    
     await CacheService.deletePattern(CacheKeys.pageContentAll());
 
     res.status(200).json({
@@ -151,7 +146,6 @@ export const createPageContent = async (req: Request, res: Response): Promise<vo
       },
     });
 
-    
     const cacheKey = CacheKeys.pageContent(page);
     await CacheService.delete(cacheKey);
 
@@ -175,7 +169,6 @@ export const deletePageContent = async (req: Request, res: Response): Promise<vo
       where: { id },
     });
 
-    
     const cacheKey = CacheKeys.pageContent(deletedContent.page);
     await CacheService.delete(cacheKey);
 

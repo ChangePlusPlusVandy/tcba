@@ -94,7 +94,7 @@ export const getPresignedUploadUrl = async (req: AuthenticatedRequest, res: Resp
       Key: key,
       ContentType: fileType as string,
       Expires: 600,
-     
+
       CacheControl: 'public, max-age=31536000, immutable', // 1 year for images
       Metadata: {
         'uploaded-by': req.user?.clerkId || 'unknown',
@@ -166,7 +166,6 @@ export const getPublicImageUrl = async (req: Request, res: Response) => {
 
     const url = s3.getSignedUrl('getObject', params);
 
-  
     res.set('Cache-Control', 'public, max-age=86400'); // Cache the URL for 24 hours
 
     return res.status(200).json({ url });

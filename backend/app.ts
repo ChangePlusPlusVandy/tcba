@@ -23,7 +23,7 @@ import { connectRedis } from './config/redis.js';
 
 const app = express();
 
-connectRedis().catch((err) => {
+connectRedis().catch(err => {
   console.error('Failed to connect to Redis on startup:', err);
 });
 

@@ -1,7 +1,6 @@
 import redisClient from '../config/redis.js';
 
 export class CacheService {
-
   static async get<T>(key: string): Promise<T | null> {
     try {
       if (!redisClient.isOpen) {
@@ -19,11 +18,7 @@ export class CacheService {
     }
   }
 
-  static async set(
-    key: string,
-    value: unknown,
-    ttl: number = 300
-  ): Promise<void> {
+  static async set(key: string, value: unknown, ttl: number = 300): Promise<void> {
     try {
       if (!redisClient.isOpen) {
         console.warn('Redis client not connected, skipping cache set');

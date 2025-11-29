@@ -160,7 +160,6 @@ export const getBlogBySlug = async (req: AuthenticatedRequest, res: Response) =>
 
     if (!blog) return res.status(404).json({ error: 'Blog not found' });
 
-
     await CacheService.set(cacheKey, blog, CacheTTL.BLOG_DETAIL);
 
     res.json(blog);
@@ -172,14 +171,12 @@ export const getBlogBySlug = async (req: AuthenticatedRequest, res: Response) =>
 
 export const getBlogTags = async (req: AuthenticatedRequest, res: Response) => {
   try {
-
     const cacheKey = CacheKeys.blogTags();
     const cachedTags = await CacheService.get<any>(cacheKey);
 
     if (cachedTags) {
       return res.json(cachedTags);
     }
-
 
     const tags = await prisma.tag.findMany({
       where: {
@@ -191,7 +188,6 @@ export const getBlogTags = async (req: AuthenticatedRequest, res: Response) => {
       },
       orderBy: { name: 'asc' },
     });
-
 
     await CacheService.set(cacheKey, tags, CacheTTL.TAGS);
 
@@ -261,7 +257,6 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
       include: { tags: true },
     });
 
-
     await CacheService.deletePattern(CacheKeys.blogsAll());
     await CacheService.delete(CacheKeys.blogTags());
 
@@ -304,7 +299,6 @@ export const updateBlog = async (req: AuthenticatedRequest, res: Response) => {
       ...(attachmentUrls !== undefined && { attachmentUrls }),
     };
 
-
     const tagIdsToUse = tagIds || tags;
     if (tagIdsToUse) {
       const currentTagIds = blogToUpdate.tags.map(t => t.id);
@@ -323,7 +317,6 @@ export const updateBlog = async (req: AuthenticatedRequest, res: Response) => {
       data: updateData,
       include: { tags: true },
     });
-
 
     await CacheService.deletePattern(CacheKeys.blogsAll());
     await CacheService.delete(CacheKeys.blogBySlug(updatedBlog.slug));
@@ -346,7 +339,6 @@ export const deleteBlog = async (req: AuthenticatedRequest, res: Response) => {
     if (!blogToDelete) return res.status(404).json({ error: 'Blog not found' });
 
     await prisma.blog.delete({ where: { id } });
-
 
     await CacheService.deletePattern(CacheKeys.blogsAll());
     await CacheService.delete(CacheKeys.blogBySlug(blogToDelete.slug));
@@ -375,7 +367,6 @@ export const publishBlog = async (req: AuthenticatedRequest, res: Response) => {
         publishedDate: new Date(),
       },
     });
-
 
     await CacheService.deletePattern(CacheKeys.blogsAll());
     await CacheService.delete(CacheKeys.blogBySlug(publishedBlog.slug));
@@ -410,7 +401,6 @@ export const unpublishBlog = async (req: AuthenticatedRequest, res: Response) =>
         isPublished: false,
       },
     });
-
 
     await CacheService.deletePattern(CacheKeys.blogsAll());
     await CacheService.delete(CacheKeys.blogBySlug(unpublishedBlog.slug));

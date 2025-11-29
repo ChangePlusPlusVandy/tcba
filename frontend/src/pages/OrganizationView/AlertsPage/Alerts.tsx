@@ -70,11 +70,10 @@ const AlertsPage = () => {
     try {
       setError('');
       const responseData = await fetchWithAuth(`${API_BASE_URL}/api/alerts?page=1&limit=100`);
-      
+
       const alerts = responseData.data || responseData;
       const alertsArray = Array.isArray(alerts) ? alerts : [];
 
-      
       const publishedAlerts = alertsArray.filter((alert: Alert) => alert.isPublished);
       setAlerts(publishedAlerts);
     } catch (err: any) {
