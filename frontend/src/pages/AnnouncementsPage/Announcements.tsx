@@ -59,9 +59,10 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
   // GET ALL ANNOUNCEMENTS
   const getAnnouncements = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/announcements`);
+      const response = await axios.get(`${API_BASE_URL}/api/announcements?page=1&limit=100`);
       console.log('API Response:', response.data);
-      setAnnouncements(response.data);
+      const announcementsData = response.data.data || response.data;
+      setAnnouncements(Array.isArray(announcementsData) ? announcementsData : []);
       setError(null);
     } catch (error) {
       console.error('Error fetching announcements:', error);

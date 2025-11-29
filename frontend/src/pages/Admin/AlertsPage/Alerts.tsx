@@ -100,18 +100,22 @@ const AdminAlerts = () => {
   const fetchAlerts = async () => {
     try {
       setError('');
-      const data = await fetchWithAuth(`${API_BASE_URL}/api/alerts`);
-      console.log('Fetched alerts:', data);
-      console.log('Alerts count:', data.length);
+      const responseData = await fetchWithAuth(`${API_BASE_URL}/api/alerts?page=1&limit=1000`);
+
+      const alerts = responseData.data || responseData;
+      const alertsArray = Array.isArray(alerts) ? alerts : [];
+
+      console.log('Fetched alerts:', alertsArray);
+      console.log('Alerts count:', alertsArray.length);
       console.log(
         'Drafts:',
-        data.filter((a: any) => !a.isPublished)
+        alertsArray.filter((a: any) => !a.isPublished)
       );
       console.log(
         'Published:',
-        data.filter((a: any) => a.isPublished)
+        alertsArray.filter((a: any) => a.isPublished)
       );
-      setAlerts(data);
+      setAlerts(alertsArray);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch alerts');
     } finally {

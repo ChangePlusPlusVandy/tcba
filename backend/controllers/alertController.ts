@@ -5,12 +5,13 @@ import { prisma } from '../config/prisma.js';
 import { EmailService } from '../services/EmailService.js';
 import { createNotification } from './inAppNotificationController.js';
 import { sendAlertEmails as sendAlertEmailNotifications } from '../services/emailNotificationService.js';
+import { CacheService, CacheKeys, CacheTTL } from '../utils/cache.js';
 
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 
 /**
- * @desc    Get all alerts (public shows only published, admins see all)
- * @route   GET /api/alerts?priority
+ * @desc    Get all alerts with pagination
+ * @route   GET /api/alerts?priority&page=1&limit=20
  * @access  Public (optional authentication)
  */
 export const getAlerts = async (req: AuthenticatedRequest, res: Response) => {
@@ -40,7 +41,30 @@ export const getAlerts = async (req: AuthenticatedRequest, res: Response) => {
       }
     }
 
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
     const { priority, isPublished } = req.query;
+
+    const cacheKey = CacheKeys.alerts(
+      page,
+      limit,
+      isAuthenticatedAdmin
+        ? isPublished === 'true'
+          ? true
+          : isPublished === 'false'
+            ? false
+            : undefined
+        : true,
+      priority as string
+    );
+    const cachedData = await CacheService.get<any>(cacheKey);
+
+    if (cachedData) {
+      console.log(`Returning cached alerts (admin: ${isAuthenticatedAdmin})`);
+      return res.status(200).json(cachedData);
+    }
 
     const where: any = {
       ...(priority && { priority: priority as AlertPriority }),
@@ -51,13 +75,31 @@ export const getAlerts = async (req: AuthenticatedRequest, res: Response) => {
         isPublished !== undefined && { isPublished: isPublished === 'true' }),
     };
 
-    const alerts = await prisma.alert.findMany({
-      where,
-      orderBy: [{ priority: 'asc' }, { createdAt: 'desc' }],
-    });
+    const [alerts, total] = await Promise.all([
+      prisma.alert.findMany({
+        where,
+        orderBy: [{ priority: 'asc' }, { createdAt: 'desc' }],
+        take: limit,
+        skip,
+      }),
+      prisma.alert.count({ where }),
+    ]);
+
+    const response = {
+      data: alerts,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        hasMore: skip + alerts.length < total,
+      },
+    };
+
+    await CacheService.set(cacheKey, response, CacheTTL.ALERTS_LIST);
 
     console.log(`Returning ${alerts.length} alerts (admin: ${isAuthenticatedAdmin})`);
-    res.status(200).json(alerts);
+    res.status(200).json(response);
   } catch (error) {
     console.error('Error fetching alerts:', error);
     res.status(500).json({ error: 'Failed to fetch alerts' });
@@ -200,6 +242,8 @@ export const createAlert = async (req: AuthenticatedRequest, res: Response) => {
       },
     });
 
+    await CacheService.deletePattern(CacheKeys.alertsAll());
+
     if (newAlert.isPublished) {
       try {
         await createNotification('ALERT', newAlert.title, newAlert.id);
@@ -248,7 +292,9 @@ export const updateAlert = async (req: AuthenticatedRequest, res: Response) => {
       },
     });
 
-    // If alert is being published for the first time, send email notifications
+    await CacheService.deletePattern(CacheKeys.alertsAll());
+    await CacheService.delete(CacheKeys.alertById(id));
+
     if (updatedAlert.isPublished && !existingAlert.isPublished) {
       await sendAlertEmails(updatedAlert);
     }
@@ -267,7 +313,6 @@ export const updateAlert = async (req: AuthenticatedRequest, res: Response) => {
  */
 export const deleteAlert = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // Ensure user is authenticated
     if (!req.user?.id) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -284,6 +329,10 @@ export const deleteAlert = async (req: AuthenticatedRequest, res: Response) => {
     }
 
     await prisma.alert.delete({ where: { id } });
+
+    await CacheService.deletePattern(CacheKeys.alertsAll());
+    await CacheService.delete(CacheKeys.alertById(id));
+
     res.status(204).end();
   } catch (error) {
     console.error('Error deleting alert:', error);
@@ -325,6 +374,9 @@ export const publishAlert = async (req: AuthenticatedRequest, res: Response) => 
       },
     });
 
+    await CacheService.deletePattern(CacheKeys.alertsAll());
+    await CacheService.delete(CacheKeys.alertById(id));
+
     try {
       await sendAlertEmailNotifications(publishedAlert.id);
       console.log('Alert notifications sent successfully');
@@ -346,7 +398,6 @@ export const publishAlert = async (req: AuthenticatedRequest, res: Response) => 
  */
 async function sendAlertEmails(alert: any): Promise<void> {
   try {
-    // Get all active organizations with membershipActive = true
     const activeOrganizations = await prisma.organization.findMany({
       where: {
         membershipActive: true,
@@ -362,17 +413,13 @@ async function sendAlertEmails(alert: any): Promise<void> {
       },
     });
 
-    // Filter organizations by matching tags
     let targetOrganizations = activeOrganizations;
 
-    // If alert has tags, only send to organizations with matching tags
     if (alert.tags && alert.tags.length > 0) {
       targetOrganizations = activeOrganizations.filter(org => {
-        // Check if organization has any matching tags with the alert
         return alert.tags.some((alertTag: string) => org.tags.includes(alertTag));
       });
     }
-    // If alert has no tags, it's a broadcast alert sent to all active organizations
 
     console.log(
       `Sending alert "${alert.title}" to ${targetOrganizations.length} organizations` +

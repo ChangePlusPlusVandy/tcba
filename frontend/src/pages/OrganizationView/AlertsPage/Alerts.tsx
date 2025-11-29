@@ -69,9 +69,12 @@ const AlertsPage = () => {
   const fetchAlerts = async () => {
     try {
       setError('');
-      const data = await fetchWithAuth(`${API_BASE_URL}/api/alerts`);
-      // Filter to only show published alerts for organizations
-      const publishedAlerts = data.filter((alert: Alert) => alert.isPublished);
+      const responseData = await fetchWithAuth(`${API_BASE_URL}/api/alerts?page=1&limit=100`);
+
+      const alerts = responseData.data || responseData;
+      const alertsArray = Array.isArray(alerts) ? alerts : [];
+
+      const publishedAlerts = alertsArray.filter((alert: Alert) => alert.isPublished);
       setAlerts(publishedAlerts);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch alerts');

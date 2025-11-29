@@ -4,6 +4,7 @@ import { AuthenticatedRequest } from '../types/index.js';
 import { prisma } from '../config/prisma.js';
 import { createNotification } from './inAppNotificationController.js';
 import { sendBlogEmails } from '../services/emailNotificationService.js';
+import { CacheService, CacheKeys, CacheTTL } from '../utils/cache.js';
 
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 
@@ -45,6 +46,10 @@ export const getAllBlogs = async (req: AuthenticatedRequest, res: Response) => {
     const { published, startDate, endDate, tags, search, sortBy, sortOrder, limit, offset } =
       req.query;
 
+    const page = parseInt((req.query.page as string) || '1');
+    const pageLimit = parseInt((limit as string) || '20');
+    const skip = offset ? parseInt(offset as string) : (page - 1) * pageLimit;
+
     const where: any = {};
     if (!isAuthenticatedAdmin) {
       where.isPublished = true;
@@ -72,15 +77,46 @@ export const getAllBlogs = async (req: AuthenticatedRequest, res: Response) => {
       ];
     }
 
-    const blogs = await prisma.blog.findMany({
-      where,
-      include: { tags: true },
-      orderBy: { [(sortBy as string) || 'publishedDate']: (sortOrder as string) || 'desc' },
-      take: limit ? parseInt(limit as string) : undefined,
-      skip: offset ? parseInt(offset as string) : undefined,
-    });
+    const isSimpleQuery = !published && !startDate && !endDate && !tags && !search;
+    let cacheKey = '';
 
-    res.json(blogs);
+    if (isSimpleQuery) {
+      cacheKey = CacheKeys.blogs(page, pageLimit);
+      const cachedData = await CacheService.get<any>(cacheKey);
+
+      if (cachedData) {
+        console.log('Returning cached blogs');
+        return res.json(cachedData);
+      }
+    }
+
+    const [blogs, total] = await Promise.all([
+      prisma.blog.findMany({
+        where,
+        include: { tags: true },
+        orderBy: { [(sortBy as string) || 'publishedDate']: (sortOrder as string) || 'desc' },
+        take: pageLimit,
+        skip,
+      }),
+      prisma.blog.count({ where }),
+    ]);
+
+    const response = {
+      data: blogs,
+      pagination: {
+        total,
+        page,
+        limit: pageLimit,
+        totalPages: Math.ceil(total / pageLimit),
+        hasMore: skip + blogs.length < total,
+      },
+    };
+
+    if (isSimpleQuery) {
+      await CacheService.set(cacheKey, response, CacheTTL.BLOGS_LIST);
+    }
+
+    res.json(response);
   } catch (error) {
     console.error('Error fetching blogs:', error);
     res.status(500).json({ error: 'Failed to fetch blogs' });
@@ -109,12 +145,22 @@ export const getBlogById = async (req: AuthenticatedRequest, res: Response) => {
 export const getBlogBySlug = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { slug } = req.params;
+
+    const cacheKey = CacheKeys.blogBySlug(slug);
+    const cachedBlog = await CacheService.get<any>(cacheKey);
+
+    if (cachedBlog) {
+      return res.json(cachedBlog);
+    }
+
     const blog = await prisma.blog.findUnique({
       where: { slug },
       include: { tags: true },
     });
 
     if (!blog) return res.status(404).json({ error: 'Blog not found' });
+
+    await CacheService.set(cacheKey, blog, CacheTTL.BLOG_DETAIL);
 
     res.json(blog);
   } catch (error) {
@@ -125,6 +171,13 @@ export const getBlogBySlug = async (req: AuthenticatedRequest, res: Response) =>
 
 export const getBlogTags = async (req: AuthenticatedRequest, res: Response) => {
   try {
+    const cacheKey = CacheKeys.blogTags();
+    const cachedTags = await CacheService.get<any>(cacheKey);
+
+    if (cachedTags) {
+      return res.json(cachedTags);
+    }
+
     const tags = await prisma.tag.findMany({
       where: {
         blogs: {
@@ -135,6 +188,8 @@ export const getBlogTags = async (req: AuthenticatedRequest, res: Response) => {
       },
       orderBy: { name: 'asc' },
     });
+
+    await CacheService.set(cacheKey, tags, CacheTTL.TAGS);
 
     res.json(tags);
   } catch (error) {
@@ -202,6 +257,9 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
       include: { tags: true },
     });
 
+    await CacheService.deletePattern(CacheKeys.blogsAll());
+    await CacheService.delete(CacheKeys.blogTags());
+
     if (blog.isPublished) {
       try {
         await createNotification('BLOG', blog.title, blog.slug || blog.id);
@@ -241,7 +299,6 @@ export const updateBlog = async (req: AuthenticatedRequest, res: Response) => {
       ...(attachmentUrls !== undefined && { attachmentUrls }),
     };
 
-    // Handle tags update if provided (accept both 'tags' and 'tagIds')
     const tagIdsToUse = tagIds || tags;
     if (tagIdsToUse) {
       const currentTagIds = blogToUpdate.tags.map(t => t.id);
@@ -261,6 +318,10 @@ export const updateBlog = async (req: AuthenticatedRequest, res: Response) => {
       include: { tags: true },
     });
 
+    await CacheService.deletePattern(CacheKeys.blogsAll());
+    await CacheService.delete(CacheKeys.blogBySlug(updatedBlog.slug));
+    await CacheService.delete(CacheKeys.blogTags());
+
     res.json(updatedBlog);
   } catch (error) {
     console.error('Error updating blog:', error);
@@ -278,6 +339,11 @@ export const deleteBlog = async (req: AuthenticatedRequest, res: Response) => {
     if (!blogToDelete) return res.status(404).json({ error: 'Blog not found' });
 
     await prisma.blog.delete({ where: { id } });
+
+    await CacheService.deletePattern(CacheKeys.blogsAll());
+    await CacheService.delete(CacheKeys.blogBySlug(blogToDelete.slug));
+    await CacheService.delete(CacheKeys.blogTags());
+
     res.json({ message: 'Blog deleted successfully' });
   } catch (error) {
     console.error('Error deleting blog:', error);
@@ -301,6 +367,9 @@ export const publishBlog = async (req: AuthenticatedRequest, res: Response) => {
         publishedDate: new Date(),
       },
     });
+
+    await CacheService.deletePattern(CacheKeys.blogsAll());
+    await CacheService.delete(CacheKeys.blogBySlug(publishedBlog.slug));
 
     try {
       await createNotification('BLOG', publishedBlog.title, publishedBlog.slug || publishedBlog.id);
@@ -332,6 +401,9 @@ export const unpublishBlog = async (req: AuthenticatedRequest, res: Response) =>
         isPublished: false,
       },
     });
+
+    await CacheService.deletePattern(CacheKeys.blogsAll());
+    await CacheService.delete(CacheKeys.blogBySlug(unpublishedBlog.slug));
 
     res.json(unpublishedBlog);
   } catch (error) {

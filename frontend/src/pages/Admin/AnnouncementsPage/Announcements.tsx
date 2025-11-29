@@ -295,22 +295,25 @@ const AdminAnnouncements = () => {
   const fetchAnnouncement = async () => {
     try {
       setError('');
-      const response = await fetchWithAuth(`${API_BASE_URL}/api/announcements`);
+      const response = await fetchWithAuth(`${API_BASE_URL}/api/announcements?page=1&limit=1000`);
 
       if (!response.ok) throw new Error('Failed to fetch announcements');
 
-      const data = await response.json();
-      console.log('Fetched announcements:', data);
-      console.log('Announcements count:', data.length);
+      const responseData = await response.json();
+      const announcements = responseData.data || responseData;
+      const announcementsArray = Array.isArray(announcements) ? announcements : [];
+
+      console.log('Fetched announcements:', announcementsArray);
+      console.log('Announcements count:', announcementsArray.length);
       console.log(
         'Drafts:',
-        data.filter((a: any) => !a.isPublished)
+        announcementsArray.filter((a: any) => !a.isPublished)
       );
       console.log(
         'Published:',
-        data.filter((a: any) => a.isPublished)
+        announcementsArray.filter((a: any) => a.isPublished)
       );
-      setAnnouncements(data);
+      setAnnouncements(announcementsArray);
     } catch (err: any) {
       setError(err.message || 'Failed to load announcements');
     } finally {

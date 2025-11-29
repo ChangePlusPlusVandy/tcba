@@ -25,10 +25,11 @@ const DashboardPage = () => {
     try {
       const allBanners: Banner[] = [];
 
-      const alertsRes = await fetch(`${API_BASE_URL}/api/alerts`);
+      const alertsRes = await fetch(`${API_BASE_URL}/api/alerts?page=1&limit=50`);
       if (alertsRes.ok) {
-        const alerts = await alertsRes.json();
-        alerts
+        const response = await alertsRes.json();
+        const alerts = response.data || response;
+        (Array.isArray(alerts) ? alerts : [])
           .filter((a: any) => a.isPublished)
           .forEach((a: any) => {
             allBanners.push({
