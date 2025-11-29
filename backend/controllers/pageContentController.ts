@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { CacheService, CacheKeys, CacheTTL } from '../utils/cache.js';
 
 const prisma = new PrismaClient();
 
@@ -19,7 +20,16 @@ export const getAllPageContent = async (req: Request, res: Response): Promise<vo
 export const getPageContent = async (req: Request, res: Response): Promise<void> => {
   try {
     const { page } = req.params;
+    const cacheKey = CacheKeys.pageContent(page);
 
+    
+    const cachedContent = await CacheService.get<Record<string, any>>(cacheKey);
+    if (cachedContent) {
+      res.status(200).json(cachedContent);
+      return;
+    }
+
+    
     const content = await prisma.pageContent.findMany({
       where: { page },
       orderBy: [{ section: 'asc' }, { contentKey: 'asc' }],
@@ -35,6 +45,9 @@ export const getPageContent = async (req: Request, res: Response): Promise<void>
         type: item.contentType,
       };
     });
+
+    
+    await CacheService.set(cacheKey, structuredContent, CacheTTL.PAGE_CONTENT);
 
     res.status(200).json(structuredContent);
   } catch (error) {
@@ -57,6 +70,10 @@ export const updatePageContent = async (req: Request, res: Response): Promise<vo
       where: { id },
       data: { contentValue },
     });
+
+    
+    const cacheKey = CacheKeys.pageContent(updatedContent.page);
+    await CacheService.delete(cacheKey);
 
     res.status(200).json(updatedContent);
   } catch (error) {
@@ -96,6 +113,9 @@ export const bulkUpdatePageContent = async (req: Request, res: Response): Promis
 
     const results = await prisma.$transaction(updatePromises);
 
+    
+    await CacheService.deletePattern(CacheKeys.pageContentAll());
+
     res.status(200).json({
       message: 'Content updated successfully',
       updatedCount: results.length,
@@ -131,6 +151,10 @@ export const createPageContent = async (req: Request, res: Response): Promise<vo
       },
     });
 
+    
+    const cacheKey = CacheKeys.pageContent(page);
+    await CacheService.delete(cacheKey);
+
     res.status(201).json(newContent);
   } catch (error: any) {
     if (error.code === 'P2002') {
@@ -147,9 +171,13 @@ export const deletePageContent = async (req: Request, res: Response): Promise<vo
   try {
     const { id } = req.params;
 
-    await prisma.pageContent.delete({
+    const deletedContent = await prisma.pageContent.delete({
       where: { id },
     });
+
+    
+    const cacheKey = CacheKeys.pageContent(deletedContent.page);
+    await CacheService.delete(cacheKey);
 
     res.status(200).json({ message: 'Content deleted successfully' });
   } catch (error) {

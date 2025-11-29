@@ -75,9 +75,13 @@ const OrgBlogsPage = () => {
   const fetchBlogs = async () => {
     try {
       setError('');
-      const data = await fetchWithAuth(`${API_BASE_URL}/api/blogs`);
-      // Filter to only show published blogs for organizations
-      const publishedBlogs = data.filter((blog: Blog) => blog.isPublished);
+      const responseData = await fetchWithAuth(`${API_BASE_URL}/api/blogs?page=1&limit=100`);
+      
+      const blogs = responseData.data || responseData;
+      const blogsArray = Array.isArray(blogs) ? blogs : [];
+
+      
+      const publishedBlogs = blogsArray.filter((blog: Blog) => blog.isPublished);
       setBlogs(publishedBlogs);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch blogs');

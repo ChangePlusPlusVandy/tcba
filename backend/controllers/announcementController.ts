@@ -4,6 +4,7 @@ import { OrganizationRole } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import { createNotification } from './inAppNotificationController.js';
 import { sendAnnouncementEmails } from '../services/emailNotificationService.js';
+import { CacheService, CacheKeys, CacheTTL } from '../utils/cache.js';
 
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 
@@ -16,8 +17,8 @@ const generateSlug = async (title: string, id: string): Promise<string> => {
 };
 
 /**
- * @desc    Get all announcements
- * @route   GET /api/announcements
+ * @desc    Get all announcements with pagination
+ * @route   GET /api/announcements?page=1&limit=10
  * @access  Public (returns only published) / Admin (returns all)
  */
 export const getAnnouncements = async (req: AuthenticatedRequest, res: Response) => {
@@ -47,14 +48,46 @@ export const getAnnouncements = async (req: AuthenticatedRequest, res: Response)
       }
     }
 
-    const announcements = await prisma.announcements.findMany({
-      where: isAuthenticatedAdmin ? {} : { isPublished: true },
-      orderBy: { createdAt: 'desc' },
-      include: { tags: true },
-    });
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
+    const cacheKey = CacheKeys.announcements(page, limit, isAuthenticatedAdmin ? undefined : true);
+    const cachedData = await CacheService.get<any>(cacheKey);
+
+    if (cachedData) {
+      console.log(`Returning cached announcements (admin: ${isAuthenticatedAdmin})`);
+      return res.status(200).json(cachedData);
+    }
+
+    const where = isAuthenticatedAdmin ? {} : { isPublished: true };
+
+    const [announcements, total] = await Promise.all([
+      prisma.announcements.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        include: { tags: true },
+        take: limit,
+        skip,
+      }),
+      prisma.announcements.count({ where }),
+    ]);
+
+    const response = {
+      data: announcements,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        hasMore: skip + announcements.length < total,
+      },
+    };
+
+    await CacheService.set(cacheKey, response, CacheTTL.ANNOUNCEMENTS_LIST);
 
     console.log(`Returning ${announcements.length} announcements (admin: ${isAuthenticatedAdmin})`);
-    res.status(200).json(announcements);
+    res.status(200).json(response);
   } catch (error) {
     console.error('Error fetching announcements:', error);
     res.status(500).json({ error: 'Failed to fetch announcements' });
@@ -91,13 +124,25 @@ export const getAnnouncementById = async (req: Request, res: Response) => {
 export const getAnnouncementBySlug = async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
+
+    const cacheKey = CacheKeys.announcementBySlug(slug);
+    const cachedAnnouncement = await CacheService.get<any>(cacheKey);
+
+    if (cachedAnnouncement) {
+      return res.status(200).json(cachedAnnouncement);
+    }
+
     const announcement = await prisma.announcements.findUnique({
       where: { slug },
       include: { tags: true },
     });
+
     if (!announcement) {
       return res.status(404).json({ error: 'Announcement not found' });
     }
+
+    await CacheService.set(cacheKey, announcement, CacheTTL.ANNOUNCEMENT_DETAIL);
+
     res.status(200).json(announcement);
   } catch (error) {
     console.error('Error fetching announcement by slug:', error);
@@ -191,6 +236,8 @@ export const createAnnouncement = async (req: AuthenticatedRequest, res: Respons
     });
     console.log('Announcement updated successfully:', newAnnouncement.id);
 
+    await CacheService.deletePattern(CacheKeys.announcementsAll());
+
     if (newAnnouncement.isPublished) {
       try {
         await createNotification('ANNOUNCEMENT', newAnnouncement.title, newAnnouncement.slug);
@@ -242,6 +289,10 @@ export const updateAnnouncement = async (req: AuthenticatedRequest, res: Respons
       data: updateData,
       include: { tags: true },
     });
+
+    await CacheService.deletePattern(CacheKeys.announcementsAll());
+    await CacheService.delete(CacheKeys.announcementBySlug(updatedAnnouncement.slug));
+
     res.status(200).json(updatedAnnouncement);
   } catch (error) {
     console.error(error);
@@ -268,6 +319,8 @@ export const deleteAnnouncement = async (req: AuthenticatedRequest, res: Respons
         },
       },
     });
+
+    await CacheService.deletePattern(CacheKeys.announcementsAll());
 
     res.status(204).end();
   } catch (error) {
@@ -298,6 +351,9 @@ export const publishAnnouncement = async (req: AuthenticatedRequest, res: Respon
       },
       include: { tags: true },
     });
+
+    await CacheService.deletePattern(CacheKeys.announcementsAll());
+    await CacheService.delete(CacheKeys.announcementBySlug(publishedAnnouncement.slug));
 
     try {
       await createNotification(
@@ -340,6 +396,9 @@ export const unpublishAnnouncement = async (req: AuthenticatedRequest, res: Resp
       },
       include: { tags: true },
     });
+
+    await CacheService.deletePattern(CacheKeys.announcementsAll());
+    await CacheService.delete(CacheKeys.announcementBySlug(unpublishedAnnouncement.slug));
 
     res.json(unpublishedAnnouncement);
   } catch (error) {

@@ -62,10 +62,11 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
       try {
         const allNotifications: NotificationBanner[] = [];
 
-        const announcementsRes = await fetch(`${API_BASE_URL}/api/announcements`);
+        const announcementsRes = await fetch(`${API_BASE_URL}/api/announcements?page=1&limit=3`);
         if (announcementsRes.ok) {
-          const announcements = await announcementsRes.json();
-          announcements
+          const response = await announcementsRes.json();
+          const announcements = response.data || response;
+          (Array.isArray(announcements) ? announcements : [])
             .filter((a: any) => a.isPublished)
             .slice(0, 3)
             .forEach((a: any) => {
@@ -79,10 +80,11 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
             });
         }
 
-        const blogsRes = await fetch(`${API_BASE_URL}/api/blogs`);
+        const blogsRes = await fetch(`${API_BASE_URL}/api/blogs?page=1&limit=2`);
         if (blogsRes.ok) {
-          const blogs = await blogsRes.json();
-          blogs
+          const response = await blogsRes.json();
+          const blogs = response.data || response;
+          (Array.isArray(blogs) ? blogs : [])
             .filter((b: any) => b.isPublished)
             .slice(0, 2)
             .forEach((b: any) => {

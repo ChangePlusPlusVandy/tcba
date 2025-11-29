@@ -54,8 +54,10 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
 
   const getBlogs = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/blogs`);
-      setBlogs(response.data);
+      const response = await axios.get(`${API_BASE_URL}/api/blogs?page=1&limit=100`);
+      
+      const blogsData = response.data.data || response.data;
+      setBlogs(Array.isArray(blogsData) ? blogsData : []);
       setError(null);
     } catch (error) {
       console.error('Error fetching blogs:', error);

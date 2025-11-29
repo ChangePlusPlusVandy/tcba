@@ -116,18 +116,22 @@ const AdminBlogs = () => {
   const fetchBlogs = async () => {
     try {
       setError('');
-      const data = await fetchWithAuth(`${API_BASE_URL}/api/blogs`);
-      console.log('Fetched blogs:', data);
-      console.log('Blogs count:', data.length);
+      const responseData = await fetchWithAuth(`${API_BASE_URL}/api/blogs?page=1&limit=1000`);
+      
+      const blogs = responseData.data || responseData;
+      const blogsArray = Array.isArray(blogs) ? blogs : [];
+
+      console.log('Fetched blogs:', blogsArray);
+      console.log('Blogs count:', blogsArray.length);
       console.log(
         'Drafts:',
-        data.filter((b: any) => !b.isPublished)
+        blogsArray.filter((b: any) => !b.isPublished)
       );
       console.log(
         'Published:',
-        data.filter((b: any) => b.isPublished)
+        blogsArray.filter((b: any) => b.isPublished)
       );
-      setBlogs(data);
+      setBlogs(blogsArray);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch blogs');
     } finally {
