@@ -1,4 +1,4 @@
-# TCBA - Tennessee Coalition for Better Aging
+# Tennessee Coalition for Better Aging (TCBA)
 
 ## Project Overview
 Repo for TCBA, a coalition management platform with:
