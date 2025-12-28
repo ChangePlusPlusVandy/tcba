@@ -129,8 +129,7 @@ const Navbar = () => {
               </Link>
             </SignedOut>
             <SignedIn>
-              {/* Notification bell}
-              {/* {!isAdmin && (
+              {!isAdmin && (
                 <button
                   onClick={handleNotificationsOpen}
                   className='relative p-2 hover:bg-gray-100 rounded-full transition'
@@ -143,7 +142,7 @@ const Navbar = () => {
                     </span>
                   )}
                 </button>
-              )} */}
+              )}
               <UserButton
                 appearance={{
                   elements: {
