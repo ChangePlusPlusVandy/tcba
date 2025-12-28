@@ -86,6 +86,7 @@ Backend uses PostgreSQL/Supabase, Prisma ORM, Clerk Auth, Stripe, AWS SES, and A
 
 **Documentation Links For Reference:**
 - [PostgreSQL Docs](https://www.postgresql.org/docs/)
+- [Redis Docs](https://redis.io/docs/latest/)
 - [Prisma Docs](https://www.prisma.io/docs/)
 - [Supabase Docs](https://supabase.com/docs)
 - [AWS S3 Docs](https://docs.aws.amazon.com/s3/)
@@ -94,3 +95,4 @@ Backend uses PostgreSQL/Supabase, Prisma ORM, Clerk Auth, Stripe, AWS SES, and A
 - [Stripe API Docs](https://stripe.com/docs/api)
 - [Docker Desktop Docs](https://docs.docker.com/desktop/)
 - [ReactQuill Docs](https://quilljs.com/docs/quickstart)
+ 
