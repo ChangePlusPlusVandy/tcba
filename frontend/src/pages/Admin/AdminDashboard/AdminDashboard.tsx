@@ -205,7 +205,8 @@ const AdminDashboard = () => {
 
       if (response.ok) {
         const responseData = await response.json();
-        setModalData(prev => ({ ...prev, [type]: responseData }));
+        const dataArray = responseData.data ? responseData.data : responseData;
+        setModalData(prev => ({ ...prev, [type]: Array.isArray(dataArray) ? dataArray : [] }));
       }
     } catch (err) {
       console.error('Error fetching modal data:', err);
@@ -343,7 +344,7 @@ const AdminDashboard = () => {
         labels: data.growthData.organizations.map(d => d.month),
         datasets: [
           {
-            label: 'Organizations',
+            label: 'Member Organizations',
             data: data.growthData.organizations.map(d => d.count),
             borderColor: '#194B90',
             backgroundColor: 'rgba(25, 75, 144, 0.1)',
@@ -390,7 +391,6 @@ const AdminDashboard = () => {
       }
     }
 
-    // Default empty data
     return {
       labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
       datasets: [
@@ -647,7 +647,7 @@ const AdminDashboard = () => {
                   onChange={e => setGraphType(e.target.value as GraphType)}
                   className='select select-sm select-bordered w-full mb-4'
                 >
-                  <option value='orgGrowth'>Org Growth</option>
+                  <option value='orgGrowth'>Member Organizations</option>
                   <option value='emailGrowth'>Email Subscribers</option>
                   <option value='surveyResponses'>Survey Responses</option>
                 </select>
@@ -768,12 +768,10 @@ const AdminDashboard = () => {
                       ))}
 
                     {activeModal === 'announcements' &&
+                      modalData.announcements &&
+                      Array.isArray(modalData.announcements) &&
                       modalData.announcements.map((ann: any) => (
-                        <div
-                          key={ann.id}
-                          onClick={() => navigate('/admin/announcements')}
-                          className='p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition'
-                        >
+                        <div key={ann.id} className='p-4 bg-gray-50 rounded-lg'>
                           <div className='flex items-center justify-between'>
                             <div>
                               <p className='font-medium text-gray-800'>{ann.title}</p>
@@ -795,12 +793,10 @@ const AdminDashboard = () => {
                       ))}
 
                     {activeModal === 'blogs' &&
+                      modalData.blogs &&
+                      Array.isArray(modalData.blogs) &&
                       modalData.blogs.map((blog: any) => (
-                        <div
-                          key={blog.id}
-                          onClick={() => navigate('/admin/blogs')}
-                          className='p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition'
-                        >
+                        <div key={blog.id} className='p-4 bg-gray-50 rounded-lg'>
                           <div className='flex items-center justify-between'>
                             <div>
                               <p className='font-medium text-gray-800'>{blog.title}</p>
@@ -813,12 +809,10 @@ const AdminDashboard = () => {
                       ))}
 
                     {activeModal === 'surveys' &&
+                      modalData.surveys &&
+                      Array.isArray(modalData.surveys) &&
                       modalData.surveys.map((survey: any) => (
-                        <div
-                          key={survey.id}
-                          onClick={() => navigate(`/admin/surveys/${survey.id}/responses`)}
-                          className='p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition'
-                        >
+                        <div key={survey.id} className='p-4 bg-gray-50 rounded-lg'>
                           <div className='flex items-center justify-between'>
                             <div>
                               <p className='font-medium text-gray-800'>{survey.title}</p>

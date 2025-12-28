@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useSignIn } from '@clerk/clerk-react';
+import { useSignIn, useClerk } from '@clerk/clerk-react';
 
 const ForgotPasswordPage = () => {
   const { isLoaded, signIn } = useSignIn();
+  const clerk = useClerk();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -52,6 +53,7 @@ const ForgotPasswordPage = () => {
       });
 
       if (result.status === 'complete') {
+        await clerk.signOut();
         setSuccess('Password reset successful! Redirecting to login...');
         setTimeout(() => navigate('/login'), 2000);
       } else {

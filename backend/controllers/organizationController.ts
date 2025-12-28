@@ -8,7 +8,11 @@ import {
 import { AuthenticatedRequest } from '../types/index.js';
 import { clerkClient } from '../config/clerk.js';
 import { prisma } from '../config/prisma.js';
-import { sendWelcomeEmail } from './notificationController.js';
+import {
+  sendWelcomeEmail,
+  sendRejectionEmail,
+  sendDeletionEmail,
+} from './notificationController.js';
 import { SendEmailCommand } from '@aws-sdk/client-ses';
 import { sesClient, sesConfig } from '../config/aws-ses.js';
 
@@ -320,7 +324,6 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
           }
         } catch (geocodeError) {
           console.error('[Update] Geocoding error:', geocodeError);
-          // Continue without updating coordinates if geocoding fails
         }
       }
     }
@@ -433,6 +436,7 @@ export const approveOrganization = async (req: AuthenticatedRequest, res: Respon
 export const declineOrganization = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const { reason } = req.body;
 
     if (!isAdmin(req.user?.role)) {
       return res.status(403).json({ error: 'Admin access required' });
@@ -447,9 +451,19 @@ export const declineOrganization = async (req: AuthenticatedRequest, res: Respon
       return res.status(400).json({ error: 'Only pending organizations can be declined' });
     }
 
+    if (org.email || org.primaryContactEmail) {
+      const recipientEmail = org.primaryContactEmail || org.email;
+      try {
+        await sendRejectionEmail(recipientEmail, org.name, reason);
+        console.log(`Sent rejection notification to ${recipientEmail}`);
+      } catch (emailError) {
+        console.error('Error sending rejection email:', emailError);
+      }
+    }
+
     await prisma.organization.delete({ where: { id } });
 
-    res.json({ message: 'Organization request declined and removed' });
+    res.json({ message: 'Organization request declined and notification sent' });
   } catch (error) {
     console.error('Error declining organization:', error);
     res.status(500).json({ error: 'Failed to decline organization' });
@@ -561,18 +575,26 @@ export const deleteOrganization = async (req: AuthenticatedRequest, res: Respons
       `Admin ${req.user?.id} is deleting organization ${orgToDelete.name} (${orgToDelete.id})`
     );
 
-    // Get all admin emails (excluding the current admin performing the deletion)
+    if (orgToDelete.email || orgToDelete.primaryContactEmail) {
+      const recipientEmail = orgToDelete.primaryContactEmail || orgToDelete.email;
+      try {
+        await sendDeletionEmail(recipientEmail, orgToDelete.name, reason);
+        console.log(`Sent deletion notification to ${recipientEmail}`);
+      } catch (emailError) {
+        console.error('Error sending deletion email to organization:', emailError);
+      }
+    }
+
     const admins = await prisma.organization.findMany({
       where: {
         role: 'ADMIN',
-        id: { not: req.user?.id }, // Don't send email to the admin who deleted it
+        id: { not: req.user?.id },
       },
       select: { email: true },
     });
 
     const adminEmails = admins.map(admin => admin.email);
 
-    // Send email notification to all other admins if reason is provided
     if (adminEmails.length > 0 && reason) {
       const htmlBody = `
         <!DOCTYPE html>
@@ -656,7 +678,6 @@ Tennessee Coalition for Better Aging
         console.log(`Sent admin deletion notification to ${adminEmails.length} admins`);
       } catch (emailError) {
         console.error('Error sending admin deletion notification email:', emailError);
-        // Continue with deletion even if email fails
       }
     }
 
@@ -714,7 +735,6 @@ export const deactivateAccount = async (req: AuthenticatedRequest, res: Response
       `Organization ${orgToDelete.name} (${orgToDelete.id}) is requesting account deactivation`
     );
 
-    // Get all admin emails
     const admins = await prisma.organization.findMany({
       where: { role: 'ADMIN' },
       select: { email: true },
@@ -722,7 +742,6 @@ export const deactivateAccount = async (req: AuthenticatedRequest, res: Response
 
     const adminEmails = admins.map(admin => admin.email);
 
-    // Send email notification to all admins
     if (adminEmails.length > 0) {
       const htmlBody = `
         <!DOCTYPE html>
@@ -806,7 +825,6 @@ Tennessee Coalition for Better Aging
         console.log(`Sent deactivation notification to ${adminEmails.length} admins`);
       } catch (emailError) {
         console.error('Error sending deactivation notification email:', emailError);
-        // Continue with deletion even if email fails
       }
     }
 
@@ -831,5 +849,53 @@ Tennessee Coalition for Better Aging
   } catch (error) {
     console.error('Error deactivating account:', error);
     res.status(500).json({ error: 'Failed to deactivate account' });
+  }
+};
+
+/**
+ * @desc    Mark content as viewed by updating lastCheckedAt timestamp
+ * @route   PUT /api/organizations/mark-viewed
+ * @access  Organization only
+ */
+export const markContentAsViewed = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { contentType } = req.body;
+
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const validTypes = ['alerts', 'announcements', 'blogs', 'messages'];
+    if (!validTypes.includes(contentType)) {
+      return res.status(400).json({ error: 'Invalid content type' });
+    }
+
+    const now = new Date();
+    const updateData: any = {};
+
+    switch (contentType) {
+      case 'alerts':
+        updateData.lastCheckedAlertsAt = now;
+        break;
+      case 'announcements':
+        updateData.lastCheckedAnnouncementsAt = now;
+        break;
+      case 'blogs':
+        updateData.lastCheckedBlogsAt = now;
+        break;
+      case 'messages':
+        updateData.lastCheckedMessagesAt = now;
+        break;
+    }
+
+    await prisma.organization.update({
+      where: { id: req.user.id },
+      data: updateData,
+    });
+
+    res.json({ success: true, lastCheckedAt: now });
+  } catch (error) {
+    console.error('Error marking content as viewed:', error);
+    res.status(500).json({ error: 'Failed to mark content as viewed' });
   }
 };

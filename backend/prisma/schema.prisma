@@ -103,12 +103,16 @@ model Organization {
   tags                  String[]
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
-  notifyAlerts          Boolean            @default(true)
-  notifyAnnouncements   Boolean            @default(true)
-  notifyBlogs           Boolean            @default(true)
-  notifySurveys         Boolean            @default(true)
-  visibleInDirectory    Boolean            @default(true)
-  surveyResponses       SurveyResponse[]
+  notifyAlerts               Boolean            @default(true)
+  notifyAnnouncements        Boolean            @default(true)
+  notifyBlogs                Boolean            @default(true)
+  notifySurveys              Boolean            @default(true)
+  visibleInDirectory         Boolean            @default(true)
+  lastCheckedAlertsAt        DateTime?
+  lastCheckedAnnouncementsAt DateTime?
+  lastCheckedBlogsAt         DateTime?
+  lastCheckedMessagesAt      DateTime?
+  surveyResponses            SurveyResponse[]
 
   @@map("organizations")
 }

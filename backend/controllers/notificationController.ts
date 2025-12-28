@@ -119,6 +119,196 @@ Tennessee Coalition for Better Aging
   await sesClient.send(command);
 };
 
+export const sendRejectionEmail = async (
+  organizationEmail: string,
+  organizationName: string,
+  reason?: string
+) => {
+  const htmlBody = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #D54242; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+        .reason-box { background-color: white; padding: 20px; border-left: 4px solid #D54242; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Application Status Update</h1>
+        </div>
+        <div class="content">
+          <p>Dear ${organizationName},</p>
+
+          <p>Thank you for your interest in joining the Tennessee Coalition for Better Aging.</p>
+
+          <p>After careful review, we regret to inform you that your application has not been approved at this time.</p>
+
+          ${reason ? `<div class="reason-box"><h3>Feedback:</h3><p>${reason.replace(/\n/g, '<br>')}</p></div>` : ''}
+
+          <p>If you have any questions or would like to discuss this decision, please feel free to contact us at ${sesConfig.replyToEmail}.</p>
+
+          <p>We appreciate your interest in our coalition and wish you the best in your endeavors.</p>
+
+          <p>Best regards,<br>The TCBA Team</p>
+        </div>
+        <div class="footer">
+          <p>Tennessee Coalition for Better Aging</p>
+          <p>This email was sent to ${organizationEmail}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const textBody = `
+Application Status Update
+
+Dear ${organizationName},
+
+Thank you for your interest in joining the Tennessee Coalition for Better Aging.
+
+After careful review, we regret to inform you that your application has not been approved at this time.
+
+${reason ? `Feedback:\n${reason}\n\n` : ''}
+
+If you have any questions or would like to discuss this decision, please feel free to contact us at ${sesConfig.replyToEmail}.
+
+We appreciate your interest in our coalition and wish you the best in your endeavors.
+
+Best regards,
+The TCBA Team
+
+Tennessee Coalition for Better Aging
+  `;
+
+  const command = new SendEmailCommand({
+    Source: `${sesConfig.fromEmail}`,
+    Destination: {
+      ToAddresses: [organizationEmail],
+    },
+    Message: {
+      Subject: {
+        Data: 'Application Status - Tennessee Coalition for Better Aging',
+        Charset: 'UTF-8',
+      },
+      Body: {
+        Html: {
+          Data: htmlBody,
+          Charset: 'UTF-8',
+        },
+        Text: {
+          Data: textBody,
+          Charset: 'UTF-8',
+        },
+      },
+    },
+    ReplyToAddresses: [sesConfig.replyToEmail],
+  });
+
+  await sesClient.send(command);
+};
+
+export const sendDeletionEmail = async (
+  organizationEmail: string,
+  organizationName: string,
+  reason?: string
+) => {
+  const htmlBody = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #D54242; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+        .reason-box { background-color: white; padding: 20px; border-left: 4px solid #D54242; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Account Status Update</h1>
+        </div>
+        <div class="content">
+          <p>Dear ${organizationName},</p>
+
+          <p>We are writing to inform you that your organization's membership with the Tennessee Coalition for Better Aging has been terminated.</p>
+
+          ${reason ? `<div class="reason-box"><h3>Reason:</h3><p>${reason.replace(/\n/g, '<br>')}</p></div>` : ''}
+
+          <p>Your account and all associated data have been removed from our system.</p>
+
+          <p>If you believe this was done in error or have any questions, please contact us at ${sesConfig.replyToEmail}.</p>
+
+          <p>Thank you for your time with the coalition.</p>
+
+          <p>Best regards,<br>The TCBA Team</p>
+        </div>
+        <div class="footer">
+          <p>Tennessee Coalition for Better Aging</p>
+          <p>This email was sent to ${organizationEmail}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const textBody = `
+Account Status Update
+
+Dear ${organizationName},
+
+We are writing to inform you that your organization's membership with the Tennessee Coalition for Better Aging has been terminated.
+
+${reason ? `Reason:\n${reason}\n\n` : ''}
+
+Your account and all associated data have been removed from our system.
+
+If you believe this was done in error or have any questions, please contact us at ${sesConfig.replyToEmail}.
+
+Thank you for your time with the coalition.
+
+Best regards,
+The TCBA Team
+
+Tennessee Coalition for Better Aging
+  `;
+
+  const command = new SendEmailCommand({
+    Source: `${sesConfig.fromEmail}`,
+    Destination: {
+      ToAddresses: [organizationEmail],
+    },
+    Message: {
+      Subject: {
+        Data: 'Account Status Update - Tennessee Coalition for Better Aging',
+        Charset: 'UTF-8',
+      },
+      Body: {
+        Html: {
+          Data: htmlBody,
+          Charset: 'UTF-8',
+        },
+        Text: {
+          Data: textBody,
+          Charset: 'UTF-8',
+        },
+      },
+    },
+    ReplyToAddresses: [sesConfig.replyToEmail],
+  });
+
+  await sesClient.send(command);
+};
+
 export const sendCustomEmail = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user || req.user.role !== 'ADMIN') {
@@ -693,11 +883,11 @@ export const sendAlertNotification = async (req: AuthenticatedRequest, res: Resp
 
 export const sendContactFormEmail = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { title, message } = req.body;
+    const { email, title, message } = req.body;
 
-    if (!title || !message) {
+    if (!email || !title || !message) {
       return res.status(400).json({
-        error: 'Title and message are required',
+        error: 'Email, title, and message are required',
       });
     }
 
@@ -710,6 +900,7 @@ export const sendContactFormEmail = async (req: AuthenticatedRequest, res: Respo
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
           .header { background-color: #D54242; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
           .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+          .email-box { background-color: white; padding: 15px; border-left: 4px solid #194B90; margin: 20px 0; }
           .message-box { background-color: white; padding: 20px; border-left: 4px solid #D54242; margin: 20px 0; }
           .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
         </style>
@@ -720,6 +911,9 @@ export const sendContactFormEmail = async (req: AuthenticatedRequest, res: Respo
             <h1>Contact Form Submission</h1>
           </div>
           <div class="content">
+            <div class="email-box">
+              <p style="margin: 0;"><strong>Reply to:</strong> ${email}</p>
+            </div>
             <h2>Subject: ${title}</h2>
             <div class="message-box">
               <p>${message.replace(/\n/g, '<br>')}</p>
@@ -733,6 +927,8 @@ export const sendContactFormEmail = async (req: AuthenticatedRequest, res: Respo
 
     const textBody = `
 Contact Form Submission
+
+Reply to: ${email}
 
 Subject: ${title}
 

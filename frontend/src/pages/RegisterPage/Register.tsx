@@ -305,7 +305,9 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           className='flex flex-col space-y-8 w-full mx-auto'
         >
           <div className='flex flex-col space-y-2'>
-            <label>Organization Name</label>
+            <label>
+              Organization Name <span className='text-red-500'>*</span>
+            </label>
             <input
               type='text'
               name='name'
@@ -318,7 +320,9 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>Street Address</label>
+            <label>
+              Street Address <span className='text-red-500'>*</span>
+            </label>
             <input
               type='text'
               name='address'
@@ -332,7 +336,9 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
 
           <div className='grid grid-cols-3 gap-4'>
             <div className='flex flex-col space-y-2'>
-              <label>City</label>
+              <label>
+                City <span className='text-red-500'>*</span>
+              </label>
               <input
                 type='text'
                 name='city'
@@ -345,7 +351,9 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
             </div>
 
             <div className='flex flex-col space-y-2'>
-              <label>State</label>
+              <label>
+                State <span className='text-red-500'>*</span>
+              </label>
               <input
                 type='text'
                 name='state'
@@ -359,7 +367,9 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
             </div>
 
             <div className='flex flex-col space-y-2'>
-              <label>Zip Code</label>
+              <label>
+                Zip Code <span className='text-red-500'>*</span>
+              </label>
               <input
                 type='text'
                 name='zipCode'
@@ -373,7 +383,9 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>Organization Contact Email</label>
+            <label>
+              Organization Contact Email <span className='text-red-500'>*</span>
+            </label>
             <input
               type='email'
               name='email'
@@ -386,7 +398,9 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>Primary Contact Name</label>
+            <label>
+              Primary Contact Name <span className='text-red-500'>*</span>
+            </label>
             <input
               type='text'
               name='primaryContactName'
@@ -399,7 +413,9 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>Primary Contact Email</label>
+            <label>
+              Primary Contact Email <span className='text-red-500'>*</span>
+            </label>
             <input
               type='email'
               name='primaryContactEmail'
@@ -412,7 +428,9 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>Primary Contact Phone Number</label>
+            <label>
+              Primary Contact Phone Number <span className='text-red-500'>*</span>
+            </label>
             <input
               type='tel'
               name='primaryContactPhone'
@@ -425,7 +443,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>Secondary Contact Name (optional)</label>
+            <label>Secondary Contact Name</label>
             <input
               type='text'
               name='secondaryContactName'
@@ -437,7 +455,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>Secondary Contact Email (optional)</label>
+            <label>Secondary Contact Email</label>
             <input
               type='email'
               name='secondaryContactEmail'
@@ -449,7 +467,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>Website URL (optional)</label>
+            <label>Website URL</label>
             <input
               type='url'
               name='website'
@@ -461,7 +479,9 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>Region</label>
+            <label>
+              Region <span className='text-red-500'>*</span>
+            </label>
             <div className='relative inline-block'>
               <select
                 name='region'
@@ -495,7 +515,9 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>Organization Type</label>
+            <label>
+              Organization Type <span className='text-red-500'>*</span>
+            </label>
             <input
               type='text'
               name='organizationType'
@@ -509,7 +531,9 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>Organization Size</label>
+            <label>
+              Organization Size <span className='text-red-500'>*</span>
+            </label>
             <div className='relative inline-block'>
               <select
                 name='organizationSize'
@@ -542,7 +566,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>Description (optional)</label>
+            <label>Description</label>
             <textarea
               name='additionalNotes'
               value={formData.additionalNotes}

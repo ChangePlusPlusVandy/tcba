@@ -1846,7 +1846,7 @@ const OrganizationManagement = () => {
       {rejectionModal && (
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4'>
           <div className='bg-white rounded-lg max-w-lg w-full'>
-            <div className='flex items-center justify-between p-6 border-b'>
+            <div className='flex items-center justify-between p-6'>
               <h2 className='text-xl font-bold text-gray-900'>Decline Organization Request</h2>
               <button
                 onClick={() => {
@@ -1869,23 +1869,23 @@ const OrganizationManagement = () => {
             <div className='p-6'>
               <p className='text-sm text-gray-600 mb-4'>
                 You are about to decline{' '}
-                <span className='font-semibold'>{rejectionModal.orgName}</span>. Please provide a
-                reason that will be sent to the organization via email.
+                <span className='font-semibold'>{rejectionModal.orgName}</span>. You can optionally
+                provide a reason that will be sent to the organization via email.
               </p>
 
               <label className='block text-sm font-medium text-gray-700 mb-2'>
-                Reason for Decline
+                Reason for Decline (Optional)
               </label>
               <textarea
                 value={rejectionReason}
                 onChange={e => setRejectionReason(e.target.value)}
                 rows={5}
-                placeholder='Enter the reason for declining this organization...'
+                placeholder='Enter the reason for declining this organization (optional)...'
                 className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#194B90]'
               />
             </div>
 
-            <div className='flex justify-end gap-3 p-6 border-t bg-gray-50'>
+            <div className='flex justify-end gap-3 p-6 bg-gray-50'>
               <button
                 onClick={() => {
                   setRejectionModal(null);
@@ -1898,7 +1898,7 @@ const OrganizationManagement = () => {
               </button>
               <button
                 onClick={handleRejectWithReason}
-                disabled={actioningOrg === rejectionModal.orgId || !rejectionReason.trim()}
+                disabled={actioningOrg === rejectionModal.orgId}
                 className='px-6 py-2 bg-[#D54242] text-white rounded-md hover:bg-[#b53a3a] disabled:opacity-50'
               >
                 {actioningOrg === rejectionModal.orgId ? 'Sending...' : 'Send Email & Decline'}
@@ -1911,7 +1911,7 @@ const OrganizationManagement = () => {
       {deletionModal && (
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4'>
           <div className='bg-white rounded-lg max-w-lg w-full'>
-            <div className='flex items-center justify-between p-6 border-b'>
+            <div className='flex items-center justify-between p-6'>
               <h2 className='text-xl font-bold text-gray-900'>Delete Organization</h2>
               <button
                 onClick={() => {
@@ -1935,7 +1935,8 @@ const OrganizationManagement = () => {
               <p className='text-sm text-gray-600 mb-4'>
                 You are about to permanently delete{' '}
                 <span className='font-semibold'>{deletionModal.orgName}</span>. You can optionally
-                provide a reason that will be sent to all other administrators via email.
+                provide a reason that will be sent to the organization and all other administrators
+                via email.
               </p>
 
               <label className='block text-sm font-medium text-gray-700 mb-2'>
@@ -1950,7 +1951,7 @@ const OrganizationManagement = () => {
               />
             </div>
 
-            <div className='flex justify-end gap-3 p-6 border-t bg-gray-50'>
+            <div className='flex justify-end gap-3 p-6 bg-gray-50'>
               <button
                 onClick={() => {
                   setDeletionModal(null);
@@ -1966,7 +1967,7 @@ const OrganizationManagement = () => {
                 disabled={actioningOrg === deletionModal.orgId}
                 className='px-6 py-2 bg-[#D54242] text-white rounded-md hover:bg-[#b53a3a] disabled:opacity-50'
               >
-                {actioningOrg === deletionModal.orgId ? 'Deleting...' : 'Delete Organization'}
+                {actioningOrg === deletionModal.orgId ? 'Deleting...' : 'Send Email & Delete'}
               </button>
             </div>
           </div>

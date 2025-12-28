@@ -14,6 +14,7 @@ interface ContactPageProps {
 
 const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
   const [formData, setFormData] = useState({
+    email: '',
     title: '',
     message: '',
   });
@@ -62,6 +63,7 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          email: formData.email,
           title: formData.title,
           message: formData.message,
         }),
@@ -77,6 +79,7 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
         type: 'success',
       });
       setFormData({
+        email: '',
         title: '',
         message: '',
       });
@@ -123,7 +126,25 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
 
       <form onSubmit={handleSubmit} className='flex flex-col space-y-8 w-full mx-auto'>
         <div className='flex flex-col space-y-2'>
-          <label className='text-base font-semibold text-slate-900'>Subject</label>
+          <label className='text-base font-semibold text-slate-900'>
+            Your Email <span className='text-red-500'>*</span>
+          </label>
+          <input
+            type='email'
+            name='email'
+            value={formData.email}
+            onChange={handleInputChange}
+            required
+            disabled={loading}
+            placeholder='Enter your email address'
+            className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
+          />
+        </div>
+
+        <div className='flex flex-col space-y-2'>
+          <label className='text-base font-semibold text-slate-900'>
+            Subject <span className='text-red-500'>*</span>
+          </label>
           <input
             type='text'
             name='title'
@@ -137,7 +158,9 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
         </div>
 
         <div className='flex flex-col space-y-2'>
-          <label className='text-base font-semibold text-slate-900'>Message</label>
+          <label className='text-base font-semibold text-slate-900'>
+            Message <span className='text-red-500'>*</span>
+          </label>
           <textarea
             name='message'
             value={formData.message}

@@ -11,6 +11,7 @@ import {
   unarchiveOrganization,
   deleteOrganization,
   deactivateAccount,
+  markContentAsViewed,
 } from '../controllers/organizationController.js';
 import { authenticateToken } from '../middleware/auth.js';
 
@@ -19,6 +20,7 @@ const router = Router();
 router.get('/', authenticateToken, getAllOrganizations);
 router.get('/directory', authenticateToken, getDirectoryOrganizations);
 router.post('/register', registerOrganization);
+router.put('/mark-viewed', authenticateToken, markContentAsViewed);
 router.get('/:id', authenticateToken, getOrganizationById);
 router.put('/:id', authenticateToken, updateOrganization);
 router.put('/:id/approve', authenticateToken, approveOrganization);

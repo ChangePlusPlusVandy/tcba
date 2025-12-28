@@ -20,6 +20,10 @@ const LoginPage = () => {
     setError('');
 
     try {
+      if (clerk.session) {
+        await clerk.signOut();
+      }
+
       const result = await signIn.create({
         identifier: email,
         password,
