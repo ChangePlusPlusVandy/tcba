@@ -1,8 +1,9 @@
-import { useAuth } from '@clerk/clerk-react';
 import { useEffect, useState } from 'react';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
 import Toast from '../../../components/Toast';
 import PublicAttachmentList from '../../../components/PublicAttachmentList';
+import Pagination from '../../../components/Pagination';
+import { useOrgAnnouncements } from '../../../hooks/queries/useOrgAnnouncements';
 import { API_BASE_URL } from '../../../config/api';
 
 type Tag = {
@@ -27,14 +28,12 @@ type Announcement = {
 };
 
 const OrgAnnouncementsPage = () => {
-  const { getToken } = useAuth();
-
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [tagsFilter, setTagsFilter] = useState<string[]>([]);
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
 
   type SortField = 'title' | 'publishedDate' | 'tags' | 'createdAt';
   type SortDirection = 'asc' | 'desc';
@@ -49,52 +48,11 @@ const OrgAnnouncementsPage = () => {
     type: 'success' | 'error' | 'info';
   } | null>(null);
 
-  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    const token = await getToken();
-    if (!token) throw new Error('Authentication required');
+  const { data: announcementsData, isLoading: loading, error: announcementsError } = useOrgAnnouncements(currentPage, itemsPerPage);
 
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
-    }
-
-    if (response.status === 204) return null;
-    return response.json();
-  };
-
-  const fetchAnnouncements = async () => {
-    try {
-      setError('');
-      const responseData = await fetchWithAuth(
-        `${API_BASE_URL}/api/announcements?page=1&limit=100`
-      );
-
-      const announcements = responseData.data || responseData;
-      const announcementsArray = Array.isArray(announcements) ? announcements : [];
-
-      const publishedAnnouncements = announcementsArray.filter(
-        (announcement: Announcement) => announcement.isPublished
-      );
-      setAnnouncements(publishedAnnouncements);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch announcements');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAnnouncements();
-  }, []);
+  const announcements = announcementsData?.data || [];
+  const totalAnnouncements = announcementsData?.total || 0;
+  const error = announcementsError ? 'Failed to fetch announcements' : '';
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -408,6 +366,16 @@ const OrgAnnouncementsPage = () => {
               </tbody>
             </table>
           </div>
+        )}
+
+        {!loading && filteredAnnouncements.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(totalAnnouncements / itemsPerPage)}
+            onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={totalAnnouncements}
+          />
         )}
       </div>
 

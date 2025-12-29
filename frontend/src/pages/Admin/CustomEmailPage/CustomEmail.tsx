@@ -4,7 +4,11 @@ import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import AdminSidebar from '../../../components/AdminSidebar';
 import Toast from '../../../components/Toast';
+import Pagination from '../../../components/Pagination';
 import { API_BASE_URL } from '../../../config/api';
+import { useAdminOrganizations } from '../../../hooks/queries/useAdminOrganizations';
+import { useEmailHistory } from '../../../hooks/queries/useEmailHistory';
+import { useEmailMutations } from '../../../hooks/mutations/useEmailMutations';
 
 type Organization = {
   id: string;
@@ -44,18 +48,33 @@ const CustomEmail = () => {
   const [manuallyExcludedOrgs, setManuallyExcludedOrgs] = useState<string[]>([]);
   const [orgSearchQuery, setOrgSearchQuery] = useState<string>('');
 
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [availableTags, setAvailableTags] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
+  const [expandedEmailId, setExpandedEmailId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const [emailHistory, setEmailHistory] = useState<EmailHistoryItem[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
-  const [expandedEmailId, setExpandedEmailId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
 
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduledDateTime, setScheduledDateTime] = useState('');
+
+  const { data: organizationsData, isLoading: loading } = useAdminOrganizations(1, 1000);
+  const { data: emailHistoryData, isLoading: historyLoading } = useEmailHistory(currentPage, itemsPerPage);
+  const { sendEmail } = useEmailMutations();
+
+  const organizationsResponse = organizationsData || {};
+  const organizations = organizationsResponse.data || organizationsResponse;
+  const organizationsArray: Organization[] = Array.isArray(organizations) ? organizations : [];
+
+  const emailHistory = emailHistoryData?.data || [];
+  const totalEmails = emailHistoryData?.total || 0;
+
+  const availableTags = Array.from(
+    new Set(
+      organizationsArray.flatMap((org: Organization) =>
+        org.tags && Array.isArray(org.tags) ? org.tags.filter((tag): tag is string => typeof tag === 'string') : []
+      )
+    )
+  ).sort();
 
   const handleImageUpload = () => {
     const input = document.createElement('input');
@@ -147,81 +166,8 @@ const CustomEmail = () => {
   const formats = ['header', 'bold', 'italic', 'underline', 'list', 'link', 'image'];
 
   useEffect(() => {
-    fetchOrganizations();
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === 'history') {
-      fetchEmailHistory();
-    }
-  }, [activeTab]);
-
-  useEffect(() => {
     setManuallyExcludedOrgs([]);
   }, [selectedTags, selectedRegion, selectedOrgSize]);
-
-  const fetchOrganizations = async () => {
-    try {
-      setLoading(true);
-      const token = await getToken();
-      const response = await fetch(`${API_BASE_URL}/api/organizations`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch organizations');
-      }
-
-      const data = await response.json();
-      console.log('Fetched organizations:', data);
-      setOrganizations(data);
-
-      const tags = new Set<string>();
-      data.forEach((org: Organization) => {
-        console.log('Org:', org.name, 'Tags:', org.tags);
-        if (org.tags && Array.isArray(org.tags)) {
-          org.tags.forEach(tag => {
-            if (tag && typeof tag === 'string') {
-              tags.add(tag);
-            }
-          });
-        }
-      });
-      console.log('Available tags:', Array.from(tags));
-      setAvailableTags(Array.from(tags).sort());
-    } catch (err: any) {
-      console.error('Error fetching organizations:', err);
-      setToast({ message: err.message || 'Failed to load organizations', type: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchEmailHistory = async () => {
-    try {
-      setHistoryLoading(true);
-      const token = await getToken();
-      const response = await fetch(`${API_BASE_URL}/api/email-notifications/history`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch email history');
-      }
-
-      const data = await response.json();
-      setEmailHistory(data);
-    } catch (err: any) {
-      console.error('Error fetching email history:', err);
-      setToast({ message: err.message || 'Failed to load email history', type: 'error' });
-    } finally {
-      setHistoryLoading(false);
-    }
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('en-US', {
@@ -234,7 +180,7 @@ const CustomEmail = () => {
   };
 
   const getFilteredOrganizations = () => {
-    let filtered = organizations;
+    let filtered = organizationsArray;
 
     if (selectedTags.length > 0) {
       filtered = filtered.filter(
@@ -266,7 +212,7 @@ const CustomEmail = () => {
   };
 
   const getBaseFilteredOrganizations = () => {
-    let filtered = organizations;
+    let filtered = organizationsArray;
 
     if (selectedTags.length > 0) {
       filtered = filtered.filter(
@@ -311,10 +257,7 @@ const CustomEmail = () => {
     }
 
     try {
-      setSending(true);
       setToast(null);
-
-      const token = await getToken();
 
       const requestData: any = {
         subject: emailTitle,
@@ -326,18 +269,7 @@ const CustomEmail = () => {
         requestData.scheduledFor = new Date(scheduledDateTime).toISOString();
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/email-notifications/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      });
-
-      if (!response.ok) {
-        throw new Error(isScheduled ? 'Failed to schedule email' : 'Failed to send email');
-      }
+      await sendEmail.mutateAsync(requestData);
 
       const successMessage = isScheduled
         ? `Email scheduled for ${new Date(scheduledDateTime).toLocaleString()} to ${recipients.length} organization(s)!`
@@ -360,8 +292,6 @@ const CustomEmail = () => {
     } catch (err: any) {
       console.error('Error sending email:', err);
       setToast({ message: err.message || 'Failed to send email', type: 'error' });
-    } finally {
-      setSending(false);
     }
   };
 
@@ -633,7 +563,7 @@ const CustomEmail = () => {
                     setScheduledDateTime('');
                     setToast(null);
                   }}
-                  disabled={sending}
+                  disabled={sendEmail.isPending}
                   className='px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50'
                 >
                   Clear
@@ -641,13 +571,13 @@ const CustomEmail = () => {
                 <button
                   onClick={handleSend}
                   disabled={
-                    sending ||
+                    sendEmail.isPending ||
                     filteredOrganizations.length === 0 ||
                     (isScheduled && !scheduledDateTime)
                   }
                   className='px-6 py-2 bg-[#D54242] text-white rounded-md hover:bg-[#b53a3a] disabled:opacity-50 disabled:cursor-not-allowed'
                 >
-                  {sending
+                  {sendEmail.isPending
                     ? isScheduled
                       ? 'Scheduling...'
                       : 'Sending...'
@@ -769,6 +699,18 @@ const CustomEmail = () => {
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+
+              {!historyLoading && emailHistory.length > 0 && (
+                <div className='p-4 border-t border-gray-200'>
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={Math.ceil(totalEmails / itemsPerPage)}
+                    onPageChange={setCurrentPage}
+                    itemsPerPage={itemsPerPage}
+                    totalItems={totalEmails}
+                  />
                 </div>
               )}
             </div>

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/clerk-react';
 import Toast from '../../../components/Toast';
 import ConfirmModal from '../../../components/ConfirmModal';
 import AdminSidebar from '../../../components/AdminSidebar';
-import { API_BASE_URL } from '../../../config/api';
+import Pagination from '../../../components/Pagination';
+import { useAdminOrganizations } from '../../../hooks/queries/useAdminOrganizations';
+import { useOrganizationMutations } from '../../../hooks/mutations/useOrganizationMutations';
 
 type Organization = {
   id: string;
@@ -47,9 +48,24 @@ type SortField =
 type SortDirection = 'asc' | 'desc';
 
 const OrganizationManagement = () => {
-  const { getToken } = useAuth();
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
+  const { data: organizationsData, isLoading: loading } = useAdminOrganizations(currentPage, itemsPerPage);
+  const {
+    approveOrganization,
+    declineOrganization,
+    archiveOrganization,
+    unarchiveOrganization,
+    deleteOrganization,
+    updateOrganization,
+  } = useOrganizationMutations();
+
+  const organizationsResponse = organizationsData || {};
+  const organizations = organizationsResponse.data || organizationsResponse;
+  const organizationsArray: Organization[] = Array.isArray(organizations) ? organizations : [];
+  const totalOrganizations = organizationsResponse.total || organizationsResponse.pagination?.total || organizationsArray.length;
+
   const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'ACTIVE' | 'INACTIVE'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [actioningOrg, setActioningOrg] = useState<string | null>(null);
@@ -88,101 +104,21 @@ const OrganizationManagement = () => {
   const [editRegionDropdownOpen, setEditRegionDropdownOpen] = useState(false);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
 
-  const isTokenExpiringSoon = (token: string): boolean => {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const expirationTime = payload.exp * 1000;
-      const now = Date.now();
-      const timeUntilExpiry = expirationTime - now;
-      return timeUntilExpiry < 5 * 60 * 1000;
-    } catch (e) {
-      return true;
-    }
-  };
-
-  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    let token = await getToken();
-
-    if (!token) {
-      throw new Error('No authentication token available');
-    }
-
-    if (isTokenExpiringSoon(token)) {
-      console.log('Token expiring soon, proactively refreshing...');
-      token = await getToken({ skipCache: true });
-
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-    }
-
-    let response = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (response.status === 401) {
-      console.log('Token expired, refreshing and retrying...');
-
-      token = await getToken({ skipCache: true });
-
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-
-      response = await fetch(url, {
-        ...options,
-        headers: {
-          ...options.headers,
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.status === 401) {
-        throw new Error('Authentication failed. Please try logging in again.');
-      }
-    }
-
-    return response;
-  };
-
-  const fetchOrganizations = async () => {
-    try {
-      const response = await fetchWithAuth(`${API_BASE_URL}/api/organizations`);
-
-      if (!response.ok) throw new Error('Failed to fetch organizations');
-
-      const data = await response.json();
-      setOrganizations(data);
-    } catch (err: any) {
-      setToast({ message: err.message || 'Failed to load organizations', type: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchTags = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/tags`);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/tags`);
       if (!response.ok) throw new Error('Failed to fetch tags');
       const data = await response.json();
-      console.log('Fetched tags from API:', data);
       const tagNames = data.map((tag: { name: string }) => tag.name);
-      console.log('Tag names:', tagNames);
       setAvailableTags(tagNames);
     } catch (err: any) {
       console.error('Error fetching tags:', err);
-      const orgTags = Array.from(new Set(organizations.flatMap(org => org.tags || [])));
-      console.log('Using fallback tags from organizations:', orgTags);
+      const orgTags = Array.from(new Set(organizationsArray.flatMap(org => org.tags || [])));
       setAvailableTags(orgTags);
     }
   };
 
   useEffect(() => {
-    fetchOrganizations();
     fetchTags();
   }, []);
 
@@ -267,23 +203,12 @@ const OrganizationManagement = () => {
     setActioningOrg(orgId);
 
     try {
-      let response;
-      if (action === 'delete') {
-        response = await fetchWithAuth(`${API_BASE_URL}/api/organizations/${orgId}`, {
-          method: 'DELETE',
-        });
-      } else {
-        response = await fetchWithAuth(`${API_BASE_URL}/api/organizations/${orgId}/${action}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Failed to ${action} organization`);
+      if (action === 'approve') {
+        await approveOrganization.mutateAsync(orgId);
+      } else if (action === 'archive') {
+        await archiveOrganization.mutateAsync(orgId);
+      } else if (action === 'unarchive') {
+        await unarchiveOrganization.mutateAsync(orgId);
       }
 
       const successMessages = {
@@ -295,7 +220,6 @@ const OrganizationManagement = () => {
       };
 
       setToast({ message: successMessages[action], type: 'success' });
-      fetchOrganizations();
     } catch (err: any) {
       const errorMessage = err.message || `Failed to ${action} organization`;
       setToast({ message: errorMessage, type: 'error' });
@@ -312,25 +236,13 @@ const OrganizationManagement = () => {
     setActioningOrg(orgId);
 
     try {
-      const response = await fetchWithAuth(`${API_BASE_URL}/api/organizations/${orgId}/decline`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ reason: rejectionReason }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to decline organization');
-      }
+      await declineOrganization.mutateAsync({ id: orgId, reason: rejectionReason });
 
       setToast({
         message: 'Organization request declined and notification sent.',
         type: 'success',
       });
       setRejectionReason('');
-      fetchOrganizations();
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to decline organization';
       setToast({ message: errorMessage, type: 'error' });
@@ -347,25 +259,13 @@ const OrganizationManagement = () => {
     setActioningOrg(orgId);
 
     try {
-      const response = await fetchWithAuth(`${API_BASE_URL}/api/organizations/${orgId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ reason: deletionReason }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete organization');
-      }
+      await deleteOrganization.mutateAsync({ id: orgId, reason: deletionReason });
 
       setToast({
         message: 'Organization deleted and notification sent.',
         type: 'success',
       });
       setDeletionReason('');
-      fetchOrganizations();
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to delete organization';
       setToast({ message: errorMessage, type: 'error' });
@@ -380,22 +280,10 @@ const OrganizationManagement = () => {
     setActioningOrg(editingOrg.id);
 
     try {
-      const response = await fetchWithAuth(`${API_BASE_URL}/api/organizations/${editingOrg.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(editingOrg),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update organization');
-      }
+      await updateOrganization.mutateAsync({ id: editingOrg.id, data: editingOrg });
 
       setToast({ message: 'Organization updated successfully!', type: 'success' });
       setEditingOrg(null);
-      fetchOrganizations();
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to update organization';
       setToast({ message: errorMessage, type: 'error' });
@@ -530,10 +418,10 @@ const OrganizationManagement = () => {
   };
 
   const uniqueOrgTypes = Array.from(
-    new Set(organizations.map(org => org.organizationType).filter(Boolean))
+    new Set(organizationsArray.map(org => org.organizationType).filter(Boolean))
   ) as string[];
 
-  const allTags = Array.from(new Set(organizations.flatMap(org => org.tags || [])));
+  const allTags = Array.from(new Set(organizationsArray.flatMap(org => org.tags || [])));
 
   const combinedTags = Array.from(new Set([...availableTags, ...allTags]));
 
@@ -542,12 +430,12 @@ const OrganizationManagement = () => {
       console.log('Region Filter Active:', regionFilter);
       console.log(
         'Organizations with regions:',
-        organizations.map(o => ({ name: o.name, region: o.region }))
+        organizationsArray.map(o => ({ name: o.name, region: o.region }))
       );
     }
   }, [regionFilter, organizations]);
 
-  const filteredOrganizations = organizations.filter(org => {
+  const filteredOrganizations = organizationsArray.filter(org => {
     if (filter === 'PENDING' && org.status !== 'PENDING') return false;
     if (filter === 'ACTIVE' && org.status !== 'ACTIVE') return false;
     if (filter === 'INACTIVE' && org.status !== 'INACTIVE') return false;
@@ -1195,6 +1083,13 @@ const OrganizationManagement = () => {
                   ))}
                 </tbody>
               </table>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(totalOrganizations / itemsPerPage)}
+                onPageChange={setCurrentPage}
+                itemsPerPage={itemsPerPage}
+                totalItems={totalOrganizations}
+              />
             </div>
           </>
         )}

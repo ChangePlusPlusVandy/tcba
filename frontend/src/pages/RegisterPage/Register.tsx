@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Toast from '../../components/Toast';
 import getInvolvedImage from '../../assets/getInvolved.png';
 import S3Image from '../../components/S3Image';
+import { usePageContent } from '../../hooks/queries/usePageContent';
 import { API_BASE_URL } from '../../config/api';
 
 interface PageContent {
@@ -58,31 +59,10 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
     message: string;
     type: 'success' | 'error' | 'info';
   } | null>(null);
-  const [content, setContent] = useState<PageContent>({});
-  const [pageLoading, setPageLoading] = useState(true);
+  const { data: pageContent, isLoading: contentLoading } = usePageContent('register');
 
-  useEffect(() => {
-    if (previewContent) {
-      setContent(previewContent);
-      setPageLoading(false);
-      return;
-    }
-
-    const loadContent = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/page-content/register`);
-        if (!response.ok) throw new Error('Failed to fetch page content');
-        const data = await response.json();
-        setContent(data);
-      } catch (error) {
-        console.error('Error loading page content:', error);
-      } finally {
-        setPageLoading(false);
-      }
-    };
-
-    loadContent();
-  }, [previewContent]);
+  const content = previewContent || pageContent || {};
+  const pageLoading = !previewContent && contentLoading;
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>

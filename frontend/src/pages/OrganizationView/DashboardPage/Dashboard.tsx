@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
 import { API_BASE_URL } from '../../../config/api';
+import { useDashboardData } from '../../../hooks/queries/useDashboardData';
 
 interface DashboardStats {
   newAlerts: number;
@@ -23,178 +24,104 @@ interface ContentItem {
 
 const DashboardPage = () => {
   const { getToken } = useAuth();
-  const [stats, setStats] = useState<DashboardStats>({
-    newAlerts: 0,
-    newSurveys: 0,
-    newAnnouncements: 0,
-    newBlogs: 0,
-  });
-  const [latestItems, setLatestItems] = useState<{
-    alert?: ContentItem;
-    survey?: ContentItem;
-    announcement?: ContentItem;
-    blog?: ContentItem;
-  }>({});
-  const [loading, setLoading] = useState(true);
+  const { orgProfile, alerts, surveys, surveyResponses, announcements, blogs, isLoading } = useDashboardData();
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  const lastCheckedDates = useMemo(() => ({
+    alerts: orgProfile?.lastCheckedAlertsAt ? new Date(orgProfile.lastCheckedAlertsAt) : null,
+    announcements: orgProfile?.lastCheckedAnnouncementsAt ? new Date(orgProfile.lastCheckedAnnouncementsAt) : null,
+    blogs: orgProfile?.lastCheckedBlogsAt ? new Date(orgProfile.lastCheckedBlogsAt) : null,
+    messages: orgProfile?.lastCheckedMessagesAt ? new Date(orgProfile.lastCheckedMessagesAt) : null,
+  }), [orgProfile]);
 
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      const token = await getToken();
+  const { stats, latestItems } = useMemo(() => {
+    const computedStats: DashboardStats = {
+      newAlerts: 0,
+      newSurveys: 0,
+      newAnnouncements: 0,
+      newBlogs: 0,
+    };
+    const computedLatest: {
+      alert?: ContentItem;
+      survey?: ContentItem;
+      announcement?: ContentItem;
+      blog?: ContentItem;
+    } = {};
 
-      const orgRes = await fetch(`${API_BASE_URL}/api/organizations/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      let lastCheckedDates = {
-        alerts: null as Date | null,
-        announcements: null as Date | null,
-        blogs: null as Date | null,
-        messages: null as Date | null,
-      };
-
-      let orgId = '';
-      if (orgRes.ok) {
-        const orgData = await orgRes.json();
-        orgId = orgData.id;
-        lastCheckedDates = {
-          alerts: orgData.lastCheckedAlertsAt ? new Date(orgData.lastCheckedAlertsAt) : null,
-          announcements: orgData.lastCheckedAnnouncementsAt
-            ? new Date(orgData.lastCheckedAnnouncementsAt)
-            : null,
-          blogs: orgData.lastCheckedBlogsAt ? new Date(orgData.lastCheckedBlogsAt) : null,
-          messages: orgData.lastCheckedMessagesAt ? new Date(orgData.lastCheckedMessagesAt) : null,
+    if (alerts) {
+      const alertsData = (alerts.data || alerts).filter((a: any) => a.isPublished);
+      const newAlerts = lastCheckedDates.alerts
+        ? alertsData.filter((a: any) => new Date(a.publishedDate || a.createdAt) > lastCheckedDates.alerts!)
+        : alertsData;
+      computedStats.newAlerts = newAlerts.length;
+      if (newAlerts[0]) {
+        computedLatest.alert = {
+          id: newAlerts[0].id,
+          title: newAlerts[0].title,
+          excerpt: newAlerts[0].message?.substring(0, 150),
+          createdAt: newAlerts[0].publishedDate || newAlerts[0].createdAt,
+          type: 'alert',
+          priority: newAlerts[0].priority,
         };
       }
-
-      const alertsRes = await fetch(`${API_BASE_URL}/api/alerts?page=1&limit=50`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (alertsRes.ok) {
-        const response = await alertsRes.json();
-        const allAlerts = (response.data || response).filter((a: any) => a.isPublished);
-        const newAlerts = lastCheckedDates.alerts
-          ? allAlerts.filter(
-              (a: any) => new Date(a.publishedDate || a.createdAt) > lastCheckedDates.alerts!
-            )
-          : allAlerts;
-        setStats(prev => ({ ...prev, newAlerts: newAlerts.length }));
-        if (newAlerts[0]) {
-          setLatestItems(prev => ({
-            ...prev,
-            alert: {
-              id: newAlerts[0].id,
-              title: newAlerts[0].title,
-              excerpt: newAlerts[0].message?.substring(0, 150),
-              createdAt: newAlerts[0].publishedDate || newAlerts[0].createdAt,
-              type: 'alert',
-              priority: newAlerts[0].priority,
-            },
-          }));
-        }
-      }
-
-      const surveysRes = await fetch(`${API_BASE_URL}/api/surveys`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (surveysRes.ok) {
-        const allSurveys = await surveysRes.json();
-        const activeSurveys = allSurveys.filter((s: any) => s.isActive && s.isPublished);
-
-        const responsesRes = await fetch(
-          `${API_BASE_URL}/api/survey-responses/organization/${orgId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        let completedSurveyIds: string[] = [];
-        if (responsesRes.ok) {
-          const responses = await responsesRes.json();
-          completedSurveyIds = responses
-            .filter((r: any) => r.submittedDate)
-            .map((r: any) => r.surveyId);
-        }
-
-        const incompleteSurveys = activeSurveys.filter(
-          (s: any) => !completedSurveyIds.includes(s.id)
-        );
-
-        setStats(prev => ({ ...prev, newSurveys: incompleteSurveys.length }));
-        if (incompleteSurveys[0]) {
-          setLatestItems(prev => ({
-            ...prev,
-            survey: {
-              id: incompleteSurveys[0].id,
-              title: incompleteSurveys[0].title,
-              excerpt: incompleteSurveys[0].description?.substring(0, 150),
-              createdAt: incompleteSurveys[0].createdAt,
-              type: 'survey',
-              dueDate: incompleteSurveys[0].dueDate,
-            },
-          }));
-        }
-      }
-
-      const announcementsRes = await fetch(`${API_BASE_URL}/api/announcements`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (announcementsRes.ok) {
-        const response = await announcementsRes.json();
-        const allAnnouncements = (response.data || response).filter((a: any) => a.isPublished);
-
-        const newAnnouncements = lastCheckedDates.announcements
-          ? allAnnouncements.filter(
-              (a: any) => new Date(a.publishedDate || a.createdAt) > lastCheckedDates.announcements!
-            )
-          : allAnnouncements;
-        setStats(prev => ({ ...prev, newAnnouncements: newAnnouncements.length }));
-        if (newAnnouncements[0]) {
-          setLatestItems(prev => ({
-            ...prev,
-            announcement: {
-              id: newAnnouncements[0].id,
-              title: newAnnouncements[0].title,
-              excerpt: newAnnouncements[0].content?.substring(0, 150),
-              createdAt: newAnnouncements[0].publishedDate || newAnnouncements[0].createdAt,
-              type: 'announcement',
-            },
-          }));
-        }
-      }
-
-      const blogsRes = await fetch(`${API_BASE_URL}/api/blogs`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (blogsRes.ok) {
-        const response = await blogsRes.json();
-        const allBlogs = (response.data || response).filter((b: any) => b.isPublished);
-
-        const newBlogs = lastCheckedDates.blogs
-          ? allBlogs.filter((b: any) => new Date(b.createdAt) > lastCheckedDates.blogs!)
-          : allBlogs;
-        setStats(prev => ({ ...prev, newBlogs: newBlogs.length }));
-        if (newBlogs[0]) {
-          setLatestItems(prev => ({
-            ...prev,
-            blog: {
-              id: newBlogs[0].id,
-              title: newBlogs[0].title,
-              excerpt: newBlogs[0].content?.substring(0, 150),
-              createdAt: newBlogs[0].createdAt,
-              type: 'blog',
-            },
-          }));
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    if (surveys && surveyResponses) {
+      const activeSurveys = surveys.filter((s: any) => s.isActive && s.isPublished);
+      const completedSurveyIds = surveyResponses
+        .filter((r: any) => r.submittedDate)
+        .map((r: any) => r.surveyId);
+      const incompleteSurveys = activeSurveys.filter((s: any) => !completedSurveyIds.includes(s.id));
+      computedStats.newSurveys = incompleteSurveys.length;
+      if (incompleteSurveys[0]) {
+        computedLatest.survey = {
+          id: incompleteSurveys[0].id,
+          title: incompleteSurveys[0].title,
+          excerpt: incompleteSurveys[0].description?.substring(0, 150),
+          createdAt: incompleteSurveys[0].createdAt,
+          type: 'survey',
+          dueDate: incompleteSurveys[0].dueDate,
+        };
+      }
+    }
+
+    if (announcements) {
+      const announcementsData = (announcements.data || announcements).filter((a: any) => a.isPublished);
+      const newAnnouncements = lastCheckedDates.announcements
+        ? announcementsData.filter((a: any) => new Date(a.publishedDate || a.createdAt) > lastCheckedDates.announcements!)
+        : announcementsData;
+      computedStats.newAnnouncements = newAnnouncements.length;
+      if (newAnnouncements[0]) {
+        computedLatest.announcement = {
+          id: newAnnouncements[0].id,
+          title: newAnnouncements[0].title,
+          excerpt: newAnnouncements[0].content?.substring(0, 150),
+          createdAt: newAnnouncements[0].publishedDate || newAnnouncements[0].createdAt,
+          type: 'announcement',
+        };
+      }
+    }
+
+    if (blogs) {
+      const blogsData = (blogs.data || blogs).filter((b: any) => b.isPublished);
+      const newBlogs = lastCheckedDates.blogs
+        ? blogsData.filter((b: any) => new Date(b.createdAt) > lastCheckedDates.blogs!)
+        : blogsData;
+      computedStats.newBlogs = newBlogs.length;
+      if (newBlogs[0]) {
+        computedLatest.blog = {
+          id: newBlogs[0].id,
+          title: newBlogs[0].title,
+          excerpt: newBlogs[0].content?.substring(0, 150),
+          createdAt: newBlogs[0].createdAt,
+          type: 'blog',
+        };
+      }
+    }
+
+    return { stats: computedStats, latestItems: computedLatest };
+  }, [alerts, surveys, surveyResponses, announcements, blogs, lastCheckedDates]);
+
+  const loading = isLoading;
 
   const markAsViewed = async (contentType: string) => {
     try {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
+import { useQueryClient } from '@tanstack/react-query';
 import ContentEditor from '../components/ContentEditor';
 import ImageUploader from '../components/ImageUploader';
 import AdminSidebar from '../../../../components/AdminSidebar';
@@ -19,6 +20,7 @@ interface PageContentState {
 
 const AboutPageEdit = () => {
   const { getToken } = useAuth();
+  const queryClient = useQueryClient();
   const [content, setContent] = useState<PageContentState>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -123,6 +125,9 @@ const AboutPageEdit = () => {
       }
 
       await fetchContent();
+
+      queryClient.invalidateQueries({ queryKey: ['page-content', 'about'] });
+      queryClient.invalidateQueries({ queryKey: ['map-organizations'] });
 
       setToast({ message: 'Changes saved successfully!', type: 'success' });
     } catch (err: any) {

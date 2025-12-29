@@ -1,10 +1,12 @@
-import axios from 'axios';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoFunnelOutline } from 'react-icons/io5';
 import 'react-quill-new/dist/quill.snow.css';
 import S3Image from '../../components/S3Image';
+import Pagination from '../../components/Pagination';
 import { API_BASE_URL } from '../../config/api';
+import { useBlogs } from '../../hooks/queries/useBlogs';
+import { useBlogTags } from '../../hooks/queries/useTags';
 
 type Tag = {
   id: string;
@@ -36,10 +38,12 @@ interface BlogsPageProps {
 }
 
 const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
-  const [blogs, setBlogs] = useState<Blog[]>([]);
-  const [allTags, setAllTags] = useState<Tag[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
+  const { data: blogsData, isLoading: blogsLoading, error: blogsError } = useBlogs(currentPage, itemsPerPage);
+  const { data: allTags = [] } = useBlogTags();
+
   const [timeFilter, setTimeFilter] = useState<'24h' | 'week' | 'month' | 'year' | null>(null);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -52,28 +56,13 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
 
   const MAX_LENGTH = 200;
 
-  const getBlogs = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/blogs?page=1&limit=100`);
-
-      const blogsData = response.data.data || response.data;
-      setBlogs(Array.isArray(blogsData) ? blogsData : []);
-      setError(null);
-    } catch (error) {
-      console.error('Error fetching blogs:', error);
-      setError('An unexpected error occurred');
-    }
-    setLoading(false);
-  };
-
-  const getTags = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/blogs/tags`);
-      setAllTags(response.data);
-    } catch (error) {
-      console.error('Error fetching tags:', error);
-    }
-  };
+  const blogsResponse = blogsData || { data: [], total: 0 };
+  const blogs: Blog[] = Array.isArray(blogsResponse.data || blogsResponse)
+    ? (blogsResponse.data || blogsResponse)
+    : [];
+  const totalBlogs = blogsResponse.total || blogsResponse.pagination?.total || blogs.length;
+  const loading = blogsLoading;
+  const error = blogsError ? 'An unexpected error occurred' : null;
 
   useEffect(() => {
     if (previewContent) {
@@ -96,10 +85,6 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
     }
   }, [previewContent]);
 
-  useEffect(() => {
-    getBlogs();
-    getTags();
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -404,6 +389,18 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {!loading && !error && filteredBlogs.length > 0 && (
+          <div className='mt-8'>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(totalBlogs / itemsPerPage)}
+              onPageChange={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              totalItems={totalBlogs}
+            />
           </div>
         )}
       </div>

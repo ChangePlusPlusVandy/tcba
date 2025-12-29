@@ -1,8 +1,9 @@
-import { useAuth } from '@clerk/clerk-react';
 import { useEffect, useState } from 'react';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
 import Toast from '../../../components/Toast';
 import PublicAttachmentList from '../../../components/PublicAttachmentList';
+import Pagination from '../../../components/Pagination';
+import { useOrgBlogs } from '../../../hooks/queries/useOrgBlogs';
 import { API_BASE_URL } from '../../../config/api';
 
 type Tag = {
@@ -28,14 +29,12 @@ type Blog = {
 };
 
 const OrgBlogsPage = () => {
-  const { getToken } = useAuth();
-
-  const [blogs, setBlogs] = useState<Blog[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [tagsFilter, setTagsFilter] = useState<string[]>([]);
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
 
   type SortField = 'title' | 'author' | 'publishedDate' | 'tags' | 'createdAt';
   type SortDirection = 'asc' | 'desc';
@@ -50,48 +49,11 @@ const OrgBlogsPage = () => {
     type: 'success' | 'error' | 'info';
   } | null>(null);
 
-  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    const token = await getToken();
-    if (!token) throw new Error('Authentication required');
+  const { data: blogsData, isLoading: loading, error: blogsError } = useOrgBlogs(currentPage, itemsPerPage);
 
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
-    }
-
-    if (response.status === 204) return null;
-    return response.json();
-  };
-
-  const fetchBlogs = async () => {
-    try {
-      setError('');
-      const responseData = await fetchWithAuth(`${API_BASE_URL}/api/blogs?page=1&limit=100`);
-
-      const blogs = responseData.data || responseData;
-      const blogsArray = Array.isArray(blogs) ? blogs : [];
-
-      const publishedBlogs = blogsArray.filter((blog: Blog) => blog.isPublished);
-      setBlogs(publishedBlogs);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch blogs');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchBlogs();
-  }, []);
+  const blogs = blogsData?.data || [];
+  const totalBlogs = blogsData?.total || 0;
+  const error = blogsError ? 'Failed to fetch blogs' : '';
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -416,6 +378,16 @@ const OrgBlogsPage = () => {
               </tbody>
             </table>
           </div>
+        )}
+
+        {!loading && filteredBlogs.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(totalBlogs / itemsPerPage)}
+            onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={totalBlogs}
+          />
         )}
       </div>
 

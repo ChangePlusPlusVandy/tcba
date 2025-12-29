@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import heroImage from '../../assets/home.jpg';
 import tcbaCapitol from '../../assets/TCBACapitol.jpg';
@@ -6,6 +6,9 @@ import tcbaGroupPhoto from '../../assets/TCBAGroupPhoto.png';
 import { FaHandshake, FaBullhorn, FaPeopleArrows, FaChartLine } from 'react-icons/fa';
 import { MdHealthAndSafety, MdFamilyRestroom } from 'react-icons/md';
 import S3Image from '../../components/S3Image';
+import { usePageContent } from '../../hooks/queries/usePageContent';
+import { useAnnouncements } from '../../hooks/queries/useAnnouncements';
+import { useBlogs } from '../../hooks/queries/useBlogs';
 import { API_BASE_URL } from '../../config/api';
 
 type NotificationType = 'ANNOUNCEMENT' | 'BLOG' | 'ALERT' | 'SURVEY';
@@ -27,105 +30,65 @@ interface HomePageProps {
 }
 
 const HomePage = ({ previewContent }: HomePageProps = {}) => {
-  const [notifications, setNotifications] = useState<NotificationBanner[]>([]);
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
-  const [content, setContent] = useState<PageContent>({});
-  const [loading, setLoading] = useState(true);
+
+  const { data: pageContent, isLoading: contentLoading } = usePageContent('home');
+  const { data: announcementsData } = useAnnouncements(1, 3);
+  const { data: blogsData } = useBlogs(1, 2);
+
+  const content = previewContent || pageContent || {};
+  const loading = !previewContent && contentLoading;
 
   useEffect(() => {
-    let isMounted = true;
+    const closedNotifications = JSON.parse(
+      localStorage.getItem('closedNotifications') || '[]'
+    );
+    setDismissedIds(closedNotifications);
+  }, []);
 
-    if (previewContent) {
-      setContent(previewContent);
-      setLoading(false);
-      return;
-    }
+  const notifications = useMemo(() => {
+    if (previewContent) return [];
 
-    const loadContent = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/page-content/home`);
-        if (!response.ok) throw new Error('Failed to fetch page content');
-        const data = await response.json();
-        if (isMounted) {
-          setContent(data);
-        }
-      } catch (error) {
-        console.error('Error loading page content:', error);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
+    const allNotifications: NotificationBanner[] = [];
 
-    const loadNotifications = async () => {
-      try {
-        const allNotifications: NotificationBanner[] = [];
-
-        const announcementsRes = await fetch(`${API_BASE_URL}/api/announcements?page=1&limit=3`);
-        if (announcementsRes.ok) {
-          const response = await announcementsRes.json();
-          const announcements = response.data || response;
-          (Array.isArray(announcements) ? announcements : [])
-            .filter((a: any) => a.isPublished)
-            .slice(0, 3)
-            .forEach((a: any) => {
-              allNotifications.push({
-                id: `announcement-${a.id}`,
-                type: 'ANNOUNCEMENT',
-                title: a.title,
-                slug: a.slug,
-                publishedDate: a.publishedDate,
-              });
-            });
-        }
-
-        const blogsRes = await fetch(`${API_BASE_URL}/api/blogs?page=1&limit=2`);
-        if (blogsRes.ok) {
-          const response = await blogsRes.json();
-          const blogs = response.data || response;
-          (Array.isArray(blogs) ? blogs : [])
-            .filter((b: any) => b.isPublished)
-            .slice(0, 2)
-            .forEach((b: any) => {
-              allNotifications.push({
-                id: `blog-${b.id}`,
-                type: 'BLOG',
-                title: b.title,
-                slug: b.slug,
-                publishedDate: b.publishedDate,
-              });
-            });
-        }
-
-        allNotifications.sort((a, b) => {
-          const dateA = a.publishedDate ? new Date(a.publishedDate).getTime() : 0;
-          const dateB = b.publishedDate ? new Date(b.publishedDate).getTime() : 0;
-          return dateB - dateA;
+    const announcementsResponse = announcementsData || {};
+    const announcements = announcementsResponse.data || announcementsResponse;
+    (Array.isArray(announcements) ? announcements : [])
+      .filter((a: any) => a.isPublished)
+      .slice(0, 3)
+      .forEach((a: any) => {
+        allNotifications.push({
+          id: `announcement-${a.id}`,
+          type: 'ANNOUNCEMENT',
+          title: a.title,
+          slug: a.slug,
+          publishedDate: a.publishedDate,
         });
+      });
 
-        if (isMounted) {
-          setNotifications(allNotifications);
+    const blogsResponse = blogsData || {};
+    const blogs = blogsResponse.data || blogsResponse;
+    (Array.isArray(blogs) ? blogs : [])
+      .filter((b: any) => b.isPublished)
+      .slice(0, 2)
+      .forEach((b: any) => {
+        allNotifications.push({
+          id: `blog-${b.id}`,
+          type: 'BLOG',
+          title: b.title,
+          slug: b.slug,
+          publishedDate: b.publishedDate,
+        });
+      });
 
-          const closedNotifications = JSON.parse(
-            localStorage.getItem('closedNotifications') || '[]'
-          );
-          setDismissedIds(closedNotifications);
-        }
-      } catch (error) {
-        console.error('Error loading notifications:', error);
-      }
-    };
+    allNotifications.sort((a, b) => {
+      const dateA = a.publishedDate ? new Date(a.publishedDate).getTime() : 0;
+      const dateB = b.publishedDate ? new Date(b.publishedDate).getTime() : 0;
+      return dateB - dateA;
+    });
 
-    loadContent();
-    if (!previewContent) {
-      loadNotifications();
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [previewContent]);
+    return allNotifications;
+  }, [announcementsData, blogsData, previewContent]);
 
   const handleDismissNotification = (notificationId: string) => {
     const updatedDismissed = [...dismissedIds, notificationId];

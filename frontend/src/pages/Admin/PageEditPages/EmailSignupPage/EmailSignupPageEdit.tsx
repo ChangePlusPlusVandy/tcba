@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
+import { useQueryClient } from '@tanstack/react-query';
 import ContentEditor from '../components/ContentEditor';
 import AdminSidebar from '../../../../components/AdminSidebar';
 import Signup from '../../../SignupPage/Signup';
@@ -18,6 +19,7 @@ interface PageContentState {
 
 const EmailSignupPageEdit = () => {
   const { getToken } = useAuth();
+  const queryClient = useQueryClient();
   const [content, setContent] = useState<PageContentState>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -85,6 +87,8 @@ const EmailSignupPageEdit = () => {
       }
 
       await fetchContent();
+
+      queryClient.invalidateQueries({ queryKey: ['page-content', 'signup'] });
 
       setToast({ message: 'Changes saved successfully!', type: 'success' });
     } catch (err: any) {

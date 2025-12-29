@@ -1,9 +1,8 @@
-import { useAuth } from '@clerk/clerk-react';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminSidebar from '../../../components/AdminSidebar';
 import Toast from '../../../components/Toast';
-import { API_BASE_URL } from '../../../config/api';
+import { useSurvey, useSurveyResponsesBySurvey } from '../../../hooks/queries/useSurveyResponses';
 
 type QuestionType = 'multipleChoice' | 'checkbox' | 'text' | 'rating';
 
@@ -47,13 +46,13 @@ type SurveyResponse = {
 };
 
 const SurveyResponses = () => {
-  const { getToken } = useAuth();
   const navigate = useNavigate();
   const { surveyId } = useParams<{ surveyId: string }>();
 
-  const [survey, setSurvey] = useState<Survey | null>(null);
-  const [responses, setResponses] = useState<SurveyResponse[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: survey = null, isLoading: surveyLoading } = useSurvey(surveyId);
+  const { data: responses = [], isLoading: responsesLoading } = useSurveyResponsesBySurvey(surveyId);
+
+  const loading = surveyLoading || responsesLoading;
   const [searchQuery, setSearchQuery] = useState('');
   const [tagsFilter, setTagsFilter] = useState<string[]>([]);
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
@@ -65,50 +64,6 @@ const SurveyResponses = () => {
     message: string;
     type: 'success' | 'error' | 'info';
   } | null>(null);
-
-  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    const token = await getToken();
-    if (!token) throw new Error('Authentication required');
-
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
-    }
-
-    if (response.status === 204) return null;
-    return response.json();
-  };
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [surveyData, responsesData] = await Promise.all([
-        fetchWithAuth(`${API_BASE_URL}/api/surveys/${surveyId}`),
-        fetchWithAuth(`${API_BASE_URL}/api/survey-responses/survey/${surveyId}`),
-      ]);
-      setSurvey(surveyData);
-      setResponses(responsesData);
-    } catch (err: any) {
-      setToast({ message: err.message || 'Failed to fetch data', type: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (surveyId) {
-      fetchData();
-    }
-  }, [surveyId]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

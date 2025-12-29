@@ -1,10 +1,12 @@
-import axios from 'axios';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoFunnelOutline } from 'react-icons/io5';
 import 'react-quill-new/dist/quill.snow.css';
 import S3Image from '../../components/S3Image';
+import Pagination from '../../components/Pagination';
 import { API_BASE_URL } from '../../config/api';
+import { useAnnouncements } from '../../hooks/queries/useAnnouncements';
+import { useTags } from '../../hooks/queries/useTags';
 
 type Announcement = {
   id: string;
@@ -36,54 +38,31 @@ interface AnnouncementsPageProps {
 }
 
 const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
-  // ALL ANNOUNCEMENTS AND TAGS STATES
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
-  // LOADING AND ERROR STATES
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  // FILTER STATES
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
+  const { data: announcementsData, isLoading: announcementsLoading, error: announcementsError } = useAnnouncements(currentPage, itemsPerPage);
+  const { data: tags = [] } = useTags();
+
   const [timeFilter, setTimeFilter] = useState<'24h' | 'week' | 'month' | 'year' | null>(null);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const filterRef = useRef<HTMLDivElement>(null);
-  // PAGE CONTENT STATE
   const [content, setContent] = useState<PageContent>({});
   const [pageLoading, setPageLoading] = useState(true);
 
   const navigate = useNavigate();
 
-  const MAX_LENGTH = 200; // MAX POST LENGTH BEFORE TRUNCATION
+  const MAX_LENGTH = 200;
 
-  // GET ALL ANNOUNCEMENTS
-  const getAnnouncements = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/announcements?page=1&limit=100`);
-      console.log('API Response:', response.data);
-      const announcementsData = response.data.data || response.data;
-      setAnnouncements(Array.isArray(announcementsData) ? announcementsData : []);
-      setError(null);
-    } catch (error) {
-      console.error('Error fetching announcements:', error);
-      setError('An unexpected error occurred');
-    }
-    setLoading(false);
-  };
-
-  // GET ALL TAGS
-  const getTags = async () => {
-    try {
-      const tags = await axios.get(`${API_BASE_URL}/api/tags`);
-      console.log('API Response:', tags.data);
-      setTags(tags.data);
-      setError(null);
-    } catch (error) {
-      console.error('Error fetching tags:', error);
-      setError('An unexpected error occurred');
-    }
-    setLoading(false);
-  };
+  const announcementsResponse = announcementsData || { data: [], total: 0 };
+  const announcements: Announcement[] = Array.isArray(announcementsResponse.data || announcementsResponse)
+    ? (announcementsResponse.data || announcementsResponse)
+    : [];
+  const totalAnnouncements = announcementsResponse.total || announcementsResponse.pagination?.total || announcements.length;
+  const loading = announcementsLoading;
+  const error = announcementsError ? 'An unexpected error occurred' : null;
 
   useEffect(() => {
     if (previewContent) {
@@ -106,10 +85,6 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
     }
   }, [previewContent]);
 
-  useEffect(() => {
-    getAnnouncements();
-    getTags();
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -412,6 +387,18 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {!loading && !error && filterAnnouncements.length > 0 && (
+          <div className='mt-8'>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(totalAnnouncements / itemsPerPage)}
+              onPageChange={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              totalItems={totalAnnouncements}
+            />
           </div>
         )}
       </div>

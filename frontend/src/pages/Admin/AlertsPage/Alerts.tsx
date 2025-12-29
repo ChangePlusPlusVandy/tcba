@@ -8,6 +8,9 @@ import Toast from '../../../components/Toast';
 import ConfirmModal from '../../../components/ConfirmModal';
 import FileUpload from '../../../components/FileUpload';
 import AttachmentList from '../../../components/AttachmentList';
+import Pagination from '../../../components/Pagination';
+import { useAdminAlerts } from '../../../hooks/queries/useAdminAlerts';
+import { useAlertMutations } from '../../../hooks/mutations/useAlertMutations';
 import { API_BASE_URL } from '../../../config/api';
 
 Quill.register('modules/imageResize', ImageResize);
@@ -33,14 +36,22 @@ type Filter = 'ALL' | 'PUBLISHED' | 'DRAFTS';
 const AdminAlerts = () => {
   const { getToken } = useAuth();
 
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [selectedAlertIds, setSelectedAlertIds] = useState<string[]>([]);
   const [filter, setFilter] = useState<Filter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [priorityFilter, setPriorityFilter] = useState<AlertPriority[]>([]);
   const [priorityDropdownOpen, setPriorityDropdownOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
+  const { data: alertsData, isLoading: loading, error: alertsError } = useAdminAlerts(currentPage, itemsPerPage);
+  const { createAlert, updateAlert, deleteAlert } = useAlertMutations();
+
+  const alertsResponse = alertsData || {};
+  const alerts = alertsResponse.data || alertsResponse;
+  const alertsArray: Alert[] = Array.isArray(alerts) ? alerts : [];
+  const totalAlerts = alertsResponse.total || alertsResponse.pagination?.total || alertsArray.length;
+  const error = alertsError ? 'Failed to fetch alerts' : '';
 
   type SortField = 'title' | 'priority' | 'publishedDate' | 'createdAt';
   type SortDirection = 'asc' | 'desc';
@@ -75,58 +86,6 @@ const AdminAlerts = () => {
     onConfirm: () => void;
   } | null>(null);
 
-  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    const token = await getToken();
-    if (!token) throw new Error('Authentication required');
-
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
-    }
-
-    if (response.status === 204) return null;
-    return response.json();
-  };
-
-  const fetchAlerts = async () => {
-    try {
-      setError('');
-      const responseData = await fetchWithAuth(`${API_BASE_URL}/api/alerts?page=1&limit=1000`);
-
-      const alerts = responseData.data || responseData;
-      const alertsArray = Array.isArray(alerts) ? alerts : [];
-
-      console.log('Fetched alerts:', alertsArray);
-      console.log('Alerts count:', alertsArray.length);
-      console.log(
-        'Drafts:',
-        alertsArray.filter((a: any) => !a.isPublished)
-      );
-      console.log(
-        'Published:',
-        alertsArray.filter((a: any) => a.isPublished)
-      );
-      setAlerts(alertsArray);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch alerts');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAlerts();
-  }, []);
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -157,21 +116,14 @@ const AdminAlerts = () => {
 
     try {
       setIsSubmitting(true);
-      setError('');
       const alertData = {
         ...newAlert,
         isPublished: publish,
         publishedDate: publish ? new Date().toISOString() : null,
       };
 
-      console.log('Creating alert with data:', alertData);
+      await createAlert.mutateAsync(alertData);
 
-      await fetchWithAuth(`${API_BASE_URL}/api/alerts`, {
-        method: 'POST',
-        body: JSON.stringify(alertData),
-      });
-
-      await fetchAlerts();
       setIsCreateModalOpen(false);
       setNewAlert({
         title: '',
@@ -201,16 +153,10 @@ const AdminAlerts = () => {
       onConfirm: async () => {
         try {
           setIsDeleting(true);
-          setError('');
           await Promise.all(
-            selectedAlertIds.map(id =>
-              fetchWithAuth(`${API_BASE_URL}/api/alerts/${id}`, {
-                method: 'DELETE',
-              })
-            )
+            selectedAlertIds.map(id => deleteAlert.mutateAsync(id))
           );
 
-          await fetchAlerts();
           setSelectedAlertIds([]);
           setToast({
             message: `${count} alert${count > 1 ? 's' : ''} deleted successfully`,
@@ -250,7 +196,7 @@ const AdminAlerts = () => {
     setSelectedAlert(null);
   };
 
-  const filteredAlerts = alerts.filter(alert => {
+  const filteredAlerts = alertsArray.filter(alert => {
     if (filter === 'PUBLISHED' && !alert.isPublished) return false;
     if (filter === 'DRAFTS' && alert.isPublished) return false;
 
@@ -502,7 +448,7 @@ const AdminAlerts = () => {
 
       <div className='flex-1 p-8'>
         <h1 className='text-3xl font-bold text-gray-800 mb-6'>
-          {filter === 'ALL' && `All Alerts (${alerts.length})`}
+          {filter === 'ALL' && `All Alerts (${alertsArray.length})`}
           {filter === 'PUBLISHED' && `Published Alerts (${filteredAlerts.length})`}
           {filter === 'DRAFTS' && `Draft Alerts (${filteredAlerts.length})`}
         </h1>
@@ -758,6 +704,13 @@ const AdminAlerts = () => {
                 ))}
               </tbody>
             </table>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(totalAlerts / itemsPerPage)}
+              onPageChange={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              totalItems={totalAlerts}
+            />
           </div>
         )}
       </div>
@@ -982,14 +935,14 @@ const AdminAlerts = () => {
                   <button
                     onClick={async () => {
                       try {
-                        await fetchWithAuth(
-                          `${API_BASE_URL}/api/alerts/${selectedAlert.id}/publish`,
-                          {
-                            method: 'POST',
-                          }
-                        );
+                        await updateAlert.mutateAsync({
+                          id: selectedAlert.id,
+                          data: {
+                            isPublished: true,
+                            publishedDate: new Date().toISOString(),
+                          },
+                        });
                         setToast({ message: 'Alert published successfully', type: 'success' });
-                        await fetchAlerts();
                         closeDetailModal();
                       } catch (err: any) {
                         setToast({

@@ -1,10 +1,10 @@
-import { useAuth } from '@clerk/clerk-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminSidebar from '../../../components/AdminSidebar';
 import Toast from '../../../components/Toast';
 import ConfirmModal from '../../../components/ConfirmModal';
-import { API_BASE_URL } from '../../../config/api';
+import { useAdminSurveys } from '../../../hooks/queries/useAdminSurveys';
+import { useSurveyMutations } from '../../../hooks/mutations/useSurveyMutations';
 
 type QuestionType = 'multipleChoice' | 'checkbox' | 'text' | 'rating';
 
@@ -33,12 +33,12 @@ type Survey = {
 type Filter = 'ALL' | 'ACTIVE' | 'INACTIVE' | 'DRAFTS';
 
 const AdminSurveys = () => {
-  const { getToken } = useAuth();
   const navigate = useNavigate();
 
-  const [surveys, setSurveys] = useState<Survey[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { data: surveys = [], isLoading: loading, error: surveysError } = useAdminSurveys();
+  const { deleteSurvey, publishSurvey } = useSurveyMutations();
+
+  const error = surveysError ? 'Failed to fetch surveys' : '';
   const [selectedSurveyIds, setSelectedSurveyIds] = useState<string[]>([]);
   const [filter, setFilter] = useState<Filter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -66,45 +66,6 @@ const AdminSurveys = () => {
     onConfirm: () => void;
   } | null>(null);
 
-  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    const token = await getToken();
-    if (!token) throw new Error('Authentication required');
-
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
-    }
-
-    if (response.status === 204) return null;
-    return response.json();
-  };
-
-  const fetchSurveys = async () => {
-    try {
-      setError('');
-      const data = await fetchWithAuth(`${API_BASE_URL}/api/surveys`);
-      console.log('Fetched surveys:', data);
-      setSurveys(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch surveys');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSurveys();
-  }, []);
-
   const handleDeleteSelected = () => {
     if (selectedSurveyIds.length === 0) return;
 
@@ -116,16 +77,10 @@ const AdminSurveys = () => {
       onConfirm: async () => {
         try {
           setIsDeleting(true);
-          setError('');
           await Promise.all(
-            selectedSurveyIds.map(id =>
-              fetchWithAuth(`${API_BASE_URL}/api/surveys/${id}`, {
-                method: 'DELETE',
-              })
-            )
+            selectedSurveyIds.map(id => deleteSurvey.mutateAsync(id))
           );
 
-          await fetchSurveys();
           setSelectedSurveyIds([]);
           setToast({
             message: `${count} survey${count > 1 ? 's' : ''} deleted successfully`,

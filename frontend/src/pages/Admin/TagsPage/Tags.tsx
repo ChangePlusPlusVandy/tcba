@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
+import { useState } from 'react';
 import AdminSidebar from '../../../components/AdminSidebar';
 import Toast from '../../../components/Toast';
 import ConfirmModal from '../../../components/ConfirmModal';
-import { API_BASE_URL } from '../../../config/api';
+import { useAdminTags } from '../../../hooks/queries/useAdminTags';
+import { useTagMutations } from '../../../hooks/mutations/useTagMutations';
 
 type Tag = {
   id: string;
@@ -14,9 +14,9 @@ type Tag = {
 };
 
 const Tags = () => {
-  const { getToken } = useAuth();
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: tags = [], isLoading: loading } = useAdminTags();
+  const { createTag, deleteTag } = useTagMutations();
+
   const [newTagName, setNewTagName] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -24,34 +24,6 @@ const Tags = () => {
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-
-  useEffect(() => {
-    fetchTags();
-  }, []);
-
-  const fetchTags = async () => {
-    try {
-      setLoading(true);
-      const token = await getToken();
-      const response = await fetch(`${API_BASE_URL}/api/tags`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch tags');
-      }
-
-      const data = await response.json();
-      setTags(data);
-    } catch (err: any) {
-      console.error('Error fetching tags:', err);
-      setToast({ message: err.message || 'Failed to load tags', type: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleAddTag = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,24 +35,9 @@ const Tags = () => {
 
     try {
       setSubmitting(true);
-      const token = await getToken();
-      const response = await fetch(`${API_BASE_URL}/api/tags`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ name: newTagName.trim() }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create tag');
-      }
-
+      await createTag.mutateAsync({ name: newTagName.trim() });
       setToast({ message: 'Tag created successfully!', type: 'success' });
       setNewTagName('');
-      fetchTags();
     } catch (err: any) {
       console.error('Error creating tag:', err);
       setToast({ message: err.message || 'Failed to create tag', type: 'error' });
@@ -98,18 +55,10 @@ const Tags = () => {
   const handleDeleteSelected = async () => {
     try {
       setIsDeleting(true);
-      const token = await getToken();
       const tagCount = selectedTagIds.length;
 
       await Promise.all(
-        selectedTagIds.map(tagId =>
-          fetch(`${API_BASE_URL}/api/tags/${tagId}`, {
-            method: 'DELETE',
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
-        )
+        selectedTagIds.map(tagId => deleteTag.mutateAsync(tagId))
       );
 
       setToast({
@@ -117,7 +66,6 @@ const Tags = () => {
         type: 'success',
       });
       setSelectedTagIds([]);
-      fetchTags();
     } catch (err: any) {
       console.error('Error deleting tags:', err);
       setToast({ message: err.message || 'Failed to delete tags', type: 'error' });

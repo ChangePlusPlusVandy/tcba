@@ -2,12 +2,16 @@ import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import ReactQuill, { Quill } from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
+import axios from 'axios';
 import ImageResize from 'quill-image-resize-module-react';
 import AdminSidebar from '../../../components/AdminSidebar';
 import Toast from '../../../components/Toast';
 import ConfirmModal from '../../../components/ConfirmModal';
 import FileUpload from '../../../components/FileUpload';
 import AttachmentList from '../../../components/AttachmentList';
+import Pagination from '../../../components/Pagination';
+import { useAdminAnnouncements } from '../../../hooks/queries/useAdminAnnouncements';
+import { useAnnouncementMutations } from '../../../hooks/mutations/useAnnouncementMutations';
 import { API_BASE_URL } from '../../../config/api';
 
 Quill.register('modules/imageResize', ImageResize);
@@ -35,14 +39,23 @@ type Tag = {
 
 const AdminAnnouncements = () => {
   const { getToken } = useAuth();
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [filter, setFilter] = useState<'ALL' | 'PUBLISHED' | 'DRAFTS'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [tagsFilter, setTagsFilter] = useState<string[]>([]);
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
+  const { data: announcementsData, isLoading: loading, error: announcementsError } = useAdminAnnouncements(currentPage, itemsPerPage);
+  const { createAnnouncement, updateAnnouncement, deleteAnnouncement } = useAnnouncementMutations();
+
+  const announcementsResponse = announcementsData || {};
+  const announcements = announcementsResponse.data || announcementsResponse;
+  const announcementsArray: Announcement[] = Array.isArray(announcements) ? announcements : [];
+  const totalAnnouncements = announcementsResponse.total || announcementsResponse.pagination?.total || announcementsArray.length;
+  const error = announcementsError ? 'Failed to fetch announcements' : '';
 
   type SortField = 'title' | 'publishedDate' | 'tags' | 'createdAt';
   type SortDirection = 'asc' | 'desc';
@@ -229,118 +242,18 @@ const AdminAnnouncements = () => {
     [handleImageUpload, alignImage]
   );
 
-  const isTokenExpiringSoon = (token: string): boolean => {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const expirationTime = payload.exp * 1000;
-      const now = Date.now();
-      const timeUntilExpiry = expirationTime - now;
-      return timeUntilExpiry < 5 * 60 * 1000;
-    } catch (e) {
-      return true;
-    }
-  };
-
-  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    let token = await getToken();
-
-    if (!token) {
-      throw new Error('No authentication token available');
-    }
-
-    if (isTokenExpiringSoon(token)) {
-      console.log('Token expiring soon, proactively refreshing...');
-      token = await getToken({ skipCache: true });
-
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-    }
-
-    let response = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (response.status === 401) {
-      console.log('Token expired, refreshing and retrying...');
-
-      token = await getToken({ skipCache: true });
-
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-
-      response = await fetch(url, {
-        ...options,
-        headers: {
-          ...options.headers,
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.status === 401) {
-        const errorBody = await response.text();
-        console.error('Auth failed even after token refresh. Response:', errorBody);
-        throw new Error('Authentication failed. Please try logging in again.');
-      }
-    }
-
-    return response;
-  };
-
-  const fetchAnnouncement = async () => {
-    try {
-      setError('');
-      const response = await fetchWithAuth(`${API_BASE_URL}/api/announcements?page=1&limit=1000`);
-
-      if (!response.ok) throw new Error('Failed to fetch announcements');
-
-      const responseData = await response.json();
-      const announcements = responseData.data || responseData;
-      const announcementsArray = Array.isArray(announcements) ? announcements : [];
-
-      console.log('Fetched announcements:', announcementsArray);
-      console.log('Announcements count:', announcementsArray.length);
-      console.log(
-        'Drafts:',
-        announcementsArray.filter((a: any) => !a.isPublished)
-      );
-      console.log(
-        'Published:',
-        announcementsArray.filter((a: any) => a.isPublished)
-      );
-      setAnnouncements(announcementsArray);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load announcements');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchTags = async () => {
     try {
-      setError('');
-      const response = await fetchWithAuth(`${API_BASE_URL}/api/tags`);
-
-      if (!response.ok) throw new Error('Failed to fetch tags');
-
-      const data = await response.json();
-      setTags(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load tags');
-    } finally {
-      setLoading(false);
+      const response = await axios.get(`${API_BASE_URL}/api/tags`);
+      setTags(response.data);
+    } catch (error) {
+      console.error('Error fetching tags:', error);
     }
   };
 
   const handleCreateAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setError('');
 
     try {
       const payload = {
@@ -352,20 +265,7 @@ const AdminAnnouncements = () => {
         attachmentUrls: newAnnouncement.attachmentUrls,
       };
 
-      const response = await fetchWithAuth(`${API_BASE_URL}/api/announcements`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create announcement');
-      }
-
-      await fetchAnnouncement();
+      await createAnnouncement.mutateAsync(payload);
 
       const successMessage = newAnnouncement.isPublished
         ? 'Announcement created successfully'
@@ -383,7 +283,7 @@ const AdminAnnouncements = () => {
       });
     } catch (err: any) {
       console.error('Create announcement error:', err);
-      setError(err.message || 'Failed to create announcement');
+      setToast({ message: err.message || 'Failed to create announcement', type: 'error' });
     } finally {
       setIsSubmitting(false);
     }
@@ -393,7 +293,6 @@ const AdminAnnouncements = () => {
     if (!selectedAnnouncement) return;
 
     setIsSubmitting(true);
-    setError('');
 
     try {
       const payload = {
@@ -403,23 +302,8 @@ const AdminAnnouncements = () => {
         attachmentUrls: editedAnnouncement.attachmentUrls,
       };
 
-      const response = await fetchWithAuth(
-        `${API_BASE_URL}/api/announcements/${selectedAnnouncement.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      await updateAnnouncement.mutateAsync({ id: selectedAnnouncement.id, data: payload });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update announcement');
-      }
-
-      await fetchAnnouncement();
       setToast({ message: 'Announcement updated successfully', type: 'success' });
       setSelectedAnnouncement(null);
       setIsEditMode(false);
@@ -442,16 +326,10 @@ const AdminAnnouncements = () => {
       onConfirm: async () => {
         try {
           setIsDeleting(true);
-          setError('');
           await Promise.all(
-            selectedAnnouncementIds.map(id =>
-              fetchWithAuth(`${API_BASE_URL}/api/announcements/${id}`, {
-                method: 'DELETE',
-              })
-            )
+            selectedAnnouncementIds.map(id => deleteAnnouncement.mutateAsync(id))
           );
 
-          await fetchAnnouncement();
           setSelectedAnnouncementIds([]);
           setToast({
             message: `${count} announcement${count > 1 ? 's' : ''} deleted successfully`,
@@ -477,7 +355,6 @@ const AdminAnnouncements = () => {
   };
 
   useEffect(() => {
-    fetchAnnouncement();
     fetchTags();
   }, []);
 
@@ -499,11 +376,11 @@ const AdminAnnouncements = () => {
     };
   }, [tagDropdownOpen]);
 
-  const published = announcements.filter(a => a.isPublished === true);
-  const drafts = announcements.filter(a => a.isPublished === false);
+  const published = announcementsArray.filter(a => a.isPublished === true);
+  const drafts = announcementsArray.filter(a => a.isPublished === false);
 
   const filtered =
-    filter === 'PUBLISHED' ? published : filter === 'DRAFTS' ? drafts : announcements;
+    filter === 'PUBLISHED' ? published : filter === 'DRAFTS' ? drafts : announcementsArray;
 
   const searchedAnnouncements = filtered.filter(a => {
     const matchesTags =
@@ -867,6 +744,16 @@ const AdminAnnouncements = () => {
               </tbody>
             </table>
           </div>
+        )}
+
+        {!loading && searchedAnnouncements.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(totalAnnouncements / itemsPerPage)}
+            onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={totalAnnouncements}
+          />
         )}
       </div>
 
