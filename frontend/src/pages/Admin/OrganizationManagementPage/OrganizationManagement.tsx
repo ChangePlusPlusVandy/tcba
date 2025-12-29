@@ -672,41 +672,41 @@ const OrganizationManagement = () => {
             <div className='flex gap-2'>
               <button
                 onClick={() => setFilter('ALL')}
-                className={`px-4 py-2 rounded-[10px] font-medium transition ${
+                className={`px-6 py-2.5 rounded-[10px] font-medium transition ${
                   filter === 'ALL'
-                    ? 'bg-[#D54242] text-white'
+                    ? 'bg-[#EBF3FF] text-[#194B90] border border-[#194B90]'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                }`}
+                } cursor-pointer`}
               >
                 All
               </button>
               <button
                 onClick={() => setFilter('PENDING')}
-                className={`px-4 py-2 rounded-[10px] font-medium transition ${
+                className={`px-6 py-2.5 rounded-[10px] font-medium transition ${
                   filter === 'PENDING'
-                    ? 'bg-[#D54242] text-white'
+                    ? 'bg-[#EBF3FF] text-[#194B90] border border-[#194B90]'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                }`}
+                } cursor-pointer`}
               >
                 Pending
               </button>
               <button
                 onClick={() => setFilter('ACTIVE')}
-                className={`px-4 py-2 rounded-[10px] font-medium transition ${
+                className={`px-6 py-2.5 rounded-[10px] font-medium transition ${
                   filter === 'ACTIVE'
-                    ? 'bg-[#D54242] text-white'
+                    ? 'bg-[#EBF3FF] text-[#194B90] border border-[#194B90]'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                }`}
+                } cursor-pointer`}
               >
                 Active
               </button>
               <button
                 onClick={() => setFilter('INACTIVE')}
-                className={`px-4 py-2 rounded-[10px] font-medium transition ${
+                className={`px-6 py-2.5 rounded-[10px] font-medium transition ${
                   filter === 'INACTIVE'
-                    ? 'bg-[#D54242] text-white'
+                    ? 'bg-[#EBF3FF] text-[#194B90] border border-[#194B90]'
                     : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                }`}
+                } cursor-pointer`}
               >
                 Inactive
               </button>
@@ -888,7 +888,7 @@ const OrganizationManagement = () => {
             <button
               onClick={exportToCSV}
               disabled={sortedOrganizations.length === 0}
-              className='flex items-center gap-2 px-4 py-2 rounded-[10px] transition bg-white text-[#D54242] border border-[#D54242] hover:bg-[#D54242] hover:text-white disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed whitespace-nowrap'
+              className='flex items-center gap-2 px-4 py-2 rounded-[10px] bg-[#D54242] text-white disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed whitespace-nowrap font-medium'
             >
               <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                 <path
