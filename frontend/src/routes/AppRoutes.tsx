@@ -40,6 +40,7 @@ import BlogsPageEdit from '../pages/Admin/PageEditPages/BlogsPage/BlogsPageEdit'
 import CustomEmail from '../pages/Admin/CustomEmailPage/CustomEmail';
 import AdminMessages from '../pages/Admin/MessagesPage/Messages';
 import OrganizationMessages from '../pages/OrganizationView/MessagesPage/Messages';
+import Tags from '../pages/Admin/TagsPage/Tags';
 
 const AppRoutes = () => {
   return (
@@ -223,6 +224,14 @@ const AppRoutes = () => {
         element={
           <AdminRoute>
             <CustomEmail />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/tags'
+        element={
+          <AdminRoute>
+            <Tags />
           </AdminRoute>
         }
       />
