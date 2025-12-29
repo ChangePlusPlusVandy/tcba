@@ -531,6 +531,50 @@ async function main() {
     },
   ];
 
+  const tags = [
+    'Healthcare',
+    'Education',
+    'Technology',
+    'Community',
+    'Legal Services',
+    'Transportation',
+    'Housing',
+    'Mental Health',
+    'Caregiving',
+    'Nutrition',
+    'Financial Planning',
+    'Advocacy',
+    'Emergency',
+    'COVID-19',
+    'Medicare',
+    'Exercise',
+    'Social Connection',
+    'Safety',
+    'Volunteer',
+    'Events',
+  ];
+
+  console.log('Creating tags...');
+  for (const tagName of tags) {
+    await prisma.tag.upsert({
+      where: { name: tagName },
+      update: {},
+      create: { name: tagName },
+    });
+  }
+
+  console.log('Creating admin user...');
+  await prisma.adminUser.upsert({
+    where: { clerkId: 'user_34wPCxBIG4LzW9L8cWghoiGYOH8' },
+    update: {},
+    create: {
+      clerkId: 'user_34wPCxBIG4LzW9L8cWghoiGYOH8',
+      email: 'tcbadevs@gmail.com',
+      name: 'TCBA Admin',
+      isActive: true,
+    },
+  });
+
   console.log('Creating organizations...');
   for (const org of organizations) {
     const tempClerkId = `seed_${Date.now()}_${Math.random().toString(36).substring(7)}`;
@@ -621,9 +665,34 @@ async function main() {
     },
   ];
 
+  const healthcareTag = await prisma.tag.findUnique({ where: { name: 'Healthcare' } });
+  const educationTag = await prisma.tag.findUnique({ where: { name: 'Education' } });
+  const technologyTag = await prisma.tag.findUnique({ where: { name: 'Technology' } });
+  const communityTag = await prisma.tag.findUnique({ where: { name: 'Community' } });
+  const eventsTag = await prisma.tag.findUnique({ where: { name: 'Events' } });
+  const advocacyTag = await prisma.tag.findUnique({ where: { name: 'Advocacy' } });
+  const volunteerTag = await prisma.tag.findUnique({ where: { name: 'Volunteer' } });
+  const safetyTag = await prisma.tag.findUnique({ where: { name: 'Safety' } });
+
+  const announcementTagMappings: { [key: string]: string[] } = {
+    'New Partnership with Tennessee Health Department': ['Healthcare', 'Advocacy'],
+    'Annual Conference Registration Now Open': ['Events', 'Education'],
+    'Grant Opportunities for Member Organizations': ['Community', 'Advocacy'],
+    'Legislative Update: Senior Care Bill Passes': ['Healthcare', 'Advocacy'],
+    'New Resources for Caregiver Support': ['Healthcare', 'Community'],
+    'Volunteer Appreciation Month': ['Volunteer', 'Events'],
+    'Summer Program Schedule Released': ['Events', 'Community'],
+    'Technology Training Initiative Launch': ['Technology', 'Education'],
+    'Fall Prevention Awareness Campaign': ['Safety', 'Healthcare'],
+    'Holiday Programs and Resources': ['Events', 'Community'],
+  };
+
   console.log('Creating announcements...');
   for (const ann of announcements) {
     const slug = generateSlug(ann.title);
+    const tagNames = announcementTagMappings[ann.title] || [];
+    const tags = await prisma.tag.findMany({ where: { name: { in: tagNames } } });
+
     await prisma.announcements.upsert({
       where: { slug },
       update: {},
@@ -632,6 +701,9 @@ async function main() {
         slug,
         createdByAdminId: 'admin_seed',
         attachmentUrls: [],
+        tags: {
+          connect: tags.map(tag => ({ id: tag.id })),
+        },
       },
     });
   }
@@ -719,9 +791,29 @@ async function main() {
     },
   ];
 
+  const blogTagMappings: { [key: string]: string[] } = {
+    'Understanding Medicare Changes for 2024': ['Medicare', 'Healthcare', 'Financial Planning'],
+    'The Importance of Social Connections in Aging': ['Social Connection', 'Community'],
+    'Navigating Long-Term Care Options in Tennessee': ['Healthcare', 'Housing'],
+    'Healthy Eating Tips for Seniors': ['Nutrition', 'Healthcare'],
+    'Exercise Programs Designed for Older Adults': ['Exercise', 'Healthcare'],
+    'Financial Planning for Retirement': ['Financial Planning'],
+    'Technology Made Easy: A Guide for Seniors': ['Technology', 'Education'],
+    'Caregiver Self-Care: Taking Time for Yourself': ['Caregiving', 'Mental Health'],
+    'Understanding Dementia: Signs, Support, and Resources': [
+      'Healthcare',
+      'Mental Health',
+      'Caregiving',
+    ],
+    'Housing Options for Aging in Place': ['Housing', 'Community'],
+  };
+
   console.log('Creating blogs...');
   for (const blog of blogs) {
     const slug = generateSlug(blog.title);
+    const tagNames = blogTagMappings[blog.title] || [];
+    const tags = await prisma.tag.findMany({ where: { name: { in: tagNames } } });
+
     await prisma.blog.upsert({
       where: { slug },
       update: {},
@@ -729,6 +821,9 @@ async function main() {
         ...blog,
         slug,
         attachmentUrls: [],
+        tags: {
+          connect: tags.map(tag => ({ id: tag.id })),
+        },
       },
     });
   }
