@@ -11,20 +11,20 @@ interface S3ImageProps {
 
 const S3Image = ({ src, alt, className, fallbackSrc, loading = 'lazy' }: S3ImageProps) => {
   const [imageSrc, setImageSrc] = useState<string>('');
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [, setError] = useState(false);
 
   useEffect(() => {
     const loadImage = async () => {
       if (!src) {
         setImageSrc(fallbackSrc || '');
-        setLoading(false);
+        setIsLoading(false);
         return;
       }
 
       if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:')) {
         setImageSrc(src);
-        setLoading(false);
+        setIsLoading(false);
         return;
       }
 
@@ -50,7 +50,7 @@ const S3Image = ({ src, alt, className, fallbackSrc, loading = 'lazy' }: S3Image
         }
         setError(true);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
@@ -65,7 +65,7 @@ const S3Image = ({ src, alt, className, fallbackSrc, loading = 'lazy' }: S3Image
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return <div className={className} style={{ backgroundColor: '#f3f4f6' }} />;
   }
 
