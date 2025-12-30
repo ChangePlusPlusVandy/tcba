@@ -44,7 +44,7 @@ export const getPageContent = async (req: Request, res: Response): Promise<void>
       };
     });
 
-    await CacheService.set(cacheKey, structuredContent, CacheTTL.PAGE_CONTENT);
+    await CacheService.set(cacheKey, structuredContent);
 
     res.status(200).json(structuredContent);
   } catch (error) {
