@@ -1,7 +1,8 @@
-import { type FormEvent, useState, useEffect } from 'react';
+import { type FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
 import Toast from '../../components/Toast';
+import { usePageContent } from '../../hooks/queries/usePageContent';
 import { API_BASE_URL } from '../../config/api';
 
 interface PageContent {
@@ -27,36 +28,16 @@ interface SignupFormProps {
 const SignupForm = ({ previewContent }: SignupFormProps = {}) => {
   const [announcements, setAnnouncements] = useState(false);
   const [blogs, setBlogs] = useState(false);
-  const [content, setContent] = useState<PageContent>({});
-  const [loading, setLoading] = useState(true);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  useEffect(() => {
-    if (previewContent) {
-      setContent(previewContent);
-      setLoading(false);
-      return;
-    }
+  const { data: pageContent, isLoading: contentLoading } = usePageContent('signup');
 
-    const loadContent = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/page-content/signup`);
-        if (!response.ok) throw new Error('Failed to fetch page content');
-        const data = await response.json();
-        setContent(data);
-      } catch (error) {
-        console.error('Error loading page content:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadContent();
-  }, [previewContent]);
+  const content = previewContent || pageContent || {};
+  const loading = !previewContent && contentLoading;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

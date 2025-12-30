@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
+import { useState } from 'react';
 import AdminSidebar from '../../../components/AdminSidebar';
 import Toast from '../../../components/Toast';
 import ConfirmModal from '../../../components/ConfirmModal';
-import { API_BASE_URL } from '../../../config/api';
+import { useAdminTags } from '../../../hooks/queries/useAdminTags';
+import { useTagMutations } from '../../../hooks/mutations/useTagMutations';
 
 type Tag = {
   id: string;
@@ -14,9 +14,10 @@ type Tag = {
 };
 
 const Tags = () => {
-  const { getToken } = useAuth();
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: tags = [], isLoading: loading } = useAdminTags();
+  const tagsArray = tags as Tag[];
+  const { createTag, deleteTag } = useTagMutations();
+
   const [newTagName, setNewTagName] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -24,34 +25,6 @@ const Tags = () => {
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-
-  useEffect(() => {
-    fetchTags();
-  }, []);
-
-  const fetchTags = async () => {
-    try {
-      setLoading(true);
-      const token = await getToken();
-      const response = await fetch(`${API_BASE_URL}/api/tags`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch tags');
-      }
-
-      const data = await response.json();
-      setTags(data);
-    } catch (err: any) {
-      console.error('Error fetching tags:', err);
-      setToast({ message: err.message || 'Failed to load tags', type: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleAddTag = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,24 +36,9 @@ const Tags = () => {
 
     try {
       setSubmitting(true);
-      const token = await getToken();
-      const response = await fetch(`${API_BASE_URL}/api/tags`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ name: newTagName.trim() }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create tag');
-      }
-
+      await createTag.mutateAsync({ name: newTagName.trim() });
       setToast({ message: 'Tag created successfully!', type: 'success' });
       setNewTagName('');
-      fetchTags();
     } catch (err: any) {
       console.error('Error creating tag:', err);
       setToast({ message: err.message || 'Failed to create tag', type: 'error' });
@@ -98,26 +56,15 @@ const Tags = () => {
   const handleDeleteSelected = async () => {
     try {
       setIsDeleting(true);
-      const token = await getToken();
       const tagCount = selectedTagIds.length;
 
-      await Promise.all(
-        selectedTagIds.map(tagId =>
-          fetch(`${API_BASE_URL}/api/tags/${tagId}`, {
-            method: 'DELETE',
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
-        )
-      );
+      await Promise.all(selectedTagIds.map(tagId => deleteTag.mutateAsync(tagId)));
 
       setToast({
         message: `${tagCount} tag${tagCount > 1 ? 's' : ''} deleted successfully!`,
         type: 'success',
       });
       setSelectedTagIds([]);
-      fetchTags();
     } catch (err: any) {
       console.error('Error deleting tags:', err);
       setToast({ message: err.message || 'Failed to delete tags', type: 'error' });
@@ -172,7 +119,7 @@ const Tags = () => {
         <div className='bg-white rounded-lg shadow-md p-6'>
           <div className='flex items-center justify-between mb-4'>
             <div className='flex items-center gap-3'>
-              <h2 className='text-xl font-semibold text-gray-800'>All Tags ({tags.length})</h2>
+              <h2 className='text-xl font-semibold text-gray-800'>All Tags ({tagsArray.length})</h2>
               {selectedTagIds.length > 0 && (
                 <button
                   onClick={() => setShowConfirmModal(true)}
@@ -183,7 +130,7 @@ const Tags = () => {
                 </button>
               )}
             </div>
-            {tags.length > 10 && (
+            {tagsArray.length > 10 && (
               <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
                 className='px-3 py-1.5 text-sm border border-[#194B90] text-[#194B90] bg-white rounded-md hover:bg-[#EBF3FF] transition font-medium'
@@ -193,7 +140,7 @@ const Tags = () => {
             )}
           </div>
 
-          {tags.length === 0 ? (
+          {tagsArray.length === 0 ? (
             <div className='text-center py-8'>
               <svg
                 className='mx-auto h-12 w-12 text-gray-400'
@@ -214,10 +161,10 @@ const Tags = () => {
           ) : (
             <div
               className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 ${
-                isCollapsed && tags.length > 10 ? 'max-h-48 overflow-hidden' : ''
+                isCollapsed && tagsArray.length > 10 ? 'max-h-48 overflow-hidden' : ''
               }`}
             >
-              {tags.map(tag => (
+              {tagsArray.map((tag: Tag) => (
                 <div
                   key={tag.id}
                   className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition'
@@ -242,13 +189,13 @@ const Tags = () => {
             </div>
           )}
 
-          {isCollapsed && tags.length > 10 && (
+          {isCollapsed && tagsArray.length > 10 && (
             <div className='mt-4 text-center'>
               <button
                 onClick={() => setIsCollapsed(false)}
                 className='px-3 py-1.5 text-sm border border-[#194B90] text-[#194B90] bg-white rounded-md hover:bg-[#EBF3FF] transition font-medium'
               >
-                Show all {tags.length} tags
+                Show all {tagsArray.length} tags
               </button>
             </div>
           )}

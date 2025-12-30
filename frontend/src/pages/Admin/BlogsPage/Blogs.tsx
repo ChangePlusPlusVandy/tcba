@@ -1,6 +1,6 @@
-import { useAuth } from '@clerk/clerk-react';
 import axios from 'axios';
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import ReactQuill, { Quill } from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import ImageResize from 'quill-image-resize-module-react';
@@ -9,6 +9,9 @@ import Toast from '../../../components/Toast';
 import ConfirmModal from '../../../components/ConfirmModal';
 import FileUpload from '../../../components/FileUpload';
 import AttachmentList from '../../../components/AttachmentList';
+import Pagination from '../../../components/Pagination';
+import { useAdminBlogs } from '../../../hooks/queries/useAdminBlogs';
+import { useBlogMutations } from '../../../hooks/mutations/useBlogMutations';
 import { API_BASE_URL } from '../../../config/api';
 
 Quill.register('modules/imageResize', ImageResize);
@@ -39,16 +42,27 @@ type Filter = 'ALL' | 'PUBLISHED' | 'DRAFTS';
 
 const AdminBlogs = () => {
   const { getToken } = useAuth();
-
-  const [blogs, setBlogs] = useState<Blog[]>([]);
   const [allTags, setAllTags] = useState<Tag[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [selectedBlogIds, setSelectedBlogIds] = useState<string[]>([]);
   const [filter, setFilter] = useState<Filter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [tagsFilter, setTagsFilter] = useState<string[]>([]);
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
+  const {
+    data: blogsData,
+    isLoading: loading,
+    error: blogsError,
+  } = useAdminBlogs(currentPage, itemsPerPage);
+  const { createBlog, updateBlog, deleteBlog, publishBlog } = useBlogMutations();
+
+  const blogsResponse = blogsData || {};
+  const blogs = blogsResponse.data || blogsResponse;
+  const blogsArray: Blog[] = Array.isArray(blogs) ? blogs : [];
+  const totalBlogs = blogsResponse.total || blogsResponse.pagination?.total || blogsArray.length;
+  const error = blogsError ? 'Failed to fetch blogs' : '';
 
   type SortField = 'title' | 'author' | 'publishedDate' | 'tags' | 'createdAt';
   type SortDirection = 'asc' | 'desc';
@@ -79,6 +93,8 @@ const AdminBlogs = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [isPublishing, setIsPublishing] = useState(false);
+
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info';
@@ -91,54 +107,6 @@ const AdminBlogs = () => {
     onConfirm: () => void;
   } | null>(null);
 
-  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    const token = await getToken();
-    if (!token) throw new Error('Authentication required');
-
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
-    }
-
-    if (response.status === 204) return null;
-    return response.json();
-  };
-
-  const fetchBlogs = async () => {
-    try {
-      setError('');
-      const responseData = await fetchWithAuth(`${API_BASE_URL}/api/blogs?page=1&limit=1000`);
-
-      const blogs = responseData.data || responseData;
-      const blogsArray = Array.isArray(blogs) ? blogs : [];
-
-      console.log('Fetched blogs:', blogsArray);
-      console.log('Blogs count:', blogsArray.length);
-      console.log(
-        'Drafts:',
-        blogsArray.filter((b: any) => !b.isPublished)
-      );
-      console.log(
-        'Published:',
-        blogsArray.filter((b: any) => b.isPublished)
-      );
-      setBlogs(blogsArray);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch blogs');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchTags = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/blogs/tags`);
@@ -149,7 +117,6 @@ const AdminBlogs = () => {
   };
 
   useEffect(() => {
-    fetchBlogs();
     fetchTags();
   }, []);
 
@@ -187,21 +154,14 @@ const AdminBlogs = () => {
 
     try {
       setIsSubmitting(true);
-      setError('');
       const blogData = {
         ...newBlog,
         isPublished: publish,
         publishedDate: publish ? new Date().toISOString() : null,
       };
 
-      console.log('Creating blog with data:', blogData);
+      await createBlog.mutateAsync(blogData);
 
-      await fetchWithAuth(`${API_BASE_URL}/api/blogs`, {
-        method: 'POST',
-        body: JSON.stringify(blogData),
-      });
-
-      await fetchBlogs();
       setIsCreateModalOpen(false);
       setNewBlog({
         title: '',
@@ -225,7 +185,6 @@ const AdminBlogs = () => {
     if (!selectedBlog) return;
 
     setIsSubmitting(true);
-    setError('');
 
     try {
       const payload = {
@@ -236,12 +195,8 @@ const AdminBlogs = () => {
         attachmentUrls: editedBlog.attachmentUrls,
       };
 
-      await fetchWithAuth(`${API_BASE_URL}/api/blogs/${selectedBlog.id}`, {
-        method: 'PUT',
-        body: JSON.stringify(payload),
-      });
+      await updateBlog.mutateAsync({ id: selectedBlog.id, data: payload });
 
-      await fetchBlogs();
       setToast({ message: 'Blog updated successfully', type: 'success' });
       closeDetailModal();
       setIsEditMode(false);
@@ -264,16 +219,8 @@ const AdminBlogs = () => {
       onConfirm: async () => {
         try {
           setIsDeleting(true);
-          setError('');
-          await Promise.all(
-            selectedBlogIds.map(id =>
-              fetchWithAuth(`${API_BASE_URL}/api/blogs/${id}`, {
-                method: 'DELETE',
-              })
-            )
-          );
+          await Promise.all(selectedBlogIds.map(id => deleteBlog.mutateAsync(id)));
 
-          await fetchBlogs();
           setSelectedBlogIds([]);
           setToast({
             message: `${count} blog${count > 1 ? 's' : ''} deleted successfully`,
@@ -313,13 +260,13 @@ const AdminBlogs = () => {
     setSelectedBlog(null);
   };
 
-  const filteredBlogs = blogs.filter(blog => {
+  const filteredBlogs = blogsArray.filter(blog => {
     if (filter === 'PUBLISHED' && !blog.isPublished) return false;
     if (filter === 'DRAFTS' && blog.isPublished) return false;
 
     const matchesTags =
       tagsFilter.length === 0 ||
-      tagsFilter.some(tagName => blog.tags?.some(blogTag => blogTag.name === tagName));
+      tagsFilter.some(tagName => blog.tags?.some((blogTag: Tag) => blogTag.name === tagName));
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -558,7 +505,7 @@ const AdminBlogs = () => {
 
       <div className='flex-1 p-8'>
         <h1 className='text-3xl font-bold text-gray-800 mb-6'>
-          {filter === 'ALL' && `All Blogs (${blogs.length})`}
+          {filter === 'ALL' && `All Blogs (${blogsArray.length})`}
           {filter === 'PUBLISHED' && `Published Blogs (${filteredBlogs.length})`}
           {filter === 'DRAFTS' && `Draft Blogs (${filteredBlogs.length})`}
         </h1>
@@ -811,7 +758,7 @@ const AdminBlogs = () => {
                     <td className='px-6 py-4'>
                       {blog.tags && blog.tags.length > 0 ? (
                         <div className='flex flex-wrap gap-1'>
-                          {blog.tags.map(tag => (
+                          {blog.tags.map((tag: Tag) => (
                             <span
                               key={tag.id}
                               className='px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
@@ -835,6 +782,13 @@ const AdminBlogs = () => {
                 ))}
               </tbody>
             </table>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(totalBlogs / itemsPerPage)}
+              onPageChange={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              totalItems={totalBlogs}
+            />
           </div>
         )}
       </div>
@@ -1213,26 +1167,29 @@ const AdminBlogs = () => {
                     <>
                       <button
                         onClick={async () => {
+                          if (isPublishing) return;
                           try {
-                            await fetchWithAuth(
-                              `${API_BASE_URL}/api/blogs/${selectedBlog.id}/publish`,
-                              {
-                                method: 'PUT',
-                              }
-                            );
+                            setIsPublishing(true);
+                            await publishBlog.mutateAsync(selectedBlog.id);
                             setToast({ message: 'Blog published successfully', type: 'success' });
-                            await fetchBlogs();
                             closeDetailModal();
                           } catch (err: any) {
                             setToast({
                               message: err.message || 'Failed to publish blog',
                               type: 'error',
                             });
+                          } finally {
+                            setIsPublishing(false);
                           }
                         }}
-                        className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
+                        disabled={isPublishing}
+                        className={`px-6 py-2.5 text-white rounded-xl font-medium transition ${
+                          isPublishing
+                            ? 'bg-[#E57373] cursor-not-allowed'
+                            : 'bg-[#D54242] hover:bg-[#b53a3a]'
+                        }`}
                       >
-                        Publish
+                        {isPublishing ? 'Publishing...' : 'Publish'}
                       </button>
                       <button
                         onClick={() => {

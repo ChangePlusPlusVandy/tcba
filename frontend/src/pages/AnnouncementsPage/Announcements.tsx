@@ -1,10 +1,12 @@
-import axios from 'axios';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoFunnelOutline } from 'react-icons/io5';
 import 'react-quill-new/dist/quill.snow.css';
 import S3Image from '../../components/S3Image';
-import { API_BASE_URL } from '../../config/api';
+import Pagination from '../../components/Pagination';
+import { useAnnouncements } from '../../hooks/queries/useAnnouncements';
+import { useTags } from '../../hooks/queries/useTags';
+import { usePageContent } from '../../hooks/queries/usePageContent';
 
 type Announcement = {
   id: string;
@@ -36,80 +38,41 @@ interface AnnouncementsPageProps {
 }
 
 const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
-  // ALL ANNOUNCEMENTS AND TAGS STATES
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
-  // LOADING AND ERROR STATES
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  // FILTER STATES
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
+  const {
+    data: announcementsData,
+    isLoading: announcementsLoading,
+    error: announcementsError,
+  } = useAnnouncements(currentPage, itemsPerPage);
+  const { data: tags = [] } = useTags();
+  const tagsArray = tags as Tag[];
+  const { data: pageContentData, isLoading: pageContentLoading } = usePageContent('announcements');
+
   const [timeFilter, setTimeFilter] = useState<'24h' | 'week' | 'month' | 'year' | null>(null);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const filterRef = useRef<HTMLDivElement>(null);
-  // PAGE CONTENT STATE
-  const [content, setContent] = useState<PageContent>({});
-  const [pageLoading, setPageLoading] = useState(true);
 
   const navigate = useNavigate();
 
-  const MAX_LENGTH = 200; // MAX POST LENGTH BEFORE TRUNCATION
+  const MAX_LENGTH = 200;
 
-  // GET ALL ANNOUNCEMENTS
-  const getAnnouncements = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/announcements?page=1&limit=100`);
-      console.log('API Response:', response.data);
-      const announcementsData = response.data.data || response.data;
-      setAnnouncements(Array.isArray(announcementsData) ? announcementsData : []);
-      setError(null);
-    } catch (error) {
-      console.error('Error fetching announcements:', error);
-      setError('An unexpected error occurred');
-    }
-    setLoading(false);
-  };
+  const announcementsResponse = announcementsData || { data: [], total: 0 };
+  const announcements: Announcement[] = Array.isArray(
+    announcementsResponse.data || announcementsResponse
+  )
+    ? announcementsResponse.data || announcementsResponse
+    : [];
+  const totalAnnouncements =
+    announcementsResponse.total || announcementsResponse.pagination?.total || announcements.length;
+  const loading = announcementsLoading;
+  const error = announcementsError ? 'An unexpected error occurred' : null;
 
-  // GET ALL TAGS
-  const getTags = async () => {
-    try {
-      const tags = await axios.get(`${API_BASE_URL}/api/tags`);
-      console.log('API Response:', tags.data);
-      setTags(tags.data);
-      setError(null);
-    } catch (error) {
-      console.error('Error fetching tags:', error);
-      setError('An unexpected error occurred');
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    if (previewContent) {
-      setContent(previewContent);
-      setPageLoading(false);
-    } else {
-      const loadContent = async () => {
-        try {
-          const response = await fetch(`${API_BASE_URL}/api/page-content/announcements`);
-          if (!response.ok) throw new Error('Failed to fetch page content');
-          const data = await response.json();
-          setContent(data);
-        } catch (error) {
-          console.error('Error loading page content:', error);
-        } finally {
-          setPageLoading(false);
-        }
-      };
-      loadContent();
-    }
-  }, [previewContent]);
-
-  useEffect(() => {
-    getAnnouncements();
-    getTags();
-  }, []);
+  const content = previewContent || pageContentData || {};
+  const pageLoading = !previewContent && pageContentLoading;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -286,11 +249,11 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
 
                 {isFilterOpen && (
                   <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[200px] max-h-[300px] overflow-y-auto'>
-                    {tags.length === 0 ? (
+                    {tagsArray.length === 0 ? (
                       <div className='px-4 py-3 text-sm text-gray-500'>No tags available</div>
                     ) : (
                       <div className='py-2'>
-                        {tags.map(tag => (
+                        {tagsArray.map(tag => (
                           <label
                             key={tag.id}
                             className='flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer'
@@ -392,7 +355,7 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
                         <>
                           <span className='text-[#717171]'>•</span>
                           <div className='flex gap-2 flex-wrap'>
-                            {a.tags.map(tag => (
+                            {a.tags.map((tag: Tag) => (
                               <span
                                 key={tag.id}
                                 className='px-3 py-1 bg-[#EBF3FF] text-[#194B90] rounded-full text-[12px] font-medium'
@@ -412,6 +375,18 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {!loading && !error && filterAnnouncements.length > 0 && (
+          <div className='mt-8'>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(totalAnnouncements / itemsPerPage)}
+              onPageChange={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              totalItems={totalAnnouncements}
+            />
           </div>
         )}
       </div>

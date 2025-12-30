@@ -8,6 +8,9 @@ import Toast from '../../../components/Toast';
 import ConfirmModal from '../../../components/ConfirmModal';
 import FileUpload from '../../../components/FileUpload';
 import AttachmentList from '../../../components/AttachmentList';
+import Pagination from '../../../components/Pagination';
+import { useAdminAlerts } from '../../../hooks/queries/useAdminAlerts';
+import { useAlertMutations } from '../../../hooks/mutations/useAlertMutations';
 import { API_BASE_URL } from '../../../config/api';
 
 Quill.register('modules/imageResize', ImageResize);
@@ -33,14 +36,27 @@ type Filter = 'ALL' | 'PUBLISHED' | 'DRAFTS';
 const AdminAlerts = () => {
   const { getToken } = useAuth();
 
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [selectedAlertIds, setSelectedAlertIds] = useState<string[]>([]);
   const [filter, setFilter] = useState<Filter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [priorityFilter, setPriorityFilter] = useState<AlertPriority[]>([]);
   const [priorityDropdownOpen, setPriorityDropdownOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
+  const {
+    data: alertsData,
+    isLoading: loading,
+    error: alertsError,
+  } = useAdminAlerts(currentPage, itemsPerPage);
+  const { createAlert, updateAlert, deleteAlert } = useAlertMutations();
+
+  const alertsResponse = alertsData || {};
+  const alerts = alertsResponse.data || alertsResponse;
+  const alertsArray: Alert[] = Array.isArray(alerts) ? alerts : [];
+  const totalAlerts =
+    alertsResponse.total || alertsResponse.pagination?.total || alertsArray.length;
+  const error = alertsError ? 'Failed to fetch alerts' : '';
 
   type SortField = 'title' | 'priority' | 'publishedDate' | 'createdAt';
   type SortDirection = 'asc' | 'desc';
@@ -50,6 +66,18 @@ const AdminAlerts = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedAlert, setEditedAlert] = useState<{
+    title: string;
+    content: string;
+    priority: AlertPriority;
+    attachmentUrls: string[];
+  }>({
+    title: '',
+    content: '',
+    priority: 'MEDIUM',
+    attachmentUrls: [],
+  });
 
   const [newAlert, setNewAlert] = useState({
     title: '',
@@ -74,58 +102,6 @@ const AdminAlerts = () => {
     confirmText: string;
     onConfirm: () => void;
   } | null>(null);
-
-  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    const token = await getToken();
-    if (!token) throw new Error('Authentication required');
-
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
-    }
-
-    if (response.status === 204) return null;
-    return response.json();
-  };
-
-  const fetchAlerts = async () => {
-    try {
-      setError('');
-      const responseData = await fetchWithAuth(`${API_BASE_URL}/api/alerts?page=1&limit=1000`);
-
-      const alerts = responseData.data || responseData;
-      const alertsArray = Array.isArray(alerts) ? alerts : [];
-
-      console.log('Fetched alerts:', alertsArray);
-      console.log('Alerts count:', alertsArray.length);
-      console.log(
-        'Drafts:',
-        alertsArray.filter((a: any) => !a.isPublished)
-      );
-      console.log(
-        'Published:',
-        alertsArray.filter((a: any) => a.isPublished)
-      );
-      setAlerts(alertsArray);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch alerts');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAlerts();
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -157,21 +133,14 @@ const AdminAlerts = () => {
 
     try {
       setIsSubmitting(true);
-      setError('');
       const alertData = {
         ...newAlert,
         isPublished: publish,
         publishedDate: publish ? new Date().toISOString() : null,
       };
 
-      console.log('Creating alert with data:', alertData);
+      await createAlert.mutateAsync(alertData);
 
-      await fetchWithAuth(`${API_BASE_URL}/api/alerts`, {
-        method: 'POST',
-        body: JSON.stringify(alertData),
-      });
-
-      await fetchAlerts();
       setIsCreateModalOpen(false);
       setNewAlert({
         title: '',
@@ -201,16 +170,8 @@ const AdminAlerts = () => {
       onConfirm: async () => {
         try {
           setIsDeleting(true);
-          setError('');
-          await Promise.all(
-            selectedAlertIds.map(id =>
-              fetchWithAuth(`${API_BASE_URL}/api/alerts/${id}`, {
-                method: 'DELETE',
-              })
-            )
-          );
+          await Promise.all(selectedAlertIds.map(id => deleteAlert.mutateAsync(id)));
 
-          await fetchAlerts();
           setSelectedAlertIds([]);
           setToast({
             message: `${count} alert${count > 1 ? 's' : ''} deleted successfully`,
@@ -248,9 +209,10 @@ const AdminAlerts = () => {
   const closeDetailModal = () => {
     setIsDetailModalOpen(false);
     setSelectedAlert(null);
+    setIsEditMode(false);
   };
 
-  const filteredAlerts = alerts.filter(alert => {
+  const filteredAlerts = alertsArray.filter(alert => {
     if (filter === 'PUBLISHED' && !alert.isPublished) return false;
     if (filter === 'DRAFTS' && alert.isPublished) return false;
 
@@ -278,7 +240,7 @@ const AdminAlerts = () => {
         bValue = b.title.toLowerCase();
         break;
       case 'priority':
-        const priorityOrder = { URGENT: 3, MEDIUM: 2, LOW: 1 };
+        const priorityOrder: Record<AlertPriority, number> = { URGENT: 3, MEDIUM: 2, LOW: 1 };
         aValue = priorityOrder[a.priority];
         bValue = priorityOrder[b.priority];
         break;
@@ -502,7 +464,7 @@ const AdminAlerts = () => {
 
       <div className='flex-1 p-8'>
         <h1 className='text-3xl font-bold text-gray-800 mb-6'>
-          {filter === 'ALL' && `All Alerts (${alerts.length})`}
+          {filter === 'ALL' && `All Alerts (${alertsArray.length})`}
           {filter === 'PUBLISHED' && `Published Alerts (${filteredAlerts.length})`}
           {filter === 'DRAFTS' && `Draft Alerts (${filteredAlerts.length})`}
         </h1>
@@ -758,6 +720,13 @@ const AdminAlerts = () => {
                 ))}
               </tbody>
             </table>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(totalAlerts / itemsPerPage)}
+              onPageChange={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              totalItems={totalAlerts}
+            />
           </div>
         )}
       </div>
@@ -910,106 +879,231 @@ const AdminAlerts = () => {
           <input type='checkbox' checked readOnly className='modal-toggle' />
           <div className='modal modal-open'>
             <div className='modal-box max-w-2xl max-h-[80vh] bg-white overflow-y-auto m-8'>
-              <h3 className='font-bold text-xl text-gray-900 mb-3'>{selectedAlert.title}</h3>
+              <h3 className='font-bold text-xl text-gray-900 mb-3'>
+                {isEditMode ? 'Edit Alert' : selectedAlert.title}
+              </h3>
 
-              <div className='space-y-4'>
-                <div>
-                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Basic Information</h4>
-                  <div className='grid grid-cols-2 gap-3'>
-                    <div>
-                      <span className='text-sm font-bold text-gray-600'>Priority:</span>
-                      <p className='text-sm'>
-                        <span
-                          className={`px-2 py-1 inline-flex text-xs font-medium rounded-full ${getPriorityColor(
-                            selectedAlert.priority
-                          )}`}
-                        >
-                          {selectedAlert.priority}
-                        </span>
-                      </p>
-                    </div>
+              {isEditMode ? (
+                <div className='space-y-4'>
+                  <div>
+                    <label className='block text-sm font-semibold text-gray-700 mb-1'>Title</label>
+                    <input
+                      type='text'
+                      value={editedAlert.title}
+                      onChange={e => setEditedAlert({ ...editedAlert, title: e.target.value })}
+                      className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                      placeholder='Alert title...'
+                    />
+                  </div>
 
-                    <div>
-                      <span className='text-sm font-bold text-gray-600'>Status:</span>
-                      <p className='text-sm'>
-                        <span
-                          className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full ${
-                            selectedAlert.isPublished
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {selectedAlert.isPublished ? 'Published' : 'Draft'}
-                        </span>
-                      </p>
+                  <div>
+                    <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                      Priority
+                    </label>
+                    <select
+                      value={editedAlert.priority}
+                      onChange={e =>
+                        setEditedAlert({
+                          ...editedAlert,
+                          priority: e.target.value as AlertPriority,
+                        })
+                      }
+                      className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                    >
+                      <option value='LOW'>Low</option>
+                      <option value='MEDIUM'>Medium</option>
+                      <option value='URGENT'>Urgent</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                      Content
+                    </label>
+                    <div style={{ height: '250px' }}>
+                      <ReactQuill
+                        ref={quillRef}
+                        theme='snow'
+                        value={editedAlert.content}
+                        onChange={content => setEditedAlert({ ...editedAlert, content })}
+                        modules={modules}
+                        placeholder='Write alert content...'
+                        style={{ height: '200px' }}
+                      />
                     </div>
                   </div>
-                </div>
 
-                <div>
-                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Content</h4>
-                  <div
-                    className='prose max-w-none text-sm text-gray-900'
-                    dangerouslySetInnerHTML={{ __html: selectedAlert.content }}
+                  <FileUpload
+                    attachmentUrls={editedAlert.attachmentUrls}
+                    onFilesChange={files =>
+                      setEditedAlert({ ...editedAlert, attachmentUrls: files })
+                    }
                   />
                 </div>
+              ) : (
+                <div className='space-y-4'>
+                  <div>
+                    <h4 className='font-semibold text-base text-gray-800 mb-2'>
+                      Basic Information
+                    </h4>
+                    <div className='grid grid-cols-2 gap-3'>
+                      <div>
+                        <span className='text-sm font-bold text-gray-600'>Priority:</span>
+                        <p className='text-sm'>
+                          <span
+                            className={`px-2 py-1 inline-flex text-xs font-medium rounded-full ${getPriorityColor(
+                              selectedAlert.priority
+                            )}`}
+                          >
+                            {selectedAlert.priority}
+                          </span>
+                        </p>
+                      </div>
 
-                {selectedAlert.attachmentUrls && selectedAlert.attachmentUrls.length > 0 && (
-                  <AttachmentList attachmentUrls={selectedAlert.attachmentUrls} />
-                )}
-
-                <div>
-                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Dates</h4>
-                  <div className='grid grid-cols-2 gap-3'>
-                    <div>
-                      <span className='text-sm font-bold text-gray-600'>Created:</span>
-                      <p className='text-sm text-gray-900'>
-                        {new Date(selectedAlert.createdAt).toLocaleDateString()}
-                      </p>
+                      <div>
+                        <span className='text-sm font-bold text-gray-600'>Status:</span>
+                        <p className='text-sm'>
+                          <span
+                            className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full ${
+                              selectedAlert.isPublished
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            {selectedAlert.isPublished ? 'Published' : 'Draft'}
+                          </span>
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <span className='text-sm font-bold text-gray-600'>Updated:</span>
-                      <p className='text-sm text-gray-900'>
-                        {new Date(selectedAlert.updatedAt).toLocaleDateString()}
-                      </p>
+                  </div>
+
+                  <div>
+                    <h4 className='font-semibold text-base text-gray-800 mb-2'>Content</h4>
+                    <div
+                      className='prose max-w-none text-sm text-gray-900'
+                      dangerouslySetInnerHTML={{ __html: selectedAlert.content }}
+                    />
+                  </div>
+
+                  {selectedAlert.attachmentUrls && selectedAlert.attachmentUrls.length > 0 && (
+                    <AttachmentList attachmentUrls={selectedAlert.attachmentUrls} />
+                  )}
+
+                  <div>
+                    <h4 className='font-semibold text-base text-gray-800 mb-2'>Dates</h4>
+                    <div className='grid grid-cols-2 gap-3'>
+                      <div>
+                        <span className='text-sm font-bold text-gray-600'>Created:</span>
+                        <p className='text-sm text-gray-900'>
+                          {new Date(selectedAlert.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div>
+                        <span className='text-sm font-bold text-gray-600'>Updated:</span>
+                        <p className='text-sm text-gray-900'>
+                          {new Date(selectedAlert.updatedAt).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              <div className='modal-action'>
-                {!selectedAlert.isPublished && (
+              {isEditMode ? (
+                <div className='modal-action'>
                   <button
                     onClick={async () => {
+                      if (!editedAlert.title.trim()) {
+                        setToast({ message: 'Title is required', type: 'error' });
+                        return;
+                      }
+                      if (!editedAlert.content.trim()) {
+                        setToast({ message: 'Content is required', type: 'error' });
+                        return;
+                      }
+
                       try {
-                        await fetchWithAuth(
-                          `${API_BASE_URL}/api/alerts/${selectedAlert.id}/publish`,
-                          {
-                            method: 'POST',
-                          }
-                        );
-                        setToast({ message: 'Alert published successfully', type: 'success' });
-                        await fetchAlerts();
+                        await updateAlert.mutateAsync({
+                          id: selectedAlert.id,
+                          data: {
+                            title: editedAlert.title,
+                            content: editedAlert.content,
+                            priority: editedAlert.priority,
+                            attachmentUrls: editedAlert.attachmentUrls,
+                          },
+                        });
+                        setToast({ message: 'Alert updated successfully', type: 'success' });
+                        setIsEditMode(false);
                         closeDetailModal();
                       } catch (err: any) {
                         setToast({
-                          message: err.message || 'Failed to publish alert',
+                          message: err.message || 'Failed to update alert',
                           type: 'error',
                         });
                       }
                     }}
                     className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
                   >
-                    Publish
+                    Save Changes
                   </button>
-                )}
-                <button
-                  onClick={closeDetailModal}
-                  className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
-                >
-                  Close
-                </button>
-              </div>
+                  <button
+                    onClick={() => setIsEditMode(false)}
+                    className='px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl font-medium transition'
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div className='modal-action'>
+                  {!selectedAlert.isPublished && (
+                    <>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await updateAlert.mutateAsync({
+                              id: selectedAlert.id,
+                              data: {
+                                isPublished: true,
+                                publishedDate: new Date().toISOString(),
+                              },
+                            });
+                            setToast({ message: 'Alert published successfully', type: 'success' });
+                            closeDetailModal();
+                          } catch (err: any) {
+                            setToast({
+                              message: err.message || 'Failed to publish alert',
+                              type: 'error',
+                            });
+                          }
+                        }}
+                        className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
+                      >
+                        Publish
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsEditMode(true);
+                          setEditedAlert({
+                            title: selectedAlert.title,
+                            content: selectedAlert.content,
+                            priority: selectedAlert.priority,
+                            attachmentUrls: selectedAlert.attachmentUrls,
+                          });
+                        }}
+                        className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
+                      >
+                        Edit
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={closeDetailModal}
+                    className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
+                  >
+                    Close
+                  </button>
+                </div>
+              )}
             </div>
             <div className='modal-backdrop bg-black/30' onClick={closeDetailModal}></div>
           </div>

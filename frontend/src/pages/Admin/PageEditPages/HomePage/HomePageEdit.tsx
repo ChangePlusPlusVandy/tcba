@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
+import { useQueryClient } from '@tanstack/react-query';
 import ContentEditor from '../components/ContentEditor';
 import ImageUploader from '../components/ImageUploader';
 import AdminSidebar from '../../../../components/AdminSidebar';
@@ -19,6 +20,7 @@ interface PageContentState {
 
 const HomePageEdit = () => {
   const { getToken } = useAuth();
+  const queryClient = useQueryClient();
   const [content, setContent] = useState<PageContentState>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -122,6 +124,8 @@ const HomePageEdit = () => {
       }
 
       await fetchContent();
+
+      queryClient.invalidateQueries({ queryKey: ['page-content', 'home'] });
 
       setToast({ message: 'Changes saved successfully!', type: 'success' });
     } catch (err: any) {

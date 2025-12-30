@@ -1,8 +1,9 @@
-import { useAuth, useUser } from '@clerk/clerk-react';
-import { useEffect, useState } from 'react';
+import { useUser } from '@clerk/clerk-react';
+import { useState } from 'react';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
 import Toast from '../../../components/Toast';
-import { API_BASE_URL } from '../../../config/api';
+import { useOrgActiveSurveys, useOrgSurveyResponses } from '../../../hooks/queries/useOrgSurveys';
+import { useSurveyResponseMutations } from '../../../hooks/mutations/useSurveyResponseMutations';
 
 type QuestionType = 'multipleChoice' | 'checkbox' | 'text' | 'rating';
 
@@ -43,79 +44,36 @@ type SurveyResponse = {
 type FilterType = 'ACTIVE' | 'COMPLETED';
 
 const OrgSurveysPage = () => {
-  const { getToken } = useAuth();
   const { user } = useUser();
   const organizationId = user?.publicMetadata?.organizationId as string | undefined;
 
-  const [surveys, setSurveys] = useState<Survey[]>([]);
-  const [myResponses, setMyResponses] = useState<SurveyResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { data: surveys = [], isLoading: loadingSurveys } = useOrgActiveSurveys();
+  const { data: myResponses = [], isLoading: loadingResponses } =
+    useOrgSurveyResponses(organizationId);
+  const { submitResponse } = useSurveyResponseMutations();
+
+  const loading = loadingSurveys || loadingResponses;
+
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<FilterType>('ACTIVE');
 
   const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null);
   const [isResponseModalOpen, setIsResponseModalOpen] = useState(false);
   const [currentResponses, setCurrentResponses] = useState<Record<string, any>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info';
   } | null>(null);
 
-  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    const token = await getToken();
-    if (!token) throw new Error('Authentication required');
-
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
-    }
-
-    if (response.status === 204) return null;
-    return response.json();
-  };
-
-  const fetchSurveysAndResponses = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const [surveysData, responsesData] = await Promise.all([
-        fetchWithAuth(`${API_BASE_URL}/api/surveys/active/list`),
-        organizationId
-          ? fetchWithAuth(`${API_BASE_URL}/api/survey-responses/organization/${organizationId}`)
-          : Promise.resolve([]),
-      ]);
-      setSurveys(surveysData || []);
-      setMyResponses(responsesData || []);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch surveys');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (organizationId) {
-      fetchSurveysAndResponses();
-    }
-  }, [organizationId]);
+  const surveysArray = surveys as Survey[];
+  const responsesArray = myResponses as SurveyResponse[];
 
   const hasResponded = (surveyId: string) => {
-    return myResponses.some(r => r.surveyId === surveyId);
+    return responsesArray.some(r => r.surveyId === surveyId);
   };
 
-  const filteredSurveys = surveys
+  const filteredSurveys = surveysArray
     .filter(survey => {
       const matchesSearch =
         survey.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -150,7 +108,6 @@ const OrgSurveysPage = () => {
   const handleSubmitResponse = async () => {
     if (!selectedSurvey || !organizationId) return;
 
-    // Validate required questions
     const missingRequired = selectedSurvey.questions.filter(q => {
       if (!q.required) return false;
       const response = currentResponses[q.id];
@@ -168,23 +125,16 @@ const OrgSurveysPage = () => {
     }
 
     try {
-      setIsSubmitting(true);
-      await fetchWithAuth(`${API_BASE_URL}/api/survey-responses`, {
-        method: 'POST',
-        body: JSON.stringify({
-          surveyId: selectedSurvey.id,
-          organizationId,
-          responses: currentResponses,
-        }),
+      await submitResponse.mutateAsync({
+        surveyId: selectedSurvey.id,
+        organizationId,
+        responses: currentResponses,
       });
 
       setToast({ message: 'Survey response submitted successfully!', type: 'success' });
       closeResponseModal();
-      fetchSurveysAndResponses();
     } catch (err: any) {
       setToast({ message: err.message || 'Failed to submit response', type: 'error' });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -256,12 +206,6 @@ const OrgSurveysPage = () => {
             </div>
           </div>
         </div>
-
-        {error && (
-          <div className='bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg mb-6'>
-            {error}
-          </div>
-        )}
 
         {loading ? (
           <div className='text-center py-12'>
@@ -361,7 +305,7 @@ const OrgSurveysPage = () => {
                   <button
                     onClick={closeResponseModal}
                     className='text-gray-400 hover:text-gray-600'
-                    disabled={isSubmitting}
+                    disabled={submitResponse.isPending}
                   >
                     <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                       <path
@@ -484,17 +428,17 @@ const OrgSurveysPage = () => {
               <div className='sticky bottom-0 bg-white border-t border-gray-200 p-6 flex justify-end gap-3'>
                 <button
                   onClick={closeResponseModal}
-                  disabled={isSubmitting}
+                  disabled={submitResponse.isPending}
                   className='px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed'
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSubmitResponse}
-                  disabled={isSubmitting}
+                  disabled={submitResponse.isPending}
                   className='px-6 py-2 bg-[#D54242] hover:bg-[#b53a3a] disabled:bg-[#e88888] text-white rounded-lg disabled:cursor-not-allowed'
                 >
-                  {isSubmitting ? 'Submitting...' : 'Submit Response'}
+                  {submitResponse.isPending ? 'Submitting...' : 'Submit Response'}
                 </button>
               </div>
             </div>

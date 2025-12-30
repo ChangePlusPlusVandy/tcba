@@ -1,10 +1,12 @@
-import axios from 'axios';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoFunnelOutline } from 'react-icons/io5';
 import 'react-quill-new/dist/quill.snow.css';
 import S3Image from '../../components/S3Image';
-import { API_BASE_URL } from '../../config/api';
+import Pagination from '../../components/Pagination';
+import { useBlogs } from '../../hooks/queries/useBlogs';
+import { useBlogTags } from '../../hooks/queries/useTags';
+import { usePageContent } from '../../hooks/queries/usePageContent';
 
 type Tag = {
   id: string;
@@ -36,70 +38,38 @@ interface BlogsPageProps {
 }
 
 const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
-  const [blogs, setBlogs] = useState<Blog[]>([]);
-  const [allTags, setAllTags] = useState<Tag[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
+  const {
+    data: blogsData,
+    isLoading: blogsLoading,
+    error: blogsError,
+  } = useBlogs(currentPage, itemsPerPage);
+  const { data: allTags = [] } = useBlogTags();
+  const tagsArray = allTags as Tag[];
+  const { data: pageContentData, isLoading: pageContentLoading } = usePageContent('blogs');
+
   const [timeFilter, setTimeFilter] = useState<'24h' | 'week' | 'month' | 'year' | null>(null);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [content, setContent] = useState<PageContent>({});
-  const [pageLoading, setPageLoading] = useState(true);
 
   const filterRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   const MAX_LENGTH = 200;
 
-  const getBlogs = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/blogs?page=1&limit=100`);
+  const blogsResponse = blogsData || { data: [], total: 0 };
+  const blogs: Blog[] = Array.isArray(blogsResponse.data || blogsResponse)
+    ? blogsResponse.data || blogsResponse
+    : [];
+  const totalBlogs = blogsResponse.total || blogsResponse.pagination?.total || blogs.length;
+  const loading = blogsLoading;
+  const error = blogsError ? 'An unexpected error occurred' : null;
 
-      const blogsData = response.data.data || response.data;
-      setBlogs(Array.isArray(blogsData) ? blogsData : []);
-      setError(null);
-    } catch (error) {
-      console.error('Error fetching blogs:', error);
-      setError('An unexpected error occurred');
-    }
-    setLoading(false);
-  };
-
-  const getTags = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/blogs/tags`);
-      setAllTags(response.data);
-    } catch (error) {
-      console.error('Error fetching tags:', error);
-    }
-  };
-
-  useEffect(() => {
-    if (previewContent) {
-      setContent(previewContent);
-      setPageLoading(false);
-    } else {
-      const loadContent = async () => {
-        try {
-          const response = await fetch(`${API_BASE_URL}/api/page-content/blogs`);
-          if (!response.ok) throw new Error('Failed to fetch page content');
-          const data = await response.json();
-          setContent(data);
-        } catch (error) {
-          console.error('Error loading page content:', error);
-        } finally {
-          setPageLoading(false);
-        }
-      };
-      loadContent();
-    }
-  }, [previewContent]);
-
-  useEffect(() => {
-    getBlogs();
-    getTags();
-  }, []);
+  const content = previewContent || pageContentData || {};
+  const pageLoading = !previewContent && pageContentLoading;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -280,11 +250,11 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
 
                 {isFilterOpen && (
                   <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[200px] max-h-[300px] overflow-y-auto'>
-                    {allTags.length === 0 ? (
+                    {tagsArray.length === 0 ? (
                       <div className='px-4 py-3 text-sm text-gray-500'>No tags available</div>
                     ) : (
                       <div className='py-2'>
-                        {allTags.map(tag => (
+                        {tagsArray.map(tag => (
                           <label
                             key={tag.id}
                             className='flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer'
@@ -384,7 +354,7 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
                         <>
                           <span className='text-[#717171]'>•</span>
                           <div className='flex gap-2 flex-wrap'>
-                            {blog.tags.map(tag => (
+                            {blog.tags.map((tag: Tag) => (
                               <span
                                 key={tag.id}
                                 className='px-3 py-1 bg-[#EBF3FF] text-[#194B90] rounded-full text-[12px] font-medium'
@@ -404,6 +374,18 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {!loading && !error && filteredBlogs.length > 0 && (
+          <div className='mt-8'>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(totalBlogs / itemsPerPage)}
+              onPageChange={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              totalItems={totalBlogs}
+            />
           </div>
         )}
       </div>

@@ -269,18 +269,14 @@ export const updateAnnouncement = async (req: AuthenticatedRequest, res: Respons
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
-    const { tags, ...otherData } = req.body;
+    const { tagIds, ...otherData } = req.body;
     const updateData: any = { ...otherData };
-    if (tags !== undefined) {
-      if (tags.length === 0) {
+    if (tagIds !== undefined) {
+      if (tagIds.length === 0) {
         updateData.tags = { set: [] };
       } else {
         updateData.tags = {
-          set: [],
-          connectOrCreate: tags.map((tagName: string) => ({
-            where: { name: tagName },
-            create: { name: tagName },
-          })),
+          set: tagIds.map((id: string) => ({ id })),
         };
       }
     }

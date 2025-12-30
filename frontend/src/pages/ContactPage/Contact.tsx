@@ -1,7 +1,8 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
 import Toast from '../../components/Toast';
+import { usePageContent } from '../../hooks/queries/usePageContent';
 import { API_BASE_URL } from '../../config/api';
 
 interface PageContent {
@@ -23,31 +24,11 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
     message: string;
     type: 'success' | 'error' | 'info';
   } | null>(null);
-  const [content, setContent] = useState<PageContent>({});
-  const [pageLoading, setPageLoading] = useState(true);
 
-  useEffect(() => {
-    if (previewContent) {
-      setContent(previewContent);
-      setPageLoading(false);
-      return;
-    }
+  const { data: pageContent, isLoading: contentLoading } = usePageContent('contact');
 
-    const loadContent = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/page-content/contact`);
-        if (!response.ok) throw new Error('Failed to fetch page content');
-        const data = await response.json();
-        setContent(data);
-      } catch (error) {
-        console.error('Error loading page content:', error);
-      } finally {
-        setPageLoading(false);
-      }
-    };
-
-    loadContent();
-  }, [previewContent]);
+  const content = previewContent || pageContent || {};
+  const pageLoading = !previewContent && contentLoading;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

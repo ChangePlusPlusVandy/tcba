@@ -1,8 +1,9 @@
-import { useAuth } from '@clerk/clerk-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
 import Toast from '../../../components/Toast';
-import { API_BASE_URL } from '../../../config/api';
+import Pagination from '../../../components/Pagination';
+import PublicAttachmentList from '../../../components/PublicAttachmentList';
+import { useOrgAlerts } from '../../../hooks/queries/useOrgAlerts';
 
 type AlertPriority = 'URGENT' | 'LOW' | 'MEDIUM';
 
@@ -23,13 +24,11 @@ type Alert = {
 type PriorityFilter = 'ALL' | 'URGENT' | 'MEDIUM' | 'LOW';
 
 const AlertsPage = () => {
-  const { getToken } = useAuth();
-
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
 
   type SortField = 'title' | 'priority' | 'publishedDate';
   type SortDirection = 'asc' | 'desc';
@@ -44,48 +43,15 @@ const AlertsPage = () => {
     type: 'success' | 'error' | 'info';
   } | null>(null);
 
-  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    const token = await getToken();
-    if (!token) throw new Error('Authentication required');
+  const {
+    data: alertsData,
+    isLoading: loading,
+    error: alertsError,
+  } = useOrgAlerts(currentPage, itemsPerPage);
 
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
-    }
-
-    if (response.status === 204) return null;
-    return response.json();
-  };
-
-  const fetchAlerts = async () => {
-    try {
-      setError('');
-      const responseData = await fetchWithAuth(`${API_BASE_URL}/api/alerts?page=1&limit=100`);
-
-      const alerts = responseData.data || responseData;
-      const alertsArray = Array.isArray(alerts) ? alerts : [];
-
-      const publishedAlerts = alertsArray.filter((alert: Alert) => alert.isPublished);
-      setAlerts(publishedAlerts);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch alerts');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAlerts();
-  }, []);
+  const alerts = (alertsData?.data || []) as Alert[];
+  const totalAlerts = alertsData?.total || 0;
+  const error = alertsError ? 'Failed to fetch alerts' : '';
 
   const openDetailModal = (alert: Alert) => {
     setSelectedAlert(alert);
@@ -120,7 +86,7 @@ const AlertsPage = () => {
         bValue = b.title.toLowerCase();
         break;
       case 'priority':
-        const priorityOrder = { URGENT: 3, MEDIUM: 2, LOW: 1 };
+        const priorityOrder: Record<AlertPriority, number> = { URGENT: 3, MEDIUM: 2, LOW: 1 };
         aValue = priorityOrder[a.priority];
         bValue = priorityOrder[b.priority];
         break;
@@ -354,6 +320,16 @@ const AlertsPage = () => {
             </table>
           </div>
         )}
+
+        {!loading && sortedAlerts.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(totalAlerts / itemsPerPage)}
+            onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={totalAlerts}
+          />
+        )}
       </div>
 
       {isDetailModalOpen && selectedAlert && (
@@ -406,22 +382,10 @@ const AlertsPage = () => {
                 </div>
 
                 {selectedAlert.attachmentUrls && selectedAlert.attachmentUrls.length > 0 && (
-                  <div>
-                    <h4 className='font-semibold text-base text-gray-800 mb-2'>Attachments</h4>
-                    <div className='space-y-2'>
-                      {selectedAlert.attachmentUrls.map((url, index) => (
-                        <a
-                          key={index}
-                          href={url}
-                          target='_blank'
-                          rel='noopener noreferrer'
-                          className='block text-sm text-[#194B90] hover:underline'
-                        >
-                          Attachment {index + 1}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
+                  <PublicAttachmentList
+                    attachmentUrls={selectedAlert.attachmentUrls}
+                    requireAuth={true}
+                  />
                 )}
 
                 <div>

@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '@clerk/clerk-react';
 import Toast from '../../../components/Toast';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
-import { API_BASE_URL } from '../../../config/api';
+import { useOrgDirectory } from '../../../hooks/queries/useOrgDirectory';
 
 type Organization = {
   id: string;
@@ -37,9 +36,9 @@ type SortField =
 type SortDirection = 'asc' | 'desc';
 
 const OrganizationsList = () => {
-  const { getToken } = useAuth();
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: organizations = [], isLoading: loading } = useOrgDirectory();
+  const organizationsArray = organizations as Organization[];
+
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState<{
     message: string;
@@ -55,30 +54,6 @@ const OrganizationsList = () => {
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
   const [regionDropdownOpen, setRegionDropdownOpen] = useState(false);
   const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
-
-  const fetchOrganizations = async () => {
-    try {
-      const token = await getToken();
-      const response = await fetch(`${API_BASE_URL}/api/organizations/directory`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch organizations');
-
-      const data = await response.json();
-      setOrganizations(data);
-    } catch (err: any) {
-      setToast({ message: err.message || 'Failed to load organizations', type: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchOrganizations();
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -104,7 +79,7 @@ const OrganizationsList = () => {
     };
   }, [tagDropdownOpen, regionDropdownOpen, typeDropdownOpen]);
 
-  const activeOrgs = organizations.filter(org => org.status === 'ACTIVE');
+  const activeOrgs = organizationsArray.filter(org => org.status === 'ACTIVE');
 
   const filteredOrganizations = activeOrgs.filter(org => {
     const matchesSearch =
@@ -147,9 +122,9 @@ const OrganizationsList = () => {
     }
   };
 
-  const allTags = Array.from(new Set(organizations.flatMap(org => org.tags || [])));
+  const allTags = Array.from(new Set(organizationsArray.flatMap(org => org.tags || [])));
   const uniqueOrgTypes = Array.from(
-    new Set(organizations.map(org => org.organizationType).filter(Boolean))
+    new Set(organizationsArray.map(org => org.organizationType).filter(Boolean))
   ) as string[];
 
   const SortIcon = ({ field }: { field: SortField }) => {

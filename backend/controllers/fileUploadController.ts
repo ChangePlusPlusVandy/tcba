@@ -94,14 +94,8 @@ export const getPresignedUploadUrl = async (req: AuthenticatedRequest, res: Resp
       Key: key,
       ContentType: fileType as string,
       Expires: 600,
-
-      CacheControl: 'public, max-age=31536000, immutable', // 1 year for images
-      Metadata: {
-        'uploaded-by': req.user?.clerkId || 'unknown',
-        'upload-timestamp': Date.now().toString(),
-      },
     };
-    const uploadUrl = await s3.getSignedUrl('putObject', params);
+    const uploadUrl = s3.getSignedUrl('putObject', params);
 
     return res.status(200).json({ uploadUrl, key });
   } catch (error) {

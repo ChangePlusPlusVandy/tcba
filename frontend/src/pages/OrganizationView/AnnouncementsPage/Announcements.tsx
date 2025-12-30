@@ -1,9 +1,17 @@
-import { useAuth } from '@clerk/clerk-react';
-import { useEffect, useState } from 'react';
+import {
+  useEffect,
+  useState,
+  type JSXElementConstructor,
+  type Key,
+  type ReactElement,
+  type ReactNode,
+  type ReactPortal,
+} from 'react';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
 import Toast from '../../../components/Toast';
 import PublicAttachmentList from '../../../components/PublicAttachmentList';
-import { API_BASE_URL } from '../../../config/api';
+import Pagination from '../../../components/Pagination';
+import { useOrgAnnouncements } from '../../../hooks/queries/useOrgAnnouncements';
 
 type Tag = {
   id: string;
@@ -27,14 +35,12 @@ type Announcement = {
 };
 
 const OrgAnnouncementsPage = () => {
-  const { getToken } = useAuth();
-
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [tagsFilter, setTagsFilter] = useState<string[]>([]);
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
 
   type SortField = 'title' | 'publishedDate' | 'tags' | 'createdAt';
   type SortDirection = 'asc' | 'desc';
@@ -49,52 +55,15 @@ const OrgAnnouncementsPage = () => {
     type: 'success' | 'error' | 'info';
   } | null>(null);
 
-  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    const token = await getToken();
-    if (!token) throw new Error('Authentication required');
+  const {
+    data: announcementsData,
+    isLoading: loading,
+    error: announcementsError,
+  } = useOrgAnnouncements(currentPage, itemsPerPage);
 
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
-    }
-
-    if (response.status === 204) return null;
-    return response.json();
-  };
-
-  const fetchAnnouncements = async () => {
-    try {
-      setError('');
-      const responseData = await fetchWithAuth(
-        `${API_BASE_URL}/api/announcements?page=1&limit=100`
-      );
-
-      const announcements = responseData.data || responseData;
-      const announcementsArray = Array.isArray(announcements) ? announcements : [];
-
-      const publishedAnnouncements = announcementsArray.filter(
-        (announcement: Announcement) => announcement.isPublished
-      );
-      setAnnouncements(publishedAnnouncements);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch announcements');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAnnouncements();
-  }, []);
+  const announcements = announcementsData?.data || [];
+  const totalAnnouncements = announcementsData?.total || 0;
+  const error = announcementsError ? 'Failed to fetch announcements' : '';
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -126,14 +95,18 @@ const OrgAnnouncementsPage = () => {
 
   // Compute all tags with counts
   const allTags = Array.from(
-    new Set(announcements.flatMap(announcement => announcement.tags.map(tag => tag.name)))
+    new Set(
+      announcements.flatMap(announcement => announcement.tags.map((tag: { name: any }) => tag.name))
+    )
   );
 
   const filteredAnnouncements = announcements.filter(announcement => {
     const matchesTags =
       tagsFilter.length === 0 ||
       tagsFilter.some(tagName =>
-        announcement.tags?.some(announcementTag => announcementTag.name === tagName)
+        announcement.tags?.some(
+          (announcementTag: { name: string }) => announcementTag.name === tagName
+        )
       );
 
     if (searchQuery) {
@@ -390,14 +363,39 @@ const OrgAnnouncementsPage = () => {
                     <td className='px-6 py-4'>
                       {announcement.tags && announcement.tags.length > 0 ? (
                         <div className='flex flex-wrap gap-1'>
-                          {announcement.tags.map(tag => (
-                            <span
-                              key={tag.id}
-                              className='px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
-                            >
-                              {tag.name}
-                            </span>
-                          ))}
+                          {announcement.tags.map(
+                            (tag: {
+                              id: Key | null | undefined;
+                              name:
+                                | string
+                                | number
+                                | bigint
+                                | boolean
+                                | ReactElement<unknown, string | JSXElementConstructor<any>>
+                                | Iterable<ReactNode>
+                                | ReactPortal
+                                | Promise<
+                                    | string
+                                    | number
+                                    | bigint
+                                    | boolean
+                                    | ReactPortal
+                                    | ReactElement<unknown, string | JSXElementConstructor<any>>
+                                    | Iterable<ReactNode>
+                                    | null
+                                    | undefined
+                                  >
+                                | null
+                                | undefined;
+                            }) => (
+                              <span
+                                key={tag.id}
+                                className='px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
+                              >
+                                {tag.name}
+                              </span>
+                            )
+                          )}
                         </div>
                       ) : (
                         <span className='text-sm text-gray-400'>-</span>
@@ -408,6 +406,16 @@ const OrgAnnouncementsPage = () => {
               </tbody>
             </table>
           </div>
+        )}
+
+        {!loading && filteredAnnouncements.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(totalAnnouncements / itemsPerPage)}
+            onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={totalAnnouncements}
+          />
         )}
       </div>
 

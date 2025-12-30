@@ -478,9 +478,39 @@ export const getEmailHistory = async (req: AuthenticatedRequest, res: Response) 
   }
 };
 
+export const deleteScheduledEmail = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user || req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+
+    const email = await prisma.emailHistory.findUnique({
+      where: { id },
+    });
+
+    if (!email) {
+      return res.status(404).json({ error: 'Email not found' });
+    }
+
+    if (email.status !== 'SCHEDULED') {
+      return res.status(400).json({ error: 'Can only delete scheduled emails' });
+    }
+
+    await prisma.emailHistory.delete({
+      where: { id },
+    });
+
+    return res.status(204).end();
+  } catch (error) {
+    console.error('Error deleting scheduled email:', error);
+    return res.status(500).json({ error: 'Failed to delete scheduled email' });
+  }
+};
+
 export const sendAnnouncementNotification = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // Only admins can send
     if (!req.user || req.user.role !== 'ADMIN') {
       return res.status(403).json({ error: 'Admin access required' });
     }

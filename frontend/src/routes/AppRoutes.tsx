@@ -1,6 +1,8 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from '../components/ProtectedRoute';
 import AdminRoute from '../components/AdminRoute';
+
 import HomePage from '../pages/HomePage/Home';
 import AboutPage from '../pages/AboutPage/About';
 import AnnouncementsPage from '../pages/AnnouncementsPage/Announcements';
@@ -10,37 +12,59 @@ import ForgotPasswordPage from '../pages/ForgotPasswordPage/ForgotPassword';
 import RegisterPage from '../pages/RegisterPage/Register';
 import SignupPage from '../pages/SignupPage/Signup';
 import UnsubscribePage from '../pages/UnsubscribePage/Unsubscribe';
-import DashboardPage from '../pages/OrganizationView/DashboardPage/Dashboard';
-import ProfilePage from '../pages/OrganizationView/ProfilePage/Profile';
-import OrgAlertsPage from '../pages/OrganizationView/AlertsPage/Alerts';
-import OrgSurveysPage from '../pages/OrganizationView/SurveysPage/Surveys';
-import OrgAnnouncementsPage from '../pages/OrganizationView/AnnouncementsPage/Announcements';
-import OrgBlogsPage from '../pages/OrganizationView/BlogsPage/Blogs';
-import OrgSettingsPage from '../pages/OrganizationView/SettingsPage/Settings';
-import OrganizationsList from '../pages/OrganizationView/OrganizationsListPage/OrganizationsList';
-import AdminDashboard from '../pages/Admin/AdminDashboard/AdminDashboard';
-import OrganizationManagement from '../pages/Admin/OrganizationManagementPage/OrganizationManagement';
 import Announcement from '../pages/AnnouncementPage/Announcement';
-import AdminAnnouncements from '../pages/Admin/AnnouncementsPage/Announcements';
-import AdminBlogs from '../pages/Admin/BlogsPage/Blogs';
-import AdminAlerts from '../pages/Admin/AlertsPage/Alerts';
-import AdminSurveys from '../pages/Admin/SurveysPage/Surveys';
-import CreateSurvey from '../pages/Admin/SurveysPage/CreateSurvey';
-import SurveyResponses from '../pages/Admin/SurveyResponsesPage/SurveyResponses';
-import SurveySummary from '../pages/Admin/SurveyResponsesPage/SurveySummary';
 import Blog from '../pages/BlogPage/Blog';
 import BlogsPage from '../pages/BlogsPage/Blogs';
-import HomePageEdit from '../pages/Admin/PageEditPages/HomePage/HomePageEdit';
-import AboutPageEdit from '../pages/Admin/PageEditPages/AboutPage/AboutPageEdit';
-import RegisterPageEdit from '../pages/Admin/PageEditPages/RegisterPage/RegisterPageEdit';
-import ContactPageEdit from '../pages/Admin/PageEditPages/ContactPage/ContactPageEdit';
-import EmailSignupPageEdit from '../pages/Admin/PageEditPages/EmailSignupPage/EmailSignupPageEdit';
-import AnnouncementsPageEdit from '../pages/Admin/PageEditPages/AnnouncementsPage/AnnouncementsPageEdit';
-import BlogsPageEdit from '../pages/Admin/PageEditPages/BlogsPage/BlogsPageEdit';
-import CustomEmail from '../pages/Admin/CustomEmailPage/CustomEmail';
-import AdminMessages from '../pages/Admin/MessagesPage/Messages';
-import OrganizationMessages from '../pages/OrganizationView/MessagesPage/Messages';
-import Tags from '../pages/Admin/TagsPage/Tags';
+
+const DashboardPage = lazy(() => import('../pages/OrganizationView/DashboardPage/Dashboard'));
+const ProfilePage = lazy(() => import('../pages/OrganizationView/ProfilePage/Profile'));
+const OrgAlertsPage = lazy(() => import('../pages/OrganizationView/AlertsPage/Alerts'));
+const OrgSurveysPage = lazy(() => import('../pages/OrganizationView/SurveysPage/Surveys'));
+const OrgAnnouncementsPage = lazy(
+  () => import('../pages/OrganizationView/AnnouncementsPage/Announcements')
+);
+const OrgBlogsPage = lazy(() => import('../pages/OrganizationView/BlogsPage/Blogs'));
+const OrgSettingsPage = lazy(() => import('../pages/OrganizationView/SettingsPage/Settings'));
+const OrganizationsList = lazy(
+  () => import('../pages/OrganizationView/OrganizationsListPage/OrganizationsList')
+);
+const OrganizationMessages = lazy(() => import('../pages/OrganizationView/MessagesPage/Messages'));
+
+const AdminDashboard = lazy(() => import('../pages/Admin/AdminDashboard/AdminDashboard'));
+const OrganizationManagement = lazy(
+  () => import('../pages/Admin/OrganizationManagementPage/OrganizationManagement')
+);
+const AdminAnnouncements = lazy(() => import('../pages/Admin/AnnouncementsPage/Announcements'));
+const AdminBlogs = lazy(() => import('../pages/Admin/BlogsPage/Blogs'));
+const AdminAlerts = lazy(() => import('../pages/Admin/AlertsPage/Alerts'));
+const AdminSurveys = lazy(() => import('../pages/Admin/SurveysPage/Surveys'));
+const CreateSurvey = lazy(() => import('../pages/Admin/SurveysPage/CreateSurvey'));
+const SurveyResponses = lazy(() => import('../pages/Admin/SurveyResponsesPage/SurveyResponses'));
+const SurveySummary = lazy(() => import('../pages/Admin/SurveyResponsesPage/SurveySummary'));
+const HomePageEdit = lazy(() => import('../pages/Admin/PageEditPages/HomePage/HomePageEdit'));
+const AboutPageEdit = lazy(() => import('../pages/Admin/PageEditPages/AboutPage/AboutPageEdit'));
+const RegisterPageEdit = lazy(
+  () => import('../pages/Admin/PageEditPages/RegisterPage/RegisterPageEdit')
+);
+const ContactPageEdit = lazy(
+  () => import('../pages/Admin/PageEditPages/ContactPage/ContactPageEdit')
+);
+const EmailSignupPageEdit = lazy(
+  () => import('../pages/Admin/PageEditPages/EmailSignupPage/EmailSignupPageEdit')
+);
+const AnnouncementsPageEdit = lazy(
+  () => import('../pages/Admin/PageEditPages/AnnouncementsPage/AnnouncementsPageEdit')
+);
+const BlogsPageEdit = lazy(() => import('../pages/Admin/PageEditPages/BlogsPage/BlogsPageEdit'));
+const CustomEmail = lazy(() => import('../pages/Admin/CustomEmailPage/CustomEmail'));
+const AdminMessages = lazy(() => import('../pages/Admin/MessagesPage/Messages'));
+const Tags = lazy(() => import('../pages/Admin/TagsPage/Tags'));
+
+const PageLoader = () => (
+  <div className='flex items-center justify-center min-h-screen'>
+    <div className='text-lg'>Loading...</div>
+  </div>
+);
 
 const AppRoutes = () => {
   return (
@@ -63,7 +87,9 @@ const AppRoutes = () => {
         path='/dashboard'
         element={
           <ProtectedRoute>
-            <DashboardPage />
+            <Suspense fallback={<PageLoader />}>
+              <DashboardPage />
+            </Suspense>
           </ProtectedRoute>
         }
       />
@@ -71,7 +97,9 @@ const AppRoutes = () => {
         path='/profile'
         element={
           <ProtectedRoute>
-            <ProfilePage />
+            <Suspense fallback={<PageLoader />}>
+              <ProfilePage />
+            </Suspense>
           </ProtectedRoute>
         }
       />
@@ -79,7 +107,9 @@ const AppRoutes = () => {
         path='/alerts'
         element={
           <ProtectedRoute>
-            <OrgAlertsPage />
+            <Suspense fallback={<PageLoader />}>
+              <OrgAlertsPage />
+            </Suspense>
           </ProtectedRoute>
         }
       />
@@ -87,7 +117,9 @@ const AppRoutes = () => {
         path='/surveys'
         element={
           <ProtectedRoute>
-            <OrgSurveysPage />
+            <Suspense fallback={<PageLoader />}>
+              <OrgSurveysPage />
+            </Suspense>
           </ProtectedRoute>
         }
       />
@@ -95,7 +127,9 @@ const AppRoutes = () => {
         path='/settings'
         element={
           <ProtectedRoute>
-            <OrgSettingsPage />
+            <Suspense fallback={<PageLoader />}>
+              <OrgSettingsPage />
+            </Suspense>
           </ProtectedRoute>
         }
       />
@@ -103,7 +137,9 @@ const AppRoutes = () => {
         path='/organizations'
         element={
           <ProtectedRoute>
-            <OrganizationsList />
+            <Suspense fallback={<PageLoader />}>
+              <OrganizationsList />
+            </Suspense>
           </ProtectedRoute>
         }
       />
@@ -111,7 +147,9 @@ const AppRoutes = () => {
         path='/org-announcements'
         element={
           <ProtectedRoute>
-            <OrgAnnouncementsPage />
+            <Suspense fallback={<PageLoader />}>
+              <OrgAnnouncementsPage />
+            </Suspense>
           </ProtectedRoute>
         }
       />
@@ -119,7 +157,9 @@ const AppRoutes = () => {
         path='/org-blogs'
         element={
           <ProtectedRoute>
-            <OrgBlogsPage />
+            <Suspense fallback={<PageLoader />}>
+              <OrgBlogsPage />
+            </Suspense>
           </ProtectedRoute>
         }
       />
@@ -127,7 +167,9 @@ const AppRoutes = () => {
         path='/messages'
         element={
           <ProtectedRoute>
-            <OrganizationMessages />
+            <Suspense fallback={<PageLoader />}>
+              <OrganizationMessages />
+            </Suspense>
           </ProtectedRoute>
         }
       />
@@ -135,7 +177,9 @@ const AppRoutes = () => {
         path='/admin'
         element={
           <AdminRoute>
-            <AdminDashboard />
+            <Suspense fallback={<PageLoader />}>
+              <AdminDashboard />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -143,7 +187,9 @@ const AppRoutes = () => {
         path='/admin/dashboard'
         element={
           <AdminRoute>
-            <AdminDashboard />
+            <Suspense fallback={<PageLoader />}>
+              <AdminDashboard />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -151,7 +197,9 @@ const AppRoutes = () => {
         path='/admin/organizations'
         element={
           <AdminRoute>
-            <OrganizationManagement />
+            <Suspense fallback={<PageLoader />}>
+              <OrganizationManagement />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -159,7 +207,9 @@ const AppRoutes = () => {
         path='/admin/announcements'
         element={
           <AdminRoute>
-            <AdminAnnouncements />
+            <Suspense fallback={<PageLoader />}>
+              <AdminAnnouncements />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -167,7 +217,9 @@ const AppRoutes = () => {
         path='/admin/blogs'
         element={
           <AdminRoute>
-            <AdminBlogs />
+            <Suspense fallback={<PageLoader />}>
+              <AdminBlogs />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -175,7 +227,9 @@ const AppRoutes = () => {
         path='/admin/alerts'
         element={
           <AdminRoute>
-            <AdminAlerts />
+            <Suspense fallback={<PageLoader />}>
+              <AdminAlerts />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -183,7 +237,9 @@ const AppRoutes = () => {
         path='/admin/surveys'
         element={
           <AdminRoute>
-            <AdminSurveys />
+            <Suspense fallback={<PageLoader />}>
+              <AdminSurveys />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -191,7 +247,9 @@ const AppRoutes = () => {
         path='/admin/surveys/create'
         element={
           <AdminRoute>
-            <CreateSurvey />
+            <Suspense fallback={<PageLoader />}>
+              <CreateSurvey />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -199,7 +257,9 @@ const AppRoutes = () => {
         path='/admin/surveys/edit/:id'
         element={
           <AdminRoute>
-            <CreateSurvey />
+            <Suspense fallback={<PageLoader />}>
+              <CreateSurvey />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -207,7 +267,9 @@ const AppRoutes = () => {
         path='/admin/surveys/:surveyId/responses'
         element={
           <AdminRoute>
-            <SurveyResponses />
+            <Suspense fallback={<PageLoader />}>
+              <SurveyResponses />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -215,7 +277,9 @@ const AppRoutes = () => {
         path='/admin/surveys/:surveyId/responses/summary'
         element={
           <AdminRoute>
-            <SurveySummary />
+            <Suspense fallback={<PageLoader />}>
+              <SurveySummary />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -223,7 +287,9 @@ const AppRoutes = () => {
         path='/admin/email'
         element={
           <AdminRoute>
-            <CustomEmail />
+            <Suspense fallback={<PageLoader />}>
+              <CustomEmail />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -231,7 +297,9 @@ const AppRoutes = () => {
         path='/admin/tags'
         element={
           <AdminRoute>
-            <Tags />
+            <Suspense fallback={<PageLoader />}>
+              <Tags />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -239,7 +307,9 @@ const AppRoutes = () => {
         path='/admin/messages'
         element={
           <AdminRoute>
-            <AdminMessages />
+            <Suspense fallback={<PageLoader />}>
+              <AdminMessages />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -247,7 +317,9 @@ const AppRoutes = () => {
         path='/admin/page-edit/home'
         element={
           <AdminRoute>
-            <HomePageEdit />
+            <Suspense fallback={<PageLoader />}>
+              <HomePageEdit />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -255,7 +327,9 @@ const AppRoutes = () => {
         path='/admin/page-edit/about'
         element={
           <AdminRoute>
-            <AboutPageEdit />
+            <Suspense fallback={<PageLoader />}>
+              <AboutPageEdit />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -263,7 +337,9 @@ const AppRoutes = () => {
         path='/admin/page-edit/register'
         element={
           <AdminRoute>
-            <RegisterPageEdit />
+            <Suspense fallback={<PageLoader />}>
+              <RegisterPageEdit />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -271,7 +347,9 @@ const AppRoutes = () => {
         path='/admin/page-edit/contact'
         element={
           <AdminRoute>
-            <ContactPageEdit />
+            <Suspense fallback={<PageLoader />}>
+              <ContactPageEdit />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -279,7 +357,9 @@ const AppRoutes = () => {
         path='/admin/page-edit/signup'
         element={
           <AdminRoute>
-            <EmailSignupPageEdit />
+            <Suspense fallback={<PageLoader />}>
+              <EmailSignupPageEdit />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -287,7 +367,9 @@ const AppRoutes = () => {
         path='/admin/page-edit/announcements'
         element={
           <AdminRoute>
-            <AnnouncementsPageEdit />
+            <Suspense fallback={<PageLoader />}>
+              <AnnouncementsPageEdit />
+            </Suspense>
           </AdminRoute>
         }
       />
@@ -295,7 +377,9 @@ const AppRoutes = () => {
         path='/admin/page-edit/blogs'
         element={
           <AdminRoute>
-            <BlogsPageEdit />
+            <Suspense fallback={<PageLoader />}>
+              <BlogsPageEdit />
+            </Suspense>
           </AdminRoute>
         }
       />

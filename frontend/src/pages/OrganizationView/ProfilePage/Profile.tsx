@@ -1,51 +1,22 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
 import Toast from '../../../components/Toast';
-import { API_BASE_URL } from '../../../config/api';
+import { useOrgProfile } from '../../../hooks/queries/useOrgProfile';
+import { useTags } from '../../../hooks/queries/useTags';
+import { useOrgProfileMutations } from '../../../hooks/mutations/useOrgProfileMutations';
 
 interface Tag {
   id: string;
   name: string;
 }
 
-interface Organization {
-  id: string;
-  clerkId: string;
-  name: string;
-  email: string;
-  description: string | null;
-  website: string | null;
-  address: string | null;
-  city: string | null;
-  state: string | null;
-  zipCode: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  primaryContactName: string;
-  primaryContactEmail: string;
-  primaryContactPhone: string;
-  secondaryContactName: string | null;
-  secondaryContactEmail: string | null;
-  region: 'EAST' | 'MIDDLE' | 'WEST' | null;
-  organizationType: string | null;
-  organizationSize: 'SMALL' | 'MEDIUM' | 'LARGE' | 'EXTRA_LARGE' | null;
-  tags: string[];
-  membershipActive: boolean;
-  membershipDate: string | null;
-  membershipRenewalDate: string | null;
-  role: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 const ProfilePage = () => {
-  const { getToken } = useAuth();
-  const [, setOrganization] = useState<Organization | null>(null);
-  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { data: organization, isLoading: loading } = useOrgProfile();
+  const { data: availableTags = [] } = useTags();
+  const { updateProfile } = useOrgProfileMutations();
+
+  const tagsArray = availableTags as Tag[];
+
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info';
@@ -71,66 +42,27 @@ const ProfilePage = () => {
   });
 
   useEffect(() => {
-    fetchOrganizationData();
-    fetchTags();
-  }, []);
-
-  const fetchOrganizationData = async () => {
-    try {
-      setLoading(true);
-      const token = await getToken();
-
-      const response = await fetch(`${API_BASE_URL}/api/organizations/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch organization data');
-      }
-
-      const data = await response.json();
-      setOrganization(data);
-
+    if (organization) {
       setFormData({
-        name: data.name || '',
-        description: data.description || '',
-        website: data.website || '',
-        address: data.address || '',
-        city: data.city || '',
-        state: data.state || '',
-        zipCode: data.zipCode || '',
-        primaryContactName: data.primaryContactName || '',
-        primaryContactEmail: data.primaryContactEmail || '',
-        primaryContactPhone: data.primaryContactPhone || '',
-        secondaryContactName: data.secondaryContactName || '',
-        secondaryContactEmail: data.secondaryContactEmail || '',
-        region: data.region || '',
-        organizationType: data.organizationType || '',
-        organizationSize: data.organizationSize || '',
-        tags: data.tags || [],
+        name: organization.name || '',
+        description: organization.description || '',
+        website: organization.website || '',
+        address: organization.address || '',
+        city: organization.city || '',
+        state: organization.state || '',
+        zipCode: organization.zipCode || '',
+        primaryContactName: organization.primaryContactName || '',
+        primaryContactEmail: organization.primaryContactEmail || '',
+        primaryContactPhone: organization.primaryContactPhone || '',
+        secondaryContactName: organization.secondaryContactName || '',
+        secondaryContactEmail: organization.secondaryContactEmail || '',
+        region: organization.region || '',
+        organizationType: organization.organizationType || '',
+        organizationSize: organization.organizationSize || '',
+        tags: organization.tags || [],
       });
-    } catch (err: any) {
-      console.error('Error fetching organization data:', err);
-      setToast({ message: err.message || 'Failed to load organization data', type: 'error' });
-    } finally {
-      setLoading(false);
     }
-  };
-
-  const fetchTags = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/tags`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch tags');
-      }
-      const data = await response.json();
-      setAvailableTags(data);
-    } catch (err) {
-      console.error('Error fetching tags:', err);
-    }
-  };
+  }, [organization]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -151,32 +83,34 @@ const ProfilePage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      setSaving(true);
-
-      const token = await getToken();
-
-      const response = await fetch(`${API_BASE_URL}/api/organizations/profile`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update organization');
-      }
-
-      const updatedData = await response.json();
-      setOrganization(updatedData);
+      await updateProfile.mutateAsync(formData);
       setToast({ message: 'Organization profile updated successfully!', type: 'success' });
     } catch (err: any) {
       console.error('Error updating organization:', err);
       setToast({ message: err.message || 'Failed to update organization', type: 'error' });
-    } finally {
-      setSaving(false);
+    }
+  };
+
+  const handleReset = () => {
+    if (organization) {
+      setFormData({
+        name: organization.name || '',
+        description: organization.description || '',
+        website: organization.website || '',
+        address: organization.address || '',
+        city: organization.city || '',
+        state: organization.state || '',
+        zipCode: organization.zipCode || '',
+        primaryContactName: organization.primaryContactName || '',
+        primaryContactEmail: organization.primaryContactEmail || '',
+        primaryContactPhone: organization.primaryContactPhone || '',
+        secondaryContactName: organization.secondaryContactName || '',
+        secondaryContactEmail: organization.secondaryContactEmail || '',
+        region: organization.region || '',
+        organizationType: organization.organizationType || '',
+        organizationSize: organization.organizationSize || '',
+        tags: organization.tags || [],
+      });
     }
   };
 
@@ -433,7 +367,7 @@ const ProfilePage = () => {
               </p>
 
               <div className='flex flex-wrap gap-2'>
-                {availableTags.map(tag => (
+                {tagsArray.map(tag => (
                   <button
                     key={tag.id}
                     type='button'
@@ -458,18 +392,18 @@ const ProfilePage = () => {
             <div className='flex justify-end space-x-4'>
               <button
                 type='button'
-                onClick={fetchOrganizationData}
-                disabled={saving}
+                onClick={handleReset}
+                disabled={updateProfile.isPending}
                 className='px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50'
               >
                 Reset
               </button>
               <button
                 type='submit'
-                disabled={saving}
+                disabled={updateProfile.isPending}
                 className='px-6 py-2 bg-[#D54242] text-white rounded-md hover:bg-[#b53a3a] disabled:opacity-50'
               >
-                {saving ? 'Saving...' : 'Save Changes'}
+                {updateProfile.isPending ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </form>

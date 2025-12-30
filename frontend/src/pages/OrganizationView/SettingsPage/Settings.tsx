@@ -1,32 +1,23 @@
 import { useState, useEffect } from 'react';
-import { useAuth, useClerk } from '@clerk/clerk-react';
+import { useClerk } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
 import Toast from '../../../components/Toast';
-import { API_BASE_URL } from '../../../config/api';
-
-interface Organization {
-  id: string;
-  name: string;
-  notifyAnnouncements: boolean;
-  notifySurveys: boolean;
-  notifyBlogs: boolean;
-  visibleInDirectory: boolean;
-}
+import { useOrgProfile } from '../../../hooks/queries/useOrgProfile';
+import { useOrgProfileMutations } from '../../../hooks/mutations/useOrgProfileMutations';
 
 const OrgSettingsPage = () => {
-  const { getToken } = useAuth();
   const { signOut } = useClerk();
   const navigate = useNavigate();
-  const [, setOrganization] = useState<Organization | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+
+  const { data: organization, isLoading: loading } = useOrgProfile();
+  const { updateProfile, deactivateAccount } = useOrgProfileMutations();
+
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info';
   } | null>(null);
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
-  const [deactivating, setDeactivating] = useState(false);
   const [deactivationReason, setDeactivationReason] = useState('');
 
   const [notificationSettings, setNotificationSettings] = useState({
@@ -40,43 +31,18 @@ const OrgSettingsPage = () => {
   });
 
   useEffect(() => {
-    fetchOrganizationSettings();
-  }, []);
-
-  const fetchOrganizationSettings = async () => {
-    try {
-      setLoading(true);
-      const token = await getToken();
-
-      const response = await fetch(`${API_BASE_URL}/api/organizations/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch organization settings');
-      }
-
-      const data = await response.json();
-      setOrganization(data);
-
+    if (organization) {
       setNotificationSettings({
-        notifyAnnouncements: data.notifyAnnouncements ?? true,
-        notifySurveys: data.notifySurveys ?? true,
-        notifyBlogs: data.notifyBlogs ?? true,
+        notifyAnnouncements: organization.notifyAnnouncements ?? true,
+        notifySurveys: organization.notifySurveys ?? true,
+        notifyBlogs: organization.notifyBlogs ?? true,
       });
 
       setPrivacySettings({
-        visibleInDirectory: data.visibleInDirectory ?? true,
+        visibleInDirectory: organization.visibleInDirectory ?? true,
       });
-    } catch (err: any) {
-      console.error('Error fetching organization settings:', err);
-      setToast({ message: err.message || 'Failed to load settings', type: 'error' });
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [organization]);
 
   const handleNotificationChange = (key: keyof typeof notificationSettings) => {
     setNotificationSettings(prev => ({
@@ -94,35 +60,14 @@ const OrgSettingsPage = () => {
 
   const handleSaveSettings = async () => {
     try {
-      setSaving(true);
-
-      const token = await getToken();
-
-      const response = await fetch(`${API_BASE_URL}/api/organizations/profile`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          ...notificationSettings,
-          ...privacySettings,
-        }),
+      await updateProfile.mutateAsync({
+        ...notificationSettings,
+        ...privacySettings,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update settings');
-      }
-
-      const updatedData = await response.json();
-      setOrganization(updatedData);
       setToast({ message: 'Settings updated successfully!', type: 'success' });
     } catch (err: any) {
       console.error('Error updating settings:', err);
       setToast({ message: err.message || 'Failed to update settings', type: 'error' });
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -133,31 +78,12 @@ const OrgSettingsPage = () => {
     }
 
     try {
-      setDeactivating(true);
-      const token = await getToken();
-
-      const response = await fetch(`${API_BASE_URL}/api/organizations/profile/deactivate`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          reason: deactivationReason,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to deactivate account');
-      }
-
+      await deactivateAccount.mutateAsync(deactivationReason);
       await signOut();
       navigate('/');
     } catch (err: any) {
       console.error('Error deactivating account:', err);
       setToast({ message: err.message || 'Failed to deactivate account', type: 'error' });
-      setDeactivating(false);
       setShowDeactivateModal(false);
     }
   };
@@ -240,10 +166,10 @@ const OrgSettingsPage = () => {
             <div className='mt-6 flex justify-end'>
               <button
                 onClick={handleSaveSettings}
-                disabled={saving}
+                disabled={updateProfile.isPending}
                 className='px-6 py-2 bg-[#D54242] text-white rounded-md hover:bg-[#b53a3a] disabled:opacity-50'
               >
-                {saving ? 'Saving...' : 'Save Preferences'}
+                {updateProfile.isPending ? 'Saving...' : 'Save Preferences'}
               </button>
             </div>
           </div>
@@ -275,10 +201,10 @@ const OrgSettingsPage = () => {
             <div className='mt-6 flex justify-end'>
               <button
                 onClick={handleSaveSettings}
-                disabled={saving}
+                disabled={updateProfile.isPending}
                 className='px-6 py-2 bg-[#D54242] text-white rounded-md hover:bg-[#b53a3a] disabled:opacity-50'
               >
-                {saving ? 'Saving...' : 'Save Preferences'}
+                {updateProfile.isPending ? 'Saving...' : 'Save Preferences'}
               </button>
             </div>
           </div>
@@ -329,7 +255,7 @@ const OrgSettingsPage = () => {
                 onChange={e => setDeactivationReason(e.target.value)}
                 placeholder='Enter your reason for deactivating...'
                 rows={4}
-                disabled={deactivating}
+                disabled={deactivateAccount.isPending}
                 className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D54242] disabled:bg-gray-100 disabled:cursor-not-allowed resize-none'
               />
             </div>
@@ -340,17 +266,17 @@ const OrgSettingsPage = () => {
                   setShowDeactivateModal(false);
                   setDeactivationReason('');
                 }}
-                disabled={deactivating}
+                disabled={deactivateAccount.isPending}
                 className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50'
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeactivateAccount}
-                disabled={deactivating}
+                disabled={deactivateAccount.isPending}
                 className='px-4 py-2 bg-[#D54242] text-white rounded-md hover:bg-[#b53a3a] disabled:opacity-50'
               >
-                {deactivating ? 'Deactivating...' : 'Yes, Deactivate My Account'}
+                {deactivateAccount.isPending ? 'Deactivating...' : 'Yes, Deactivate My Account'}
               </button>
             </div>
           </div>

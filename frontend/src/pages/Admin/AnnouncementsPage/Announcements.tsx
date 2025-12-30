@@ -2,12 +2,16 @@ import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import ReactQuill, { Quill } from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
+import axios from 'axios';
 import ImageResize from 'quill-image-resize-module-react';
 import AdminSidebar from '../../../components/AdminSidebar';
 import Toast from '../../../components/Toast';
 import ConfirmModal from '../../../components/ConfirmModal';
 import FileUpload from '../../../components/FileUpload';
 import AttachmentList from '../../../components/AttachmentList';
+import Pagination from '../../../components/Pagination';
+import { useAdminAnnouncements } from '../../../hooks/queries/useAdminAnnouncements';
+import { useAnnouncementMutations } from '../../../hooks/mutations/useAnnouncementMutations';
 import { API_BASE_URL } from '../../../config/api';
 
 Quill.register('modules/imageResize', ImageResize);
@@ -35,14 +39,31 @@ type Tag = {
 
 const AdminAnnouncements = () => {
   const { getToken } = useAuth();
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [filter, setFilter] = useState<'ALL' | 'PUBLISHED' | 'DRAFTS'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [tagsFilter, setTagsFilter] = useState<string[]>([]);
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
+  const {
+    data: announcementsData,
+    isLoading: loading,
+    error: announcementsError,
+  } = useAdminAnnouncements(currentPage, itemsPerPage);
+  const { createAnnouncement, updateAnnouncement, deleteAnnouncement, publishAnnouncement } =
+    useAnnouncementMutations();
+
+  const announcementsResponse = announcementsData || {};
+  const announcements = announcementsResponse.data || announcementsResponse;
+  const announcementsArray: Announcement[] = Array.isArray(announcements) ? announcements : [];
+  const totalAnnouncements =
+    announcementsResponse.total ||
+    announcementsResponse.pagination?.total ||
+    announcementsArray.length;
+  const error = announcementsError ? 'Failed to fetch announcements' : '';
 
   type SortField = 'title' | 'publishedDate' | 'tags' | 'createdAt';
   type SortDirection = 'asc' | 'desc';
@@ -229,118 +250,18 @@ const AdminAnnouncements = () => {
     [handleImageUpload, alignImage]
   );
 
-  const isTokenExpiringSoon = (token: string): boolean => {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const expirationTime = payload.exp * 1000;
-      const now = Date.now();
-      const timeUntilExpiry = expirationTime - now;
-      return timeUntilExpiry < 5 * 60 * 1000;
-    } catch (e) {
-      return true;
-    }
-  };
-
-  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    let token = await getToken();
-
-    if (!token) {
-      throw new Error('No authentication token available');
-    }
-
-    if (isTokenExpiringSoon(token)) {
-      console.log('Token expiring soon, proactively refreshing...');
-      token = await getToken({ skipCache: true });
-
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-    }
-
-    let response = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (response.status === 401) {
-      console.log('Token expired, refreshing and retrying...');
-
-      token = await getToken({ skipCache: true });
-
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-
-      response = await fetch(url, {
-        ...options,
-        headers: {
-          ...options.headers,
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.status === 401) {
-        const errorBody = await response.text();
-        console.error('Auth failed even after token refresh. Response:', errorBody);
-        throw new Error('Authentication failed. Please try logging in again.');
-      }
-    }
-
-    return response;
-  };
-
-  const fetchAnnouncement = async () => {
-    try {
-      setError('');
-      const response = await fetchWithAuth(`${API_BASE_URL}/api/announcements?page=1&limit=1000`);
-
-      if (!response.ok) throw new Error('Failed to fetch announcements');
-
-      const responseData = await response.json();
-      const announcements = responseData.data || responseData;
-      const announcementsArray = Array.isArray(announcements) ? announcements : [];
-
-      console.log('Fetched announcements:', announcementsArray);
-      console.log('Announcements count:', announcementsArray.length);
-      console.log(
-        'Drafts:',
-        announcementsArray.filter((a: any) => !a.isPublished)
-      );
-      console.log(
-        'Published:',
-        announcementsArray.filter((a: any) => a.isPublished)
-      );
-      setAnnouncements(announcementsArray);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load announcements');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchTags = async () => {
     try {
-      setError('');
-      const response = await fetchWithAuth(`${API_BASE_URL}/api/tags`);
-
-      if (!response.ok) throw new Error('Failed to fetch tags');
-
-      const data = await response.json();
-      setTags(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load tags');
-    } finally {
-      setLoading(false);
+      const response = await axios.get(`${API_BASE_URL}/api/tags`);
+      setTags(response.data);
+    } catch (error) {
+      console.error('Error fetching tags:', error);
     }
   };
 
   const handleCreateAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setError('');
 
     try {
       const payload = {
@@ -352,20 +273,7 @@ const AdminAnnouncements = () => {
         attachmentUrls: newAnnouncement.attachmentUrls,
       };
 
-      const response = await fetchWithAuth(`${API_BASE_URL}/api/announcements`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create announcement');
-      }
-
-      await fetchAnnouncement();
+      await createAnnouncement.mutateAsync(payload);
 
       const successMessage = newAnnouncement.isPublished
         ? 'Announcement created successfully'
@@ -383,7 +291,7 @@ const AdminAnnouncements = () => {
       });
     } catch (err: any) {
       console.error('Create announcement error:', err);
-      setError(err.message || 'Failed to create announcement');
+      setToast({ message: err.message || 'Failed to create announcement', type: 'error' });
     } finally {
       setIsSubmitting(false);
     }
@@ -393,7 +301,6 @@ const AdminAnnouncements = () => {
     if (!selectedAnnouncement) return;
 
     setIsSubmitting(true);
-    setError('');
 
     try {
       const payload = {
@@ -403,23 +310,8 @@ const AdminAnnouncements = () => {
         attachmentUrls: editedAnnouncement.attachmentUrls,
       };
 
-      const response = await fetchWithAuth(
-        `${API_BASE_URL}/api/announcements/${selectedAnnouncement.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      await updateAnnouncement.mutateAsync({ id: selectedAnnouncement.id, data: payload });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update announcement');
-      }
-
-      await fetchAnnouncement();
       setToast({ message: 'Announcement updated successfully', type: 'success' });
       setSelectedAnnouncement(null);
       setIsEditMode(false);
@@ -442,16 +334,8 @@ const AdminAnnouncements = () => {
       onConfirm: async () => {
         try {
           setIsDeleting(true);
-          setError('');
-          await Promise.all(
-            selectedAnnouncementIds.map(id =>
-              fetchWithAuth(`${API_BASE_URL}/api/announcements/${id}`, {
-                method: 'DELETE',
-              })
-            )
-          );
+          await Promise.all(selectedAnnouncementIds.map(id => deleteAnnouncement.mutateAsync(id)));
 
-          await fetchAnnouncement();
           setSelectedAnnouncementIds([]);
           setToast({
             message: `${count} announcement${count > 1 ? 's' : ''} deleted successfully`,
@@ -477,7 +361,6 @@ const AdminAnnouncements = () => {
   };
 
   useEffect(() => {
-    fetchAnnouncement();
     fetchTags();
   }, []);
 
@@ -499,55 +382,59 @@ const AdminAnnouncements = () => {
     };
   }, [tagDropdownOpen]);
 
-  const published = announcements.filter(a => a.isPublished === true);
-  const drafts = announcements.filter(a => a.isPublished === false);
+  const published = announcementsArray.filter(a => a.isPublished === true);
+  const drafts = announcementsArray.filter(a => a.isPublished === false);
 
   const filtered =
-    filter === 'PUBLISHED' ? published : filter === 'DRAFTS' ? drafts : announcements;
+    filter === 'PUBLISHED' ? published : filter === 'DRAFTS' ? drafts : announcementsArray;
 
   const searchedAnnouncements = filtered.filter(a => {
     const matchesTags =
       tagsFilter.length === 0 ||
-      tagsFilter.some(tagName => a.tags?.some(announcementTag => announcementTag.name === tagName));
+      tagsFilter.some(tagName =>
+        a.tags?.some((announcementTag: Tag) => announcementTag.name === tagName)
+      );
 
     const q = searchQuery.toLowerCase();
     return (
       (a.title.toLowerCase().includes(q) ||
         a.content.toLowerCase().includes(q) ||
-        a.tags.some(t => t.name.toLowerCase().includes(q))) &&
+        a.tags.some((t: Tag) => t.name.toLowerCase().includes(q))) &&
       matchesTags
     );
   });
 
-  const sortedAnnouncements = [...searchedAnnouncements].sort((a, b) => {
-    let aValue: any;
-    let bValue: any;
+  const sortedAnnouncements = [...searchedAnnouncements].sort(
+    (a: Announcement, b: Announcement) => {
+      let aValue: any;
+      let bValue: any;
 
-    switch (sortField) {
-      case 'title':
-        aValue = a.title.toLowerCase();
-        bValue = b.title.toLowerCase();
-        break;
-      case 'publishedDate':
-        aValue = a.publishedDate ? new Date(a.publishedDate).getTime() : 0;
-        bValue = b.publishedDate ? new Date(b.publishedDate).getTime() : 0;
-        break;
-      case 'tags':
-        aValue = a.tags?.length || 0;
-        bValue = b.tags?.length || 0;
-        break;
-      case 'createdAt':
-        aValue = new Date(a.createdAt).getTime();
-        bValue = new Date(b.createdAt).getTime();
-        break;
-      default:
-        return 0;
+      switch (sortField) {
+        case 'title':
+          aValue = a.title.toLowerCase();
+          bValue = b.title.toLowerCase();
+          break;
+        case 'publishedDate':
+          aValue = a.publishedDate ? new Date(a.publishedDate).getTime() : 0;
+          bValue = b.publishedDate ? new Date(b.publishedDate).getTime() : 0;
+          break;
+        case 'tags':
+          aValue = a.tags?.length || 0;
+          bValue = b.tags?.length || 0;
+          break;
+        case 'createdAt':
+          aValue = new Date(a.createdAt).getTime();
+          bValue = new Date(b.createdAt).getTime();
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
     }
-
-    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-    return 0;
-  });
+  );
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -610,10 +497,10 @@ const AdminAnnouncements = () => {
 
         <div className='flex items-center gap-4 mb-6'>
           <div className='flex gap-2'>
-            {['ALL', 'PUBLISHED', 'DRAFTS'].map(f => (
+            {(['ALL', 'PUBLISHED', 'DRAFTS'] as const).map((f: 'ALL' | 'PUBLISHED' | 'DRAFTS') => (
               <button
                 key={f}
-                onClick={() => setFilter(f as any)}
+                onClick={() => setFilter(f)}
                 className={`px-6 py-2.5 rounded-[10px] font-medium transition ${
                   filter === f
                     ? 'bg-[#EBF3FF] text-[#194B90] border border-[#194B90]'
@@ -654,7 +541,7 @@ const AdminAnnouncements = () => {
                   <div className='px-4 py-3 text-sm text-gray-500'>No tags available</div>
                 ) : (
                   <div className='py-2'>
-                    {tags.map(tag => (
+                    {tags.map((tag: Tag) => (
                       <label
                         key={tag.id}
                         className='flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer'
@@ -763,7 +650,9 @@ const AdminAnnouncements = () => {
                       }
                       onChange={e => {
                         if (e.target.checked) {
-                          setSelectedAnnouncementIds(sortedAnnouncements.map(a => a.id));
+                          setSelectedAnnouncementIds(
+                            sortedAnnouncements.map((a: Announcement) => a.id)
+                          );
                         } else {
                           setSelectedAnnouncementIds([]);
                         }
@@ -805,7 +694,7 @@ const AdminAnnouncements = () => {
               </thead>
 
               <tbody className='divide-y divide-gray-200'>
-                {sortedAnnouncements.map(a => (
+                {sortedAnnouncements.map((a: Announcement) => (
                   <tr key={a.id} className='hover:bg-gray-50'>
                     <td className='px-6 py-4' onClick={e => e.stopPropagation()}>
                       <input
@@ -845,7 +734,7 @@ const AdminAnnouncements = () => {
                     <td className='px-6 py-4'>
                       {a.tags && a.tags.length > 0 ? (
                         <div className='flex flex-wrap gap-1'>
-                          {a.tags.map(t => (
+                          {a.tags.map((t: Tag) => (
                             <span
                               key={t.id}
                               className='px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
@@ -867,6 +756,16 @@ const AdminAnnouncements = () => {
               </tbody>
             </table>
           </div>
+        )}
+
+        {!loading && searchedAnnouncements.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(totalAnnouncements / itemsPerPage)}
+            onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={totalAnnouncements}
+          />
         )}
       </div>
 
@@ -923,7 +822,7 @@ const AdminAnnouncements = () => {
                         <p className='text-sm text-gray-500'>No tags available</p>
                       ) : (
                         <div className='flex flex-wrap gap-2'>
-                          {tags.map(tag => {
+                          {tags.map((tag: Tag) => {
                             const isSelected = editedAnnouncement.tags.includes(tag.id);
                             return (
                               <button
@@ -980,7 +879,7 @@ const AdminAnnouncements = () => {
                         setEditedAnnouncement({
                           title: selectedAnnouncement.title,
                           content: selectedAnnouncement.content,
-                          tags: selectedAnnouncement.tags.map(t => t.id),
+                          tags: selectedAnnouncement.tags.map((t: Tag) => t.id),
                           attachmentUrls: selectedAnnouncement.attachmentUrls,
                         });
                       }}
@@ -1049,7 +948,7 @@ const AdminAnnouncements = () => {
                     <h4 className='font-semibold text-base text-gray-800 mb-2'>Tags</h4>
                     {selectedAnnouncement.tags && selectedAnnouncement.tags.length > 0 ? (
                       <div className='flex flex-wrap gap-2'>
-                        {selectedAnnouncement.tags.map((tag, index) => (
+                        {selectedAnnouncement.tags.map((tag: Tag, index: number) => (
                           <span
                             key={index}
                             className='px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
@@ -1090,17 +989,11 @@ const AdminAnnouncements = () => {
                       <button
                         onClick={async () => {
                           try {
-                            await fetchWithAuth(
-                              `${API_BASE_URL}/api/announcements/${selectedAnnouncement.id}/publish`,
-                              {
-                                method: 'POST',
-                              }
-                            );
+                            await publishAnnouncement.mutateAsync(selectedAnnouncement.id);
                             setToast({
                               message: 'Announcement published successfully',
                               type: 'success',
                             });
-                            await fetchAnnouncement();
                             setSelectedAnnouncement(null);
                           } catch (err: any) {
                             setToast({
@@ -1119,7 +1012,7 @@ const AdminAnnouncements = () => {
                           setEditedAnnouncement({
                             title: selectedAnnouncement.title,
                             content: selectedAnnouncement.content,
-                            tags: selectedAnnouncement.tags.map(t => t.id),
+                            tags: selectedAnnouncement.tags.map((t: Tag) => t.id),
                             attachmentUrls: selectedAnnouncement.attachmentUrls,
                           });
                         }}
@@ -1206,7 +1099,7 @@ const AdminAnnouncements = () => {
                       <p className='text-sm text-gray-500'>No tags available</p>
                     ) : (
                       <div className='flex flex-wrap gap-2'>
-                        {tags.map(tag => {
+                        {tags.map((tag: Tag) => {
                           const isSelected = newAnnouncement.tags.includes(tag.id);
                           return (
                             <button
@@ -1260,16 +1153,15 @@ const AdminAnnouncements = () => {
                     disabled={isSubmitting}
                     onClick={async () => {
                       if (!newAnnouncement.title.trim()) {
-                        setError('Title is required');
+                        setToast({ message: 'Title is required', type: 'error' });
                         return;
                       }
                       if (!newAnnouncement.content.trim()) {
-                        setError('Content is required');
+                        setToast({ message: 'Content is required', type: 'error' });
                         return;
                       }
 
                       setIsSubmitting(true);
-                      setError('');
 
                       try {
                         const payload = {
@@ -1281,23 +1173,8 @@ const AdminAnnouncements = () => {
                           attachmentUrls: newAnnouncement.attachmentUrls,
                         };
 
-                        console.log('Publishing announcement with payload:', payload);
+                        await createAnnouncement.mutateAsync(payload);
 
-                        const response = await fetchWithAuth(`${API_BASE_URL}/api/announcements`, {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify(payload),
-                        });
-
-                        if (!response.ok) {
-                          const errorData = await response.json();
-                          console.error('Server error:', errorData);
-                          throw new Error(errorData.error || 'Failed to create announcement');
-                        }
-
-                        await fetchAnnouncement();
                         setIsCreateModalOpen(false);
                         setNewAnnouncement({
                           title: '',
@@ -1312,8 +1189,6 @@ const AdminAnnouncements = () => {
                           type: 'success',
                         });
                       } catch (err: any) {
-                        console.error('Create announcement error:', err);
-                        setError(err.message || 'Failed to create announcement');
                         setToast({
                           message: err.message || 'Failed to publish announcement',
                           type: 'error',
@@ -1330,18 +1205,16 @@ const AdminAnnouncements = () => {
                     type='button'
                     disabled={isSubmitting}
                     onClick={async () => {
-                      // Validation
                       if (!newAnnouncement.title.trim()) {
-                        setError('Title is required');
+                        setToast({ message: 'Title is required', type: 'error' });
                         return;
                       }
                       if (!newAnnouncement.content.trim()) {
-                        setError('Content is required');
+                        setToast({ message: 'Content is required', type: 'error' });
                         return;
                       }
 
                       setIsSubmitting(true);
-                      setError('');
 
                       try {
                         const payload = {
@@ -1353,23 +1226,8 @@ const AdminAnnouncements = () => {
                           attachmentUrls: newAnnouncement.attachmentUrls,
                         };
 
-                        console.log('Saving to drafts with payload:', payload);
+                        await createAnnouncement.mutateAsync(payload);
 
-                        const response = await fetchWithAuth(`${API_BASE_URL}/api/announcements`, {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify(payload),
-                        });
-
-                        if (!response.ok) {
-                          const errorData = await response.json();
-                          console.error('Server error:', errorData);
-                          throw new Error(errorData.error || 'Failed to create announcement');
-                        }
-
-                        await fetchAnnouncement();
                         setIsCreateModalOpen(false);
                         setNewAnnouncement({
                           title: '',
@@ -1381,8 +1239,6 @@ const AdminAnnouncements = () => {
                         });
                         setToast({ message: 'Announcement saved to drafts!', type: 'success' });
                       } catch (err: any) {
-                        console.error('Create announcement error:', err);
-                        setError(err.message || 'Failed to create announcement');
                         setToast({
                           message: err.message || 'Failed to save announcement',
                           type: 'error',

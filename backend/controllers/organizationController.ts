@@ -735,8 +735,7 @@ export const deactivateAccount = async (req: AuthenticatedRequest, res: Response
       `Organization ${orgToDelete.name} (${orgToDelete.id}) is requesting account deactivation`
     );
 
-    const admins = await prisma.organization.findMany({
-      where: { role: 'ADMIN' },
+    const admins = await prisma.adminUser.findMany({
       select: { email: true },
     });
 

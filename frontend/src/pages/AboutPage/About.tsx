@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import tcbaDDABill from '../../assets/TCBADDABill.jpeg';
 import { FaHandHoldingHeart, FaUserNurse, FaHome } from 'react-icons/fa';
 import { HiUserGroup } from 'react-icons/hi';
 import GoogleMap from '../../components/GoogleMap';
 import S3Image from '../../components/S3Image';
+import { usePageContent, useMapOrganizations } from '../../hooks/queries/usePageContent';
 
 interface PageContent {
   [key: string]: { id: string; value: string; type: string };
@@ -45,7 +46,6 @@ import ucddLogo from '../../assets/logos/ucdd.png';
 import utkcswLogo from '../../assets/logos/utkcsw.png';
 import vumcLogo from '../../assets/logos/vumc.png';
 import wehfLogo from '../../assets/logos/wehf.png';
-import { API_BASE_URL } from '../../config/api';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -66,12 +66,14 @@ interface MapOrganization {
 
 const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
   const [showAllPartners, setShowAllPartners] = useState(false);
-  const [mapOrganizations, setMapOrganizations] = useState<MapOrganization[]>([]);
-  const [isLoadingMap, setIsLoadingMap] = useState(true);
-  const [content, setContent] = useState<PageContent>({});
-  const [loading, setLoading] = useState(true);
 
-  // Logo mapping for organizations
+  const { data: pageContent, isLoading: contentLoading } = usePageContent('about');
+  const { data: mapOrgsData, isLoading: mapOrgsLoading } = useMapOrganizations();
+
+  const content = previewContent || pageContent || {};
+  const loading = !previewContent && contentLoading;
+  const isLoadingMap = mapOrgsLoading;
+
   const logoMap: Record<string, string> = {
     'AARP Tennessee': aarpLogo,
     'AgeWell Middle Tennessee': agewellLogo,
@@ -105,57 +107,13 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
     'West End Home Foundation': wehfLogo,
   };
 
-  // Fetch organizations for map
-  useEffect(() => {
-    const fetchMapOrganizations = async () => {
-      try {
-        console.log('Fetching organizations from:', `${API_BASE_URL}/api/map/organizations`);
-        const response = await fetch(`${API_BASE_URL}/api/map/organizations`);
-        console.log('Response status:', response.status);
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Received organizations:', data.length, data);
-          // Add logos to organizations
-          const orgsWithLogos = data.map((org: MapOrganization) => ({
-            ...org,
-            logo: logoMap[org.name],
-          }));
-          setMapOrganizations(orgsWithLogos);
-        } else {
-          console.error('Failed to fetch organizations:', response.statusText);
-        }
-      } catch (error) {
-        console.error('Error fetching map organizations:', error);
-      } finally {
-        setIsLoadingMap(false);
-      }
-    };
-
-    fetchMapOrganizations();
-  }, []);
-
-  useEffect(() => {
-    if (previewContent) {
-      setContent(previewContent);
-      setLoading(false);
-      return;
-    }
-
-    const loadContent = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/page-content/about`);
-        if (!response.ok) throw new Error('Failed to fetch page content');
-        const data = await response.json();
-        setContent(data);
-      } catch (error) {
-        console.error('Error loading page content:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadContent();
-  }, [previewContent]);
+  const mapOrganizations = useMemo(() => {
+    if (!mapOrgsData) return [];
+    return mapOrgsData.map((org: MapOrganization) => ({
+      ...org,
+      logo: logoMap[org.name],
+    }));
+  }, [mapOrgsData, logoMap]);
 
   if (loading) {
     return (

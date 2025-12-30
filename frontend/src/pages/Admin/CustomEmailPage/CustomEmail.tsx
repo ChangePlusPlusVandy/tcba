@@ -4,7 +4,11 @@ import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import AdminSidebar from '../../../components/AdminSidebar';
 import Toast from '../../../components/Toast';
+import Pagination from '../../../components/Pagination';
 import { API_BASE_URL } from '../../../config/api';
+import { useAdminOrganizations } from '../../../hooks/queries/useAdminOrganizations';
+import { useEmailHistory } from '../../../hooks/queries/useEmailHistory';
+import { useEmailMutations } from '../../../hooks/mutations/useEmailMutations';
 
 type Organization = {
   id: string;
@@ -44,18 +48,39 @@ const CustomEmail = () => {
   const [manuallyExcludedOrgs, setManuallyExcludedOrgs] = useState<string[]>([]);
   const [orgSearchQuery, setOrgSearchQuery] = useState<string>('');
 
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [availableTags, setAvailableTags] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
+  const [expandedEmailId, setExpandedEmailId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const [emailHistory, setEmailHistory] = useState<EmailHistoryItem[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
-  const [expandedEmailId, setExpandedEmailId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
 
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduledDateTime, setScheduledDateTime] = useState('');
+  const [editingEmailId, setEditingEmailId] = useState<string | null>(null);
+
+  const { data: organizationsData, isLoading: loading } = useAdminOrganizations(1, 1000);
+  const { data: emailHistoryData, isLoading: historyLoading } = useEmailHistory(
+    currentPage,
+    itemsPerPage
+  );
+  const { sendEmail, deleteScheduledEmail } = useEmailMutations();
+
+  const organizationsResponse = organizationsData || {};
+  const organizations = organizationsResponse.data || organizationsResponse;
+  const organizationsArray: Organization[] = Array.isArray(organizations) ? organizations : [];
+
+  const emailHistory = (emailHistoryData?.data || []) as EmailHistoryItem[];
+  const totalEmails = emailHistoryData?.total || 0;
+
+  const availableTags = Array.from(
+    new Set(
+      organizationsArray.flatMap((org: Organization) =>
+        org.tags && Array.isArray(org.tags)
+          ? org.tags.filter((tag): tag is string => typeof tag === 'string')
+          : []
+      )
+    )
+  ).sort();
 
   const handleImageUpload = () => {
     const input = document.createElement('input');
@@ -147,81 +172,8 @@ const CustomEmail = () => {
   const formats = ['header', 'bold', 'italic', 'underline', 'list', 'link', 'image'];
 
   useEffect(() => {
-    fetchOrganizations();
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === 'history') {
-      fetchEmailHistory();
-    }
-  }, [activeTab]);
-
-  useEffect(() => {
     setManuallyExcludedOrgs([]);
   }, [selectedTags, selectedRegion, selectedOrgSize]);
-
-  const fetchOrganizations = async () => {
-    try {
-      setLoading(true);
-      const token = await getToken();
-      const response = await fetch(`${API_BASE_URL}/api/organizations`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch organizations');
-      }
-
-      const data = await response.json();
-      console.log('Fetched organizations:', data);
-      setOrganizations(data);
-
-      const tags = new Set<string>();
-      data.forEach((org: Organization) => {
-        console.log('Org:', org.name, 'Tags:', org.tags);
-        if (org.tags && Array.isArray(org.tags)) {
-          org.tags.forEach(tag => {
-            if (tag && typeof tag === 'string') {
-              tags.add(tag);
-            }
-          });
-        }
-      });
-      console.log('Available tags:', Array.from(tags));
-      setAvailableTags(Array.from(tags).sort());
-    } catch (err: any) {
-      console.error('Error fetching organizations:', err);
-      setToast({ message: err.message || 'Failed to load organizations', type: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchEmailHistory = async () => {
-    try {
-      setHistoryLoading(true);
-      const token = await getToken();
-      const response = await fetch(`${API_BASE_URL}/api/email-notifications/history`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch email history');
-      }
-
-      const data = await response.json();
-      setEmailHistory(data);
-    } catch (err: any) {
-      console.error('Error fetching email history:', err);
-      setToast({ message: err.message || 'Failed to load email history', type: 'error' });
-    } finally {
-      setHistoryLoading(false);
-    }
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('en-US', {
@@ -234,7 +186,7 @@ const CustomEmail = () => {
   };
 
   const getFilteredOrganizations = () => {
-    let filtered = organizations;
+    let filtered = organizationsArray;
 
     if (selectedTags.length > 0) {
       filtered = filtered.filter(
@@ -266,7 +218,7 @@ const CustomEmail = () => {
   };
 
   const getBaseFilteredOrganizations = () => {
-    let filtered = organizations;
+    let filtered = organizationsArray;
 
     if (selectedTags.length > 0) {
       filtered = filtered.filter(
@@ -283,6 +235,45 @@ const CustomEmail = () => {
     }
 
     return filtered;
+  };
+
+  const handleEditEmail = (email: EmailHistoryItem) => {
+    setEmailTitle(email.subject);
+    setEmailBody(email.body);
+    setIsScheduled(true);
+    setScheduledDateTime(
+      email.scheduledFor ? new Date(email.scheduledFor).toISOString().slice(0, 16) : ''
+    );
+
+    const recipientEmailSet = new Set(email.recipientEmails.map(e => e.toLowerCase().trim()));
+
+    const excludedOrgIds = organizationsArray
+      .filter(org => {
+        const orgEmail = org.email?.toLowerCase().trim();
+        return orgEmail && !recipientEmailSet.has(orgEmail);
+      })
+      .map(org => org.id);
+
+    console.log('Total orgs:', organizationsArray.length);
+    console.log('Recipient emails:', email.recipientEmails);
+    console.log('Excluded org count:', excludedOrgIds.length);
+    console.log(
+      'Should select:',
+      organizationsArray.length - excludedOrgIds.length,
+      'organizations'
+    );
+
+    setSelectedTags([]);
+    setSelectedRegion('');
+    setSelectedOrgSize('');
+    setOrgSearchQuery('');
+
+    setEditingEmailId(email.id);
+    setActiveTab('compose');
+
+    setTimeout(() => {
+      setManuallyExcludedOrgs(excludedOrgIds);
+    }, 0);
   };
 
   const handleSend = async () => {
@@ -311,10 +302,11 @@ const CustomEmail = () => {
     }
 
     try {
-      setSending(true);
       setToast(null);
 
-      const token = await getToken();
+      if (editingEmailId) {
+        await deleteScheduledEmail.mutateAsync(editingEmailId);
+      }
 
       const requestData: any = {
         subject: emailTitle,
@@ -326,22 +318,15 @@ const CustomEmail = () => {
         requestData.scheduledFor = new Date(scheduledDateTime).toISOString();
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/email-notifications/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestData),
-      });
+      await sendEmail.mutateAsync(requestData);
 
-      if (!response.ok) {
-        throw new Error(isScheduled ? 'Failed to schedule email' : 'Failed to send email');
-      }
-
-      const successMessage = isScheduled
-        ? `Email scheduled for ${new Date(scheduledDateTime).toLocaleString()} to ${recipients.length} organization(s)!`
-        : `Email sent successfully to ${recipients.length} organization(s)!`;
+      const successMessage = editingEmailId
+        ? isScheduled
+          ? `Scheduled email updated for ${new Date(scheduledDateTime).toLocaleString()} to ${recipients.length} organization(s)!`
+          : `Email sent successfully to ${recipients.length} organization(s)!`
+        : isScheduled
+          ? `Email scheduled for ${new Date(scheduledDateTime).toLocaleString()} to ${recipients.length} organization(s)!`
+          : `Email sent successfully to ${recipients.length} organization(s)!`;
 
       setToast({
         message: successMessage,
@@ -357,11 +342,10 @@ const CustomEmail = () => {
       setOrgSearchQuery('');
       setIsScheduled(false);
       setScheduledDateTime('');
+      setEditingEmailId(null);
     } catch (err: any) {
       console.error('Error sending email:', err);
       setToast({ message: err.message || 'Failed to send email', type: 'error' });
-    } finally {
-      setSending(false);
     }
   };
 
@@ -392,7 +376,6 @@ const CustomEmail = () => {
             <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
           )}
 
-          {/* Tabs */}
           <div className='flex border-b border-gray-200 mb-6'>
             <button
               onClick={() => setActiveTab('compose')}
@@ -418,6 +401,30 @@ const CustomEmail = () => {
 
           {activeTab === 'compose' && (
             <>
+              {editingEmailId && (
+                <div className='bg-red-50 border border-red-200 rounded-lg p-4 mb-6'>
+                  <div className='flex items-center gap-2'>
+                    <svg
+                      className='w-5 h-5 text-[#D54242]'
+                      fill='none'
+                      stroke='currentColor'
+                      viewBox='0 0 24 24'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+                      />
+                    </svg>
+                    <span className='text-sm font-semibold text-[#D54242]'>
+                      Editing scheduled email - modify recipients, content, or schedule time as
+                      needed
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <div className='bg-white rounded-lg shadow-md p-6 mb-6'>
                 <h2 className='text-xl font-semibold text-gray-800 mb-4'>Select Recipients</h2>
 
@@ -580,7 +587,6 @@ const CustomEmail = () => {
                   </div>
                 </div>
 
-                {/* Schedule Email Section */}
                 <div className='border-t border-gray-200 pt-6'>
                   <div className='flex items-center gap-3 mb-4'>
                     <label className='relative inline-flex items-center cursor-pointer'>
@@ -631,9 +637,10 @@ const CustomEmail = () => {
                     setOrgSearchQuery('');
                     setIsScheduled(false);
                     setScheduledDateTime('');
+                    setEditingEmailId(null);
                     setToast(null);
                   }}
-                  disabled={sending}
+                  disabled={sendEmail.isPending || deleteScheduledEmail.isPending}
                   className='px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50'
                 >
                   Clear
@@ -641,25 +648,29 @@ const CustomEmail = () => {
                 <button
                   onClick={handleSend}
                   disabled={
-                    sending ||
+                    sendEmail.isPending ||
+                    deleteScheduledEmail.isPending ||
                     filteredOrganizations.length === 0 ||
                     (isScheduled && !scheduledDateTime)
                   }
                   className='px-6 py-2 bg-[#D54242] text-white rounded-md hover:bg-[#b53a3a] disabled:opacity-50 disabled:cursor-not-allowed'
                 >
-                  {sending
-                    ? isScheduled
-                      ? 'Scheduling...'
-                      : 'Sending...'
-                    : isScheduled
-                      ? `Schedule Email (${filteredOrganizations.length})`
-                      : `Send Email (${filteredOrganizations.length})`}
+                  {sendEmail.isPending || deleteScheduledEmail.isPending
+                    ? editingEmailId
+                      ? 'Updating...'
+                      : isScheduled
+                        ? 'Scheduling...'
+                        : 'Sending...'
+                    : editingEmailId
+                      ? `Update Scheduled Email (${filteredOrganizations.length})`
+                      : isScheduled
+                        ? `Schedule Email (${filteredOrganizations.length})`
+                        : `Send Email (${filteredOrganizations.length})`}
                 </button>
               </div>
             </>
           )}
 
-          {/* Past Emails Tab */}
           {activeTab === 'history' && (
             <div className='bg-white rounded-lg shadow-md'>
               {historyLoading ? (
@@ -680,14 +691,16 @@ const CustomEmail = () => {
                           setExpandedEmailId(expandedEmailId === email.id ? null : email.id)
                         }
                       >
-                        <div className='flex items-center justify-between'>
+                        <div className='flex items-center justify-between gap-4'>
                           <div className='flex-1'>
                             <h3 className='text-lg font-semibold text-gray-800'>{email.subject}</h3>
                             <div className='flex items-center gap-4 mt-1 text-sm text-gray-500'>
                               <span>
                                 {email.sentAt
                                   ? formatDate(email.sentAt)
-                                  : formatDate(email.createdAt)}
+                                  : email.scheduledFor
+                                    ? `Scheduled: ${formatDate(email.scheduledFor)}`
+                                    : formatDate(email.createdAt)}
                               </span>
                               <span className='flex items-center gap-1'>
                                 <svg
@@ -719,8 +732,50 @@ const CustomEmail = () => {
                               </span>
                             </div>
                           </div>
+
+                          {email.status === 'SCHEDULED' && (
+                            <div className='flex items-center gap-2 shrink-0'>
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  handleEditEmail(email);
+                                }}
+                                className='px-4 py-2 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-lg font-medium transition'
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={async e => {
+                                  e.stopPropagation();
+                                  if (
+                                    window.confirm(
+                                      'Are you sure you want to cancel this scheduled email?'
+                                    )
+                                  ) {
+                                    try {
+                                      await deleteScheduledEmail.mutateAsync(email.id);
+                                      setToast({
+                                        message: 'Scheduled email cancelled successfully',
+                                        type: 'success',
+                                      });
+                                    } catch (err: any) {
+                                      setToast({
+                                        message: err.message || 'Failed to cancel scheduled email',
+                                        type: 'error',
+                                      });
+                                    }
+                                  }
+                                }}
+                                disabled={deleteScheduledEmail.isPending}
+                                className='px-4 py-2 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-lg font-medium transition disabled:opacity-50'
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+
                           <svg
-                            className={`w-5 h-5 text-gray-400 transition-transform ${
+                            className={`w-5 h-5 text-gray-400 transition-transform shrink-0 ${
                               expandedEmailId === email.id ? 'transform rotate-180' : ''
                             }`}
                             fill='none'
@@ -754,14 +809,16 @@ const CustomEmail = () => {
                             </h4>
                             <div className='bg-gray-50 p-4 rounded-md max-h-48 overflow-y-auto'>
                               <div className='flex flex-wrap gap-2'>
-                                {email.recipientEmails.map((recipientEmail, index) => (
-                                  <span
-                                    key={index}
-                                    className='px-2 py-1 bg-white border border-gray-200 rounded text-sm text-gray-600'
-                                  >
-                                    {recipientEmail}
-                                  </span>
-                                ))}
+                                {email.recipientEmails.map(
+                                  (recipientEmail: string, index: number) => (
+                                    <span
+                                      key={index}
+                                      className='px-2 py-1 bg-white border border-gray-200 rounded text-sm text-gray-600'
+                                    >
+                                      {recipientEmail}
+                                    </span>
+                                  )
+                                )}
                               </div>
                             </div>
                           </div>
@@ -769,6 +826,18 @@ const CustomEmail = () => {
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+
+              {!historyLoading && emailHistory.length > 0 && (
+                <div className='p-4 border-t border-gray-200'>
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={Math.ceil(totalEmails / itemsPerPage)}
+                    onPageChange={setCurrentPage}
+                    itemsPerPage={itemsPerPage}
+                    totalItems={totalEmails}
+                  />
                 </div>
               )}
             </div>
