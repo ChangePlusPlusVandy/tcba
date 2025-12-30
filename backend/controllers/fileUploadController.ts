@@ -150,10 +150,11 @@ export const getPublicImageUrl = async (req: Request, res: Response) => {
     }
 
     const bucketName = process.env.AWS_S3_BUCKET_NAME;
+    const normalizedKey = fileKey.startsWith('/') ? fileKey.slice(1) : fileKey;
 
     const params = {
       Bucket: bucketName,
-      Key: fileKey,
+      Key: normalizedKey,
       Expires: 86400, // 24 hours (longer for public images)
       ResponseCacheControl: 'public, max-age=31536000, immutable', // Tell browser to cache for 1 year
     };
