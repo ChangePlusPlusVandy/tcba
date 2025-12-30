@@ -5,6 +5,7 @@ import { s3 } from '../config/aws-s3.js';
 import { prisma } from '../config/prisma.js';
 
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
+const normalizeS3Key = (key: string) => key.startsWith('/') ? key.slice(1) : key;
 
 // Get presigned URL for uploading file to S3
 // Validate fileName, generate unique key, create PutObjectCommand, use getSignedUrl for upload
@@ -121,7 +122,7 @@ export const getPresignedDownloadUrl = async (req: AuthenticatedRequest, res: Re
     // defines parameters for presigned URL generation
     const params = {
       Bucket: bucketName,
-      Key: fileKey,
+      Key: normalizeS3Key(fileKey),
       Expires: 600,
     };
 
@@ -150,11 +151,10 @@ export const getPublicImageUrl = async (req: Request, res: Response) => {
     }
 
     const bucketName = process.env.AWS_S3_BUCKET_NAME;
-    const normalizedKey = fileKey.startsWith('/') ? fileKey.slice(1) : fileKey;
 
     const params = {
       Bucket: bucketName,
-      Key: normalizedKey,
+      Key: normalizeS3Key(fileKey),
       Expires: 86400, // 24 hours (longer for public images)
       ResponseCacheControl: 'public, max-age=31536000, immutable', // Tell browser to cache for 1 year
     };
@@ -185,7 +185,7 @@ export const getAuthenticatedDownloadUrl = async (req: AuthenticatedRequest, res
 
     const params = {
       Bucket: bucketName,
-      Key: fileKey,
+      Key: normalizeS3Key(fileKey),
       Expires: 600,
     };
 
@@ -209,7 +209,7 @@ export const getPublicDownloadUrl = async (req: Request, res: Response) => {
 
     const params = {
       Bucket: bucketName,
-      Key: fileKey,
+      Key: normalizeS3Key(fileKey),
       Expires: 600,
     };
 
@@ -261,7 +261,7 @@ export const deleteDocument = async (req: AuthenticatedRequest, res: Response) =
       await s3
         .deleteObject({
           Bucket: bucketName,
-          Key: fileKey,
+          Key: normalizeS3Key(fileKey),
         })
         .promise();
       await prisma.alert.update({
@@ -284,7 +284,7 @@ export const deleteDocument = async (req: AuthenticatedRequest, res: Response) =
       await s3
         .deleteObject({
           Bucket: bucketName,
-          Key: fileKey,
+          Key: normalizeS3Key(fileKey),
         })
         .promise();
       await prisma.announcements.update({
@@ -307,7 +307,7 @@ export const deleteDocument = async (req: AuthenticatedRequest, res: Response) =
       await s3
         .deleteObject({
           Bucket: bucketName,
-          Key: fileKey,
+          Key: normalizeS3Key(fileKey),
         })
         .promise();
       await prisma.blog.update({
