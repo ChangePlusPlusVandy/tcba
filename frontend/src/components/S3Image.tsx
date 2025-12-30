@@ -21,7 +21,7 @@ const S3Image = ({ src, alt, className, fallbackSrc }: S3ImageProps) => {
         return;
       }
 
-      if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:')) {
+      if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:') || src.startsWith('/')) {
         setImageSrc(src);
         setIsLoading(false);
         return;
