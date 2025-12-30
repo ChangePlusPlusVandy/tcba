@@ -4,9 +4,9 @@ import { IoFunnelOutline } from 'react-icons/io5';
 import 'react-quill-new/dist/quill.snow.css';
 import S3Image from '../../components/S3Image';
 import Pagination from '../../components/Pagination';
-import { API_BASE_URL } from '../../config/api';
 import { useAnnouncements } from '../../hooks/queries/useAnnouncements';
 import { useTags } from '../../hooks/queries/useTags';
+import { usePageContent } from '../../hooks/queries/usePageContent';
 
 type Announcement = {
   id: string;
@@ -44,14 +44,13 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
   const { data: announcementsData, isLoading: announcementsLoading, error: announcementsError } = useAnnouncements(currentPage, itemsPerPage);
   const { data: tags = [] } = useTags();
   const tagsArray = tags as Tag[];
+  const { data: pageContentData, isLoading: pageContentLoading } = usePageContent('announcements');
 
   const [timeFilter, setTimeFilter] = useState<'24h' | 'week' | 'month' | 'year' | null>(null);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const filterRef = useRef<HTMLDivElement>(null);
-  const [content, setContent] = useState<PageContent>({});
-  const [pageLoading, setPageLoading] = useState(true);
 
   const navigate = useNavigate();
 
@@ -65,26 +64,8 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
   const loading = announcementsLoading;
   const error = announcementsError ? 'An unexpected error occurred' : null;
 
-  useEffect(() => {
-    if (previewContent) {
-      setContent(previewContent);
-      setPageLoading(false);
-    } else {
-      const loadContent = async () => {
-        try {
-          const response = await fetch(`${API_BASE_URL}/api/page-content/announcements`);
-          if (!response.ok) throw new Error('Failed to fetch page content');
-          const data = await response.json();
-          setContent(data);
-        } catch (error) {
-          console.error('Error loading page content:', error);
-        } finally {
-          setPageLoading(false);
-        }
-      };
-      loadContent();
-    }
-  }, [previewContent]);
+  const content = previewContent || pageContentData || {};
+  const pageLoading = !previewContent && pageContentLoading;
 
 
   useEffect(() => {

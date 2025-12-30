@@ -4,9 +4,9 @@ import { IoFunnelOutline } from 'react-icons/io5';
 import 'react-quill-new/dist/quill.snow.css';
 import S3Image from '../../components/S3Image';
 import Pagination from '../../components/Pagination';
-import { API_BASE_URL } from '../../config/api';
 import { useBlogs } from '../../hooks/queries/useBlogs';
 import { useBlogTags } from '../../hooks/queries/useTags';
+import { usePageContent } from '../../hooks/queries/usePageContent';
 
 type Tag = {
   id: string;
@@ -44,13 +44,12 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
   const { data: blogsData, isLoading: blogsLoading, error: blogsError } = useBlogs(currentPage, itemsPerPage);
   const { data: allTags = [] } = useBlogTags();
   const tagsArray = allTags as Tag[];
+  const { data: pageContentData, isLoading: pageContentLoading } = usePageContent('blogs');
 
   const [timeFilter, setTimeFilter] = useState<'24h' | 'week' | 'month' | 'year' | null>(null);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [content, setContent] = useState<PageContent>({});
-  const [pageLoading, setPageLoading] = useState(true);
 
   const filterRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -65,26 +64,8 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
   const loading = blogsLoading;
   const error = blogsError ? 'An unexpected error occurred' : null;
 
-  useEffect(() => {
-    if (previewContent) {
-      setContent(previewContent);
-      setPageLoading(false);
-    } else {
-      const loadContent = async () => {
-        try {
-          const response = await fetch(`${API_BASE_URL}/api/page-content/blogs`);
-          if (!response.ok) throw new Error('Failed to fetch page content');
-          const data = await response.json();
-          setContent(data);
-        } catch (error) {
-          console.error('Error loading page content:', error);
-        } finally {
-          setPageLoading(false);
-        }
-      };
-      loadContent();
-    }
-  }, [previewContent]);
+  const content = previewContent || pageContentData || {};
+  const pageLoading = !previewContent && pageContentLoading;
 
 
   useEffect(() => {
