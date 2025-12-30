@@ -86,6 +86,7 @@ export const getAllBlogs = async (req: AuthenticatedRequest, res: Response) => {
 
       if (cachedData) {
         console.log('Returning cached blogs');
+        res.set('Cache-Control', 'public, max-age=0, s-maxage=300, must-revalidate');
         return res.json(cachedData);
       }
     }
@@ -116,6 +117,7 @@ export const getAllBlogs = async (req: AuthenticatedRequest, res: Response) => {
       await CacheService.set(cacheKey, response, CacheTTL.BLOGS_LIST);
     }
 
+    res.set('Cache-Control', 'public, max-age=0, s-maxage=300, must-revalidate');
     res.json(response);
   } catch (error) {
     console.error('Error fetching blogs:', error);

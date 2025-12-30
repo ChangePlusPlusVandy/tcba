@@ -20,12 +20,15 @@ import mapRoutes from './routes/mapRoutes.js';
 import { prisma } from './config/prisma.js';
 import { clerkClient, clerkMiddleware } from '@clerk/express';
 import { connectRedis } from './config/redis.js';
+import { warmCache } from './utils/cacheWarmer.js';
 
 const app = express();
 
-connectRedis().catch(err => {
-  console.error('Failed to connect to Redis on startup:', err);
-});
+connectRedis()
+  .then(() => warmCache())
+  .catch(err => {
+    console.error('Failed to connect to Redis on startup:', err);
+  });
 
 const allowedOrigins = [
   'http://localhost:5173',

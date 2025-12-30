@@ -57,6 +57,7 @@ export const getAnnouncements = async (req: AuthenticatedRequest, res: Response)
 
     if (cachedData) {
       console.log(`Returning cached announcements (admin: ${isAuthenticatedAdmin})`);
+      res.set('Cache-Control', 'public, max-age=0, s-maxage=300, must-revalidate');
       return res.status(200).json(cachedData);
     }
 
@@ -87,6 +88,7 @@ export const getAnnouncements = async (req: AuthenticatedRequest, res: Response)
     await CacheService.set(cacheKey, response, CacheTTL.ANNOUNCEMENTS_LIST);
 
     console.log(`Returning ${announcements.length} announcements (admin: ${isAuthenticatedAdmin})`);
+    res.set('Cache-Control', 'public, max-age=0, s-maxage=300, must-revalidate');
     res.status(200).json(response);
   } catch (error) {
     console.error('Error fetching announcements:', error);
