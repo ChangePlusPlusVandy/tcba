@@ -22,6 +22,7 @@ model Announcements {
   AnnouncementTag  AnnouncementTag[]
   tags             Tag[]             @relation("AnnouncementsToTag")
 
+  @@index([isPublished, createdAt(sort: Desc)])
   @@map("announcements")
 }
 
@@ -186,6 +187,7 @@ model Blog {
   BlogTag          BlogTag[]
   tags             Tag[]     @relation("BlogsToTag")
 
+  @@index([isPublished, publishedDate(sort: Desc)])
   @@map("blogs")
 }
 
@@ -228,6 +230,7 @@ model PageContent {
   updatedAt    DateTime @updatedAt
 
   @@unique([page, section, contentKey])
+  @@index([page])
   @@map("page_content")
 }
 
