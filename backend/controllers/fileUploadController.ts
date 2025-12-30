@@ -82,12 +82,12 @@ export const getPresignedUploadUrl = async (req: AuthenticatedRequest, res: Resp
         return res.status(400).json({ error: 'Invalid folder specified' });
       }
       if (resourceId && typeof resourceId === 'string') {
-        key = `${folder}/${resourceId}/${Date.now()}-${sanitizedFileName}`;
+        key = `${folder}/${resourceId}/${sanitizedFileName}`;
       } else {
-        key = `${folder}/${Date.now()}-${sanitizedFileName}`;
+        key = `${folder}/${sanitizedFileName}`;
       }
     } else {
-      key = `uploads/${Date.now()}-${sanitizedFileName}`;
+      key = `uploads/${sanitizedFileName}`;
     }
 
     const params = {
