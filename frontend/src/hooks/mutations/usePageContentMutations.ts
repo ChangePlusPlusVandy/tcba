@@ -27,6 +27,7 @@ export const usePageContentMutations = (pageName: string) => {
 
       return response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['page-content', pageName] });
     },

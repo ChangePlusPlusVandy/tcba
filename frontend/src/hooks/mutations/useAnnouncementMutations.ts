@@ -63,8 +63,9 @@ export const useAnnouncementMutations = () => {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || 'Failed to delete announcement');
       }
-      return response.json();
+      return response.status === 204 ? { success: true } : response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['announcements'] });
     },

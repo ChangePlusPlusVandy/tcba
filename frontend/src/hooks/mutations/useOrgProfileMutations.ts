@@ -23,6 +23,7 @@ export const useOrgProfileMutations = () => {
       }
       return response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organization', 'profile'] });
     },
@@ -45,6 +46,7 @@ export const useOrgProfileMutations = () => {
       }
       return response.json();
     },
+    retry: false,
   });
 
   return { updateProfile, deactivateAccount };

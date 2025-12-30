@@ -18,9 +18,9 @@ export const useSurveyMutations = () => {
       if (!response.ok) {
         throw new Error('Failed to delete survey');
       }
-      if (response.status === 204) return null;
-      return response.json();
+      return response.status === 204 ? { success: true } : response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['surveys'] });
     },
@@ -30,7 +30,7 @@ export const useSurveyMutations = () => {
     mutationFn: async (id: string) => {
       const token = await getToken();
       const response = await fetch(`${API_BASE_URL}/api/surveys/${id}/publish`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -42,6 +42,7 @@ export const useSurveyMutations = () => {
       }
       return response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['surveys'] });
     },

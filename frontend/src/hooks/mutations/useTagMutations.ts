@@ -23,6 +23,7 @@ export const useTagMutations = () => {
       }
       return response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tags'] });
     },
@@ -40,8 +41,9 @@ export const useTagMutations = () => {
       if (!response.ok) {
         throw new Error('Failed to delete tag');
       }
-      return response.json();
+      return response.status === 204 ? { success: true } : response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tags'] });
     },

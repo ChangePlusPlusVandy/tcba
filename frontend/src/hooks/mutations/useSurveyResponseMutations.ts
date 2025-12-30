@@ -28,6 +28,7 @@ export const useSurveyResponseMutations = () => {
       if (response.status === 204) return null;
       return response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['survey-responses'] });
       queryClient.invalidateQueries({ queryKey: ['surveys', 'active'] });

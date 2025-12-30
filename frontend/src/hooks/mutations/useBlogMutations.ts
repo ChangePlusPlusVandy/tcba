@@ -23,6 +23,7 @@ export const useBlogMutations = () => {
       }
       return response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blogs'] });
     },
@@ -45,6 +46,7 @@ export const useBlogMutations = () => {
       }
       return response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blogs'] });
     },
@@ -63,8 +65,9 @@ export const useBlogMutations = () => {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || 'Failed to delete blog');
       }
-      return response.json();
+      return response.status === 204 ? { success: true } : response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blogs'] });
     },

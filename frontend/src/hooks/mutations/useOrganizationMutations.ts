@@ -10,7 +10,7 @@ export const useOrganizationMutations = () => {
     mutationFn: async (id: string) => {
       const token = await getToken();
       const response = await fetch(`${API_BASE_URL}/api/organizations/${id}/approve`, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -20,6 +20,7 @@ export const useOrganizationMutations = () => {
       }
       return response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
     },
@@ -29,7 +30,7 @@ export const useOrganizationMutations = () => {
     mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
       const token = await getToken();
       const response = await fetch(`${API_BASE_URL}/api/organizations/${id}/decline`, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -41,6 +42,7 @@ export const useOrganizationMutations = () => {
       }
       return response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
     },
@@ -60,6 +62,7 @@ export const useOrganizationMutations = () => {
       }
       return response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
     },
@@ -79,6 +82,7 @@ export const useOrganizationMutations = () => {
       }
       return response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
     },
@@ -98,9 +102,9 @@ export const useOrganizationMutations = () => {
       if (!response.ok) {
         throw new Error('Failed to delete organization');
       }
-      if (response.status === 204) return null;
-      return response.json();
+      return response.status === 204 ? { success: true } : response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
     },
@@ -123,6 +127,7 @@ export const useOrganizationMutations = () => {
       }
       return response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
     },

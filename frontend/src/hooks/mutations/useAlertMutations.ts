@@ -23,6 +23,7 @@ export const useAlertMutations = () => {
       }
       return response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
     },
@@ -45,6 +46,7 @@ export const useAlertMutations = () => {
       }
       return response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
     },
@@ -63,8 +65,9 @@ export const useAlertMutations = () => {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || 'Failed to delete alert');
       }
-      return response.json();
+      return response.status === 204 ? { success: true } : response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] });
     },

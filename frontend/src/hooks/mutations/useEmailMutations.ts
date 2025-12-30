@@ -27,6 +27,7 @@ export const useEmailMutations = () => {
       }
       return response.json();
     },
+    retry: false,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email-history'] });
     },
