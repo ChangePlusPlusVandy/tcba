@@ -776,7 +776,7 @@ const OrganizationManagement = () => {
             <button
               onClick={exportToCSV}
               disabled={sortedOrganizations.length === 0}
-              className='flex items-center gap-2 px-4 py-2 rounded-[10px] bg-[#D54242] text-white disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed whitespace-nowrap font-medium'
+              className='flex items-center gap-2 px-6 py-2.5 rounded-[10px] bg-[#D54242] text-white border border-[#D54242] disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed whitespace-nowrap font-medium'
             >
               <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                 <path
