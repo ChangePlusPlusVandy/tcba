@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminSidebar from '../../../components/AdminSidebar';
 import Toast from '../../../components/Toast';
+import { useSurveyMutations } from '../../../hooks/mutations/useSurveyMutations';
 import { API_BASE_URL } from '../../../config/api';
 
 type QuestionType = 'multipleChoice' | 'checkbox' | 'text' | 'rating';
@@ -23,6 +24,7 @@ const CreateSurvey = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditMode = !!id;
+  const { createSurvey, updateSurvey } = useSurveyMutations();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -187,13 +189,11 @@ const CreateSurvey = () => {
         isPublished: publish,
       };
 
-      const url = isEditMode ? `${API_BASE_URL}/api/surveys/${id}` : `${API_BASE_URL}/api/surveys`;
-      const method = isEditMode ? 'PUT' : 'POST';
-
-      await fetchWithAuth(url, {
-        method,
-        body: JSON.stringify(surveyData),
-      });
+      if (isEditMode) {
+        await updateSurvey.mutateAsync({ id: id!, data: surveyData });
+      } else {
+        await createSurvey.mutateAsync(surveyData);
+      }
 
       const successMessage = isEditMode
         ? publish

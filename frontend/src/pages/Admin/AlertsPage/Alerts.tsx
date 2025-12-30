@@ -66,6 +66,18 @@ const AdminAlerts = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedAlert, setEditedAlert] = useState<{
+    title: string;
+    content: string;
+    priority: AlertPriority;
+    attachmentUrls: string[];
+  }>({
+    title: '',
+    content: '',
+    priority: 'MEDIUM',
+    attachmentUrls: [],
+  });
 
   const [newAlert, setNewAlert] = useState({
     title: '',
@@ -197,6 +209,7 @@ const AdminAlerts = () => {
   const closeDetailModal = () => {
     setIsDetailModalOpen(false);
     setSelectedAlert(null);
+    setIsEditMode(false);
   };
 
   const filteredAlerts = alertsArray.filter(alert => {
@@ -866,106 +879,231 @@ const AdminAlerts = () => {
           <input type='checkbox' checked readOnly className='modal-toggle' />
           <div className='modal modal-open'>
             <div className='modal-box max-w-2xl max-h-[80vh] bg-white overflow-y-auto m-8'>
-              <h3 className='font-bold text-xl text-gray-900 mb-3'>{selectedAlert.title}</h3>
+              <h3 className='font-bold text-xl text-gray-900 mb-3'>
+                {isEditMode ? 'Edit Alert' : selectedAlert.title}
+              </h3>
 
-              <div className='space-y-4'>
-                <div>
-                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Basic Information</h4>
-                  <div className='grid grid-cols-2 gap-3'>
-                    <div>
-                      <span className='text-sm font-bold text-gray-600'>Priority:</span>
-                      <p className='text-sm'>
-                        <span
-                          className={`px-2 py-1 inline-flex text-xs font-medium rounded-full ${getPriorityColor(
-                            selectedAlert.priority
-                          )}`}
-                        >
-                          {selectedAlert.priority}
-                        </span>
-                      </p>
-                    </div>
+              {isEditMode ? (
+                <div className='space-y-4'>
+                  <div>
+                    <label className='block text-sm font-semibold text-gray-700 mb-1'>Title</label>
+                    <input
+                      type='text'
+                      value={editedAlert.title}
+                      onChange={e => setEditedAlert({ ...editedAlert, title: e.target.value })}
+                      className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                      placeholder='Alert title...'
+                    />
+                  </div>
 
-                    <div>
-                      <span className='text-sm font-bold text-gray-600'>Status:</span>
-                      <p className='text-sm'>
-                        <span
-                          className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full ${
-                            selectedAlert.isPublished
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {selectedAlert.isPublished ? 'Published' : 'Draft'}
-                        </span>
-                      </p>
+                  <div>
+                    <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                      Priority
+                    </label>
+                    <select
+                      value={editedAlert.priority}
+                      onChange={e =>
+                        setEditedAlert({
+                          ...editedAlert,
+                          priority: e.target.value as AlertPriority,
+                        })
+                      }
+                      className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                    >
+                      <option value='LOW'>Low</option>
+                      <option value='MEDIUM'>Medium</option>
+                      <option value='URGENT'>Urgent</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                      Content
+                    </label>
+                    <div style={{ height: '250px' }}>
+                      <ReactQuill
+                        ref={quillRef}
+                        theme='snow'
+                        value={editedAlert.content}
+                        onChange={content => setEditedAlert({ ...editedAlert, content })}
+                        modules={modules}
+                        placeholder='Write alert content...'
+                        style={{ height: '200px' }}
+                      />
                     </div>
                   </div>
-                </div>
 
-                <div>
-                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Content</h4>
-                  <div
-                    className='prose max-w-none text-sm text-gray-900'
-                    dangerouslySetInnerHTML={{ __html: selectedAlert.content }}
+                  <FileUpload
+                    attachmentUrls={editedAlert.attachmentUrls}
+                    onFilesChange={files =>
+                      setEditedAlert({ ...editedAlert, attachmentUrls: files })
+                    }
                   />
                 </div>
+              ) : (
+                <div className='space-y-4'>
+                  <div>
+                    <h4 className='font-semibold text-base text-gray-800 mb-2'>
+                      Basic Information
+                    </h4>
+                    <div className='grid grid-cols-2 gap-3'>
+                      <div>
+                        <span className='text-sm font-bold text-gray-600'>Priority:</span>
+                        <p className='text-sm'>
+                          <span
+                            className={`px-2 py-1 inline-flex text-xs font-medium rounded-full ${getPriorityColor(
+                              selectedAlert.priority
+                            )}`}
+                          >
+                            {selectedAlert.priority}
+                          </span>
+                        </p>
+                      </div>
 
-                {selectedAlert.attachmentUrls && selectedAlert.attachmentUrls.length > 0 && (
-                  <AttachmentList attachmentUrls={selectedAlert.attachmentUrls} />
-                )}
-
-                <div>
-                  <h4 className='font-semibold text-base text-gray-800 mb-2'>Dates</h4>
-                  <div className='grid grid-cols-2 gap-3'>
-                    <div>
-                      <span className='text-sm font-bold text-gray-600'>Created:</span>
-                      <p className='text-sm text-gray-900'>
-                        {new Date(selectedAlert.createdAt).toLocaleDateString()}
-                      </p>
+                      <div>
+                        <span className='text-sm font-bold text-gray-600'>Status:</span>
+                        <p className='text-sm'>
+                          <span
+                            className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full ${
+                              selectedAlert.isPublished
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            {selectedAlert.isPublished ? 'Published' : 'Draft'}
+                          </span>
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <span className='text-sm font-bold text-gray-600'>Updated:</span>
-                      <p className='text-sm text-gray-900'>
-                        {new Date(selectedAlert.updatedAt).toLocaleDateString()}
-                      </p>
+                  </div>
+
+                  <div>
+                    <h4 className='font-semibold text-base text-gray-800 mb-2'>Content</h4>
+                    <div
+                      className='prose max-w-none text-sm text-gray-900'
+                      dangerouslySetInnerHTML={{ __html: selectedAlert.content }}
+                    />
+                  </div>
+
+                  {selectedAlert.attachmentUrls && selectedAlert.attachmentUrls.length > 0 && (
+                    <AttachmentList attachmentUrls={selectedAlert.attachmentUrls} />
+                  )}
+
+                  <div>
+                    <h4 className='font-semibold text-base text-gray-800 mb-2'>Dates</h4>
+                    <div className='grid grid-cols-2 gap-3'>
+                      <div>
+                        <span className='text-sm font-bold text-gray-600'>Created:</span>
+                        <p className='text-sm text-gray-900'>
+                          {new Date(selectedAlert.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div>
+                        <span className='text-sm font-bold text-gray-600'>Updated:</span>
+                        <p className='text-sm text-gray-900'>
+                          {new Date(selectedAlert.updatedAt).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              <div className='modal-action'>
-                {!selectedAlert.isPublished && (
+              {isEditMode ? (
+                <div className='modal-action'>
                   <button
                     onClick={async () => {
+                      if (!editedAlert.title.trim()) {
+                        setToast({ message: 'Title is required', type: 'error' });
+                        return;
+                      }
+                      if (!editedAlert.content.trim()) {
+                        setToast({ message: 'Content is required', type: 'error' });
+                        return;
+                      }
+
                       try {
                         await updateAlert.mutateAsync({
                           id: selectedAlert.id,
                           data: {
-                            isPublished: true,
-                            publishedDate: new Date().toISOString(),
+                            title: editedAlert.title,
+                            content: editedAlert.content,
+                            priority: editedAlert.priority,
+                            attachmentUrls: editedAlert.attachmentUrls,
                           },
                         });
-                        setToast({ message: 'Alert published successfully', type: 'success' });
+                        setToast({ message: 'Alert updated successfully', type: 'success' });
+                        setIsEditMode(false);
                         closeDetailModal();
                       } catch (err: any) {
                         setToast({
-                          message: err.message || 'Failed to publish alert',
+                          message: err.message || 'Failed to update alert',
                           type: 'error',
                         });
                       }
                     }}
                     className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
                   >
-                    Publish
+                    Save Changes
                   </button>
-                )}
-                <button
-                  onClick={closeDetailModal}
-                  className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
-                >
-                  Close
-                </button>
-              </div>
+                  <button
+                    onClick={() => setIsEditMode(false)}
+                    className='px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl font-medium transition'
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div className='modal-action'>
+                  {!selectedAlert.isPublished && (
+                    <>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await updateAlert.mutateAsync({
+                              id: selectedAlert.id,
+                              data: {
+                                isPublished: true,
+                                publishedDate: new Date().toISOString(),
+                              },
+                            });
+                            setToast({ message: 'Alert published successfully', type: 'success' });
+                            closeDetailModal();
+                          } catch (err: any) {
+                            setToast({
+                              message: err.message || 'Failed to publish alert',
+                              type: 'error',
+                            });
+                          }
+                        }}
+                        className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
+                      >
+                        Publish
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsEditMode(true);
+                          setEditedAlert({
+                            title: selectedAlert.title,
+                            content: selectedAlert.content,
+                            priority: selectedAlert.priority,
+                            attachmentUrls: selectedAlert.attachmentUrls,
+                          });
+                        }}
+                        className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
+                      >
+                        Edit
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={closeDetailModal}
+                    className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
+                  >
+                    Close
+                  </button>
+                </div>
+              )}
             </div>
             <div className='modal-backdrop bg-black/30' onClick={closeDetailModal}></div>
           </div>

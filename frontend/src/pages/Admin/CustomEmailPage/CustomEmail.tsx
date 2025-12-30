@@ -56,13 +56,14 @@ const CustomEmail = () => {
 
   const [isScheduled, setIsScheduled] = useState(false);
   const [scheduledDateTime, setScheduledDateTime] = useState('');
+  const [editingEmailId, setEditingEmailId] = useState<string | null>(null);
 
   const { data: organizationsData, isLoading: loading } = useAdminOrganizations(1, 1000);
   const { data: emailHistoryData, isLoading: historyLoading } = useEmailHistory(
     currentPage,
     itemsPerPage
   );
-  const { sendEmail } = useEmailMutations();
+  const { sendEmail, deleteScheduledEmail } = useEmailMutations();
 
   const organizationsResponse = organizationsData || {};
   const organizations = organizationsResponse.data || organizationsResponse;
@@ -236,6 +237,45 @@ const CustomEmail = () => {
     return filtered;
   };
 
+  const handleEditEmail = (email: EmailHistoryItem) => {
+    setEmailTitle(email.subject);
+    setEmailBody(email.body);
+    setIsScheduled(true);
+    setScheduledDateTime(
+      email.scheduledFor ? new Date(email.scheduledFor).toISOString().slice(0, 16) : ''
+    );
+
+    const recipientEmailSet = new Set(email.recipientEmails.map(e => e.toLowerCase().trim()));
+
+    const excludedOrgIds = organizationsArray
+      .filter(org => {
+        const orgEmail = org.email?.toLowerCase().trim();
+        return orgEmail && !recipientEmailSet.has(orgEmail);
+      })
+      .map(org => org.id);
+
+    console.log('Total orgs:', organizationsArray.length);
+    console.log('Recipient emails:', email.recipientEmails);
+    console.log('Excluded org count:', excludedOrgIds.length);
+    console.log(
+      'Should select:',
+      organizationsArray.length - excludedOrgIds.length,
+      'organizations'
+    );
+
+    setSelectedTags([]);
+    setSelectedRegion('');
+    setSelectedOrgSize('');
+    setOrgSearchQuery('');
+
+    setEditingEmailId(email.id);
+    setActiveTab('compose');
+
+    setTimeout(() => {
+      setManuallyExcludedOrgs(excludedOrgIds);
+    }, 0);
+  };
+
   const handleSend = async () => {
     if (!emailTitle.trim() || !emailBody.trim()) {
       setToast({ message: 'Please provide both email title and body', type: 'error' });
@@ -264,6 +304,10 @@ const CustomEmail = () => {
     try {
       setToast(null);
 
+      if (editingEmailId) {
+        await deleteScheduledEmail.mutateAsync(editingEmailId);
+      }
+
       const requestData: any = {
         subject: emailTitle,
         html: emailBody,
@@ -276,9 +320,13 @@ const CustomEmail = () => {
 
       await sendEmail.mutateAsync(requestData);
 
-      const successMessage = isScheduled
-        ? `Email scheduled for ${new Date(scheduledDateTime).toLocaleString()} to ${recipients.length} organization(s)!`
-        : `Email sent successfully to ${recipients.length} organization(s)!`;
+      const successMessage = editingEmailId
+        ? isScheduled
+          ? `Scheduled email updated for ${new Date(scheduledDateTime).toLocaleString()} to ${recipients.length} organization(s)!`
+          : `Email sent successfully to ${recipients.length} organization(s)!`
+        : isScheduled
+          ? `Email scheduled for ${new Date(scheduledDateTime).toLocaleString()} to ${recipients.length} organization(s)!`
+          : `Email sent successfully to ${recipients.length} organization(s)!`;
 
       setToast({
         message: successMessage,
@@ -294,6 +342,7 @@ const CustomEmail = () => {
       setOrgSearchQuery('');
       setIsScheduled(false);
       setScheduledDateTime('');
+      setEditingEmailId(null);
     } catch (err: any) {
       console.error('Error sending email:', err);
       setToast({ message: err.message || 'Failed to send email', type: 'error' });
@@ -327,7 +376,6 @@ const CustomEmail = () => {
             <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
           )}
 
-          {/* Tabs */}
           <div className='flex border-b border-gray-200 mb-6'>
             <button
               onClick={() => setActiveTab('compose')}
@@ -353,6 +401,30 @@ const CustomEmail = () => {
 
           {activeTab === 'compose' && (
             <>
+              {editingEmailId && (
+                <div className='bg-red-50 border border-red-200 rounded-lg p-4 mb-6'>
+                  <div className='flex items-center gap-2'>
+                    <svg
+                      className='w-5 h-5 text-[#D54242]'
+                      fill='none'
+                      stroke='currentColor'
+                      viewBox='0 0 24 24'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+                      />
+                    </svg>
+                    <span className='text-sm font-semibold text-[#D54242]'>
+                      Editing scheduled email - modify recipients, content, or schedule time as
+                      needed
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <div className='bg-white rounded-lg shadow-md p-6 mb-6'>
                 <h2 className='text-xl font-semibold text-gray-800 mb-4'>Select Recipients</h2>
 
@@ -515,7 +587,6 @@ const CustomEmail = () => {
                   </div>
                 </div>
 
-                {/* Schedule Email Section */}
                 <div className='border-t border-gray-200 pt-6'>
                   <div className='flex items-center gap-3 mb-4'>
                     <label className='relative inline-flex items-center cursor-pointer'>
@@ -566,9 +637,10 @@ const CustomEmail = () => {
                     setOrgSearchQuery('');
                     setIsScheduled(false);
                     setScheduledDateTime('');
+                    setEditingEmailId(null);
                     setToast(null);
                   }}
-                  disabled={sendEmail.isPending}
+                  disabled={sendEmail.isPending || deleteScheduledEmail.isPending}
                   className='px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50'
                 >
                   Clear
@@ -577,24 +649,28 @@ const CustomEmail = () => {
                   onClick={handleSend}
                   disabled={
                     sendEmail.isPending ||
+                    deleteScheduledEmail.isPending ||
                     filteredOrganizations.length === 0 ||
                     (isScheduled && !scheduledDateTime)
                   }
                   className='px-6 py-2 bg-[#D54242] text-white rounded-md hover:bg-[#b53a3a] disabled:opacity-50 disabled:cursor-not-allowed'
                 >
-                  {sendEmail.isPending
-                    ? isScheduled
-                      ? 'Scheduling...'
-                      : 'Sending...'
-                    : isScheduled
-                      ? `Schedule Email (${filteredOrganizations.length})`
-                      : `Send Email (${filteredOrganizations.length})`}
+                  {sendEmail.isPending || deleteScheduledEmail.isPending
+                    ? editingEmailId
+                      ? 'Updating...'
+                      : isScheduled
+                        ? 'Scheduling...'
+                        : 'Sending...'
+                    : editingEmailId
+                      ? `Update Scheduled Email (${filteredOrganizations.length})`
+                      : isScheduled
+                        ? `Schedule Email (${filteredOrganizations.length})`
+                        : `Send Email (${filteredOrganizations.length})`}
                 </button>
               </div>
             </>
           )}
 
-          {/* Past Emails Tab */}
           {activeTab === 'history' && (
             <div className='bg-white rounded-lg shadow-md'>
               {historyLoading ? (
@@ -615,14 +691,16 @@ const CustomEmail = () => {
                           setExpandedEmailId(expandedEmailId === email.id ? null : email.id)
                         }
                       >
-                        <div className='flex items-center justify-between'>
+                        <div className='flex items-center justify-between gap-4'>
                           <div className='flex-1'>
                             <h3 className='text-lg font-semibold text-gray-800'>{email.subject}</h3>
                             <div className='flex items-center gap-4 mt-1 text-sm text-gray-500'>
                               <span>
                                 {email.sentAt
                                   ? formatDate(email.sentAt)
-                                  : formatDate(email.createdAt)}
+                                  : email.scheduledFor
+                                    ? `Scheduled: ${formatDate(email.scheduledFor)}`
+                                    : formatDate(email.createdAt)}
                               </span>
                               <span className='flex items-center gap-1'>
                                 <svg
@@ -654,8 +732,50 @@ const CustomEmail = () => {
                               </span>
                             </div>
                           </div>
+
+                          {email.status === 'SCHEDULED' && (
+                            <div className='flex items-center gap-2 shrink-0'>
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  handleEditEmail(email);
+                                }}
+                                className='px-4 py-2 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-lg font-medium transition'
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={async e => {
+                                  e.stopPropagation();
+                                  if (
+                                    window.confirm(
+                                      'Are you sure you want to cancel this scheduled email?'
+                                    )
+                                  ) {
+                                    try {
+                                      await deleteScheduledEmail.mutateAsync(email.id);
+                                      setToast({
+                                        message: 'Scheduled email cancelled successfully',
+                                        type: 'success',
+                                      });
+                                    } catch (err: any) {
+                                      setToast({
+                                        message: err.message || 'Failed to cancel scheduled email',
+                                        type: 'error',
+                                      });
+                                    }
+                                  }
+                                }}
+                                disabled={deleteScheduledEmail.isPending}
+                                className='px-4 py-2 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-lg font-medium transition disabled:opacity-50'
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+
                           <svg
-                            className={`w-5 h-5 text-gray-400 transition-transform ${
+                            className={`w-5 h-5 text-gray-400 transition-transform shrink-0 ${
                               expandedEmailId === email.id ? 'transform rotate-180' : ''
                             }`}
                             fill='none'

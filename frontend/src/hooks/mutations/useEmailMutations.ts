@@ -33,5 +33,25 @@ export const useEmailMutations = () => {
     },
   });
 
-  return { sendEmail };
+  const deleteScheduledEmail = useMutation({
+    mutationFn: async (id: string) => {
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/api/email-notifications/scheduled/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete scheduled email');
+      }
+      return response.status === 204 ? { success: true } : response.json();
+    },
+    retry: false,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['email-history'] });
+    },
+  });
+
+  return { sendEmail, deleteScheduledEmail };
 };

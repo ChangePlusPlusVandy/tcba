@@ -6,6 +6,52 @@ export const useSurveyMutations = () => {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
 
+  const createSurvey = useMutation({
+    mutationFn: async (data: any) => {
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/api/surveys`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to create survey');
+      }
+      return response.json();
+    },
+    retry: false,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['surveys'] });
+    },
+  });
+
+  const updateSurvey = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/api/surveys/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update survey');
+      }
+      return response.json();
+    },
+    retry: false,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['surveys'] });
+    },
+  });
+
   const deleteSurvey = useMutation({
     mutationFn: async (id: string) => {
       const token = await getToken();
@@ -48,5 +94,5 @@ export const useSurveyMutations = () => {
     },
   });
 
-  return { deleteSurvey, publishSurvey };
+  return { createSurvey, updateSurvey, deleteSurvey, publishSurvey };
 };

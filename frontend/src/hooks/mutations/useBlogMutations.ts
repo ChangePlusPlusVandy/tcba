@@ -73,5 +73,27 @@ export const useBlogMutations = () => {
     },
   });
 
-  return { createBlog, updateBlog, deleteBlog };
+  const publishBlog = useMutation({
+    mutationFn: async (id: string) => {
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/api/blogs/${id}/publish`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to publish blog');
+      }
+      return response.json();
+    },
+    retry: false,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['blogs'] });
+    },
+  });
+
+  return { createBlog, updateBlog, deleteBlog, publishBlog };
 };

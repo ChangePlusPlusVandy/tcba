@@ -56,7 +56,7 @@ const AdminBlogs = () => {
     isLoading: loading,
     error: blogsError,
   } = useAdminBlogs(currentPage, itemsPerPage);
-  const { createBlog, updateBlog, deleteBlog } = useBlogMutations();
+  const { createBlog, updateBlog, deleteBlog, publishBlog } = useBlogMutations();
 
   const blogsResponse = blogsData || {};
   const blogs = blogsResponse.data || blogsResponse;
@@ -92,6 +92,8 @@ const AdminBlogs = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [isPublishing, setIsPublishing] = useState(false);
 
   const [toast, setToast] = useState<{
     message: string;
@@ -1165,14 +1167,10 @@ const AdminBlogs = () => {
                     <>
                       <button
                         onClick={async () => {
+                          if (isPublishing) return;
                           try {
-                            await updateBlog.mutateAsync({
-                              id: selectedBlog.id,
-                              data: {
-                                isPublished: true,
-                                publishedDate: new Date().toISOString(),
-                              },
-                            });
+                            setIsPublishing(true);
+                            await publishBlog.mutateAsync(selectedBlog.id);
                             setToast({ message: 'Blog published successfully', type: 'success' });
                             closeDetailModal();
                           } catch (err: any) {
@@ -1180,11 +1178,18 @@ const AdminBlogs = () => {
                               message: err.message || 'Failed to publish blog',
                               type: 'error',
                             });
+                          } finally {
+                            setIsPublishing(false);
                           }
                         }}
-                        className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
+                        disabled={isPublishing}
+                        className={`px-6 py-2.5 text-white rounded-xl font-medium transition ${
+                          isPublishing
+                            ? 'bg-[#E57373] cursor-not-allowed'
+                            : 'bg-[#D54242] hover:bg-[#b53a3a]'
+                        }`}
                       >
-                        Publish
+                        {isPublishing ? 'Publishing...' : 'Publish'}
                       </button>
                       <button
                         onClick={() => {

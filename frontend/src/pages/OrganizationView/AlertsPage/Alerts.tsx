@@ -2,6 +2,7 @@ import { useState } from 'react';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
 import Toast from '../../../components/Toast';
 import Pagination from '../../../components/Pagination';
+import PublicAttachmentList from '../../../components/PublicAttachmentList';
 import { useOrgAlerts } from '../../../hooks/queries/useOrgAlerts';
 
 type AlertPriority = 'URGENT' | 'LOW' | 'MEDIUM';
@@ -381,22 +382,10 @@ const AlertsPage = () => {
                 </div>
 
                 {selectedAlert.attachmentUrls && selectedAlert.attachmentUrls.length > 0 && (
-                  <div>
-                    <h4 className='font-semibold text-base text-gray-800 mb-2'>Attachments</h4>
-                    <div className='space-y-2'>
-                      {selectedAlert.attachmentUrls.map((url, index) => (
-                        <a
-                          key={index}
-                          href={url}
-                          target='_blank'
-                          rel='noopener noreferrer'
-                          className='block text-sm text-[#194B90] hover:underline'
-                        >
-                          Attachment {index + 1}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
+                  <PublicAttachmentList
+                    attachmentUrls={selectedAlert.attachmentUrls}
+                    requireAuth={true}
+                  />
                 )}
 
                 <div>

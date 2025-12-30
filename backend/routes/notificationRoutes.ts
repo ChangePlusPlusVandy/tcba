@@ -7,6 +7,7 @@ import {
   sendAlertNotification,
   sendContactFormEmail,
   getEmailHistory,
+  deleteScheduledEmail,
 } from '../controllers/notificationController.js';
 import { authenticateToken } from '../middleware/auth.js';
 
@@ -16,6 +17,7 @@ router.post('/contact-form', sendContactFormEmail);
 router.use(authenticateToken);
 router.post('/send', sendCustomEmail);
 router.get('/history', getEmailHistory);
+router.delete('/scheduled/:id', deleteScheduledEmail);
 router.post('/announcement/:id', sendAnnouncementNotification);
 router.post('/survey/:id', sendSurveyNotification);
 router.post('/blog/:id', sendBlogNotification);
