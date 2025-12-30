@@ -18,18 +18,14 @@ export class CacheService {
     }
   }
 
-  static async set(key: string, value: unknown, ttl?: number): Promise<void> {
+  static async set(key: string, value: unknown, ttl: number = 300): Promise<void> {
     try {
       if (!redisClient.isOpen) {
         console.warn('Redis client not connected, skipping cache set');
         return;
       }
 
-      if (ttl === undefined || ttl === 0) {
-        await redisClient.set(key, JSON.stringify(value));
-      } else {
-        await redisClient.setEx(key, ttl, JSON.stringify(value));
-      }
+      await redisClient.setEx(key, ttl, JSON.stringify(value));
     } catch (error) {
       console.error(`Cache set error for key ${key}:`, error);
     }
