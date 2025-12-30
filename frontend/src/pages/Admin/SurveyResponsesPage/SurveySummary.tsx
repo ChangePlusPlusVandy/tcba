@@ -209,7 +209,7 @@ const SurveySummary = () => {
       <div className='flex gap-8 items-center'>
         <div className='relative w-64 h-64 flex-shrink-0'>
           <svg viewBox='0 0 100 100' className='transform -rotate-90'>
-            {sortedEntries.map(([answer, data], index) => {
+            {sortedEntries.map(([answer, data], index: number) => {
               const percentage = (data.count / total) * 100;
               const offset = cumulativePercentage;
               cumulativePercentage += percentage;
@@ -265,7 +265,7 @@ const SurveySummary = () => {
 
         <div className='flex-1 space-y-2'>
           <p className='text-sm font-semibold text-gray-700 mb-3'>Total Responses: {total}</p>
-          {sortedEntries.map(([answer, data], index) => (
+          {sortedEntries.map(([answer, data], index: number) => (
             <div
               key={answer}
               className='flex items-center gap-3 p-2 rounded hover:bg-gray-50 transition cursor-pointer'
@@ -297,7 +297,7 @@ const SurveySummary = () => {
 
     return (
       <div className='space-y-3'>
-        {sortedEntries.map(([answer, data], index) => {
+        {sortedEntries.map(([answer, data], index: number) => {
           const percentage = maxCount > 0 ? (data.count / maxCount) * 100 : 0;
           const isHovered =
             hoveredSegment?.questionId === questionId && hoveredSegment?.answer === answer;
@@ -383,7 +383,7 @@ const SurveySummary = () => {
           </div>
         ) : (
           <div className='space-y-8'>
-            {survey?.questions.map((question, index) => {
+            {survey?.questions.map((question: Question, index: number) => {
               const questionStat = stats.questionStats[question.id];
               if (!questionStat) return null;
 

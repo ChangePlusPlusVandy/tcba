@@ -70,5 +70,25 @@ export const useAnnouncementMutations = () => {
     },
   });
 
-  return { createAnnouncement, updateAnnouncement, deleteAnnouncement };
+  const publishAnnouncement = useMutation({
+    mutationFn: async (id: string) => {
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/api/announcements/${id}/publish`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to publish announcement');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['announcements'] });
+    },
+  });
+
+  return { createAnnouncement, updateAnnouncement, deleteAnnouncement, publishAnnouncement };
 };

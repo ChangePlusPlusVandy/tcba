@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
+import { useQueryClient } from '@tanstack/react-query';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
 import { API_BASE_URL } from '../../../config/api';
 import { useDashboardData } from '../../../hooks/queries/useDashboardData';
@@ -24,6 +25,7 @@ interface ContentItem {
 
 const DashboardPage = () => {
   const { getToken } = useAuth();
+  const queryClient = useQueryClient();
   const { orgProfile, alerts, surveys, surveyResponses, announcements, blogs, isLoading } = useDashboardData();
 
   const lastCheckedDates = useMemo(() => ({
@@ -135,7 +137,7 @@ const DashboardPage = () => {
         body: JSON.stringify({ contentType }),
       });
 
-      fetchDashboardData();
+      queryClient.invalidateQueries({ queryKey: ['organization', 'profile'] });
     } catch (error) {
       console.error('Error marking content as viewed:', error);
     }

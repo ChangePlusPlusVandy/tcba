@@ -37,6 +37,7 @@ type SortDirection = 'asc' | 'desc';
 
 const OrganizationsList = () => {
   const { data: organizations = [], isLoading: loading } = useOrgDirectory();
+  const organizationsArray = organizations as Organization[];
 
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState<{
@@ -78,7 +79,7 @@ const OrganizationsList = () => {
     };
   }, [tagDropdownOpen, regionDropdownOpen, typeDropdownOpen]);
 
-  const activeOrgs = organizations.filter(org => org.status === 'ACTIVE');
+  const activeOrgs = organizationsArray.filter(org => org.status === 'ACTIVE');
 
   const filteredOrganizations = activeOrgs.filter(org => {
     const matchesSearch =
@@ -121,9 +122,9 @@ const OrganizationsList = () => {
     }
   };
 
-  const allTags = Array.from(new Set(organizations.flatMap(org => org.tags || [])));
+  const allTags = Array.from(new Set(organizationsArray.flatMap(org => org.tags || [])));
   const uniqueOrgTypes = Array.from(
-    new Set(organizations.map(org => org.organizationType).filter(Boolean))
+    new Set(organizationsArray.map(org => org.organizationType).filter(Boolean))
   ) as string[];
 
   const SortIcon = ({ field }: { field: SortField }) => {

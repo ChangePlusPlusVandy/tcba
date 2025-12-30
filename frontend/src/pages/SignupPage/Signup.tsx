@@ -1,4 +1,4 @@
-import { type FormEvent, useState, useEffect } from 'react';
+import { type FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
 import Toast from '../../components/Toast';

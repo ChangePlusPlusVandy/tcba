@@ -262,7 +262,7 @@ const AdminBlogs = () => {
 
     const matchesTags =
       tagsFilter.length === 0 ||
-      tagsFilter.some(tagName => blog.tags?.some(blogTag => blogTag.name === tagName));
+      tagsFilter.some(tagName => blog.tags?.some((blogTag: Tag) => blogTag.name === tagName));
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -754,7 +754,7 @@ const AdminBlogs = () => {
                     <td className='px-6 py-4'>
                       {blog.tags && blog.tags.length > 0 ? (
                         <div className='flex flex-wrap gap-1'>
-                          {blog.tags.map(tag => (
+                          {blog.tags.map((tag: Tag) => (
                             <span
                               key={tag.id}
                               className='px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'

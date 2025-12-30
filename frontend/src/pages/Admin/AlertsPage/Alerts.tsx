@@ -224,7 +224,7 @@ const AdminAlerts = () => {
         bValue = b.title.toLowerCase();
         break;
       case 'priority':
-        const priorityOrder = { URGENT: 3, MEDIUM: 2, LOW: 1 };
+        const priorityOrder: Record<AlertPriority, number> = { URGENT: 3, MEDIUM: 2, LOW: 1 };
         aValue = priorityOrder[a.priority];
         bValue = priorityOrder[b.priority];
         break;

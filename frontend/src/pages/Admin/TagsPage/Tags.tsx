@@ -15,6 +15,7 @@ type Tag = {
 
 const Tags = () => {
   const { data: tags = [], isLoading: loading } = useAdminTags();
+  const tagsArray = tags as Tag[];
   const { createTag, deleteTag } = useTagMutations();
 
   const [newTagName, setNewTagName] = useState('');
@@ -120,7 +121,7 @@ const Tags = () => {
         <div className='bg-white rounded-lg shadow-md p-6'>
           <div className='flex items-center justify-between mb-4'>
             <div className='flex items-center gap-3'>
-              <h2 className='text-xl font-semibold text-gray-800'>All Tags ({tags.length})</h2>
+              <h2 className='text-xl font-semibold text-gray-800'>All Tags ({tagsArray.length})</h2>
               {selectedTagIds.length > 0 && (
                 <button
                   onClick={() => setShowConfirmModal(true)}
@@ -131,7 +132,7 @@ const Tags = () => {
                 </button>
               )}
             </div>
-            {tags.length > 10 && (
+            {tagsArray.length > 10 && (
               <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
                 className='px-3 py-1.5 text-sm border border-[#194B90] text-[#194B90] bg-white rounded-md hover:bg-[#EBF3FF] transition font-medium'
@@ -141,7 +142,7 @@ const Tags = () => {
             )}
           </div>
 
-          {tags.length === 0 ? (
+          {tagsArray.length === 0 ? (
             <div className='text-center py-8'>
               <svg
                 className='mx-auto h-12 w-12 text-gray-400'
@@ -162,10 +163,10 @@ const Tags = () => {
           ) : (
             <div
               className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 ${
-                isCollapsed && tags.length > 10 ? 'max-h-48 overflow-hidden' : ''
+                isCollapsed && tagsArray.length > 10 ? 'max-h-48 overflow-hidden' : ''
               }`}
             >
-              {tags.map(tag => (
+              {tagsArray.map((tag: Tag) => (
                 <div
                   key={tag.id}
                   className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition'
@@ -190,13 +191,13 @@ const Tags = () => {
             </div>
           )}
 
-          {isCollapsed && tags.length > 10 && (
+          {isCollapsed && tagsArray.length > 10 && (
             <div className='mt-4 text-center'>
               <button
                 onClick={() => setIsCollapsed(false)}
                 className='px-3 py-1.5 text-sm border border-[#194B90] text-[#194B90] bg-white rounded-md hover:bg-[#EBF3FF] transition font-medium'
               >
-                Show all {tags.length} tags
+                Show all {tagsArray.length} tags
               </button>
             </div>
           )}

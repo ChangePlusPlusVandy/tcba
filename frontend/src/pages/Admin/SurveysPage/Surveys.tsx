@@ -36,6 +36,7 @@ const AdminSurveys = () => {
   const navigate = useNavigate();
 
   const { data: surveys = [], isLoading: loading, error: surveysError } = useAdminSurveys();
+  const surveysArray = surveys as Survey[];
   const { deleteSurvey, publishSurvey } = useSurveyMutations();
 
   const error = surveysError ? 'Failed to fetch surveys' : '';
@@ -125,13 +126,9 @@ const AdminSurveys = () => {
 
     try {
       setIsPublishing(true);
-      await fetchWithAuth(`${API_BASE_URL}/api/surveys/${selectedSurvey.id}/publish`, {
-        method: 'PATCH',
-      });
-
+      await publishSurvey.mutateAsync(selectedSurvey.id);
       setToast({ message: 'Survey published successfully', type: 'success' });
       closeDetailModal();
-      await fetchSurveys();
     } catch (err: any) {
       setToast({ message: err.message || 'Failed to publish survey', type: 'error' });
     } finally {
@@ -139,7 +136,7 @@ const AdminSurveys = () => {
     }
   };
 
-  const filteredSurveys = surveys.filter(survey => {
+  const filteredSurveys = surveysArray.filter(survey => {
     const now = new Date();
     const isInactive = survey.dueDate && new Date(survey.dueDate) < now;
     const isActive = survey.isPublished && (!survey.dueDate || new Date(survey.dueDate) >= now);

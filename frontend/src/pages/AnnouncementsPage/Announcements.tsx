@@ -43,6 +43,7 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
 
   const { data: announcementsData, isLoading: announcementsLoading, error: announcementsError } = useAnnouncements(currentPage, itemsPerPage);
   const { data: tags = [] } = useTags();
+  const tagsArray = tags as Tag[];
 
   const [timeFilter, setTimeFilter] = useState<'24h' | 'week' | 'month' | 'year' | null>(null);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
@@ -261,11 +262,11 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
 
                 {isFilterOpen && (
                   <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[200px] max-h-[300px] overflow-y-auto'>
-                    {tags.length === 0 ? (
+                    {tagsArray.length === 0 ? (
                       <div className='px-4 py-3 text-sm text-gray-500'>No tags available</div>
                     ) : (
                       <div className='py-2'>
-                        {tags.map(tag => (
+                        {tagsArray.map(tag => (
                           <label
                             key={tag.id}
                             className='flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer'
@@ -367,7 +368,7 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
                         <>
                           <span className='text-[#717171]'>•</span>
                           <div className='flex gap-2 flex-wrap'>
-                            {a.tags.map(tag => (
+                            {a.tags.map((tag: Tag) => (
                               <span
                                 key={tag.id}
                                 className='px-3 py-1 bg-[#EBF3FF] text-[#194B90] rounded-full text-[12px] font-medium'

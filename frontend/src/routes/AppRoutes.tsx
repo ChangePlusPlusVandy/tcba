@@ -52,12 +52,6 @@ const PageLoader = () => (
   </div>
 );
 
-const withSuspense = (Component: React.LazyExoticComponent<React.ComponentType<any>>) => (
-  <Suspense fallback={<PageLoader />}>
-    <Component />
-  </Suspense>
-);
-
 const AppRoutes = () => {
   return (
     <Routes>

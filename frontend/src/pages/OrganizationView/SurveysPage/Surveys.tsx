@@ -65,12 +65,15 @@ const OrgSurveysPage = () => {
     type: 'success' | 'error' | 'info';
   } | null>(null);
 
+  const surveysArray = surveys as Survey[];
+  const responsesArray = myResponses as SurveyResponse[];
+
   const hasResponded = (surveyId: string) => {
-    return myResponses.some((r: { surveyId: string; }) => r.surveyId === surveyId);
+    return responsesArray.some((r) => r.surveyId === surveyId);
   };
 
-  const filteredSurveys: Survey[] = surveys
-    .filter((survey: { title: string; description: string; id: string; }) => {
+  const filteredSurveys = surveysArray
+    .filter((survey) => {
       const matchesSearch =
         survey.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (survey.description &&
@@ -83,7 +86,7 @@ const OrgSurveysPage = () => {
         return matchesSearch && responded;
       }
     })
-    .sort((a: { createdAt: string | number | Date; }, b: { createdAt: string | number | Date; }) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const openResponseModal = (survey: Survey) => {
     setSelectedSurvey(survey);

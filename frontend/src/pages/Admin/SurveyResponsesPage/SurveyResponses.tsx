@@ -50,7 +50,9 @@ const SurveyResponses = () => {
   const { surveyId } = useParams<{ surveyId: string }>();
 
   const { data: survey = null, isLoading: surveyLoading } = useSurvey(surveyId);
+  const surveyData = survey as Survey | null;
   const { data: responses = [], isLoading: responsesLoading } = useSurveyResponsesBySurvey(surveyId);
+  const responsesArray = responses as SurveyResponse[];
 
   const loading = surveyLoading || responsesLoading;
   const [searchQuery, setSearchQuery] = useState('');
@@ -92,14 +94,14 @@ const SurveyResponses = () => {
     setSelectedResponse(null);
   };
 
-  const allTags = Array.from(new Set(responses.flatMap(r => r.organization.tags || [])));
+  const allTags = Array.from(new Set(responsesArray.flatMap((r: SurveyResponse) => r.organization.tags || []))) as string[];
 
-  const filteredResponses = responses.filter(response => {
+  const filteredResponses = responsesArray.filter((response: SurveyResponse) => {
     const matchesSearch = response.organization.name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
     const matchesTags =
-      tagsFilter.length === 0 || tagsFilter.some(tag => response.organization.tags?.includes(tag));
+      tagsFilter.length === 0 || tagsFilter.some((tag: string) => response.organization.tags?.includes(tag));
     return matchesSearch && matchesTags;
   });
 
@@ -145,8 +147,8 @@ const SurveyResponses = () => {
           </button>
 
           <div>
-            <h1 className='text-3xl font-bold text-gray-800'>{survey?.title}</h1>
-            <p className='text-gray-600 mt-1'>Survey Responses ({responses.length})</p>
+            <h1 className='text-3xl font-bold text-gray-800'>{surveyData?.title}</h1>
+            <p className='text-gray-600 mt-1'>Survey Responses ({responsesArray.length})</p>
           </div>
         </div>
 
@@ -187,7 +189,7 @@ const SurveyResponses = () => {
                   <div className='px-4 py-3 text-sm text-gray-500'>No tags available</div>
                 ) : (
                   <div className='py-2'>
-                    {allTags.map(tag => (
+                    {allTags.map((tag: string) => (
                       <label
                         key={tag}
                         className='flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer'
@@ -326,7 +328,7 @@ const SurveyResponses = () => {
               </h3>
 
               <div className='space-y-6'>
-                {survey.questions.map((question, index) => (
+                {surveyData?.questions.map((question: Question, index: number) => (
                   <div key={question.id} className='border-b border-gray-200 pb-4 last:border-b-0'>
                     <div className='mb-2'>
                       <p className='font-semibold text-gray-800'>
@@ -348,7 +350,7 @@ const SurveyResponses = () => {
                     {(question.type === 'multipleChoice' || question.type === 'checkbox') && (
                       <div className='ml-4 space-y-1'>
                         <p className='text-sm text-gray-600 mb-2'>Options:</p>
-                        {question.options?.map(option => {
+                        {question.options?.map((option: string) => {
                           const answer = selectedResponse.responses[question.id];
                           const isSelected =
                             question.type === 'checkbox'

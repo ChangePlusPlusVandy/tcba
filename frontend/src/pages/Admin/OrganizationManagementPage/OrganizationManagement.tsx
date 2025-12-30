@@ -433,7 +433,7 @@ const OrganizationManagement = () => {
         organizationsArray.map(o => ({ name: o.name, region: o.region }))
       );
     }
-  }, [regionFilter, organizations]);
+  }, [regionFilter, organizationsArray]);
 
   const filteredOrganizations = organizationsArray.filter(org => {
     if (filter === 'PENDING' && org.status !== 'PENDING') return false;

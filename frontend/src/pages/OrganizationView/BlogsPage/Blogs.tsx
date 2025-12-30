@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type JSXElementConstructor, type Key, type ReactElement, type ReactNode, type ReactPortal } from 'react';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
 import Toast from '../../../components/Toast';
 import PublicAttachmentList from '../../../components/PublicAttachmentList';
 import Pagination from '../../../components/Pagination';
 import { useOrgBlogs } from '../../../hooks/queries/useOrgBlogs';
-import { API_BASE_URL } from '../../../config/api';
 
 type Tag = {
   id: string;
@@ -84,12 +83,12 @@ const OrgBlogsPage = () => {
   };
 
   // Compute all tags with counts
-  const allTags = Array.from(new Set(blogs.flatMap(blog => blog.tags.map(tag => tag.name))));
+  const allTags = Array.from(new Set(blogs.flatMap(blog => blog.tags.map((tag: { name: any; }) => tag.name))));
 
   const filteredBlogs = blogs.filter(blog => {
     const matchesTags =
       tagsFilter.length === 0 ||
-      tagsFilter.some(tagName => blog.tags?.some(blogTag => blogTag.name === tagName));
+      tagsFilter.some(tagName => blog.tags?.some((blogTag: { name: string; }) => blogTag.name === tagName));
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -360,7 +359,7 @@ const OrgBlogsPage = () => {
                     <td className='px-6 py-4'>
                       {blog.tags && blog.tags.length > 0 ? (
                         <div className='flex flex-wrap gap-1'>
-                          {blog.tags.map(tag => (
+                          {blog.tags.map((tag: { id: Key | null | undefined; name: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; }) => (
                             <span
                               key={tag.id}
                               className='px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'

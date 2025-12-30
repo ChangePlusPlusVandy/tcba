@@ -9,7 +9,6 @@ import S3Image from '../../components/S3Image';
 import { usePageContent } from '../../hooks/queries/usePageContent';
 import { useAnnouncements } from '../../hooks/queries/useAnnouncements';
 import { useBlogs } from '../../hooks/queries/useBlogs';
-import { API_BASE_URL } from '../../config/api';
 
 type NotificationType = 'ANNOUNCEMENT' | 'BLOG' | 'ALERT' | 'SURVEY';
 

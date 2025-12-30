@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
 import Toast from '../../../components/Toast';
 import Pagination from '../../../components/Pagination';
 import { useOrgAlerts } from '../../../hooks/queries/useOrgAlerts';
-import { API_BASE_URL } from '../../../config/api';
 
 type AlertPriority = 'URGENT' | 'LOW' | 'MEDIUM';
 
@@ -45,7 +44,7 @@ const AlertsPage = () => {
 
   const { data: alertsData, isLoading: loading, error: alertsError } = useOrgAlerts(currentPage, itemsPerPage);
 
-  const alerts = alertsData?.data || [];
+  const alerts = (alertsData?.data || []) as Alert[];
   const totalAlerts = alertsData?.total || 0;
   const error = alertsError ? 'Failed to fetch alerts' : '';
 
@@ -82,7 +81,7 @@ const AlertsPage = () => {
         bValue = b.title.toLowerCase();
         break;
       case 'priority':
-        const priorityOrder = { URGENT: 3, MEDIUM: 2, LOW: 1 };
+        const priorityOrder: Record<AlertPriority, number> = { URGENT: 3, MEDIUM: 2, LOW: 1 };
         aValue = priorityOrder[a.priority];
         bValue = priorityOrder[b.priority];
         break;

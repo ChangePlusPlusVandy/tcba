@@ -28,5 +28,24 @@ export const useOrgProfileMutations = () => {
     },
   });
 
-  return { updateProfile };
+  const deactivateAccount = useMutation({
+    mutationFn: async (reason: string) => {
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/api/organizations/profile/deactivate`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ reason }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to deactivate account');
+      }
+      return response.json();
+    },
+  });
+
+  return { updateProfile, deactivateAccount };
 };

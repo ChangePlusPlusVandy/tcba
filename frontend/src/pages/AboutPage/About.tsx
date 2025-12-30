@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import tcbaDDABill from '../../assets/TCBADDABill.jpeg';
 import { FaHandHoldingHeart, FaUserNurse, FaHome } from 'react-icons/fa';
@@ -46,7 +46,6 @@ import ucddLogo from '../../assets/logos/ucdd.png';
 import utkcswLogo from '../../assets/logos/utkcsw.png';
 import vumcLogo from '../../assets/logos/vumc.png';
 import wehfLogo from '../../assets/logos/wehf.png';
-import { API_BASE_URL } from '../../config/api';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 

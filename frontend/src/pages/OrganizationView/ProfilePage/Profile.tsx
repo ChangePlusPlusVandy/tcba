@@ -10,41 +10,12 @@ interface Tag {
   name: string;
 }
 
-interface Organization {
-  id: string;
-  clerkId: string;
-  name: string;
-  email: string;
-  description: string | null;
-  website: string | null;
-  address: string | null;
-  city: string | null;
-  state: string | null;
-  zipCode: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  primaryContactName: string;
-  primaryContactEmail: string;
-  primaryContactPhone: string;
-  secondaryContactName: string | null;
-  secondaryContactEmail: string | null;
-  region: 'EAST' | 'MIDDLE' | 'WEST' | null;
-  organizationType: string | null;
-  organizationSize: 'SMALL' | 'MEDIUM' | 'LARGE' | 'EXTRA_LARGE' | null;
-  tags: string[];
-  membershipActive: boolean;
-  membershipDate: string | null;
-  membershipRenewalDate: string | null;
-  role: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 const ProfilePage = () => {
   const { data: organization, isLoading: loading } = useOrgProfile();
   const { data: availableTags = [] } = useTags();
   const { updateProfile } = useOrgProfileMutations();
+
+  const tagsArray = availableTags as Tag[];
 
   const [toast, setToast] = useState<{
     message: string;
@@ -397,7 +368,7 @@ const ProfilePage = () => {
               </p>
 
               <div className='flex flex-wrap gap-2'>
-                {availableTags.map(tag => (
+                {tagsArray.map(tag => (
                   <button
                     key={tag.id}
                     type='button'

@@ -65,7 +65,7 @@ const CustomEmail = () => {
   const organizations = organizationsResponse.data || organizationsResponse;
   const organizationsArray: Organization[] = Array.isArray(organizations) ? organizations : [];
 
-  const emailHistory = emailHistoryData?.data || [];
+  const emailHistory = (emailHistoryData?.data || []) as EmailHistoryItem[];
   const totalEmails = emailHistoryData?.total || 0;
 
   const availableTags = Array.from(
@@ -684,7 +684,7 @@ const CustomEmail = () => {
                             </h4>
                             <div className='bg-gray-50 p-4 rounded-md max-h-48 overflow-y-auto'>
                               <div className='flex flex-wrap gap-2'>
-                                {email.recipientEmails.map((recipientEmail, index) => (
+                                {email.recipientEmails.map((recipientEmail: string, index: number) => (
                                   <span
                                     key={index}
                                     className='px-2 py-1 bg-white border border-gray-200 rounded text-sm text-gray-600'

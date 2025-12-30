@@ -49,7 +49,7 @@ const AdminAnnouncements = () => {
   const itemsPerPage = 50;
 
   const { data: announcementsData, isLoading: loading, error: announcementsError } = useAdminAnnouncements(currentPage, itemsPerPage);
-  const { createAnnouncement, updateAnnouncement, deleteAnnouncement } = useAnnouncementMutations();
+  const { createAnnouncement, updateAnnouncement, deleteAnnouncement, publishAnnouncement } = useAnnouncementMutations();
 
   const announcementsResponse = announcementsData || {};
   const announcements = announcementsResponse.data || announcementsResponse;
@@ -385,18 +385,18 @@ const AdminAnnouncements = () => {
   const searchedAnnouncements = filtered.filter(a => {
     const matchesTags =
       tagsFilter.length === 0 ||
-      tagsFilter.some(tagName => a.tags?.some(announcementTag => announcementTag.name === tagName));
+      tagsFilter.some(tagName => a.tags?.some((announcementTag: Tag) => announcementTag.name === tagName));
 
     const q = searchQuery.toLowerCase();
     return (
       (a.title.toLowerCase().includes(q) ||
         a.content.toLowerCase().includes(q) ||
-        a.tags.some(t => t.name.toLowerCase().includes(q))) &&
+        a.tags.some((t: Tag) => t.name.toLowerCase().includes(q))) &&
       matchesTags
     );
   });
 
-  const sortedAnnouncements = [...searchedAnnouncements].sort((a, b) => {
+  const sortedAnnouncements = [...searchedAnnouncements].sort((a: Announcement, b: Announcement) => {
     let aValue: any;
     let bValue: any;
 
@@ -487,10 +487,10 @@ const AdminAnnouncements = () => {
 
         <div className='flex items-center gap-4 mb-6'>
           <div className='flex gap-2'>
-            {['ALL', 'PUBLISHED', 'DRAFTS'].map(f => (
+            {(['ALL', 'PUBLISHED', 'DRAFTS'] as const).map((f: 'ALL' | 'PUBLISHED' | 'DRAFTS') => (
               <button
                 key={f}
-                onClick={() => setFilter(f as any)}
+                onClick={() => setFilter(f)}
                 className={`px-6 py-2.5 rounded-[10px] font-medium transition ${
                   filter === f
                     ? 'bg-[#EBF3FF] text-[#194B90] border border-[#194B90]'
@@ -531,7 +531,7 @@ const AdminAnnouncements = () => {
                   <div className='px-4 py-3 text-sm text-gray-500'>No tags available</div>
                 ) : (
                   <div className='py-2'>
-                    {tags.map(tag => (
+                    {tags.map((tag: Tag) => (
                       <label
                         key={tag.id}
                         className='flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer'
@@ -640,7 +640,7 @@ const AdminAnnouncements = () => {
                       }
                       onChange={e => {
                         if (e.target.checked) {
-                          setSelectedAnnouncementIds(sortedAnnouncements.map(a => a.id));
+                          setSelectedAnnouncementIds(sortedAnnouncements.map((a: Announcement) => a.id));
                         } else {
                           setSelectedAnnouncementIds([]);
                         }
@@ -682,7 +682,7 @@ const AdminAnnouncements = () => {
               </thead>
 
               <tbody className='divide-y divide-gray-200'>
-                {sortedAnnouncements.map(a => (
+                {sortedAnnouncements.map((a: Announcement) => (
                   <tr key={a.id} className='hover:bg-gray-50'>
                     <td className='px-6 py-4' onClick={e => e.stopPropagation()}>
                       <input
@@ -722,7 +722,7 @@ const AdminAnnouncements = () => {
                     <td className='px-6 py-4'>
                       {a.tags && a.tags.length > 0 ? (
                         <div className='flex flex-wrap gap-1'>
-                          {a.tags.map(t => (
+                          {a.tags.map((t: Tag) => (
                             <span
                               key={t.id}
                               className='px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
@@ -810,7 +810,7 @@ const AdminAnnouncements = () => {
                         <p className='text-sm text-gray-500'>No tags available</p>
                       ) : (
                         <div className='flex flex-wrap gap-2'>
-                          {tags.map(tag => {
+                          {tags.map((tag: Tag) => {
                             const isSelected = editedAnnouncement.tags.includes(tag.id);
                             return (
                               <button
@@ -867,7 +867,7 @@ const AdminAnnouncements = () => {
                         setEditedAnnouncement({
                           title: selectedAnnouncement.title,
                           content: selectedAnnouncement.content,
-                          tags: selectedAnnouncement.tags.map(t => t.id),
+                          tags: selectedAnnouncement.tags.map((t: Tag) => t.id),
                           attachmentUrls: selectedAnnouncement.attachmentUrls,
                         });
                       }}
@@ -936,7 +936,7 @@ const AdminAnnouncements = () => {
                     <h4 className='font-semibold text-base text-gray-800 mb-2'>Tags</h4>
                     {selectedAnnouncement.tags && selectedAnnouncement.tags.length > 0 ? (
                       <div className='flex flex-wrap gap-2'>
-                        {selectedAnnouncement.tags.map((tag, index) => (
+                        {selectedAnnouncement.tags.map((tag: Tag, index: number) => (
                           <span
                             key={index}
                             className='px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
@@ -977,17 +977,11 @@ const AdminAnnouncements = () => {
                       <button
                         onClick={async () => {
                           try {
-                            await fetchWithAuth(
-                              `${API_BASE_URL}/api/announcements/${selectedAnnouncement.id}/publish`,
-                              {
-                                method: 'POST',
-                              }
-                            );
+                            await publishAnnouncement.mutateAsync(selectedAnnouncement.id);
                             setToast({
                               message: 'Announcement published successfully',
                               type: 'success',
                             });
-                            await fetchAnnouncement();
                             setSelectedAnnouncement(null);
                           } catch (err: any) {
                             setToast({
@@ -1006,7 +1000,7 @@ const AdminAnnouncements = () => {
                           setEditedAnnouncement({
                             title: selectedAnnouncement.title,
                             content: selectedAnnouncement.content,
-                            tags: selectedAnnouncement.tags.map(t => t.id),
+                            tags: selectedAnnouncement.tags.map((t: Tag) => t.id),
                             attachmentUrls: selectedAnnouncement.attachmentUrls,
                           });
                         }}
@@ -1093,7 +1087,7 @@ const AdminAnnouncements = () => {
                       <p className='text-sm text-gray-500'>No tags available</p>
                     ) : (
                       <div className='flex flex-wrap gap-2'>
-                        {tags.map(tag => {
+                        {tags.map((tag: Tag) => {
                           const isSelected = newAnnouncement.tags.includes(tag.id);
                           return (
                             <button
@@ -1147,16 +1141,15 @@ const AdminAnnouncements = () => {
                     disabled={isSubmitting}
                     onClick={async () => {
                       if (!newAnnouncement.title.trim()) {
-                        setError('Title is required');
+                        setToast({ message: 'Title is required', type: 'error' });
                         return;
                       }
                       if (!newAnnouncement.content.trim()) {
-                        setError('Content is required');
+                        setToast({ message: 'Content is required', type: 'error' });
                         return;
                       }
 
                       setIsSubmitting(true);
-                      setError('');
 
                       try {
                         const payload = {
@@ -1168,23 +1161,8 @@ const AdminAnnouncements = () => {
                           attachmentUrls: newAnnouncement.attachmentUrls,
                         };
 
-                        console.log('Publishing announcement with payload:', payload);
+                        await createAnnouncement.mutateAsync(payload);
 
-                        const response = await fetchWithAuth(`${API_BASE_URL}/api/announcements`, {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify(payload),
-                        });
-
-                        if (!response.ok) {
-                          const errorData = await response.json();
-                          console.error('Server error:', errorData);
-                          throw new Error(errorData.error || 'Failed to create announcement');
-                        }
-
-                        await fetchAnnouncement();
                         setIsCreateModalOpen(false);
                         setNewAnnouncement({
                           title: '',
@@ -1199,8 +1177,6 @@ const AdminAnnouncements = () => {
                           type: 'success',
                         });
                       } catch (err: any) {
-                        console.error('Create announcement error:', err);
-                        setError(err.message || 'Failed to create announcement');
                         setToast({
                           message: err.message || 'Failed to publish announcement',
                           type: 'error',
@@ -1217,18 +1193,16 @@ const AdminAnnouncements = () => {
                     type='button'
                     disabled={isSubmitting}
                     onClick={async () => {
-                      // Validation
                       if (!newAnnouncement.title.trim()) {
-                        setError('Title is required');
+                        setToast({ message: 'Title is required', type: 'error' });
                         return;
                       }
                       if (!newAnnouncement.content.trim()) {
-                        setError('Content is required');
+                        setToast({ message: 'Content is required', type: 'error' });
                         return;
                       }
 
                       setIsSubmitting(true);
-                      setError('');
 
                       try {
                         const payload = {
@@ -1240,23 +1214,8 @@ const AdminAnnouncements = () => {
                           attachmentUrls: newAnnouncement.attachmentUrls,
                         };
 
-                        console.log('Saving to drafts with payload:', payload);
+                        await createAnnouncement.mutateAsync(payload);
 
-                        const response = await fetchWithAuth(`${API_BASE_URL}/api/announcements`, {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify(payload),
-                        });
-
-                        if (!response.ok) {
-                          const errorData = await response.json();
-                          console.error('Server error:', errorData);
-                          throw new Error(errorData.error || 'Failed to create announcement');
-                        }
-
-                        await fetchAnnouncement();
                         setIsCreateModalOpen(false);
                         setNewAnnouncement({
                           title: '',
@@ -1268,8 +1227,6 @@ const AdminAnnouncements = () => {
                         });
                         setToast({ message: 'Announcement saved to drafts!', type: 'success' });
                       } catch (err: any) {
-                        console.error('Create announcement error:', err);
-                        setError(err.message || 'Failed to create announcement');
                         setToast({
                           message: err.message || 'Failed to save announcement',
                           type: 'error',

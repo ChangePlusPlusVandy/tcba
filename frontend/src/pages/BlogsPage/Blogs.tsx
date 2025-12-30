@@ -43,6 +43,7 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
 
   const { data: blogsData, isLoading: blogsLoading, error: blogsError } = useBlogs(currentPage, itemsPerPage);
   const { data: allTags = [] } = useBlogTags();
+  const tagsArray = allTags as Tag[];
 
   const [timeFilter, setTimeFilter] = useState<'24h' | 'week' | 'month' | 'year' | null>(null);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
@@ -265,11 +266,11 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
 
                 {isFilterOpen && (
                   <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[200px] max-h-[300px] overflow-y-auto'>
-                    {allTags.length === 0 ? (
+                    {tagsArray.length === 0 ? (
                       <div className='px-4 py-3 text-sm text-gray-500'>No tags available</div>
                     ) : (
                       <div className='py-2'>
-                        {allTags.map(tag => (
+                        {tagsArray.map(tag => (
                           <label
                             key={tag.id}
                             className='flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer'
@@ -369,7 +370,7 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
                         <>
                           <span className='text-[#717171]'>•</span>
                           <div className='flex gap-2 flex-wrap'>
-                            {blog.tags.map(tag => (
+                            {blog.tags.map((tag: Tag) => (
                               <span
                                 key={tag.id}
                                 className='px-3 py-1 bg-[#EBF3FF] text-[#194B90] rounded-full text-[12px] font-medium'
