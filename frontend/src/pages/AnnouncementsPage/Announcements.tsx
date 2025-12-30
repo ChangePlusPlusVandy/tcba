@@ -41,7 +41,11 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  const { data: announcementsData, isLoading: announcementsLoading, error: announcementsError } = useAnnouncements(currentPage, itemsPerPage);
+  const {
+    data: announcementsData,
+    isLoading: announcementsLoading,
+    error: announcementsError,
+  } = useAnnouncements(currentPage, itemsPerPage);
   const { data: tags = [] } = useTags();
   const tagsArray = tags as Tag[];
   const { data: pageContentData, isLoading: pageContentLoading } = usePageContent('announcements');
@@ -57,16 +61,18 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
   const MAX_LENGTH = 200;
 
   const announcementsResponse = announcementsData || { data: [], total: 0 };
-  const announcements: Announcement[] = Array.isArray(announcementsResponse.data || announcementsResponse)
-    ? (announcementsResponse.data || announcementsResponse)
+  const announcements: Announcement[] = Array.isArray(
+    announcementsResponse.data || announcementsResponse
+  )
+    ? announcementsResponse.data || announcementsResponse
     : [];
-  const totalAnnouncements = announcementsResponse.total || announcementsResponse.pagination?.total || announcements.length;
+  const totalAnnouncements =
+    announcementsResponse.total || announcementsResponse.pagination?.total || announcements.length;
   const loading = announcementsLoading;
   const error = announcementsError ? 'An unexpected error occurred' : null;
 
   const content = previewContent || pageContentData || {};
   const pageLoading = !previewContent && pageContentLoading;
-
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

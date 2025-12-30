@@ -44,13 +44,18 @@ const AdminAlerts = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
 
-  const { data: alertsData, isLoading: loading, error: alertsError } = useAdminAlerts(currentPage, itemsPerPage);
+  const {
+    data: alertsData,
+    isLoading: loading,
+    error: alertsError,
+  } = useAdminAlerts(currentPage, itemsPerPage);
   const { createAlert, updateAlert, deleteAlert } = useAlertMutations();
 
   const alertsResponse = alertsData || {};
   const alerts = alertsResponse.data || alertsResponse;
   const alertsArray: Alert[] = Array.isArray(alerts) ? alerts : [];
-  const totalAlerts = alertsResponse.total || alertsResponse.pagination?.total || alertsArray.length;
+  const totalAlerts =
+    alertsResponse.total || alertsResponse.pagination?.total || alertsArray.length;
   const error = alertsError ? 'Failed to fetch alerts' : '';
 
   type SortField = 'title' | 'priority' | 'publishedDate' | 'createdAt';
@@ -153,9 +158,7 @@ const AdminAlerts = () => {
       onConfirm: async () => {
         try {
           setIsDeleting(true);
-          await Promise.all(
-            selectedAlertIds.map(id => deleteAlert.mutateAsync(id))
-          );
+          await Promise.all(selectedAlertIds.map(id => deleteAlert.mutateAsync(id)));
 
           setSelectedAlertIds([]);
           setToast({

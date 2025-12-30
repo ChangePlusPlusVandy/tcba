@@ -41,7 +41,11 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  const { data: blogsData, isLoading: blogsLoading, error: blogsError } = useBlogs(currentPage, itemsPerPage);
+  const {
+    data: blogsData,
+    isLoading: blogsLoading,
+    error: blogsError,
+  } = useBlogs(currentPage, itemsPerPage);
   const { data: allTags = [] } = useBlogTags();
   const tagsArray = allTags as Tag[];
   const { data: pageContentData, isLoading: pageContentLoading } = usePageContent('blogs');
@@ -58,7 +62,7 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
 
   const blogsResponse = blogsData || { data: [], total: 0 };
   const blogs: Blog[] = Array.isArray(blogsResponse.data || blogsResponse)
-    ? (blogsResponse.data || blogsResponse)
+    ? blogsResponse.data || blogsResponse
     : [];
   const totalBlogs = blogsResponse.total || blogsResponse.pagination?.total || blogs.length;
   const loading = blogsLoading;
@@ -66,7 +70,6 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
 
   const content = previewContent || pageContentData || {};
   const pageLoading = !previewContent && pageContentLoading;
-
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

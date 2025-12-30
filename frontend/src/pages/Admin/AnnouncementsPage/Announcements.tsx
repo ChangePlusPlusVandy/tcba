@@ -48,13 +48,21 @@ const AdminAnnouncements = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
 
-  const { data: announcementsData, isLoading: loading, error: announcementsError } = useAdminAnnouncements(currentPage, itemsPerPage);
-  const { createAnnouncement, updateAnnouncement, deleteAnnouncement, publishAnnouncement } = useAnnouncementMutations();
+  const {
+    data: announcementsData,
+    isLoading: loading,
+    error: announcementsError,
+  } = useAdminAnnouncements(currentPage, itemsPerPage);
+  const { createAnnouncement, updateAnnouncement, deleteAnnouncement, publishAnnouncement } =
+    useAnnouncementMutations();
 
   const announcementsResponse = announcementsData || {};
   const announcements = announcementsResponse.data || announcementsResponse;
   const announcementsArray: Announcement[] = Array.isArray(announcements) ? announcements : [];
-  const totalAnnouncements = announcementsResponse.total || announcementsResponse.pagination?.total || announcementsArray.length;
+  const totalAnnouncements =
+    announcementsResponse.total ||
+    announcementsResponse.pagination?.total ||
+    announcementsArray.length;
   const error = announcementsError ? 'Failed to fetch announcements' : '';
 
   type SortField = 'title' | 'publishedDate' | 'tags' | 'createdAt';
@@ -326,9 +334,7 @@ const AdminAnnouncements = () => {
       onConfirm: async () => {
         try {
           setIsDeleting(true);
-          await Promise.all(
-            selectedAnnouncementIds.map(id => deleteAnnouncement.mutateAsync(id))
-          );
+          await Promise.all(selectedAnnouncementIds.map(id => deleteAnnouncement.mutateAsync(id)));
 
           setSelectedAnnouncementIds([]);
           setToast({
@@ -385,7 +391,9 @@ const AdminAnnouncements = () => {
   const searchedAnnouncements = filtered.filter(a => {
     const matchesTags =
       tagsFilter.length === 0 ||
-      tagsFilter.some(tagName => a.tags?.some((announcementTag: Tag) => announcementTag.name === tagName));
+      tagsFilter.some(tagName =>
+        a.tags?.some((announcementTag: Tag) => announcementTag.name === tagName)
+      );
 
     const q = searchQuery.toLowerCase();
     return (
@@ -396,35 +404,37 @@ const AdminAnnouncements = () => {
     );
   });
 
-  const sortedAnnouncements = [...searchedAnnouncements].sort((a: Announcement, b: Announcement) => {
-    let aValue: any;
-    let bValue: any;
+  const sortedAnnouncements = [...searchedAnnouncements].sort(
+    (a: Announcement, b: Announcement) => {
+      let aValue: any;
+      let bValue: any;
 
-    switch (sortField) {
-      case 'title':
-        aValue = a.title.toLowerCase();
-        bValue = b.title.toLowerCase();
-        break;
-      case 'publishedDate':
-        aValue = a.publishedDate ? new Date(a.publishedDate).getTime() : 0;
-        bValue = b.publishedDate ? new Date(b.publishedDate).getTime() : 0;
-        break;
-      case 'tags':
-        aValue = a.tags?.length || 0;
-        bValue = b.tags?.length || 0;
-        break;
-      case 'createdAt':
-        aValue = new Date(a.createdAt).getTime();
-        bValue = new Date(b.createdAt).getTime();
-        break;
-      default:
-        return 0;
+      switch (sortField) {
+        case 'title':
+          aValue = a.title.toLowerCase();
+          bValue = b.title.toLowerCase();
+          break;
+        case 'publishedDate':
+          aValue = a.publishedDate ? new Date(a.publishedDate).getTime() : 0;
+          bValue = b.publishedDate ? new Date(b.publishedDate).getTime() : 0;
+          break;
+        case 'tags':
+          aValue = a.tags?.length || 0;
+          bValue = b.tags?.length || 0;
+          break;
+        case 'createdAt':
+          aValue = new Date(a.createdAt).getTime();
+          bValue = new Date(b.createdAt).getTime();
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
     }
-
-    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-    return 0;
-  });
+  );
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -640,7 +650,9 @@ const AdminAnnouncements = () => {
                       }
                       onChange={e => {
                         if (e.target.checked) {
-                          setSelectedAnnouncementIds(sortedAnnouncements.map((a: Announcement) => a.id));
+                          setSelectedAnnouncementIds(
+                            sortedAnnouncements.map((a: Announcement) => a.id)
+                          );
                         } else {
                           setSelectedAnnouncementIds([]);
                         }

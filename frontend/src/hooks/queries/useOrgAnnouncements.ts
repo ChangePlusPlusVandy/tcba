@@ -10,7 +10,9 @@ export const useOrgAnnouncements = (page = 1, limit = 50) => {
       const response = await api.get(`/api/announcements?page=${page}&limit=${limit}`);
       const data = response.data || response;
       const announcementsArray = Array.isArray(data) ? data : [];
-      const publishedAnnouncements = announcementsArray.filter((announcement: any) => announcement.isPublished);
+      const publishedAnnouncements = announcementsArray.filter(
+        (announcement: any) => announcement.isPublished
+      );
 
       return {
         data: publishedAnnouncements,

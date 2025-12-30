@@ -48,7 +48,8 @@ const OrgSurveysPage = () => {
   const organizationId = user?.publicMetadata?.organizationId as string | undefined;
 
   const { data: surveys = [], isLoading: loadingSurveys } = useOrgActiveSurveys();
-  const { data: myResponses = [], isLoading: loadingResponses } = useOrgSurveyResponses(organizationId);
+  const { data: myResponses = [], isLoading: loadingResponses } =
+    useOrgSurveyResponses(organizationId);
   const { submitResponse } = useSurveyResponseMutations();
 
   const loading = loadingSurveys || loadingResponses;
@@ -69,11 +70,11 @@ const OrgSurveysPage = () => {
   const responsesArray = myResponses as SurveyResponse[];
 
   const hasResponded = (surveyId: string) => {
-    return responsesArray.some((r) => r.surveyId === surveyId);
+    return responsesArray.some(r => r.surveyId === surveyId);
   };
 
   const filteredSurveys = surveysArray
-    .filter((survey) => {
+    .filter(survey => {
       const matchesSearch =
         survey.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (survey.description &&
@@ -241,7 +242,7 @@ const OrgSurveysPage = () => {
                 </tr>
               </thead>
               <tbody className='divide-y divide-gray-200'>
-                {filteredSurveys.map((survey) => (
+                {filteredSurveys.map(survey => (
                   <tr key={survey.id} className='hover:bg-gray-50'>
                     <td className='px-6 py-4'>
                       <div>

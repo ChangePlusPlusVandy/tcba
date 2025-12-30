@@ -20,14 +20,20 @@ const DashboardPage = lazy(() => import('../pages/OrganizationView/DashboardPage
 const ProfilePage = lazy(() => import('../pages/OrganizationView/ProfilePage/Profile'));
 const OrgAlertsPage = lazy(() => import('../pages/OrganizationView/AlertsPage/Alerts'));
 const OrgSurveysPage = lazy(() => import('../pages/OrganizationView/SurveysPage/Surveys'));
-const OrgAnnouncementsPage = lazy(() => import('../pages/OrganizationView/AnnouncementsPage/Announcements'));
+const OrgAnnouncementsPage = lazy(
+  () => import('../pages/OrganizationView/AnnouncementsPage/Announcements')
+);
 const OrgBlogsPage = lazy(() => import('../pages/OrganizationView/BlogsPage/Blogs'));
 const OrgSettingsPage = lazy(() => import('../pages/OrganizationView/SettingsPage/Settings'));
-const OrganizationsList = lazy(() => import('../pages/OrganizationView/OrganizationsListPage/OrganizationsList'));
+const OrganizationsList = lazy(
+  () => import('../pages/OrganizationView/OrganizationsListPage/OrganizationsList')
+);
 const OrganizationMessages = lazy(() => import('../pages/OrganizationView/MessagesPage/Messages'));
 
 const AdminDashboard = lazy(() => import('../pages/Admin/AdminDashboard/AdminDashboard'));
-const OrganizationManagement = lazy(() => import('../pages/Admin/OrganizationManagementPage/OrganizationManagement'));
+const OrganizationManagement = lazy(
+  () => import('../pages/Admin/OrganizationManagementPage/OrganizationManagement')
+);
 const AdminAnnouncements = lazy(() => import('../pages/Admin/AnnouncementsPage/Announcements'));
 const AdminBlogs = lazy(() => import('../pages/Admin/BlogsPage/Blogs'));
 const AdminAlerts = lazy(() => import('../pages/Admin/AlertsPage/Alerts'));
@@ -37,18 +43,26 @@ const SurveyResponses = lazy(() => import('../pages/Admin/SurveyResponsesPage/Su
 const SurveySummary = lazy(() => import('../pages/Admin/SurveyResponsesPage/SurveySummary'));
 const HomePageEdit = lazy(() => import('../pages/Admin/PageEditPages/HomePage/HomePageEdit'));
 const AboutPageEdit = lazy(() => import('../pages/Admin/PageEditPages/AboutPage/AboutPageEdit'));
-const RegisterPageEdit = lazy(() => import('../pages/Admin/PageEditPages/RegisterPage/RegisterPageEdit'));
-const ContactPageEdit = lazy(() => import('../pages/Admin/PageEditPages/ContactPage/ContactPageEdit'));
-const EmailSignupPageEdit = lazy(() => import('../pages/Admin/PageEditPages/EmailSignupPage/EmailSignupPageEdit'));
-const AnnouncementsPageEdit = lazy(() => import('../pages/Admin/PageEditPages/AnnouncementsPage/AnnouncementsPageEdit'));
+const RegisterPageEdit = lazy(
+  () => import('../pages/Admin/PageEditPages/RegisterPage/RegisterPageEdit')
+);
+const ContactPageEdit = lazy(
+  () => import('../pages/Admin/PageEditPages/ContactPage/ContactPageEdit')
+);
+const EmailSignupPageEdit = lazy(
+  () => import('../pages/Admin/PageEditPages/EmailSignupPage/EmailSignupPageEdit')
+);
+const AnnouncementsPageEdit = lazy(
+  () => import('../pages/Admin/PageEditPages/AnnouncementsPage/AnnouncementsPageEdit')
+);
 const BlogsPageEdit = lazy(() => import('../pages/Admin/PageEditPages/BlogsPage/BlogsPageEdit'));
 const CustomEmail = lazy(() => import('../pages/Admin/CustomEmailPage/CustomEmail'));
 const AdminMessages = lazy(() => import('../pages/Admin/MessagesPage/Messages'));
 const Tags = lazy(() => import('../pages/Admin/TagsPage/Tags'));
 
 const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="text-lg">Loading...</div>
+  <div className='flex items-center justify-center min-h-screen'>
+    <div className='text-lg'>Loading...</div>
   </div>
 );
 

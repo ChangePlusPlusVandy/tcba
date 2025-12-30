@@ -58,7 +58,10 @@ const CustomEmail = () => {
   const [scheduledDateTime, setScheduledDateTime] = useState('');
 
   const { data: organizationsData, isLoading: loading } = useAdminOrganizations(1, 1000);
-  const { data: emailHistoryData, isLoading: historyLoading } = useEmailHistory(currentPage, itemsPerPage);
+  const { data: emailHistoryData, isLoading: historyLoading } = useEmailHistory(
+    currentPage,
+    itemsPerPage
+  );
   const { sendEmail } = useEmailMutations();
 
   const organizationsResponse = organizationsData || {};
@@ -71,7 +74,9 @@ const CustomEmail = () => {
   const availableTags = Array.from(
     new Set(
       organizationsArray.flatMap((org: Organization) =>
-        org.tags && Array.isArray(org.tags) ? org.tags.filter((tag): tag is string => typeof tag === 'string') : []
+        org.tags && Array.isArray(org.tags)
+          ? org.tags.filter((tag): tag is string => typeof tag === 'string')
+          : []
       )
     )
   ).sort();
@@ -684,14 +689,16 @@ const CustomEmail = () => {
                             </h4>
                             <div className='bg-gray-50 p-4 rounded-md max-h-48 overflow-y-auto'>
                               <div className='flex flex-wrap gap-2'>
-                                {email.recipientEmails.map((recipientEmail: string, index: number) => (
-                                  <span
-                                    key={index}
-                                    className='px-2 py-1 bg-white border border-gray-200 rounded text-sm text-gray-600'
-                                  >
-                                    {recipientEmail}
-                                  </span>
-                                ))}
+                                {email.recipientEmails.map(
+                                  (recipientEmail: string, index: number) => (
+                                    <span
+                                      key={index}
+                                      className='px-2 py-1 bg-white border border-gray-200 rounded text-sm text-gray-600'
+                                    >
+                                      {recipientEmail}
+                                    </span>
+                                  )
+                                )}
                               </div>
                             </div>
                           </div>

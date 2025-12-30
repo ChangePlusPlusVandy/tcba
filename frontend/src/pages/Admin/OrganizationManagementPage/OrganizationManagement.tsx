@@ -51,7 +51,10 @@ const OrganizationManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
 
-  const { data: organizationsData, isLoading: loading } = useAdminOrganizations(currentPage, itemsPerPage);
+  const { data: organizationsData, isLoading: loading } = useAdminOrganizations(
+    currentPage,
+    itemsPerPage
+  );
   const {
     approveOrganization,
     declineOrganization,
@@ -64,7 +67,10 @@ const OrganizationManagement = () => {
   const organizationsResponse = organizationsData || {};
   const organizations = organizationsResponse.data || organizationsResponse;
   const organizationsArray: Organization[] = Array.isArray(organizations) ? organizations : [];
-  const totalOrganizations = organizationsResponse.total || organizationsResponse.pagination?.total || organizationsArray.length;
+  const totalOrganizations =
+    organizationsResponse.total ||
+    organizationsResponse.pagination?.total ||
+    organizationsArray.length;
 
   const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'ACTIVE' | 'INACTIVE'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -106,7 +112,9 @@ const OrganizationManagement = () => {
 
   const fetchTags = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/tags`);
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/tags`
+      );
       if (!response.ok) throw new Error('Failed to fetch tags');
       const data = await response.json();
       const tagNames = data.map((tag: { name: string }) => tag.name);

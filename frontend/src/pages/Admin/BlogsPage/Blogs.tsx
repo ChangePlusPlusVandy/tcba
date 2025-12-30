@@ -51,7 +51,11 @@ const AdminBlogs = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
 
-  const { data: blogsData, isLoading: loading, error: blogsError } = useAdminBlogs(currentPage, itemsPerPage);
+  const {
+    data: blogsData,
+    isLoading: loading,
+    error: blogsError,
+  } = useAdminBlogs(currentPage, itemsPerPage);
   const { createBlog, updateBlog, deleteBlog } = useBlogMutations();
 
   const blogsResponse = blogsData || {};
@@ -213,9 +217,7 @@ const AdminBlogs = () => {
       onConfirm: async () => {
         try {
           setIsDeleting(true);
-          await Promise.all(
-            selectedBlogIds.map(id => deleteBlog.mutateAsync(id))
-          );
+          await Promise.all(selectedBlogIds.map(id => deleteBlog.mutateAsync(id)));
 
           setSelectedBlogIds([]);
           setToast({

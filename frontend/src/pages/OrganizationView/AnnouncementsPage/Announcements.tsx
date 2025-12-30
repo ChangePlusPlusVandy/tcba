@@ -1,4 +1,12 @@
-import { useEffect, useState, type JSXElementConstructor, type Key, type ReactElement, type ReactNode, type ReactPortal } from 'react';
+import {
+  useEffect,
+  useState,
+  type JSXElementConstructor,
+  type Key,
+  type ReactElement,
+  type ReactNode,
+  type ReactPortal,
+} from 'react';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
 import Toast from '../../../components/Toast';
 import PublicAttachmentList from '../../../components/PublicAttachmentList';
@@ -47,7 +55,11 @@ const OrgAnnouncementsPage = () => {
     type: 'success' | 'error' | 'info';
   } | null>(null);
 
-  const { data: announcementsData, isLoading: loading, error: announcementsError } = useOrgAnnouncements(currentPage, itemsPerPage);
+  const {
+    data: announcementsData,
+    isLoading: loading,
+    error: announcementsError,
+  } = useOrgAnnouncements(currentPage, itemsPerPage);
 
   const announcements = announcementsData?.data || [];
   const totalAnnouncements = announcementsData?.total || 0;
@@ -83,14 +95,18 @@ const OrgAnnouncementsPage = () => {
 
   // Compute all tags with counts
   const allTags = Array.from(
-    new Set(announcements.flatMap(announcement => announcement.tags.map((tag: { name: any; }) => tag.name)))
+    new Set(
+      announcements.flatMap(announcement => announcement.tags.map((tag: { name: any }) => tag.name))
+    )
   );
 
   const filteredAnnouncements = announcements.filter(announcement => {
     const matchesTags =
       tagsFilter.length === 0 ||
       tagsFilter.some(tagName =>
-        announcement.tags?.some((announcementTag: { name: string; }) => announcementTag.name === tagName)
+        announcement.tags?.some(
+          (announcementTag: { name: string }) => announcementTag.name === tagName
+        )
       );
 
     if (searchQuery) {
@@ -347,14 +363,39 @@ const OrgAnnouncementsPage = () => {
                     <td className='px-6 py-4'>
                       {announcement.tags && announcement.tags.length > 0 ? (
                         <div className='flex flex-wrap gap-1'>
-                          {announcement.tags.map((tag: { id: Key | null | undefined; name: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; }) => (
-                            <span
-                              key={tag.id}
-                              className='px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
-                            >
-                              {tag.name}
-                            </span>
-                          ))}
+                          {announcement.tags.map(
+                            (tag: {
+                              id: Key | null | undefined;
+                              name:
+                                | string
+                                | number
+                                | bigint
+                                | boolean
+                                | ReactElement<unknown, string | JSXElementConstructor<any>>
+                                | Iterable<ReactNode>
+                                | ReactPortal
+                                | Promise<
+                                    | string
+                                    | number
+                                    | bigint
+                                    | boolean
+                                    | ReactPortal
+                                    | ReactElement<unknown, string | JSXElementConstructor<any>>
+                                    | Iterable<ReactNode>
+                                    | null
+                                    | undefined
+                                  >
+                                | null
+                                | undefined;
+                            }) => (
+                              <span
+                                key={tag.id}
+                                className='px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200'
+                              >
+                                {tag.name}
+                              </span>
+                            )
+                          )}
                         </div>
                       ) : (
                         <span className='text-sm text-gray-400'>-</span>

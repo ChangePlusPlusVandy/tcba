@@ -51,7 +51,8 @@ const SurveyResponses = () => {
 
   const { data: survey = null, isLoading: surveyLoading } = useSurvey(surveyId);
   const surveyData = survey as Survey | null;
-  const { data: responses = [], isLoading: responsesLoading } = useSurveyResponsesBySurvey(surveyId);
+  const { data: responses = [], isLoading: responsesLoading } =
+    useSurveyResponsesBySurvey(surveyId);
   const responsesArray = responses as SurveyResponse[];
 
   const loading = surveyLoading || responsesLoading;
@@ -94,14 +95,17 @@ const SurveyResponses = () => {
     setSelectedResponse(null);
   };
 
-  const allTags = Array.from(new Set(responsesArray.flatMap((r: SurveyResponse) => r.organization.tags || []))) as string[];
+  const allTags = Array.from(
+    new Set(responsesArray.flatMap((r: SurveyResponse) => r.organization.tags || []))
+  ) as string[];
 
   const filteredResponses = responsesArray.filter((response: SurveyResponse) => {
     const matchesSearch = response.organization.name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
     const matchesTags =
-      tagsFilter.length === 0 || tagsFilter.some((tag: string) => response.organization.tags?.includes(tag));
+      tagsFilter.length === 0 ||
+      tagsFilter.some((tag: string) => response.organization.tags?.includes(tag));
     return matchesSearch && matchesTags;
   });
 

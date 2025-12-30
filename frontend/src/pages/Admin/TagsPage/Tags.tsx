@@ -58,9 +58,7 @@ const Tags = () => {
       setIsDeleting(true);
       const tagCount = selectedTagIds.length;
 
-      await Promise.all(
-        selectedTagIds.map(tagId => deleteTag.mutateAsync(tagId))
-      );
+      await Promise.all(selectedTagIds.map(tagId => deleteTag.mutateAsync(tagId)));
 
       setToast({
         message: `${tagCount} tag${tagCount > 1 ? 's' : ''} deleted successfully!`,

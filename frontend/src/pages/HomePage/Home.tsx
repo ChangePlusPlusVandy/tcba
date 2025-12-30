@@ -39,9 +39,7 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
   const loading = !previewContent && contentLoading;
 
   useEffect(() => {
-    const closedNotifications = JSON.parse(
-      localStorage.getItem('closedNotifications') || '[]'
-    );
+    const closedNotifications = JSON.parse(localStorage.getItem('closedNotifications') || '[]');
     setDismissedIds(closedNotifications);
   }, []);
 

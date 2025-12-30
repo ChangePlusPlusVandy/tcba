@@ -38,8 +38,8 @@ export const useDashboardData = () => {
     enabled: !!orgId,
   });
 
-  const isLoading = results.some((r) => r.isLoading);
-  const isError = results.some((r) => r.isError);
+  const isLoading = results.some(r => r.isLoading);
+  const isError = results.some(r => r.isError);
 
   return {
     orgProfile,

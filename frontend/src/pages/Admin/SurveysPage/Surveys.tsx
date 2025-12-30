@@ -78,9 +78,7 @@ const AdminSurveys = () => {
       onConfirm: async () => {
         try {
           setIsDeleting(true);
-          await Promise.all(
-            selectedSurveyIds.map(id => deleteSurvey.mutateAsync(id))
-          );
+          await Promise.all(selectedSurveyIds.map(id => deleteSurvey.mutateAsync(id)));
 
           setSelectedSurveyIds([]);
           setToast({

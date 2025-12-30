@@ -64,7 +64,6 @@ const ProfilePage = () => {
     }
   }, [organization]);
 
-
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {

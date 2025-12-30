@@ -44,7 +44,6 @@ const OrgSettingsPage = () => {
     }
   }, [organization]);
 
-
   const handleNotificationChange = (key: keyof typeof notificationSettings) => {
     setNotificationSettings(prev => ({
       ...prev,

@@ -42,7 +42,11 @@ const AlertsPage = () => {
     type: 'success' | 'error' | 'info';
   } | null>(null);
 
-  const { data: alertsData, isLoading: loading, error: alertsError } = useOrgAlerts(currentPage, itemsPerPage);
+  const {
+    data: alertsData,
+    isLoading: loading,
+    error: alertsError,
+  } = useOrgAlerts(currentPage, itemsPerPage);
 
   const alerts = (alertsData?.data || []) as Alert[];
   const totalAlerts = alertsData?.total || 0;

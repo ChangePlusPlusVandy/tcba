@@ -26,14 +26,22 @@ interface ContentItem {
 const DashboardPage = () => {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
-  const { orgProfile, alerts, surveys, surveyResponses, announcements, blogs, isLoading } = useDashboardData();
+  const { orgProfile, alerts, surveys, surveyResponses, announcements, blogs, isLoading } =
+    useDashboardData();
 
-  const lastCheckedDates = useMemo(() => ({
-    alerts: orgProfile?.lastCheckedAlertsAt ? new Date(orgProfile.lastCheckedAlertsAt) : null,
-    announcements: orgProfile?.lastCheckedAnnouncementsAt ? new Date(orgProfile.lastCheckedAnnouncementsAt) : null,
-    blogs: orgProfile?.lastCheckedBlogsAt ? new Date(orgProfile.lastCheckedBlogsAt) : null,
-    messages: orgProfile?.lastCheckedMessagesAt ? new Date(orgProfile.lastCheckedMessagesAt) : null,
-  }), [orgProfile]);
+  const lastCheckedDates = useMemo(
+    () => ({
+      alerts: orgProfile?.lastCheckedAlertsAt ? new Date(orgProfile.lastCheckedAlertsAt) : null,
+      announcements: orgProfile?.lastCheckedAnnouncementsAt
+        ? new Date(orgProfile.lastCheckedAnnouncementsAt)
+        : null,
+      blogs: orgProfile?.lastCheckedBlogsAt ? new Date(orgProfile.lastCheckedBlogsAt) : null,
+      messages: orgProfile?.lastCheckedMessagesAt
+        ? new Date(orgProfile.lastCheckedMessagesAt)
+        : null,
+    }),
+    [orgProfile]
+  );
 
   const { stats, latestItems } = useMemo(() => {
     const computedStats: DashboardStats = {
@@ -52,7 +60,9 @@ const DashboardPage = () => {
     if (alerts) {
       const alertsData = (alerts.data || alerts).filter((a: any) => a.isPublished);
       const newAlerts = lastCheckedDates.alerts
-        ? alertsData.filter((a: any) => new Date(a.publishedDate || a.createdAt) > lastCheckedDates.alerts!)
+        ? alertsData.filter(
+            (a: any) => new Date(a.publishedDate || a.createdAt) > lastCheckedDates.alerts!
+          )
         : alertsData;
       computedStats.newAlerts = newAlerts.length;
       if (newAlerts[0]) {
@@ -72,7 +82,9 @@ const DashboardPage = () => {
       const completedSurveyIds = surveyResponses
         .filter((r: any) => r.submittedDate)
         .map((r: any) => r.surveyId);
-      const incompleteSurveys = activeSurveys.filter((s: any) => !completedSurveyIds.includes(s.id));
+      const incompleteSurveys = activeSurveys.filter(
+        (s: any) => !completedSurveyIds.includes(s.id)
+      );
       computedStats.newSurveys = incompleteSurveys.length;
       if (incompleteSurveys[0]) {
         computedLatest.survey = {
@@ -87,9 +99,13 @@ const DashboardPage = () => {
     }
 
     if (announcements) {
-      const announcementsData = (announcements.data || announcements).filter((a: any) => a.isPublished);
+      const announcementsData = (announcements.data || announcements).filter(
+        (a: any) => a.isPublished
+      );
       const newAnnouncements = lastCheckedDates.announcements
-        ? announcementsData.filter((a: any) => new Date(a.publishedDate || a.createdAt) > lastCheckedDates.announcements!)
+        ? announcementsData.filter(
+            (a: any) => new Date(a.publishedDate || a.createdAt) > lastCheckedDates.announcements!
+          )
         : announcementsData;
       computedStats.newAnnouncements = newAnnouncements.length;
       if (newAnnouncements[0]) {

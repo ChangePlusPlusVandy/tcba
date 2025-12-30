@@ -6,7 +6,9 @@ export const useAnnouncements = (page = 1, limit = 100) => {
   return useQuery({
     queryKey: ['announcements', { page, limit }],
     queryFn: async () => {
-      const response = await axios.get(`${API_BASE_URL}/api/announcements?page=${page}&limit=${limit}`);
+      const response = await axios.get(
+        `${API_BASE_URL}/api/announcements?page=${page}&limit=${limit}`
+      );
       return response.data.data || response.data;
     },
     staleTime: 5 * 60 * 1000,

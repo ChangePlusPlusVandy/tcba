@@ -28,10 +28,8 @@ export const useApi = () => {
 
   return {
     get: (url: string) => request(url, { method: 'GET' }),
-    post: (url: string, data?: any) =>
-      request(url, { method: 'POST', body: JSON.stringify(data) }),
-    put: (url: string, data?: any) =>
-      request(url, { method: 'PUT', body: JSON.stringify(data) }),
+    post: (url: string, data?: any) => request(url, { method: 'POST', body: JSON.stringify(data) }),
+    put: (url: string, data?: any) => request(url, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (url: string) => request(url, { method: 'DELETE' }),
   };
 };
