@@ -160,7 +160,7 @@ export const getPublicImageUrl = async (req: Request, res: Response) => {
 
     const url = s3.getSignedUrl('getObject', params);
 
-    res.set('Cache-Control', 'public, max-age=86400'); // Cache the URL for 24 hours
+    res.set('Cache-Control', 'public, max-age=86400, s-maxage=86400, immutable');
 
     return res.status(200).json({ url });
   } catch (error) {
