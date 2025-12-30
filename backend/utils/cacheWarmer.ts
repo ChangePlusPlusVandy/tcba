@@ -21,7 +21,11 @@ export const warmCache = async () => {
       };
     });
 
-    await CacheService.set(CacheKeys.pageContent('home'), structuredHomeContent, CacheTTL.PAGE_CONTENT);
+    await CacheService.set(
+      CacheKeys.pageContent('home'),
+      structuredHomeContent,
+      CacheTTL.PAGE_CONTENT
+    );
     console.log('Cached home page content');
 
     const [announcements, announcementsTotal] = await Promise.all([
@@ -46,7 +50,11 @@ export const warmCache = async () => {
       },
     };
 
-    await CacheService.set(CacheKeys.announcements(1, 3, true), announcementsResponse, CacheTTL.ANNOUNCEMENTS_LIST);
+    await CacheService.set(
+      CacheKeys.announcements(1, 3, true),
+      announcementsResponse,
+      CacheTTL.ANNOUNCEMENTS_LIST
+    );
     console.log('Cached announcements');
 
     const [blogs, blogsTotal] = await Promise.all([
