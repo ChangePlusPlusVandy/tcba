@@ -3,18 +3,18 @@ import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from '../components/ProtectedRoute';
 import AdminRoute from '../components/AdminRoute';
 
-import HomePage from '../pages/HomePage/Home';
-import AboutPage from '../pages/AboutPage/About';
-import AnnouncementsPage from '../pages/AnnouncementsPage/Announcements';
-import ContactPage from '../pages/ContactPage/Contact';
-import LoginPage from '../pages/LoginPage/Login';
-import ForgotPasswordPage from '../pages/ForgotPasswordPage/ForgotPassword';
-import RegisterPage from '../pages/RegisterPage/Register';
-import SignupPage from '../pages/SignupPage/Signup';
-import UnsubscribePage from '../pages/UnsubscribePage/Unsubscribe';
-import Announcement from '../pages/AnnouncementPage/Announcement';
-import Blog from '../pages/BlogPage/Blog';
-import BlogsPage from '../pages/BlogsPage/Blogs';
+const HomePage = lazy(() => import('../pages/HomePage/Home'));
+const AboutPage = lazy(() => import('../pages/AboutPage/About'));
+const AnnouncementsPage = lazy(() => import('../pages/AnnouncementsPage/Announcements'));
+const ContactPage = lazy(() => import('../pages/ContactPage/Contact'));
+const LoginPage = lazy(() => import('../pages/LoginPage/Login'));
+const ForgotPasswordPage = lazy(() => import('../pages/ForgotPasswordPage/ForgotPassword'));
+const RegisterPage = lazy(() => import('../pages/RegisterPage/Register'));
+const SignupPage = lazy(() => import('../pages/SignupPage/Signup'));
+const UnsubscribePage = lazy(() => import('../pages/UnsubscribePage/Unsubscribe'));
+const Announcement = lazy(() => import('../pages/AnnouncementPage/Announcement'));
+const Blog = lazy(() => import('../pages/BlogPage/Blog'));
+const BlogsPage = lazy(() => import('../pages/BlogsPage/Blogs'));
 
 const DashboardPage = lazy(() => import('../pages/OrganizationView/DashboardPage/Dashboard'));
 const ProfilePage = lazy(() => import('../pages/OrganizationView/ProfilePage/Profile'));
@@ -69,19 +69,110 @@ const PageLoader = () => (
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route path='/' element={<HomePage />} />
-      <Route path='/home' element={<HomePage />} />
-      <Route path='/about' element={<AboutPage />} />
-      <Route path='/announcements' element={<AnnouncementsPage />} />
-      <Route path='/announcement/:slug' element={<Announcement />} />
-      <Route path='/blogs' element={<BlogsPage />} />
-      <Route path='/blog/:slug' element={<Blog />} />
-      <Route path='/contact' element={<ContactPage />} />
-      <Route path='/login' element={<LoginPage />} />
-      <Route path='/forgot-password' element={<ForgotPasswordPage />} />
-      <Route path='/register' element={<RegisterPage />} />
-      <Route path='/email-signup' element={<SignupPage />} />
-      <Route path='/unsubscribe' element={<UnsubscribePage />} />
+      <Route
+        path='/'
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <HomePage />
+          </Suspense>
+        }
+      />
+      <Route
+        path='/home'
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <HomePage />
+          </Suspense>
+        }
+      />
+      <Route
+        path='/about'
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <AboutPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path='/announcements'
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <AnnouncementsPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path='/announcement/:slug'
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <Announcement />
+          </Suspense>
+        }
+      />
+      <Route
+        path='/blogs'
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <BlogsPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path='/blog/:slug'
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <Blog />
+          </Suspense>
+        }
+      />
+      <Route
+        path='/contact'
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <ContactPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path='/login'
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <LoginPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path='/forgot-password'
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <ForgotPasswordPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path='/register'
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <RegisterPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path='/email-signup'
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <SignupPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path='/unsubscribe'
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <UnsubscribePage />
+          </Suspense>
+        }
+      />
 
       <Route
         path='/dashboard'
