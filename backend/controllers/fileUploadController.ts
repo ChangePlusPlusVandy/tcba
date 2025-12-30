@@ -5,7 +5,7 @@ import { s3 } from '../config/aws-s3.js';
 import { prisma } from '../config/prisma.js';
 
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
-const normalizeS3Key = (key: string) => key.startsWith('/') ? key.slice(1) : key;
+const normalizeS3Key = (key: string) => (key.startsWith('/') ? key.slice(1) : key);
 
 // Get presigned URL for uploading file to S3
 // Validate fileName, generate unique key, create PutObjectCommand, use getSignedUrl for upload
@@ -161,7 +161,7 @@ export const getPublicImageUrl = async (req: Request, res: Response) => {
 
     const url = s3.getSignedUrl('getObject', params);
 
-    res.set('Cache-Control', 'public, max-age=86400, s-maxage=86400, immutable');
+    res.set('Cache-Control', 'public, max-age=86400');
 
     return res.status(200).json({ url });
   } catch (error) {

@@ -6,10 +6,9 @@ interface S3ImageProps {
   alt: string;
   className?: string;
   fallbackSrc?: string;
-  loading?: 'lazy' | 'eager';
 }
 
-const S3Image = ({ src, alt, className, fallbackSrc, loading = 'lazy' }: S3ImageProps) => {
+const S3Image = ({ src, alt, className, fallbackSrc }: S3ImageProps) => {
   const [imageSrc, setImageSrc] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [, setError] = useState(false);
@@ -78,7 +77,6 @@ const S3Image = ({ src, alt, className, fallbackSrc, loading = 'lazy' }: S3Image
       src={imageSrc || fallbackSrc || ''}
       alt={alt}
       className={className}
-      loading={loading}
       onError={handleError}
     />
   );

@@ -170,7 +170,6 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
           fallbackSrc={heroImage}
           alt='Hands providing support'
           className='absolute inset-0 w-full h-full object-cover'
-          loading='eager'
         />
         <div className='absolute inset-0 bg-slate-950/60' />
 
