@@ -32,12 +32,11 @@ interface HomePageProps {
 const HomePage = ({ previewContent }: HomePageProps = {}) => {
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
 
-  const { data: pageContent, isLoading: contentLoading } = usePageContent('home');
+  const { data: pageContent } = usePageContent('home');
   const { data: announcementsData } = useAnnouncements(1, 3);
   const { data: blogsData } = useBlogs(1, 2);
 
   const content = previewContent || pageContent || {};
-  const loading = !previewContent && contentLoading;
 
   useEffect(() => {
     const closedNotifications = JSON.parse(localStorage.getItem('closedNotifications') || '[]');
@@ -152,13 +151,7 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <div className='text-lg'>Loading...</div>
-      </div>
-    );
-  }
+  // Removed blocking loader - show content immediately with progressive loading
 
   const heroImageSrc = content['hero_image']?.value || heroImage;
 

@@ -9,7 +9,6 @@ import 'react-quill-new/dist/quill.snow.css';
 export default function Announcement() {
   const { slug } = useParams<{ slug: string }>();
   const [announcement, setAnnouncement] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAnnouncement = async () => {
@@ -20,13 +19,12 @@ export default function Announcement() {
         console.error('Error fetching announcement:', error);
         setAnnouncement(null);
       }
-      setLoading(false);
     };
 
     fetchAnnouncement();
   }, [slug]);
 
-  if (loading) return <p>Loading...</p>;
+  // Removed blocking loader
   if (!announcement) return <p>Announcement not found.</p>;
 
   // FORMAT TIME AGO

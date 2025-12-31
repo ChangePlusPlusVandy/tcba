@@ -25,10 +25,9 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
     type: 'success' | 'error' | 'info';
   } | null>(null);
 
-  const { data: pageContent, isLoading: contentLoading } = usePageContent('contact');
+  const { data: pageContent } = usePageContent('contact');
 
   const content = previewContent || pageContent || {};
-  const pageLoading = !previewContent && contentLoading;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -74,13 +73,7 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
     }
   };
 
-  if (pageLoading) {
-    return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <div className='text-lg'>Loading...</div>
-      </div>
-    );
-  }
+  // Removed blocking loader - show content immediately with progressive loading
 
   return (
     <div className='mt-8 bg-white px-20 py-16'>

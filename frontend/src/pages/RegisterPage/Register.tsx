@@ -59,10 +59,9 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
     message: string;
     type: 'success' | 'error' | 'info';
   } | null>(null);
-  const { data: pageContent, isLoading: contentLoading } = usePageContent('register');
+  const { data: pageContent } = usePageContent('register');
 
   const content = previewContent || pageContent || {};
-  const pageLoading = !previewContent && contentLoading;
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -149,13 +148,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
     navigate('/contact');
   };
 
-  if (pageLoading) {
-    return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <div className='text-lg'>Loading...</div>
-      </div>
-    );
-  }
+  // Removed blocking loader - show content immediately with progressive loading
 
   const heroImageSrc = content['hero_image']?.value || getInvolvedImage;
 

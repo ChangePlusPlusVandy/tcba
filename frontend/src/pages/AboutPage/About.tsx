@@ -71,7 +71,6 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
   const { data: mapOrgsData, isLoading: mapOrgsLoading } = useMapOrganizations();
 
   const content = previewContent || pageContent || {};
-  const loading = !previewContent && contentLoading;
   const isLoadingMap = mapOrgsLoading;
 
   const logoMap: Record<string, string> = {
@@ -115,13 +114,7 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
     }));
   }, [mapOrgsData, logoMap]);
 
-  if (loading) {
-    return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <div className='text-lg'>Loading...</div>
-      </div>
-    );
-  }
+  // Removed blocking loader - show content immediately with progressive loading
 
   const missionImageSrc = content['mission_image']?.value || tcbaDDABill;
 

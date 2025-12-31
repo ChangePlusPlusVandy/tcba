@@ -31,7 +31,6 @@ type BlogType = {
 const Blog = () => {
   const { slug } = useParams<{ slug: string }>();
   const [blog, setBlog] = useState<BlogType | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchBlog = async () => {
@@ -42,13 +41,12 @@ const Blog = () => {
         console.error('Error fetching blog:', error);
         setBlog(null);
       }
-      setLoading(false);
     };
 
     fetchBlog();
   }, [slug]);
 
-  if (loading) return <p>Loading...</p>;
+  // Removed blocking loader
   if (!blog) return <p>Blog not found.</p>;
 
   const getTimeAgo = (dateString: string) => {
