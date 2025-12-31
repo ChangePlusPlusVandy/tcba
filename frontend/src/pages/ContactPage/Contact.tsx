@@ -73,8 +73,6 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
     }
   };
 
-  // Removed blocking loader - show content immediately with progressive loading
-
   return (
     <div className='mt-8 bg-white px-20 py-16'>
       <Link

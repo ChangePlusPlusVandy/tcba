@@ -46,7 +46,6 @@ const Blog = () => {
     fetchBlog();
   }, [slug]);
 
-  // Removed blocking loader
   if (!blog) return <p>Blog not found.</p>;
 
   const getTimeAgo = (dateString: string) => {

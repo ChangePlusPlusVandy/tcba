@@ -151,8 +151,6 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
     }
   };
 
-  // Removed blocking loader - show content immediately with progressive loading
-
   const heroImageSrc = content['hero_image']?.value || heroImage;
 
   return (

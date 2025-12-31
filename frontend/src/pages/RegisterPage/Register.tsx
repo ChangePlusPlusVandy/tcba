@@ -148,8 +148,6 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
     navigate('/contact');
   };
 
-  // Removed blocking loader - show content immediately with progressive loading
-
   const heroImageSrc = content['hero_image']?.value || getInvolvedImage;
 
   return (

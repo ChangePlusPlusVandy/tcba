@@ -114,8 +114,6 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
     }));
   }, [mapOrgsData, logoMap]);
 
-  // Removed blocking loader - show content immediately with progressive loading
-
   const missionImageSrc = content['mission_image']?.value || tcbaDDABill;
 
   // Coalition partners

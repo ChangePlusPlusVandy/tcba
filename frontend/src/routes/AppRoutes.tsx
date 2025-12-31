@@ -83,12 +83,12 @@ const PageLoader = () => {
       <div className='flex flex-col items-center gap-6 w-full max-w-md px-6'>
         <MutatingDots
           visible={true}
-          height="100"
-          width="100"
-          color="#D54242"
-          secondaryColor="#D54242"
-          radius="12.5"
-          ariaLabel="mutating-dots-loading"
+          height='100'
+          width='100'
+          color='#D54242'
+          secondaryColor='#D54242'
+          radius='12.5'
+          ariaLabel='mutating-dots-loading'
         />
         <div className='w-full'>
           <div className='w-full bg-gray-200 rounded-full h-3 overflow-hidden'>

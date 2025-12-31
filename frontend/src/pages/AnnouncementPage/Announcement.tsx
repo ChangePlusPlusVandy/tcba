@@ -24,7 +24,6 @@ export default function Announcement() {
     fetchAnnouncement();
   }, [slug]);
 
-  // Removed blocking loader
   if (!announcement) return <p>Announcement not found.</p>;
 
   // FORMAT TIME AGO
