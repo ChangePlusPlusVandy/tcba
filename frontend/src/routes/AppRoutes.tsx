@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from '../components/ProtectedRoute';
 import AdminRoute from '../components/AdminRoute';
@@ -60,11 +60,42 @@ const CustomEmail = lazy(() => import('../pages/Admin/CustomEmailPage/CustomEmai
 const AdminMessages = lazy(() => import('../pages/Admin/MessagesPage/Messages'));
 const Tags = lazy(() => import('../pages/Admin/TagsPage/Tags'));
 
-const PageLoader = () => (
-  <div className='flex items-center justify-center min-h-screen'>
-    <div className='text-lg'>Loading...</div>
-  </div>
-);
+const PageLoader = () => {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 95) return prev;
+        if (prev >= 70) return prev + 1;
+        if (prev >= 40) return prev + 3;
+        return prev + 5;
+      });
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className='flex items-center justify-center min-h-screen bg-gray-50'>
+      <div className='flex flex-col items-center gap-6 w-full max-w-md px-6'>
+        <div className='relative w-16 h-16'>
+          <div className='absolute inset-0 border-4 border-gray-200 rounded-full'></div>
+          <div className='absolute inset-0 border-4 border-[#D54242] rounded-full border-t-transparent animate-spin'></div>
+        </div>
+        <div className='w-full'>
+          <div className='w-full bg-gray-200 rounded-full h-3 overflow-hidden'>
+            <div
+              className='bg-[#D54242] h-full rounded-full transition-all duration-300 ease-out'
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className='text-center mt-2 text-2xl font-semibold text-slate-700'>{progress}%</div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const AppRoutes = () => {
   return (
