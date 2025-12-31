@@ -273,6 +273,10 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
       membershipDate,
       membershipRenewalDate,
       password,
+      id,
+      clerkId,
+      createdAt,
+      updatedAt,
       ...updateFields
     } = req.body;
     const targetId = resolveTargetId(req.params.id, req.user?.id);

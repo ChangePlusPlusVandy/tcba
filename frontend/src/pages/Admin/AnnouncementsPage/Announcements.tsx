@@ -3,7 +3,6 @@ import { useAuth } from '@clerk/clerk-react';
 import ReactQuill, { Quill } from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import axios from 'axios';
-import ImageResize from 'quill-image-resize-module-react';
 import AdminSidebar from '../../../components/AdminSidebar';
 import Toast from '../../../components/Toast';
 import ConfirmModal from '../../../components/ConfirmModal';
@@ -13,6 +12,9 @@ import Pagination from '../../../components/Pagination';
 import { useAdminAnnouncements } from '../../../hooks/queries/useAdminAnnouncements';
 import { useAnnouncementMutations } from '../../../hooks/mutations/useAnnouncementMutations';
 import { API_BASE_URL } from '../../../config/api';
+import { registerQuillModules } from '../../../config/quill';
+
+registerQuillModules();
 
 type Announcement = {
   id: string;
@@ -359,11 +361,6 @@ const AdminAnnouncements = () => {
   };
 
   useEffect(() => {
-    try {
-      Quill.register('modules/imageResize', ImageResize);
-    } catch (error) {
-      console.warn('Quill imageResize module already registered');
-    }
     fetchTags();
   }, []);
 
