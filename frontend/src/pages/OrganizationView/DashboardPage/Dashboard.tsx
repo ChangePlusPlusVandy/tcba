@@ -29,6 +29,11 @@ const DashboardPage = () => {
   const { orgProfile, alerts, surveys, surveyResponses, announcements, blogs, isLoading } =
     useDashboardData();
 
+  const membershipDate = useMemo(
+    () => (orgProfile?.membershipDate ? new Date(orgProfile.membershipDate) : null),
+    [orgProfile]
+  );
+
   const lastCheckedDates = useMemo(
     () => ({
       alerts: orgProfile?.lastCheckedAlertsAt ? new Date(orgProfile.lastCheckedAlertsAt) : null,
@@ -57,13 +62,16 @@ const DashboardPage = () => {
       blog?: ContentItem;
     } = {};
 
-    if (alerts) {
+    if (alerts && membershipDate) {
       const alertsData = (alerts.data || alerts).filter((a: any) => a.isPublished);
-      const newAlerts = lastCheckedDates.alerts
-        ? alertsData.filter(
-            (a: any) => new Date(a.publishedDate || a.createdAt) > lastCheckedDates.alerts!
-          )
-        : alertsData;
+      const baselineDate =
+        lastCheckedDates.alerts && lastCheckedDates.alerts > membershipDate
+          ? lastCheckedDates.alerts
+          : membershipDate;
+      const newAlerts = alertsData.filter((a: any) => {
+        const publishedDate = new Date(a.publishedDate || a.createdAt);
+        return publishedDate > baselineDate;
+      });
       computedStats.newAlerts = newAlerts.length;
       if (newAlerts[0]) {
         computedLatest.alert = {
@@ -78,7 +86,10 @@ const DashboardPage = () => {
     }
 
     if (surveys && surveyResponses) {
-      const activeSurveys = surveys.filter((s: any) => s.isActive && s.isPublished);
+      const now = new Date();
+      const activeSurveys = surveys.filter(
+        (s: any) => s.isActive && s.isPublished && (!s.dueDate || new Date(s.dueDate) > now)
+      );
       const completedSurveyIds = surveyResponses
         .filter((r: any) => r.submittedDate)
         .map((r: any) => r.surveyId);
@@ -98,15 +109,18 @@ const DashboardPage = () => {
       }
     }
 
-    if (announcements) {
+    if (announcements && membershipDate) {
       const announcementsData = (announcements.data || announcements).filter(
         (a: any) => a.isPublished
       );
-      const newAnnouncements = lastCheckedDates.announcements
-        ? announcementsData.filter(
-            (a: any) => new Date(a.publishedDate || a.createdAt) > lastCheckedDates.announcements!
-          )
-        : announcementsData;
+      const baselineDate =
+        lastCheckedDates.announcements && lastCheckedDates.announcements > membershipDate
+          ? lastCheckedDates.announcements
+          : membershipDate;
+      const newAnnouncements = announcementsData.filter((a: any) => {
+        const publishedDate = new Date(a.publishedDate || a.createdAt);
+        return publishedDate > baselineDate;
+      });
       computedStats.newAnnouncements = newAnnouncements.length;
       if (newAnnouncements[0]) {
         computedLatest.announcement = {
@@ -119,11 +133,16 @@ const DashboardPage = () => {
       }
     }
 
-    if (blogs) {
+    if (blogs && membershipDate) {
       const blogsData = (blogs.data || blogs).filter((b: any) => b.isPublished);
-      const newBlogs = lastCheckedDates.blogs
-        ? blogsData.filter((b: any) => new Date(b.createdAt) > lastCheckedDates.blogs!)
-        : blogsData;
+      const baselineDate =
+        lastCheckedDates.blogs && lastCheckedDates.blogs > membershipDate
+          ? lastCheckedDates.blogs
+          : membershipDate;
+      const newBlogs = blogsData.filter((b: any) => {
+        const publishedDate = new Date(b.createdAt);
+        return publishedDate > baselineDate;
+      });
       computedStats.newBlogs = newBlogs.length;
       if (newBlogs[0]) {
         computedLatest.blog = {
@@ -137,7 +156,7 @@ const DashboardPage = () => {
     }
 
     return { stats: computedStats, latestItems: computedLatest };
-  }, [alerts, surveys, surveyResponses, announcements, blogs, lastCheckedDates]);
+  }, [alerts, surveys, surveyResponses, announcements, blogs, membershipDate, lastCheckedDates]);
 
   const loading = isLoading;
 
