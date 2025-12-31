@@ -14,8 +14,6 @@ import { useBlogMutations } from '../../../hooks/mutations/useBlogMutations';
 import { API_BASE_URL } from '../../../config/api';
 import { registerQuillModules } from '../../../config/quill';
 
-registerQuillModules();
-
 type Tag = {
   id: string;
   name: string;
@@ -117,6 +115,7 @@ const AdminBlogs = () => {
   };
 
   useEffect(() => {
+    registerQuillModules();
     fetchTags();
   }, []);
 

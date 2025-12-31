@@ -296,6 +296,14 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
       ...(userIsAdmin && status && { status }),
     };
 
+    if (updateData.region) {
+      updateData.region = updateData.region.toUpperCase();
+    }
+
+    if (updateData.organizationSize) {
+      updateData.organizationSize = updateData.organizationSize.toUpperCase().replace(/ /g, '_');
+    }
+
     if (updateFields.address || updateFields.city || updateFields.zipCode) {
       const currentOrg = await prisma.organization.findUnique({ where: { id: targetId } });
       if (!currentOrg) return res.status(404).json({ error: 'Organization not found' });
@@ -333,23 +341,27 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
     }
 
     if (email) {
-      const existingOrg = await prisma.organization.findFirst({
-        where: { email, NOT: { id: targetId } },
-      });
-      if (existingOrg)
-        return res.status(400).json({ error: 'Email is already in use by another organization' });
       const currentOrg = await prisma.organization.findUnique({ where: { id: targetId } });
       if (!currentOrg) return res.status(404).json({ error: 'Organization not found' });
-      try {
-        await clerkClient.users.updateUser(currentOrg.clerkId, { externalId: email });
-      } catch (clerkError: any) {
-        console.error('Clerk email update failed:', clerkError);
-        return res.status(400).json({
-          error: 'Failed to update email in authentication system',
-          details: clerkError.message,
+
+      if (email !== currentOrg.email) {
+        const existingOrg = await prisma.organization.findFirst({
+          where: { email, NOT: { id: targetId } },
         });
+        if (existingOrg)
+          return res.status(400).json({ error: 'Email is already in use by another organization' });
+
+        try {
+          await clerkClient.users.updateUser(currentOrg.clerkId, { externalId: email });
+        } catch (clerkError: any) {
+          console.error('Clerk email update failed:', clerkError);
+          return res.status(400).json({
+            error: 'Failed to update email in authentication system',
+            details: clerkError.message,
+          });
+        }
+        updateData.email = email;
       }
-      updateData.email = email;
     }
     const updatedOrg = await prisma.organization.update({
       where: { id: targetId },

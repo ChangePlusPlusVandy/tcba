@@ -14,8 +14,6 @@ import { useAnnouncementMutations } from '../../../hooks/mutations/useAnnounceme
 import { API_BASE_URL } from '../../../config/api';
 import { registerQuillModules } from '../../../config/quill';
 
-registerQuillModules();
-
 type Announcement = {
   id: string;
   slug: string;
@@ -361,6 +359,7 @@ const AdminAnnouncements = () => {
   };
 
   useEffect(() => {
+    registerQuillModules();
     fetchTags();
   }, []);
 

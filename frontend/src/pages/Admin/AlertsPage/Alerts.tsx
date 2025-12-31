@@ -13,8 +13,6 @@ import { useAlertMutations } from '../../../hooks/mutations/useAlertMutations';
 import { API_BASE_URL } from '../../../config/api';
 import { registerQuillModules } from '../../../config/quill';
 
-registerQuillModules();
-
 type AlertPriority = 'URGENT' | 'LOW' | 'MEDIUM';
 
 type Alert = {
@@ -102,6 +100,10 @@ const AdminAlerts = () => {
     confirmText: string;
     onConfirm: () => void;
   } | null>(null);
+
+  useEffect(() => {
+    registerQuillModules();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
