@@ -48,7 +48,7 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
   } = useAnnouncements(currentPage, itemsPerPage);
   const { data: tags = [] } = useTags();
   const tagsArray = tags as Tag[];
-  const { data: pageContentData, isLoading: pageContentLoading } = usePageContent('announcements');
+  const { data: pageContentData } = usePageContent('announcements');
 
   const [timeFilter, setTimeFilter] = useState<'24h' | 'week' | 'month' | 'year' | null>(null);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
@@ -72,7 +72,6 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
   const error = announcementsError ? 'An unexpected error occurred' : null;
 
   const content = previewContent || pageContentData || {};
-  const pageLoading = !previewContent && pageContentLoading;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -139,14 +138,6 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
 
     return true;
   });
-
-  if (pageLoading) {
-    return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <div className='text-lg'>Loading...</div>
-      </div>
-    );
-  }
 
   const headerImageSrc = content['header_image']?.value || '';
 

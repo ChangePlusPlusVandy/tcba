@@ -48,7 +48,7 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
   } = useBlogs(currentPage, itemsPerPage);
   const { data: allTags = [] } = useBlogTags();
   const tagsArray = allTags as Tag[];
-  const { data: pageContentData, isLoading: pageContentLoading } = usePageContent('blogs');
+  const { data: pageContentData } = usePageContent('blogs');
 
   const [timeFilter, setTimeFilter] = useState<'24h' | 'week' | 'month' | 'year' | null>(null);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
@@ -69,7 +69,6 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
   const error = blogsError ? 'An unexpected error occurred' : null;
 
   const content = previewContent || pageContentData || {};
-  const pageLoading = !previewContent && pageContentLoading;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -139,14 +138,6 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
 
     return true;
   });
-
-  if (pageLoading) {
-    return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <div className='text-lg'>Loading...</div>
-      </div>
-    );
-  }
 
   const headerImageSrc = content['header_image']?.value || '';
 

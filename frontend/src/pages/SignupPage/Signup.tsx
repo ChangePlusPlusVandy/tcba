@@ -34,10 +34,9 @@ const SignupForm = ({ previewContent }: SignupFormProps = {}) => {
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const { data: pageContent, isLoading: contentLoading } = usePageContent('signup');
+  const { data: pageContent } = usePageContent('signup');
 
   const content = previewContent || pageContent || {};
-  const loading = !previewContent && contentLoading;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -90,14 +89,6 @@ const SignupForm = ({ previewContent }: SignupFormProps = {}) => {
       setSubmitting(false);
     }
   };
-
-  if (loading) {
-    return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <div className='text-lg'>Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <>
