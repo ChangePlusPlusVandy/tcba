@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { MutatingDots } from 'react-loader-spinner';
 import ProtectedRoute from '../components/ProtectedRoute';
 import AdminRoute from '../components/AdminRoute';
 
@@ -66,12 +67,13 @@ const PageLoader = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress(prev => {
-        if (prev >= 95) return prev;
-        if (prev >= 70) return prev + 1;
-        if (prev >= 40) return prev + 3;
-        return prev + 5;
+        if (prev >= 99) return Math.min(prev + 0.1, 100);
+        if (prev >= 90) return prev + 0.5;
+        if (prev >= 70) return prev + 2;
+        if (prev >= 40) return prev + 4;
+        return prev + 8;
       });
-    }, 100);
+    }, 80);
 
     return () => clearInterval(interval);
   }, []);
@@ -79,10 +81,15 @@ const PageLoader = () => {
   return (
     <div className='flex items-center justify-center min-h-screen bg-gray-50'>
       <div className='flex flex-col items-center gap-6 w-full max-w-md px-6'>
-        <div className='relative w-16 h-16'>
-          <div className='absolute inset-0 border-4 border-gray-200 rounded-full'></div>
-          <div className='absolute inset-0 border-4 border-[#D54242] rounded-full border-t-transparent animate-spin'></div>
-        </div>
+        <MutatingDots
+          visible={true}
+          height="100"
+          width="100"
+          color="#D54242"
+          secondaryColor="#D54242"
+          radius="12.5"
+          ariaLabel="mutating-dots-loading"
+        />
         <div className='w-full'>
           <div className='w-full bg-gray-200 rounded-full h-3 overflow-hidden'>
             <div
@@ -90,7 +97,9 @@ const PageLoader = () => {
               style={{ width: `${progress}%` }}
             />
           </div>
-          <div className='text-center mt-2 text-2xl font-semibold text-slate-700'>{progress}%</div>
+          <div className='text-center mt-2 text-2xl font-semibold text-slate-700'>
+            {Math.round(progress)}%
+          </div>
         </div>
       </div>
     </div>
