@@ -24,7 +24,7 @@ export const warmCache = async () => {
     await CacheService.set(
       CacheKeys.pageContent('home'),
       structuredHomeContent,
-      CacheTTL.PAGE_CONTENT
+      365 * 24 * 60 * 60
     );
     console.log('Cached home page content');
 
