@@ -14,8 +14,6 @@ import { useAdminAnnouncements } from '../../../hooks/queries/useAdminAnnounceme
 import { useAnnouncementMutations } from '../../../hooks/mutations/useAnnouncementMutations';
 import { API_BASE_URL } from '../../../config/api';
 
-Quill.register('modules/imageResize', ImageResize);
-
 type Announcement = {
   id: string;
   slug: string;
@@ -361,6 +359,11 @@ const AdminAnnouncements = () => {
   };
 
   useEffect(() => {
+    try {
+      Quill.register('modules/imageResize', ImageResize);
+    } catch (error) {
+      console.warn('Quill imageResize module already registered');
+    }
     fetchTags();
   }, []);
 

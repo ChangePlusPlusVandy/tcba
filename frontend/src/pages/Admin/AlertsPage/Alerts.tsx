@@ -13,8 +13,6 @@ import { useAdminAlerts } from '../../../hooks/queries/useAdminAlerts';
 import { useAlertMutations } from '../../../hooks/mutations/useAlertMutations';
 import { API_BASE_URL } from '../../../config/api';
 
-Quill.register('modules/imageResize', ImageResize);
-
 type AlertPriority = 'URGENT' | 'LOW' | 'MEDIUM';
 
 type Alert = {
@@ -102,6 +100,14 @@ const AdminAlerts = () => {
     confirmText: string;
     onConfirm: () => void;
   } | null>(null);
+
+  useEffect(() => {
+    try {
+      Quill.register('modules/imageResize', ImageResize);
+    } catch (error) {
+      console.warn('Quill imageResize module already registered');
+    }
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

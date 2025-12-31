@@ -14,8 +14,6 @@ import { useAdminBlogs } from '../../../hooks/queries/useAdminBlogs';
 import { useBlogMutations } from '../../../hooks/mutations/useBlogMutations';
 import { API_BASE_URL } from '../../../config/api';
 
-Quill.register('modules/imageResize', ImageResize);
-
 type Tag = {
   id: string;
   name: string;
@@ -117,6 +115,11 @@ const AdminBlogs = () => {
   };
 
   useEffect(() => {
+    try {
+      Quill.register('modules/imageResize', ImageResize);
+    } catch (error) {
+      console.warn('Quill imageResize module already registered');
+    }
     fetchTags();
   }, []);
 
