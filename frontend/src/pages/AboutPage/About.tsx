@@ -67,7 +67,7 @@ interface MapOrganization {
 const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
   const [showAllPartners, setShowAllPartners] = useState(false);
 
-  const { data: pageContent, isLoading: contentLoading } = usePageContent('about');
+  const { data: pageContent } = usePageContent('about');
   const { data: mapOrgsData, isLoading: mapOrgsLoading } = useMapOrganizations();
 
   const content = previewContent || pageContent || {};
