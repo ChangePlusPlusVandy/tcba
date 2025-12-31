@@ -24,7 +24,7 @@ export const getPageContent = async (req: Request, res: Response): Promise<void>
 
     const cachedContent = await CacheService.get<Record<string, any>>(cacheKey);
     if (cachedContent) {
-      res.set('Cache-Control', 'public, max-age=0, s-maxage=1800, must-revalidate');
+      res.set('Cache-Control', 'public, max-age=0, must-revalidate');
       res.status(200).json(cachedContent);
       return;
     }
@@ -45,9 +45,9 @@ export const getPageContent = async (req: Request, res: Response): Promise<void>
       };
     });
 
-    await CacheService.set(cacheKey, structuredContent, CacheTTL.PAGE_CONTENT);
+    await CacheService.set(cacheKey, structuredContent, 365 * 24 * 60 * 60);
 
-    res.set('Cache-Control', 'public, max-age=0, s-maxage=1800, must-revalidate');
+    res.set('Cache-Control', 'public, max-age=0, must-revalidate');
     res.status(200).json(structuredContent);
   } catch (error) {
     console.error('Error fetching page content:', error);

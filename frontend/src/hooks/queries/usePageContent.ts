@@ -13,7 +13,7 @@ export const usePageContent = (pageName: string) => {
       if (!response.ok) throw new Error('Failed to fetch page content');
       return response.json() as Promise<PageContent>;
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
   });
 };
