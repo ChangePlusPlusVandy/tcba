@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
+import { MutatingDots } from 'react-loader-spinner';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import AdminSidebar from '../../../components/AdminSidebar';
@@ -654,8 +655,16 @@ const AdminBlogs = () => {
         )}
 
         {loading ? (
-          <div className='text-center py-12'>
-            <p className='text-gray-600'>Loading blogs...</p>
+          <div className='flex justify-center items-center py-12'>
+            <MutatingDots
+              visible={true}
+              height='100'
+              width='100'
+              color='#D54242'
+              secondaryColor='#D54242'
+              radius='12.5'
+              ariaLabel='mutating-dots-loading'
+            />
           </div>
         ) : filteredBlogs.length === 0 ? (
           <div className='text-center py-12'>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { MutatingDots } from 'react-loader-spinner';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
 import Toast from '../../../components/Toast';
 import Pagination from '../../../components/Pagination';
@@ -250,8 +251,16 @@ const AlertsPage = () => {
         )}
 
         {loading ? (
-          <div className='text-center py-12'>
-            <p className='text-gray-600'>Loading alerts...</p>
+          <div className='flex justify-center items-center py-12'>
+            <MutatingDots
+              visible={true}
+              height='100'
+              width='100'
+              color='#D54242'
+              secondaryColor='#D54242'
+              radius='12.5'
+              ariaLabel='mutating-dots-loading'
+            />
           </div>
         ) : sortedAlerts.length === 0 ? (
           <div className='text-center py-12'>

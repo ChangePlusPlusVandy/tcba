@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MutatingDots } from 'react-loader-spinner';
 import { IoFunnelOutline } from 'react-icons/io5';
 import 'react-quill-new/dist/quill.snow.css';
 import S3Image from '../../components/S3Image';
@@ -312,7 +313,19 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
       </section>
 
       <div className='px-8 pb-8'>
-        {loading && <p>Loading blogs...</p>}
+        {loading && (
+          <div className='flex justify-center items-center py-12'>
+            <MutatingDots
+              visible={true}
+              height='100'
+              width='100'
+              color='#D54242'
+              secondaryColor='#D54242'
+              radius='12.5'
+              ariaLabel='mutating-dots-loading'
+            />
+          </div>
+        )}
         {error && <p>{error}</p>}
         {!loading && !error && blogs.length === 0 && (
           <p className='font-[Open_Sans] text-[32px] font-bold leading-[100%] text-[#AAAAAA] mb-6'>

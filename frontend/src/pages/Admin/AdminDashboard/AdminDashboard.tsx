@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
+import { MutatingDots } from 'react-loader-spinner';
 import AdminSidebar from '../../../components/AdminSidebar';
 import GoogleMap from '../../../components/GoogleMap';
 import { API_BASE_URL } from '../../../config/api';
@@ -429,7 +430,15 @@ const AdminDashboard = () => {
       <div className='flex min-h-screen bg-gray-50'>
         <AdminSidebar />
         <div className='flex-1 flex items-center justify-center'>
-          <div className='text-lg'>Loading dashboard...</div>
+          <MutatingDots
+            visible={true}
+            height='100'
+            width='100'
+            color='#D54242'
+            secondaryColor='#D54242'
+            radius='12.5'
+            ariaLabel='mutating-dots-loading'
+          />
         </div>
       </div>
     );

@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { useQueryClient } from '@tanstack/react-query';
+import { MutatingDots } from 'react-loader-spinner';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
 import { API_BASE_URL } from '../../../config/api';
 import { useDashboardData } from '../../../hooks/queries/useDashboardData';
@@ -300,7 +301,15 @@ const DashboardPage = () => {
       <div className='flex min-h-screen bg-gray-50'>
         <OrganizationSidebar />
         <div className='flex-1 flex items-center justify-center'>
-          <div className='text-lg'>Loading dashboard...</div>
+          <MutatingDots
+            visible={true}
+            height='100'
+            width='100'
+            color='#D54242'
+            secondaryColor='#D54242'
+            radius='12.5'
+            ariaLabel='mutating-dots-loading'
+          />
         </div>
       </div>
     );

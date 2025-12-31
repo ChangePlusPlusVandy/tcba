@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useClerk } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
+import { MutatingDots } from 'react-loader-spinner';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
 import Toast from '../../../components/Toast';
 import { useOrgProfile } from '../../../hooks/queries/useOrgProfile';
@@ -93,7 +94,15 @@ const OrgSettingsPage = () => {
       <div className='flex min-h-screen bg-gray-50'>
         <OrganizationSidebar />
         <div className='flex-1 flex items-center justify-center'>
-          <div className='text-lg'>Loading settings...</div>
+          <MutatingDots
+            visible={true}
+            height='100'
+            width='100'
+            color='#D54242'
+            secondaryColor='#D54242'
+            radius='12.5'
+            ariaLabel='mutating-dots-loading'
+          />
         </div>
       </div>
     );

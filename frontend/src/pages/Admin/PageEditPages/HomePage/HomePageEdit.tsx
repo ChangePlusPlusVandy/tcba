@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useQueryClient } from '@tanstack/react-query';
+import { MutatingDots } from 'react-loader-spinner';
 import ContentEditor from '../components/ContentEditor';
 import ImageUploader from '../components/ImageUploader';
 import AdminSidebar from '../../../../components/AdminSidebar';
@@ -145,7 +146,15 @@ const HomePageEdit = () => {
       <div className='flex min-h-screen bg-gray-50'>
         <AdminSidebar />
         <div className='flex-1 flex items-center justify-center'>
-          <div className='text-lg'>Loading content...</div>
+          <MutatingDots
+            visible={true}
+            height='100'
+            width='100'
+            color='#D54242'
+            secondaryColor='#D54242'
+            radius='12.5'
+            ariaLabel='mutating-dots-loading'
+          />
         </div>
       </div>
     );

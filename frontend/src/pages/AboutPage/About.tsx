@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { MutatingDots } from 'react-loader-spinner';
 import tcbaDDABill from '../../assets/TCBADDABill.jpeg';
 import { FaHandHoldingHeart, FaUserNurse, FaHome } from 'react-icons/fa';
 import { HiUserGroup } from 'react-icons/hi';
@@ -435,7 +436,15 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
           {/* Google Maps showing coalition member organizations */}
           {isLoadingMap ? (
             <div className='bg-slate-300 min-h-[300px] rounded-lg flex items-center justify-center'>
-              <p className='text-gray-600'>Loading map...</p>
+              <MutatingDots
+                visible={true}
+                height='100'
+                width='100'
+                color='#D54242'
+                secondaryColor='#D54242'
+                radius='12.5'
+                ariaLabel='mutating-dots-loading'
+              />
             </div>
           ) : (
             <GoogleMap

@@ -7,6 +7,7 @@ import {
   type ReactNode,
   type ReactPortal,
 } from 'react';
+import { MutatingDots } from 'react-loader-spinner';
 import OrganizationSidebar from '../../../components/OrganizationSidebar';
 import Toast from '../../../components/Toast';
 import PublicAttachmentList from '../../../components/PublicAttachmentList';
@@ -303,8 +304,16 @@ const OrgBlogsPage = () => {
         )}
 
         {loading ? (
-          <div className='text-center py-12'>
-            <p className='text-gray-600'>Loading blogs...</p>
+          <div className='flex justify-center items-center py-12'>
+            <MutatingDots
+              visible={true}
+              height='100'
+              width='100'
+              color='#D54242'
+              secondaryColor='#D54242'
+              radius='12.5'
+              ariaLabel='mutating-dots-loading'
+            />
           </div>
         ) : filteredBlogs.length === 0 ? (
           <div className='text-center py-12'>
