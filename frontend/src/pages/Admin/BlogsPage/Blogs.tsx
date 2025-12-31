@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import ReactQuill, { Quill } from 'react-quill-new';
+import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import AdminSidebar from '../../../components/AdminSidebar';
 import Toast from '../../../components/Toast';
@@ -12,7 +12,6 @@ import Pagination from '../../../components/Pagination';
 import { useAdminBlogs } from '../../../hooks/queries/useAdminBlogs';
 import { useBlogMutations } from '../../../hooks/mutations/useBlogMutations';
 import { API_BASE_URL } from '../../../config/api';
-import { registerQuillModules } from '../../../config/quill';
 
 type Tag = {
   id: string;
@@ -115,7 +114,6 @@ const AdminBlogs = () => {
   };
 
   useEffect(() => {
-    registerQuillModules();
     fetchTags();
   }, []);
 
@@ -489,10 +487,6 @@ const AdminBlogs = () => {
           'align-image-center': () => alignImage('center'),
           'align-image-right': () => alignImage('right'),
         },
-      },
-      imageResize: {
-        parchment: Quill.import('parchment'),
-        modules: ['Resize', 'DisplaySize'],
       },
     }),
     [handleImageUpload, alignImage]

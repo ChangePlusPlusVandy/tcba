@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import ReactQuill, { Quill } from 'react-quill-new';
+import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import axios from 'axios';
 import AdminSidebar from '../../../components/AdminSidebar';
@@ -12,7 +12,6 @@ import Pagination from '../../../components/Pagination';
 import { useAdminAnnouncements } from '../../../hooks/queries/useAdminAnnouncements';
 import { useAnnouncementMutations } from '../../../hooks/mutations/useAnnouncementMutations';
 import { API_BASE_URL } from '../../../config/api';
-import { registerQuillModules } from '../../../config/quill';
 
 type Announcement = {
   id: string;
@@ -240,10 +239,6 @@ const AdminAnnouncements = () => {
           'align-image-right': () => alignImage('right'),
         },
       },
-      imageResize: {
-        parchment: Quill.import('parchment'),
-        modules: ['Resize', 'DisplaySize'],
-      },
     }),
     [handleImageUpload, alignImage]
   );
@@ -359,7 +354,6 @@ const AdminAnnouncements = () => {
   };
 
   useEffect(() => {
-    registerQuillModules();
     fetchTags();
   }, []);
 

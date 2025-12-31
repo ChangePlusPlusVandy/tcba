@@ -1,6 +1,6 @@
 import { useAuth } from '@clerk/clerk-react';
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import ReactQuill, { Quill } from 'react-quill-new';
+import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import AdminSidebar from '../../../components/AdminSidebar';
 import Toast from '../../../components/Toast';
@@ -11,7 +11,6 @@ import Pagination from '../../../components/Pagination';
 import { useAdminAlerts } from '../../../hooks/queries/useAdminAlerts';
 import { useAlertMutations } from '../../../hooks/mutations/useAlertMutations';
 import { API_BASE_URL } from '../../../config/api';
-import { registerQuillModules } from '../../../config/quill';
 
 type AlertPriority = 'URGENT' | 'LOW' | 'MEDIUM';
 
@@ -100,10 +99,6 @@ const AdminAlerts = () => {
     confirmText: string;
     onConfirm: () => void;
   } | null>(null);
-
-  useEffect(() => {
-    registerQuillModules();
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -451,10 +446,6 @@ const AdminAlerts = () => {
           'align-image-center': () => alignImage('center'),
           'align-image-right': () => alignImage('right'),
         },
-      },
-      imageResize: {
-        parchment: Quill.import('parchment'),
-        modules: ['Resize', 'DisplaySize'],
       },
     }),
     [handleImageUpload, alignImage]
