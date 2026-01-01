@@ -98,7 +98,7 @@ model Organization {
   membershipActive      Boolean            @default(false)
   membershipDate        DateTime?
   membershipRenewalDate DateTime?
-  organizationSize      OrganizationSize?
+  organizationSize      OrganizationSize
   role                  OrganizationRole   @default(MEMBER)
   status                OrganizationStatus @default(PENDING)
   tags                  String[]

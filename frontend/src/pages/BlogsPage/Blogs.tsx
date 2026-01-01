@@ -87,21 +87,12 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
     };
   }, [isFilterOpen]);
 
-  const getTimeAgo = (dateString: string) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
-
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
-    }
-
-    if (diffInMinutes < 1440) {
-      const hours = Math.floor(diffInMinutes / 60);
-      return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
-    }
-    const days = Math.floor(diffInMinutes / 1440);
-    return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
   };
 
   const filteredBlogs = blogs.filter(blog => {
@@ -352,7 +343,7 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
                     </h2>
                     <div className='flex items-center gap-3 mb-4'>
                       <h3 className='font-[Open_Sans] text-[14px] font-normal leading-[150%] text-[#717171]'>
-                        By {blog.author} • {getTimeAgo(blog.createdAt)}
+                        By {blog.author} • {formatDate(blog.createdAt)}
                       </h3>
                       {blog.tags.length > 0 && (
                         <>

@@ -220,20 +220,12 @@ const AdminDashboard = () => {
     setActiveModal(null);
   };
 
-  const getTimeAgo = (dateString: string) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
-
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes} ${diffInMinutes === 1 ? 'min' : 'mins'} ago`;
-    }
-    if (diffInMinutes < 1440) {
-      const hours = Math.floor(diffInMinutes / 60);
-      return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
-    }
-    const days = Math.floor(diffInMinutes / 1440);
-    return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
   };
 
   const getActivityIcon = (type: string) => {
@@ -638,7 +630,7 @@ const AdminDashboard = () => {
                           {activity.title}
                         </p>
                         <p className='text-xs text-gray-500'>{activity.description}</p>
-                        <p className='text-xs text-gray-400'>{getTimeAgo(activity.createdAt)}</p>
+                        <p className='text-xs text-gray-400'>{formatDate(activity.createdAt)}</p>
                       </div>
                     </div>
                   ))

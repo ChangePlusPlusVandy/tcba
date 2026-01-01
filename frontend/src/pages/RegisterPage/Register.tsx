@@ -148,7 +148,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
     navigate('/contact');
   };
 
-  const heroImageSrc = content['hero_image']?.value || getInvolvedImage;
+  const heroImageSrc = content['hero_image']?.value || '';
 
   return (
     <div className='mt-8'>

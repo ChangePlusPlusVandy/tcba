@@ -90,20 +90,13 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
     };
   }, [isFilterOpen]);
 
-  // FORMAT TIME AGO
-  const getTimeAgo = (dateString: string) => {
+  // FORMAT DATE
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
-
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
-    }
-
-    if (diffInMinutes < 1440) {
-      return `${Math.floor(diffInMinutes / 60)} ${Math.floor(diffInMinutes / 60) === 1 ? 'hour' : 'hours'} ago`;
-    }
-    return `${Math.floor(diffInMinutes / 1440)} ${Math.floor(diffInMinutes / 1440) === 1 ? 'day' : 'days'} ago`;
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
   };
 
   const filterAnnouncements = announcements.filter(a => {
@@ -353,7 +346,7 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
                     </h2>
                     <div className='flex items-center gap-3 mb-4'>
                       <h3 className='font-[Open_Sans] text-[14px] font-normal leading-[150%] text-[#717171]'>
-                        {getTimeAgo(a.createdAt)}
+                        {formatDate(a.createdAt)}
                       </h3>
                       {a.tags.length > 0 && (
                         <>
