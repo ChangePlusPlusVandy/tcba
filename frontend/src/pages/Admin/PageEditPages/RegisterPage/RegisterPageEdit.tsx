@@ -69,23 +69,58 @@ const RegisterPageEdit = () => {
       setSaving(true);
 
       const token = await getToken();
+      const existingItems: any[] = [];
+      const newItems: any[] = [];
 
-      const updates = Object.entries(content).map(([, item]) => ({
-        id: item.id,
-        contentValue: item.value,
-      }));
+      Object.entries(content).forEach(([key, item]) => {
+        if (item.id) {
+          existingItems.push({
+            id: item.id,
+            contentValue: item.value,
+          });
+        } else if (item.value) {
+          const parts = key.split('_');
+          const section = parts[0];
+          const contentKey = parts.slice(1).join('_');
 
-      const response = await fetch(`${API_BASE_URL}/api/page-content/bulk`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ updates }),
+          newItems.push({
+            page: 'register',
+            section,
+            contentKey,
+            contentValue: item.value,
+            contentType: item.type || 'text',
+          });
+        }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to save changes');
+      for (const newItem of newItems) {
+        const createResponse = await fetch(`${API_BASE_URL}/api/page-content`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(newItem),
+        });
+
+        if (!createResponse.ok) {
+          throw new Error(`Failed to create ${newItem.contentKey}`);
+        }
+      }
+
+      if (existingItems.length > 0) {
+        const response = await fetch(`${API_BASE_URL}/api/page-content/bulk`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ updates: existingItems }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save changes');
+        }
       }
 
       await fetchContent();
