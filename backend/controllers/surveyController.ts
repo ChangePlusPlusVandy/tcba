@@ -10,10 +10,28 @@ const resolveTargetId = (id: string, userId?: string) => (id === 'profile' ? use
 
 export const getAllSurveys = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const surveys = await prisma.survey.findMany({
-      orderBy: { createdAt: 'desc' },
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const skip = (page - 1) * limit;
+
+    const [surveys, total] = await Promise.all([
+      prisma.survey.findMany({
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.survey.count(),
+    ]);
+
+    res.json({
+      data: surveys,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     });
-    res.json(surveys);
   } catch (error) {
     console.error('Error fetching surveys:', error);
     res.status(500).json({ error: 'Failed to fetch surveys' });
@@ -165,14 +183,37 @@ export const updateSurvey = async (req: AuthenticatedRequest, res: Response) => 
 
 export const getActiveSurveys = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const surveys = await prisma.survey.findMany({
-      where: {
-        isActive: true,
-        isPublished: true,
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const skip = (page - 1) * limit;
+
+    const [surveys, total] = await Promise.all([
+      prisma.survey.findMany({
+        where: {
+          isActive: true,
+          isPublished: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.survey.count({
+        where: {
+          isActive: true,
+          isPublished: true,
+        },
+      }),
+    ]);
+
+    res.json({
+      data: surveys,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
-      orderBy: { createdAt: 'desc' },
     });
-    res.json(surveys);
   } catch (error) {
     console.error('Error fetching active surveys:', error);
     res.status(500).json({ error: 'Failed to fetch active surveys' });

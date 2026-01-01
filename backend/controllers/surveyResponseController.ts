@@ -19,20 +19,38 @@ export const getAllResponses = async (req: AuthenticatedRequest, res: Response) 
       return res.status(403).json({ error: 'Access denied - Admin only' });
 
     const { surveyId, organizationId } = req.query;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const skip = (page - 1) * limit;
+
     const where: any = {
       ...(surveyId && { surveyId: surveyId as string }),
       ...(organizationId && { organizationId: organizationId as string }),
     };
 
-    const surveyResponses = await prisma.surveyResponse.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        survey: { select: { title: true } },
-        organization: { select: { name: true } },
+    const [surveyResponses, total] = await Promise.all([
+      prisma.surveyResponse.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          survey: { select: { title: true } },
+          organization: { select: { name: true } },
+        },
+      }),
+      prisma.surveyResponse.count({ where }),
+    ]);
+
+    res.json({
+      data: surveyResponses,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
     });
-    res.json(surveyResponses);
   } catch (error) {
     console.error('Error fetching survey responses:', error);
     res.status(500).json({ error: 'Failed to fetch survey responses' });
@@ -236,15 +254,33 @@ export const getResponsesByOrganization = async (req: AuthenticatedRequest, res:
     if (!isAdmin(req.user.role) && orgId !== req.user.id) {
       return res.status(403).json({ error: 'Access denied' });
     }
-    const surveyResponses = await prisma.surveyResponse.findMany({
-      where: { organizationId: orgId },
-      orderBy: { submittedDate: 'desc' },
-      include: {
-        survey: { select: { title: true, description: true, dueDate: true } },
+
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const skip = (page - 1) * limit;
+
+    const [surveyResponses, total] = await Promise.all([
+      prisma.surveyResponse.findMany({
+        where: { organizationId: orgId },
+        orderBy: { submittedDate: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          survey: { select: { title: true, description: true, dueDate: true } },
+        },
+      }),
+      prisma.surveyResponse.count({ where: { organizationId: orgId } }),
+    ]);
+
+    res.json({
+      data: surveyResponses,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
     });
-
-    res.json(surveyResponses);
   } catch (error) {
     console.error('Error fetching responses by organization:', error);
     res.status(500).json({ error: 'Failed to fetch organization responses' });

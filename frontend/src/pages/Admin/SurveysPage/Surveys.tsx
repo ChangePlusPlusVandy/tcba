@@ -4,6 +4,7 @@ import { MutatingDots } from 'react-loader-spinner';
 import AdminSidebar from '../../../components/AdminSidebar';
 import Toast from '../../../components/Toast';
 import ConfirmModal from '../../../components/ConfirmModal';
+import Pagination from '../../../components/Pagination';
 import { useAdminSurveys } from '../../../hooks/queries/useAdminSurveys';
 import { useSurveyMutations } from '../../../hooks/mutations/useSurveyMutations';
 
@@ -35,9 +36,14 @@ type Filter = 'ALL' | 'ACTIVE' | 'INACTIVE' | 'DRAFTS';
 
 const AdminSurveys = () => {
   const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
 
-  const { data: surveys = [], isLoading: loading, error: surveysError } = useAdminSurveys();
-  const surveysArray = surveys as Survey[];
+  const { data: surveysData, isLoading: loading, error: surveysError } = useAdminSurveys(currentPage, itemsPerPage);
+  const surveysResponse = surveysData || { data: [], pagination: { total: 0, totalPages: 0 } };
+  const surveysArray = (Array.isArray(surveysResponse.data) ? surveysResponse.data : surveysResponse) as Survey[];
+  const totalSurveys = surveysResponse.pagination?.total || surveysArray.length;
+
   const { deleteSurvey, publishSurvey } = useSurveyMutations();
 
   const error = surveysError ? 'Failed to fetch surveys' : '';
@@ -438,6 +444,18 @@ const AdminSurveys = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {!loading && !error && filteredSurveys.length > 0 && (
+          <div className='mt-8'>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(totalSurveys / itemsPerPage)}
+              onPageChange={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              totalItems={totalSurveys}
+            />
           </div>
         )}
       </div>
