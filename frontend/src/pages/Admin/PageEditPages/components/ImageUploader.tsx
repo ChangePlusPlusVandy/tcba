@@ -139,7 +139,31 @@ const ImageUploader = ({
     }
   };
 
-  const handleRemove = () => {
+  const handleRemove = async () => {
+    // If there's a current image URL and it's an S3 key, delete it from S3
+    if (currentImageUrl && !currentImageUrl.startsWith('data:') && !currentImageUrl.startsWith('http')) {
+      try {
+        const token = await getToken();
+        const response = await fetch(
+          `${API_BASE_URL}/api/files/page-image/${encodeURIComponent(currentImageUrl)}`,
+          {
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          console.error('Failed to delete image from S3');
+          // Continue anyway to clear the UI
+        }
+      } catch (err) {
+        console.error('Error deleting image from S3:', err);
+        // Continue anyway to clear the UI
+      }
+    }
+
     setPreview(null);
     onChange('');
     if (fileInputRef.current) {

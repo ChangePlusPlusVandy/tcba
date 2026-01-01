@@ -3,6 +3,7 @@ import {
   getPresignedUploadUrl,
   getPresignedDownloadUrl,
   deleteDocument,
+  deletePageImage,
   getPublicImageUrl,
   getAuthenticatedDownloadUrl,
   getPublicDownloadUrl,
@@ -17,6 +18,7 @@ router.use(authenticateToken);
 router.get('/presigned-upload', getPresignedUploadUrl);
 router.get('/presigned-download/:fileKey', getPresignedDownloadUrl);
 router.get('/authenticated-download/:fileKey', getAuthenticatedDownloadUrl);
+router.delete('/page-image/:fileKey', deletePageImage);
 router.delete('/document/:fileKey', deleteDocument);
 
 export default router;

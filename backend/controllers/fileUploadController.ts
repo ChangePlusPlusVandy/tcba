@@ -7,9 +7,6 @@ import { prisma } from '../config/prisma.js';
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 const normalizeS3Key = (key: string) => (key.startsWith('/') ? key.slice(1) : key);
 
-// Get presigned URL for uploading file to S3
-// Validate fileName, generate unique key, create PutObjectCommand, use getSignedUrl for upload
-// client uploads file then saves key to DB (like Announcements.attachmentUrls)
 export const getPresignedUploadUrl = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -110,16 +107,13 @@ export const getPresignedDownloadUrl = async (req: AuthenticatedRequest, res: Re
     if (!req.user || !isAdmin(req.user.role)) {
       return res.status(403).json({ error: 'Admin access required' });
     }
-    // extracts fileKey from the URL path
     const { fileKey } = req.params;
     if (!fileKey) {
       return res.status(400).json({ error: 'fileKey parameter is required' });
     }
 
-    // gets bucket name from environment variables
     const bucketName = process.env.AWS_S3_BUCKET_NAME;
 
-    // defines parameters for presigned URL generation
     const params = {
       Bucket: bucketName,
       Key: normalizeS3Key(fileKey),
@@ -219,6 +213,48 @@ export const getPublicDownloadUrl = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error generating public download URL:', error);
     res.status(500).json({ error: 'Failed to generate download URL' });
+  }
+};
+
+export const deletePageImage = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    if (!isAdmin(req.user.role)) {
+      return res.status(403).json({ error: 'Admin access required to delete files' });
+    }
+    const { fileKey } = req.params;
+    if (!fileKey) {
+      return res.status(400).json({ error: 'File key is required' });
+    }
+
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    const hasImageExtension = imageExtensions.some(ext => fileKey.toLowerCase().endsWith(ext));
+    if (!hasImageExtension) {
+      return res.status(400).json({ error: 'Only image files can be deleted via this endpoint' });
+    }
+
+    if (!fileKey.startsWith('pages/')) {
+      return res.status(400).json({ error: 'Only page images can be deleted via this endpoint' });
+    }
+
+    const bucketName = process.env.AWS_S3_BUCKET_NAME;
+    if (!bucketName) {
+      return res.status(500).json({ error: 'S3 bucket not configured' });
+    }
+
+    await s3
+      .deleteObject({
+        Bucket: bucketName,
+        Key: normalizeS3Key(fileKey),
+      })
+      .promise();
+
+    res.status(200).json({ message: 'Image deleted successfully from S3' });
+  } catch (err) {
+    console.error('Error deleting page image:', err);
+    res.status(500).json({ error: 'Failed to delete image' });
   }
 };
 
