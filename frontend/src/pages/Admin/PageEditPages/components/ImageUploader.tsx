@@ -141,7 +141,11 @@ const ImageUploader = ({
 
   const handleRemove = async () => {
     // If there's a current image URL and it's an S3 key, delete it from S3
-    if (currentImageUrl && !currentImageUrl.startsWith('data:') && !currentImageUrl.startsWith('http')) {
+    if (
+      currentImageUrl &&
+      !currentImageUrl.startsWith('data:') &&
+      !currentImageUrl.startsWith('http')
+    ) {
       try {
         const token = await getToken();
         const response = await fetch(

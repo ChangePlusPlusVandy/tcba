@@ -39,9 +39,15 @@ const AdminSurveys = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
 
-  const { data: surveysData, isLoading: loading, error: surveysError } = useAdminSurveys(currentPage, itemsPerPage);
+  const {
+    data: surveysData,
+    isLoading: loading,
+    error: surveysError,
+  } = useAdminSurveys(currentPage, itemsPerPage);
   const surveysResponse = surveysData || { data: [], pagination: { total: 0, totalPages: 0 } };
-  const surveysArray = (Array.isArray(surveysResponse.data) ? surveysResponse.data : surveysResponse) as Survey[];
+  const surveysArray = (
+    Array.isArray(surveysResponse.data) ? surveysResponse.data : surveysResponse
+  ) as Survey[];
   const totalSurveys = surveysResponse.pagination?.total || surveysArray.length;
 
   const { deleteSurvey, publishSurvey } = useSurveyMutations();
