@@ -575,7 +575,10 @@ export const declineOrganization = async (req: AuthenticatedRequest, res: Respon
           await sendRejectionEmail(email, org.name, reason);
           console.log(`[DECLINE] SUCCESS - Sent rejection notification to ${email}`);
         } catch (emailError) {
-          console.error(`[DECLINE] ERROR - Failed to send rejection email to ${email}:`, emailError);
+          console.error(
+            `[DECLINE] ERROR - Failed to send rejection email to ${email}:`,
+            emailError
+          );
         }
       }
     } else {
