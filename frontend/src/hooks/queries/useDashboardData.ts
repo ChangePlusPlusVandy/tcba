@@ -35,7 +35,7 @@ export const useDashboardData = () => {
   const orgProfile = results[0].data;
   const orgId = orgProfile?.id;
 
-  const { data: surveyResponses } = useQuery({
+  const { data: surveyResponsesData } = useQuery({
     queryKey: ['survey-responses', 'organization', orgId],
     queryFn: () => api.get(`/api/survey-responses/organization/${orgId}`),
     enabled: !!orgId,
@@ -46,11 +46,11 @@ export const useDashboardData = () => {
 
   return {
     orgProfile,
-    alerts: results[1].data,
-    surveys: results[2].data,
-    surveyResponses,
-    announcements: results[3].data,
-    blogs: results[4].data,
+    alerts: results[1].data?.data || results[1].data || [],
+    surveys: results[2].data || [],
+    surveyResponses: surveyResponsesData?.data || surveyResponsesData || [],
+    announcements: results[3].data || [],
+    blogs: results[4].data || [],
     isLoading,
     isError,
   };

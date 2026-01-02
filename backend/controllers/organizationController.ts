@@ -446,7 +446,8 @@ export const approveOrganization = async (req: AuthenticatedRequest, res: Respon
       if (existingClerkUsers.data && existingClerkUsers.data.length > 0) {
         console.log('[APPROVE] Email already exists in Clerk');
         return res.status(400).json({
-          error: 'This email is already registered in the system. If this organization was previously deleted, please contact support.',
+          error:
+            'This email is already registered in the system. If this organization was previously deleted, please contact support.',
         });
       }
     } catch (clerkCheckError) {
