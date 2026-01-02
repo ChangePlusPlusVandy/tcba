@@ -394,6 +394,7 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
 export const approveOrganization = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
+    console.log('[APPROVE] Starting approval for organization:', id);
 
     if (!isAdmin(req.user?.role)) {
       return res.status(403).json({ error: 'Admin access required' });
@@ -401,10 +402,19 @@ export const approveOrganization = async (req: AuthenticatedRequest, res: Respon
 
     const org = await prisma.organization.findUnique({ where: { id } });
     if (!org) {
+      console.log('[APPROVE] Organization not found:', id);
       return res.status(404).json({ error: 'Organization not found' });
     }
 
+    console.log('[APPROVE] Organization details:', {
+      name: org.name,
+      email: org.email,
+      status: org.status,
+      organizationSize: org.organizationSize,
+    });
+
     if (org.status !== 'PENDING') {
+      console.log('[APPROVE] Organization is not pending, status:', org.status);
       return res.status(400).json({ error: 'Organization is not in pending status' });
     }
 
@@ -418,43 +428,85 @@ export const approveOrganization = async (req: AuthenticatedRequest, res: Respon
     };
 
     const generatedPassword = generatePassword();
+    console.log('[APPROVE] Generated password for new user');
 
-    const clerkUser = await clerkClient.users.createUser({
-      emailAddress: [org.email],
-      password: generatedPassword,
-      firstName: org.name.split(' ')[0] || org.name,
-      lastName: org.name.split(' ').slice(1).join(' ') || '',
-      publicMetadata: {
-        organizationName: org.name,
-        role: org.role || 'MEMBER',
-        organizationId: org.id,
-      },
-    });
-
-    const updatedOrg = await prisma.organization.update({
-      where: { id },
-      data: {
-        clerkId: clerkUser.id,
-        status: 'ACTIVE',
-        membershipActive: true,
-        membershipDate: new Date(),
-        // Set default organizationSize if null (for legacy pending orgs)
-        organizationSize: org.organizationSize || 'MEDIUM',
-      },
-    });
+    console.log('[APPROVE] Creating Clerk user...');
+    let clerkUser;
     try {
-      await sendWelcomeEmail(org.email, org.name, generatedPassword);
-    } catch (emailError) {
-      console.error('Error sending welcome email:', emailError);
+      clerkUser = await clerkClient.users.createUser({
+        emailAddress: [org.email],
+        password: generatedPassword,
+        firstName: org.name.split(' ')[0] || org.name,
+        lastName: org.name.split(' ').slice(1).join(' ') || '',
+        publicMetadata: {
+          organizationName: org.name,
+          role: org.role || 'MEMBER',
+          organizationId: org.id,
+        },
+      });
+      console.log('[APPROVE] Clerk user created successfully:', clerkUser.id);
+    } catch (clerkError: any) {
+      console.error('[APPROVE] Clerk user creation failed:', {
+        error: clerkError?.message,
+        status: clerkError?.status,
+        clerkTraceId: clerkError?.clerkTraceId,
+        errors: clerkError?.errors,
+      });
+      return res.status(500).json({
+        error: 'Failed to create user account',
+        details: clerkError?.errors?.[0]?.message || clerkError?.message || 'Unknown Clerk error',
+      });
     }
 
+    console.log('[APPROVE] Updating organization in database...');
+    let updatedOrg;
+    try {
+      updatedOrg = await prisma.organization.update({
+        where: { id },
+        data: {
+          clerkId: clerkUser.id,
+          status: 'ACTIVE',
+          membershipActive: true,
+          membershipDate: new Date(),
+          // Set default organizationSize if null (for legacy pending orgs)
+          organizationSize: org.organizationSize || 'MEDIUM',
+        },
+      });
+      console.log('[APPROVE] Organization updated successfully');
+    } catch (dbError: any) {
+      console.error('[APPROVE] Database update failed:', {
+        error: dbError?.message,
+        code: dbError?.code,
+        meta: dbError?.meta,
+      });
+      return res.status(500).json({
+        error: 'Failed to update organization',
+        details: dbError?.message || 'Unknown database error',
+      });
+    }
+
+    console.log('[APPROVE] Sending welcome email...');
+    try {
+      await sendWelcomeEmail(org.email, org.name, generatedPassword);
+      console.log('[APPROVE] Welcome email sent successfully');
+    } catch (emailError) {
+      console.error('[APPROVE] Error sending welcome email:', emailError);
+    }
+
+    console.log('[APPROVE] Organization approval completed successfully');
     res.json({
       message: 'Organization approved successfully and welcome email sent',
       organization: updatedOrg,
     });
-  } catch (error) {
-    console.error('Error approving organization:', error);
-    res.status(500).json({ error: 'Failed to approve organization' });
+  } catch (error: any) {
+    console.error('[APPROVE] Unexpected error:', {
+      message: error?.message,
+      stack: error?.stack,
+    });
+    res.status(500).json({
+      error: 'Failed to approve organization',
+      details: error?.message || String(error),
+    });
   }
 };
 
