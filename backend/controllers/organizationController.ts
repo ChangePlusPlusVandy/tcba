@@ -563,17 +563,23 @@ export const declineOrganization = async (req: AuthenticatedRequest, res: Respon
       primaryContactEmail: org.primaryContactEmail,
     });
 
-    if (org.email || org.primaryContactEmail) {
-      const recipientEmail = org.primaryContactEmail || org.email;
-      console.log('[DECLINE] Attempting to send rejection email to:', recipientEmail);
-      try {
-        await sendRejectionEmail(recipientEmail, org.name, reason);
-        console.log(`[DECLINE] SUCCESS - Sent rejection notification to ${recipientEmail}`);
-      } catch (emailError) {
-        console.error('[DECLINE] ERROR - Failed to send rejection email:', emailError);
+    // Send to both org email and primary contact email
+    const emailsToSend = new Set<string>();
+    if (org.email) emailsToSend.add(org.email);
+    if (org.primaryContactEmail) emailsToSend.add(org.primaryContactEmail);
+
+    if (emailsToSend.size > 0) {
+      console.log('[DECLINE] Attempting to send rejection emails to:', Array.from(emailsToSend));
+      for (const email of emailsToSend) {
+        try {
+          await sendRejectionEmail(email, org.name, reason);
+          console.log(`[DECLINE] SUCCESS - Sent rejection notification to ${email}`);
+        } catch (emailError) {
+          console.error(`[DECLINE] ERROR - Failed to send rejection email to ${email}:`, emailError);
+        }
       }
     } else {
-      console.log('[DECLINE] No email address found, skipping email notification');
+      console.log('[DECLINE] No email addresses found, skipping email notification');
     }
 
     await prisma.organization.delete({ where: { id } });
@@ -695,17 +701,23 @@ export const deleteOrganization = async (req: AuthenticatedRequest, res: Respons
       primaryContactEmail: orgToDelete.primaryContactEmail,
     });
 
-    if (orgToDelete.email || orgToDelete.primaryContactEmail) {
-      const recipientEmail = orgToDelete.primaryContactEmail || orgToDelete.email;
-      console.log('[DELETE] Attempting to send deletion email to:', recipientEmail);
-      try {
-        await sendDeletionEmail(recipientEmail, orgToDelete.name, reason);
-        console.log(`[DELETE] SUCCESS - Sent deletion notification to ${recipientEmail}`);
-      } catch (emailError) {
-        console.error('[DELETE] ERROR - Failed to send deletion email:', emailError);
+    // Send to both org email and primary contact email
+    const emailsToSend = new Set<string>();
+    if (orgToDelete.email) emailsToSend.add(orgToDelete.email);
+    if (orgToDelete.primaryContactEmail) emailsToSend.add(orgToDelete.primaryContactEmail);
+
+    if (emailsToSend.size > 0) {
+      console.log('[DELETE] Attempting to send deletion emails to:', Array.from(emailsToSend));
+      for (const email of emailsToSend) {
+        try {
+          await sendDeletionEmail(email, orgToDelete.name, reason);
+          console.log(`[DELETE] SUCCESS - Sent deletion notification to ${email}`);
+        } catch (emailError) {
+          console.error(`[DELETE] ERROR - Failed to send deletion email to ${email}:`, emailError);
+        }
       }
     } else {
-      console.log('[DELETE] No email address found, skipping email notification');
+      console.log('[DELETE] No email addresses found, skipping email notification');
     }
 
     const admins = await prisma.organization.findMany({
