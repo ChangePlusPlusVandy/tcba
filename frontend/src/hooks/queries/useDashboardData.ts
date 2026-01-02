@@ -15,8 +15,11 @@ export const useDashboardData = () => {
         queryFn: () => api.get('/api/alerts?page=1&limit=50'),
       },
       {
-        queryKey: ['surveys'],
-        queryFn: () => api.get('/api/surveys'),
+        queryKey: ['surveys', 'active', 'list'],
+        queryFn: async () => {
+          const response = await api.get('/api/surveys/active/list');
+          return response?.data || response || [];
+        },
       },
       {
         queryKey: ['announcements', 'dashboard'],

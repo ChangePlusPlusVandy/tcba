@@ -171,10 +171,17 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
     }
 
     const existingOrg = await prisma.organization.findFirst({
-      where: { OR: [{ name }] },
+      where: {
+        OR: [{ name }, { email }],
+      },
     });
     if (existingOrg) {
-      return res.status(400).json({ error: 'Organization with this name already exists' });
+      if (existingOrg.email === email) {
+        return res.status(400).json({ error: 'An organization with this email already exists' });
+      }
+      if (existingOrg.name === name) {
+        return res.status(400).json({ error: 'Organization with this name already exists' });
+      }
     }
 
     const tempClerkId = `pending_${Date.now()}_${Math.random().toString(36).substring(7)}`;
@@ -429,6 +436,23 @@ export const approveOrganization = async (req: AuthenticatedRequest, res: Respon
 
     const generatedPassword = generatePassword();
     console.log('[APPROVE] Generated password for new user');
+
+    // Check if email already exists in Clerk
+    console.log('[APPROVE] Checking if email already exists in Clerk...');
+    try {
+      const existingClerkUsers = await clerkClient.users.getUserList({
+        emailAddress: [org.email],
+      });
+      if (existingClerkUsers.data && existingClerkUsers.data.length > 0) {
+        console.log('[APPROVE] Email already exists in Clerk');
+        return res.status(400).json({
+          error: 'This email is already registered in the system. If this organization was previously deleted, please contact support.',
+        });
+      }
+    } catch (clerkCheckError) {
+      console.error('[APPROVE] Error checking Clerk for existing email:', clerkCheckError);
+      // Continue anyway - the create will fail if it exists
+    }
 
     console.log('[APPROVE] Creating Clerk user...');
     let clerkUser;
