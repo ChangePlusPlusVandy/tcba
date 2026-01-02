@@ -53,23 +53,25 @@ const OrgSurveysPage = () => {
   const [completedPage, setCompletedPage] = useState(1);
   const itemsPerPage = 50;
 
-  const { data: surveysData = {}, isLoading: loadingSurveys } = useOrgActiveSurveys(
+  const { data: surveysData, isLoading: loadingSurveys } = useOrgActiveSurveys(
     activePage,
     itemsPerPage
   );
-  const surveysResponse = surveysData || { data: [], pagination: { total: 0, totalPages: 0 } };
-  const surveys = Array.isArray(surveysResponse.data) ? surveysResponse.data : surveysResponse;
+  const surveysResponse = surveysData?.data
+    ? surveysData
+    : { data: [], pagination: { total: 0, totalPages: 0 } };
+  const surveys = surveysResponse.data || [];
   const totalSurveys = surveysResponse.pagination?.total || 0;
 
-  const { data: responsesData = {}, isLoading: loadingResponses } = useOrgSurveyResponses(
+  const { data: responsesData, isLoading: loadingResponses } = useOrgSurveyResponses(
     organizationId,
     completedPage,
     itemsPerPage
   );
-  const responsesResponse = responsesData || { data: [], pagination: { total: 0, totalPages: 0 } };
-  const myResponses = Array.isArray(responsesResponse.data)
-    ? responsesResponse.data
-    : responsesResponse;
+  const responsesResponse = responsesData?.data
+    ? responsesData
+    : { data: [], pagination: { total: 0, totalPages: 0 } };
+  const myResponses = responsesResponse.data || [];
   const totalResponses = responsesResponse.pagination?.total || 0;
 
   const { submitResponse } = useSurveyResponseMutations();

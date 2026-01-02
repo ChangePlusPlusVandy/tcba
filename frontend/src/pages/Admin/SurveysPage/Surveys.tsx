@@ -44,10 +44,10 @@ const AdminSurveys = () => {
     isLoading: loading,
     error: surveysError,
   } = useAdminSurveys(currentPage, itemsPerPage);
-  const surveysResponse = surveysData || { data: [], pagination: { total: 0, totalPages: 0 } };
-  const surveysArray = (
-    Array.isArray(surveysResponse.data) ? surveysResponse.data : surveysResponse
-  ) as Survey[];
+  const surveysResponse = surveysData?.data
+    ? surveysData
+    : { data: [], pagination: { total: 0, totalPages: 0 } };
+  const surveysArray = (surveysResponse.data || []) as Survey[];
   const totalSurveys = surveysResponse.pagination?.total || surveysArray.length;
 
   const { deleteSurvey, publishSurvey } = useSurveyMutations();
