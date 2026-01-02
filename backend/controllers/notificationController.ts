@@ -124,6 +124,10 @@ export const sendRejectionEmail = async (
   organizationName: string,
   reason?: string
 ) => {
+  console.log('[sendRejectionEmail] Starting email send to:', organizationEmail);
+  console.log('[sendRejectionEmail] Organization name:', organizationName);
+  console.log('[sendRejectionEmail] Reason:', reason);
+
   const htmlBody = `
     <!DOCTYPE html>
     <html>
@@ -211,7 +215,9 @@ Tennessee Coalition for Better Aging
     ReplyToAddresses: [sesConfig.replyToEmail],
   });
 
-  await sesClient.send(command);
+  console.log('[sendRejectionEmail] Sending email via AWS SES...');
+  const result = await sesClient.send(command);
+  console.log('[sendRejectionEmail] Email sent successfully! MessageId:', result.MessageId);
 };
 
 export const sendDeletionEmail = async (
@@ -219,6 +225,10 @@ export const sendDeletionEmail = async (
   organizationName: string,
   reason?: string
 ) => {
+  console.log('[sendDeletionEmail] Starting email send to:', organizationEmail);
+  console.log('[sendDeletionEmail] Organization name:', organizationName);
+  console.log('[sendDeletionEmail] Reason:', reason);
+
   const htmlBody = `
     <!DOCTYPE html>
     <html>
@@ -306,7 +316,9 @@ Tennessee Coalition for Better Aging
     ReplyToAddresses: [sesConfig.replyToEmail],
   });
 
-  await sesClient.send(command);
+  console.log('[sendDeletionEmail] Sending email via AWS SES...');
+  const result = await sesClient.send(command);
+  console.log('[sendDeletionEmail] Email sent successfully! MessageId:', result.MessageId);
 };
 
 export const sendCustomEmail = async (req: AuthenticatedRequest, res: Response) => {

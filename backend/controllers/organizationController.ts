@@ -158,6 +158,18 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
       });
     }
 
+    if (!primaryContactName || !primaryContactEmail || !primaryContactPhone) {
+      return res.status(400).json({
+        error: 'Primary contact information (name, email, phone) is required',
+      });
+    }
+
+    if (!organizationSize) {
+      return res.status(400).json({
+        error: 'Organization size is required',
+      });
+    }
+
     const existingOrg = await prisma.organization.findFirst({
       where: { OR: [{ name }] },
     });
@@ -218,7 +230,7 @@ export const registerOrganization = async (req: AuthenticatedRequest, res: Respo
         secondaryContactEmail: secondaryContactEmail || null,
         region: region || null,
         organizationType: organizationType || null,
-        organizationSize: organizationSize || null,
+        organizationSize: organizationSize,
         membershipActive: false,
         membershipDate: null,
         membershipRenewalDate: null,
@@ -426,6 +438,8 @@ export const approveOrganization = async (req: AuthenticatedRequest, res: Respon
         status: 'ACTIVE',
         membershipActive: true,
         membershipDate: new Date(),
+        // Set default organizationSize if null (for legacy pending orgs)
+        organizationSize: org.organizationSize || 'MEDIUM',
       },
     });
     try {
@@ -467,14 +481,22 @@ export const declineOrganization = async (req: AuthenticatedRequest, res: Respon
       return res.status(400).json({ error: 'Only pending organizations can be declined' });
     }
 
+    console.log('[DECLINE] Checking email addresses:', {
+      email: org.email,
+      primaryContactEmail: org.primaryContactEmail,
+    });
+
     if (org.email || org.primaryContactEmail) {
       const recipientEmail = org.primaryContactEmail || org.email;
+      console.log('[DECLINE] Attempting to send rejection email to:', recipientEmail);
       try {
         await sendRejectionEmail(recipientEmail, org.name, reason);
-        console.log(`Sent rejection notification to ${recipientEmail}`);
+        console.log(`[DECLINE] SUCCESS - Sent rejection notification to ${recipientEmail}`);
       } catch (emailError) {
-        console.error('Error sending rejection email:', emailError);
+        console.error('[DECLINE] ERROR - Failed to send rejection email:', emailError);
       }
+    } else {
+      console.log('[DECLINE] No email address found, skipping email notification');
     }
 
     await prisma.organization.delete({ where: { id } });
@@ -591,14 +613,22 @@ export const deleteOrganization = async (req: AuthenticatedRequest, res: Respons
       `Admin ${req.user?.id} is deleting organization ${orgToDelete.name} (${orgToDelete.id})`
     );
 
+    console.log('[DELETE] Checking email addresses:', {
+      email: orgToDelete.email,
+      primaryContactEmail: orgToDelete.primaryContactEmail,
+    });
+
     if (orgToDelete.email || orgToDelete.primaryContactEmail) {
       const recipientEmail = orgToDelete.primaryContactEmail || orgToDelete.email;
+      console.log('[DELETE] Attempting to send deletion email to:', recipientEmail);
       try {
         await sendDeletionEmail(recipientEmail, orgToDelete.name, reason);
-        console.log(`Sent deletion notification to ${recipientEmail}`);
+        console.log(`[DELETE] SUCCESS - Sent deletion notification to ${recipientEmail}`);
       } catch (emailError) {
-        console.error('Error sending deletion email to organization:', emailError);
+        console.error('[DELETE] ERROR - Failed to send deletion email:', emailError);
       }
+    } else {
+      console.log('[DELETE] No email address found, skipping email notification');
     }
 
     const admins = await prisma.organization.findMany({
