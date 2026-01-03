@@ -433,7 +433,13 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
         </div>
         <div className='grid gap-12 md:grid-cols-3 justify-items-center'>
           {['age', 'ltss', 'caregiver'].map(key => {
-            const title = content[`why_we_work_${key}_title`]?.value || '';
+            const getFallbackTitle = () => {
+              if (key === 'age') return 'Fastest Growing Age Group';
+              if (key === 'ltss') return 'Inadequate LTSS in Tennessee';
+              if (key === 'caregiver') return 'Lack of Family Caregiver Support';
+              return '';
+            };
+            const title = content[`why_we_work_${key}_title`]?.value || getFallbackTitle();
             const description = content[`why_we_work_${key}_desc`]?.value || '';
             return (
               <div key={key} className='flex flex-col items-center text-center space-y-4 max-w-sm'>
