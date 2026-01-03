@@ -57,7 +57,6 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const filterRef = useRef<HTMLDivElement>(null);
 
-
   const MAX_LENGTH = 200;
 
   const announcementsResponse = announcementsData || { data: [], total: 0 };
