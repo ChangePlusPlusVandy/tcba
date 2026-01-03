@@ -238,14 +238,14 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
   return (
     <div className='flex flex-col mt-8'>
       <section>
-        <div className='grid grid-cols-2 gap-0'>
-          <div className='bg-white px-8 sm:px-12 py-20 flex items-center'>
-            <div className='p-8'>
-              <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+          <div className='bg-white px-6 sm:px-8 lg:px-12 py-10 sm:py-16 lg:py-20 flex items-center'>
+            <div className='p-4 sm:p-6 lg:p-8'>
+              <h2 className='font-[Open_Sans] text-2xl sm:text-3xl lg:text-[40px] font-bold leading-[110%] text-gray-800 mb-4 sm:mb-6'>
                 {content['mission_title']?.value || 'The Mission'}
               </h2>
               <div
-                className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'
+                className='font-[Open_Sans] text-base sm:text-lg font-normal leading-[150%] text-gray-800'
                 dangerouslySetInnerHTML={{
                   __html:
                     content['mission_description']?.value ||
@@ -254,7 +254,7 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
               />
             </div>
           </div>
-          <div className='bg-slate-300 h-[400px] mr-12 overflow-hidden rounded-lg relative group'>
+          <div className='bg-slate-300 h-[300px] sm:h-[400px] lg:mr-12 overflow-hidden rounded-lg relative group'>
             <S3Image
               src={missionImageSrc}
               fallbackSrc={tcbaDDABill}
@@ -334,12 +334,12 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
         </div>
       </section>
 
-      <section className='mt-8 bg-white px-20 py-16'>
-        <div className='text-center space-y-4 mb-12'>
-          <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800'>
+      <section className='mt-8 bg-white px-4 sm:px-8 lg:px-20 py-8 sm:py-12 lg:py-16'>
+        <div className='text-center space-y-4 mb-8 sm:mb-12'>
+          <h2 className='font-[Open_Sans] text-2xl sm:text-3xl lg:text-[40px] font-bold leading-[110%] text-gray-800'>
             Our Coalition
           </h2>
-          <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800 max-w-3xl mx-auto'>
+          <p className='font-[Open_Sans] text-base sm:text-lg font-normal leading-[150%] text-gray-800 max-w-3xl mx-auto px-4'>
             Representative organizations of older Tennesseans and people with disabilities across
             the State have joined the Coalition in an effort to advocate for the communities they
             serve.

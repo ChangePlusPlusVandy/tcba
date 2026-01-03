@@ -125,11 +125,7 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div
-          id='mobile-menu'
-          className='md:hidden bg-white border-b border-gray-200'
-          role='menu'
-        >
+        <div id='mobile-menu' className='md:hidden bg-white border-b border-gray-200' role='menu'>
           <div className='px-4 pt-2 pb-4 space-y-1'>
             <Link
               to='/'

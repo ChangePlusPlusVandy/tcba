@@ -154,10 +154,10 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
   return (
     <div className='mt-8'>
       <section>
-        <div className='grid grid-cols-2 gap-0'>
-          <div className='bg-white px-8 sm:px-12 py-20 flex items-center'>
-            <div className='p-8'>
-              <h1 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+          <div className='bg-white px-6 sm:px-8 lg:px-12 py-10 sm:py-16 lg:py-20 flex items-center'>
+            <div className='p-4 sm:p-6 lg:p-8'>
+              <h1 className='font-[Open_Sans] text-2xl sm:text-3xl lg:text-[40px] font-bold leading-[110%] text-gray-800 mb-4 sm:mb-6'>
                 {content['hero_title']?.value || 'Get Involved'}
               </h1>
               <ul className='space-y-2 text-gray-700 mb-6'>
@@ -198,7 +198,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
             </div>
           </div>
 
-          <div className='h-[400px] bg-slate-200 mr-12 overflow-hidden rounded-lg'>
+          <div className='h-[300px] sm:h-[400px] bg-slate-200 lg:mr-12 overflow-hidden rounded-lg'>
             <S3Image
               src={heroImageSrc}
               fallbackSrc={getInvolvedImage}
@@ -209,15 +209,15 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
         </div>
       </section>
 
-      <div className='bg-white px-20 py-16'>
+      <div className='bg-white px-4 sm:px-8 lg:px-20 py-8 sm:py-12 lg:py-16'>
         <div ref={membershipSectionRef} className='mb-12'>
-          <h2 className='text-3xl font-bold text-gray-800 text-center mb-8'>
+          <h2 className='text-2xl sm:text-3xl font-bold text-gray-800 text-center mb-6 sm:mb-8'>
             {content['membership_title']?.value || 'Membership Information'}
           </h2>
 
-          <div className='grid md:grid-cols-2 gap-8 mb-8'>
+          <div className='grid md:grid-cols-2 gap-6 sm:gap-8 mb-8'>
             <div>
-              <h3 className='text-xl font-semibold text-gray-800 mb-4'>
+              <h3 className='text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4'>
                 {content['eligibility_title']?.value || 'Eligibility'}
               </h3>
               <div
@@ -239,7 +239,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
             </div>
 
             <div>
-              <h3 className='text-xl font-semibold text-gray-800 mb-4'>
+              <h3 className='text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4'>
                 {content['requirements_title']?.value || 'Membership Requirements'}
               </h3>
               <div
@@ -310,7 +310,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
             />
           </div>
 
-          <div className='grid grid-cols-3 gap-4'>
+          <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
             <div className='flex flex-col space-y-2'>
               <label htmlFor='city'>
                 City <span className='text-red-500'>*</span>
