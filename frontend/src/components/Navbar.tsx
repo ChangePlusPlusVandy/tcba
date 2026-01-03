@@ -80,7 +80,7 @@ const Navbar = () => {
                 className='relative text-[#3C3C3C] hover:text-[#88242C] font-medium transition-colors duration-200 flex items-center gap-2 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full'
                 aria-label='Login to your account'
               >
-                <IoPersonSharp className='text-xl' />
+                <IoPersonSharp className='text-xl' role='presentation' />
               </Link>
             </SignedOut>
             <SignedIn>

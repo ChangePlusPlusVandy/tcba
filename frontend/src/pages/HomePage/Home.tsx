@@ -220,6 +220,7 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
                           fill='none'
                           stroke='currentColor'
                           viewBox='0 0 24 24'
+                          role='presentation'
                         >
                           <path
                             strokeLinecap='round'
