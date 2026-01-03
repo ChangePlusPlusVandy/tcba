@@ -78,7 +78,7 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
   };
 
   return (
-    <div className='mt-8 bg-white px-20 py-16'>
+    <div className='mt-8 bg-white px-4 sm:px-8 lg:px-20 py-8 sm:py-12 lg:py-16'>
       <Link
         to='/register'
         className='inline-flex items-center gap-2 text-[#3C3C3C] hover:text-black font-medium mb-6'
@@ -86,12 +86,12 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
         <IoArrowBack size={20} />
         Back to Get Involved
       </Link>
-      <div className='mb-12'>
-        <h1 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
+      <div className='mb-8 sm:mb-12'>
+        <h1 className='font-[Open_Sans] text-2xl sm:text-3xl lg:text-[40px] font-bold leading-[110%] text-gray-800 mb-4 sm:mb-6'>
           {content['header_title']?.value || 'Contact Us'}
         </h1>
         <p
-          className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800 max-w-2xl'
+          className='font-[Open_Sans] text-base sm:text-lg font-normal leading-[150%] text-gray-800 max-w-2xl'
           dangerouslySetInnerHTML={{
             __html:
               content['header_description']?.value ||

@@ -170,7 +170,7 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
 
         <SignedOut>
           {visibleNotifications.length > 0 && (
-            <div className='absolute top-1 left-0 right-0 z-10 px-2'>
+            <div className='absolute top-1 left-0 right-0 z-10'>
               <div className='relative'>
                 {visibleNotifications.slice(1, 3).map((notification, index) => {
                   const styles = getNotificationStyles(notification.type);
@@ -179,7 +179,7 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
                   return (
                     <div
                       key={notification.id}
-                      className={`absolute left-0 right-0 ${styles.bg} border ${styles.border} rounded-3xl px-6 sm:px-10 py-3 backdrop-blur-sm`}
+                      className={`absolute left-0 right-0 ${styles.bg} border ${styles.border} rounded-3xl py-3 px-4 sm:px-6 lg:px-8 backdrop-blur-sm`}
                       style={{
                         top: `${offset}px`,
                         transform: `scale(${scale})`,
@@ -188,8 +188,8 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
                         opacity: 0.7 - index * 0.2,
                       }}
                     >
-                      <div className='max-w-7xl mx-auto opacity-0'>
-                        <div className='pr-32'>
+                      <div className='opacity-0'>
+                        <div className='pr-16 sm:pr-24 md:pr-32'>
                           <div className='mb-1'>
                             <p className='text-sm font-semibold uppercase tracking-wide'>
                               {notification.type}
@@ -207,71 +207,69 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
                   const styles = getNotificationStyles(notification.type);
                   return (
                     <div
-                      className={`${styles.bg} border ${styles.border} shadow-lg rounded-3xl px-6 sm:px-10 py-3 relative backdrop-blur-sm transition-all duration-300`}
+                      className={`${styles.bg} border ${styles.border} shadow-lg rounded-3xl py-3 px-4 sm:px-6 lg:px-8 relative backdrop-blur-sm transition-all duration-300`}
                       style={{ zIndex: 10 }}
                     >
-                      <div className='max-w-7xl mx-auto'>
-                        <button
-                          onClick={() => handleDismissNotification(notification.id)}
-                          className={`absolute top-3 right-6 sm:right-10 ${styles.closeBtn} transition z-10`}
-                          aria-label='Close notification'
+                      <button
+                        onClick={() => handleDismissNotification(notification.id)}
+                        className={`absolute top-3 right-4 sm:right-6 lg:right-8 ${styles.closeBtn} transition z-10`}
+                        aria-label='Close notification'
+                      >
+                        <svg
+                          className='w-5 h-5'
+                          fill='none'
+                          stroke='currentColor'
+                          viewBox='0 0 24 24'
                         >
-                          <svg
-                            className='w-5 h-5'
-                            fill='none'
-                            stroke='currentColor'
-                            viewBox='0 0 24 24'
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth={2}
+                            d='M6 18L18 6M6 6l12 12'
+                          />
+                        </svg>
+                      </button>
+                      <Link
+                        to={getNotificationRoute(notification)}
+                        onClick={() => handleDismissNotification(notification.id)}
+                        className='absolute bottom-3 right-4 sm:right-6 lg:right-8 text-white px-4 py-2 rounded-full text-sm font-semibold shadow transition whitespace-nowrap'
+                        style={{ backgroundColor: '#D54242' }}
+                      >
+                        {notification.type === 'SURVEY' ? 'Take Survey' : 'Read More'}
+                      </Link>
+                      <div className='pr-16 sm:pr-24 md:pr-32'>
+                        <div className='mb-1 flex items-center gap-3'>
+                          <p
+                            className={`text-sm font-semibold uppercase tracking-wide ${styles.label}`}
                           >
-                            <path
-                              strokeLinecap='round'
-                              strokeLinejoin='round'
-                              strokeWidth={2}
-                              d='M6 18L18 6M6 6l12 12'
-                            />
-                          </svg>
-                        </button>
-                        <Link
-                          to={getNotificationRoute(notification)}
-                          onClick={() => handleDismissNotification(notification.id)}
-                          className='absolute bottom-3 right-6 sm:right-10 text-white px-4 py-2 rounded-full text-sm font-semibold shadow transition whitespace-nowrap'
-                          style={{ backgroundColor: '#D54242' }}
-                        >
-                          {notification.type === 'SURVEY' ? 'Take Survey' : 'Read More'}
-                        </Link>
-                        <div className='pr-32'>
-                          <div className='mb-1 flex items-center gap-3'>
-                            <p
-                              className={`text-sm font-semibold uppercase tracking-wide ${styles.label}`}
+                            {notification.type === 'ANNOUNCEMENT'
+                              ? 'Announcement'
+                              : notification.type === 'BLOG'
+                                ? 'New Blog'
+                                : notification.type === 'ALERT'
+                                  ? 'Alert'
+                                  : 'Survey'}
+                          </p>
+                          {visibleNotifications.length > 1 && (
+                            <span
+                              className={`text-xs ${styles.date} bg-white/50 px-2 py-0.5 rounded-full`}
                             >
-                              {notification.type === 'ANNOUNCEMENT'
-                                ? 'Announcement'
-                                : notification.type === 'BLOG'
-                                  ? 'New Blog'
-                                  : notification.type === 'ALERT'
-                                    ? 'Alert'
-                                    : 'Survey'}
-                            </p>
-                            {visibleNotifications.length > 1 && (
-                              <span
-                                className={`text-xs ${styles.date} bg-white/50 px-2 py-0.5 rounded-full`}
-                              >
-                                +{visibleNotifications.length - 1} more
-                              </span>
-                            )}
-                          </div>
-                          {notification.publishedDate && (
-                            <p className={`text-xs ${styles.date}`}>
-                              {new Date(notification.publishedDate).toLocaleDateString(undefined, {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                              })}
-                            </p>
+                              +{visibleNotifications.length - 1} more
+                            </span>
                           )}
-                          <h2 className={`text-lg font-semibold ${styles.title}`}>
-                            {notification.title}
-                          </h2>
                         </div>
+                        {notification.publishedDate && (
+                          <p className={`text-xs ${styles.date}`}>
+                            {new Date(notification.publishedDate).toLocaleDateString(undefined, {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            })}
+                          </p>
+                        )}
+                        <h2 className={`text-lg font-semibold ${styles.title}`}>
+                          {notification.title}
+                        </h2>
                       </div>
                     </div>
                   );
@@ -281,7 +279,7 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
           )}
         </SignedOut>
 
-        <div className='relative max-w-7xl mx-auto pt-24 pb-24 lg:pt-32 lg:pb-28'>
+        <div className='relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-24 lg:pt-32 lg:pb-28'>
           <h1 className='text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-white max-w-2xl'>
             {content['hero_title']?.value || 'Tennessee Coalition for Better Aging'}
           </h1>
@@ -305,12 +303,12 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
       <section className='relative w-screen left-1/2 -translate-x-1/2 -mt-8'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6'>
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 auto-rows-fr'>
-            <div className='bg-white border border-transparent px-8 sm:px-12 py-10 space-y-4 flex flex-col justify-center rounded-lg'>
-              <h2 className='text-3xl font-bold text-slate-900'>
+            <div className='bg-white border border-transparent px-6 sm:px-8 lg:px-12 py-8 sm:py-10 space-y-4 flex flex-col justify-center rounded-lg'>
+              <h2 className='text-2xl sm:text-3xl font-bold text-slate-900'>
                 {content['working_title']?.value || 'Working Towards a Better Tomorrow'}
               </h2>
               <div
-                className='text-base text-slate-600 leading-relaxed max-w-[80%]'
+                className='text-sm sm:text-base text-slate-600 leading-relaxed'
                 dangerouslySetInnerHTML={{
                   __html:
                     content['working_paragraph1']?.value ||
@@ -318,7 +316,7 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
                 }}
               />
               <div
-                className='text-base text-slate-600 leading-relaxed max-w-[80%]'
+                className='text-sm sm:text-base text-slate-600 leading-relaxed'
                 dangerouslySetInnerHTML={{
                   __html:
                     content['working_paragraph2']?.value ||

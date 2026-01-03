@@ -97,7 +97,7 @@ const SignupForm = ({ previewContent }: SignupFormProps = {}) => {
   return (
     <>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-      <div className='mt-8 bg-white px-20 py-16'>
+      <div className='mt-8 bg-white px-4 sm:px-8 lg:px-20 py-8 sm:py-12 lg:py-16'>
         <Link
           to='/register'
           className='inline-flex items-center gap-2 text-[#3C3C3C] hover:text-black font-medium mb-6'
@@ -105,14 +105,14 @@ const SignupForm = ({ previewContent }: SignupFormProps = {}) => {
           <IoArrowBack size={20} />
           Back to Get Involved
         </Link>
-        <div className='grid md:grid-cols-2 gap-8 mb-12'>
+        <div className='grid md:grid-cols-2 gap-8 mb-8 sm:mb-12'>
           <div>
-            <h1 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
+            <h1 className='font-[Open_Sans] text-2xl sm:text-3xl lg:text-[40px] font-bold leading-[110%] text-gray-800 mb-4 sm:mb-6'>
               {content['header_title']?.value || 'Subscribe to Email Notifications'}
             </h1>
 
             <div
-              className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800 mb-6'
+              className='font-[Open_Sans] text-base sm:text-lg font-normal leading-[150%] text-gray-800 mb-6'
               dangerouslySetInnerHTML={{
                 __html:
                   content['header_description']?.value ||
@@ -124,7 +124,7 @@ const SignupForm = ({ previewContent }: SignupFormProps = {}) => {
 
         <form onSubmit={handleSubmit} className='flex flex-col space-y-8 w-full mx-auto'>
           <label className='text-base font-semibold text-gray-800 mb-2'>Name</label>
-          <div className='flex gap-4'>
+          <div className='flex flex-col sm:flex-row gap-4'>
             <input
               type='text'
               required

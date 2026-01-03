@@ -12,7 +12,7 @@ const Footer = () => {
             className='h-12 md:h-16 w-auto'
           />
 
-          <div className='flex flex-col sm:flex-row gap-8 md:gap-12 text-center sm:text-left'>
+          <div className='flex flex-row gap-8 md:gap-12'>
             <div className='flex flex-col gap-2'>
               <h3 className='font-semibold text-sm mb-1' style={{ color: '#3C3C3C' }}>
                 Learn more about us

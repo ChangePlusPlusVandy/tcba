@@ -140,14 +140,14 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
   return (
     <div className='mt-8'>
       <section>
-        <div className='grid grid-cols-2 gap-0'>
-          <div className='bg-white px-8 sm:px-12 py-20 flex items-center'>
-            <div className='p-8'>
-              <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+          <div className='bg-white px-6 sm:px-8 lg:px-12 py-10 sm:py-16 lg:py-20 flex items-center'>
+            <div className='p-4 sm:p-6 lg:p-8'>
+              <h2 className='font-[Open_Sans] text-2xl sm:text-3xl lg:text-[40px] font-bold leading-[110%] text-gray-800 mb-4 sm:mb-6'>
                 {content['header_title']?.value || 'Announcements'}
               </h2>
               <div
-                className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'
+                className='font-[Open_Sans] text-base sm:text-lg font-normal leading-[150%] text-gray-800'
                 dangerouslySetInnerHTML={{
                   __html:
                     content['header_description']?.value ||
@@ -156,7 +156,7 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
               />
             </div>
           </div>
-          <div className='h-[400px] bg-slate-200 mr-12 rounded-lg overflow-hidden'>
+          <div className='h-[300px] sm:h-[400px] bg-slate-200 lg:mr-12 rounded-lg overflow-hidden'>
             {headerImageSrc && (
               <S3Image
                 src={headerImageSrc}
@@ -168,15 +168,15 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
         </div>
       </section>
       <section className='mt-8'>
-        <div className='bg-white px-20 py-4'>
-          <p className='font-[Open_Sans] text-[18px] font-bold text-gray-800 mb-4'>
+        <div className='bg-white px-4 sm:px-8 lg:px-20 py-4'>
+          <p className='font-[Open_Sans] text-base sm:text-lg font-bold text-gray-800 mb-4'>
             {filterAnnouncements.length}{' '}
             {filterAnnouncements.length === 1 ? 'Announcement' : 'Announcements'}
           </p>
-          <div className='flex items-center justify-between'>
-            <div className='flex gap-2 items-center'>
+          <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
+            <div className='flex gap-2 items-center overflow-x-auto w-full sm:w-auto'>
               <button
-                className={`px-8 py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap ${
+                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base ${
                   timeFilter === null
                     ? 'bg-[#EBF3FF] text-[#194B90]'
                     : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
@@ -186,7 +186,7 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
                 All
               </button>
               <button
-                className={`px-8 py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap ${
+                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base ${
                   timeFilter === '24h'
                     ? 'bg-[#EBF3FF] text-[#194B90]'
                     : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
@@ -196,7 +196,7 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
                 Last Day
               </button>
               <button
-                className={`px-8 py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap ${
+                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base ${
                   timeFilter === 'week'
                     ? 'bg-[#EBF3FF] text-[#194B90]'
                     : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
@@ -206,7 +206,7 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
                 Last Week
               </button>
               <button
-                className={`px-8 py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap ${
+                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base ${
                   timeFilter === 'month'
                     ? 'bg-[#EBF3FF] text-[#194B90]'
                     : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
@@ -216,7 +216,7 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
                 Last Month
               </button>
               <button
-                className={`px-8 py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap ${
+                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base ${
                   timeFilter === 'year'
                     ? 'bg-[#EBF3FF] text-[#194B90]'
                     : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
