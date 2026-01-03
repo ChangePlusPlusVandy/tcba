@@ -39,6 +39,10 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
   const content = previewContent || pageContent || {};
 
   useEffect(() => {
+    document.title = 'Home - Tennessee Coalition For Better Aging';
+  }, []);
+
+  useEffect(() => {
     const closedNotifications = JSON.parse(localStorage.getItem('closedNotifications') || '[]');
     setDismissedIds(closedNotifications);
   }, []);

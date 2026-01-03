@@ -29,6 +29,14 @@ export default function Announcement() {
     fetchAnnouncement();
   }, [slug]);
 
+  useEffect(() => {
+    if (announcement) {
+      document.title = `${announcement.title} - Tennessee Coalition For Better Aging`;
+    } else {
+      document.title = 'Announcement - Tennessee Coalition For Better Aging';
+    }
+  }, [announcement]);
+
   if (loading) {
     return (
       <div className='flex justify-center items-center min-h-screen'>

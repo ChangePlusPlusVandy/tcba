@@ -43,7 +43,7 @@ async function getNotificationRecipients(
 
   const orgs = await prisma.organization.findMany({
     where,
-    select: { email: true, primaryContactEmail: true, name: true },
+    select: { email: true, name: true },
   });
 
   console.log(`[${notificationType}] Found ${orgs.length} organizations`);
@@ -51,7 +51,7 @@ async function getNotificationRecipients(
   const emails = Array.from(
     new Set(
       orgs
-        .map(o => o.primaryContactEmail || o.email)
+        .map(o => o.email)
         .filter(Boolean)
         .map(e => e!.toLowerCase())
     )
@@ -442,13 +442,13 @@ export async function sendSurveyEmails(
 
     const orgs = await prisma.organization.findMany({
       where,
-      select: { email: true, primaryContactEmail: true, name: true },
+      select: { email: true, name: true },
     });
 
     const recipients = Array.from(
       new Set(
         orgs
-          .map(o => o.primaryContactEmail || o.email)
+          .map(o => o.email)
           .filter(Boolean)
           .map(e => e!.toLowerCase())
       )

@@ -73,6 +73,10 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
   const content = previewContent || pageContentData || {};
 
   useEffect(() => {
+    document.title = 'Announcements - Tennessee Coalition For Better Aging';
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
         setIsFilterOpen(false);
@@ -277,11 +281,16 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
             </div>
 
             <div className='relative flex-1 max-w-xl' style={{ marginLeft: '12px' }}>
+              <label htmlFor='search-announcements' className='sr-only'>
+                Search announcements
+              </label>
               <input
+                id='search-announcements'
                 type='text'
                 placeholder='Search announcements...'
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
+                aria-label='Search announcements'
                 className='w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#194B90]'
               />
               <svg

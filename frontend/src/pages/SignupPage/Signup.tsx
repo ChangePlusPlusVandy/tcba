@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
 import Toast from '../../components/Toast';
@@ -14,6 +14,10 @@ interface SignupPageProps {
 }
 
 const SignupPage = ({ previewContent }: SignupPageProps = {}) => {
+  useEffect(() => {
+    document.title = 'Email Signup - Tennessee Coalition For Better Aging';
+  }, []);
+
   return (
     <div>
       <SignupForm previewContent={previewContent} />

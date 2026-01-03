@@ -51,6 +51,14 @@ const Blog = () => {
     fetchBlog();
   }, [slug]);
 
+  useEffect(() => {
+    if (blog) {
+      document.title = `${blog.title} - Tennessee Coalition For Better Aging`;
+    } else {
+      document.title = 'Blog - Tennessee Coalition For Better Aging';
+    }
+  }, [blog]);
+
   if (loading) {
     return (
       <div className='flex justify-center items-center min-h-screen'>

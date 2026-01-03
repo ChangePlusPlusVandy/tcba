@@ -71,6 +71,10 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
   const content = previewContent || pageContentData || {};
 
   useEffect(() => {
+    document.title = 'Blogs - Tennessee Coalition For Better Aging';
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
         setIsFilterOpen(false);
@@ -277,11 +281,16 @@ const BlogsPage = ({ previewContent }: BlogsPageProps = {}) => {
             </div>
 
             <div className='relative flex-1 max-w-xl' style={{ marginLeft: '12px' }}>
+              <label htmlFor='search-blogs' className='sr-only'>
+                Search blogs
+              </label>
               <input
+                id='search-blogs'
                 type='text'
                 placeholder='Search blogs...'
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
+                aria-label='Search blogs'
                 className='w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#194B90]'
               />
               <svg

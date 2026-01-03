@@ -16,6 +16,7 @@ interface RegisterPageProps {
 
 const RegisterPage = ({ previewContent }: RegisterPageProps = {}) => {
   useEffect(() => {
+    document.title = 'Get Involved - Tennessee Coalition For Better Aging';
     window.scrollTo(0, 0);
   }, []);
 

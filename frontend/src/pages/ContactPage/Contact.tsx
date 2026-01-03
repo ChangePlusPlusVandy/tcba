@@ -29,6 +29,10 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
 
   const content = previewContent || pageContent || {};
 
+  useEffect(() => {
+    document.title = 'Contact Us - Tennessee Coalition For Better Aging';
+  }, []);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));

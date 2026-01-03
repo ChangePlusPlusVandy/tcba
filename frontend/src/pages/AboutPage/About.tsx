@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MutatingDots } from 'react-loader-spinner';
 import tcbaDDABill from '../../assets/TCBADDABill.jpeg';
@@ -73,6 +73,10 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
 
   const content = previewContent || pageContent || {};
   const isLoadingMap = mapOrgsLoading;
+
+  useEffect(() => {
+    document.title = 'About Us - Tennessee Coalition For Better Aging';
+  }, []);
 
   const logoMap: Record<string, string> = {
     'AARP Tennessee': aarpLogo,
