@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { MutatingDots } from 'react-loader-spinner';
 import { IoFunnelOutline } from 'react-icons/io5';
 import 'react-quill-new/dist/quill.snow.css';
@@ -57,7 +57,6 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const filterRef = useRef<HTMLDivElement>(null);
 
-  const navigate = useNavigate();
 
   const MAX_LENGTH = 200;
 
