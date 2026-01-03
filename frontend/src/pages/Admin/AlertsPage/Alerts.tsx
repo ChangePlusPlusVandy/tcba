@@ -458,9 +458,9 @@ const AdminAlerts = () => {
 
       <div className='flex-1 p-8'>
         <h1 className='text-3xl font-bold text-gray-800 mb-6'>
-          {filter === 'ALL' && `All Alerts (${alertsArray.length})`}
-          {filter === 'PUBLISHED' && `Published Alerts (${filteredAlerts.length})`}
-          {filter === 'DRAFTS' && `Draft Alerts (${filteredAlerts.length})`}
+          {filter === 'ALL' && `All Alerts (${alertsArray?.length || 0})`}
+          {filter === 'PUBLISHED' && `Published Alerts (${filteredAlerts?.length || 0})`}
+          {filter === 'DRAFTS' && `Draft Alerts (${filteredAlerts?.length || 0})`}
         </h1>
 
         <div className='flex items-center gap-4 mb-6'>

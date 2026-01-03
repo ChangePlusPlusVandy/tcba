@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { MutatingDots } from 'react-loader-spinner';
 import { IoFunnelOutline } from 'react-icons/io5';
 import 'react-quill-new/dist/quill.snow.css';
@@ -335,10 +335,10 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
                 : `${a.content.slice(0, MAX_LENGTH)}...`;
 
               return (
-                <div
+                <Link
                   key={a.id}
-                  onClick={() => navigate(`/announcement/${a.slug}`)}
-                  className='flex gap-0 p-6 border border-gray-200 rounded-2xl transition-shadow duration-300 hover:shadow-[0_4px_12px_10px_#EBF3FFE5] cursor-pointer m-4'
+                  to={`/announcement/${a.slug}`}
+                  className='flex gap-0 p-6 border border-gray-200 rounded-2xl transition-shadow duration-300 hover:shadow-[0_4px_12px_10px_#EBF3FFE5] block m-4 no-underline'
                 >
                   <div className='w-full'>
                     <h2 className='font-[Open_Sans] text-[24px] font-semibold leading-[150%] text-[#3C3C3C] mb-2'>
@@ -369,7 +369,7 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
                       dangerouslySetInnerHTML={{ __html: displayedContent }}
                     />
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>

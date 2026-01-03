@@ -4,42 +4,57 @@ import { IoArrowBack } from 'react-icons/io5';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config/api';
 import PublicAttachmentList from '../../components/PublicAttachmentList';
+import { MutatingDots } from 'react-loader-spinner';
 import 'react-quill-new/dist/quill.snow.css';
 
 export default function Announcement() {
   const { slug } = useParams<{ slug: string }>();
   const [announcement, setAnnouncement] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAnnouncement = async () => {
+      setLoading(true);
       try {
         const res = await axios.get(`${API_BASE_URL}/api/announcements/slug/${slug}`);
         setAnnouncement(res.data);
       } catch (error) {
         console.error('Error fetching announcement:', error);
         setAnnouncement(null);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchAnnouncement();
   }, [slug]);
 
+  if (loading) {
+    return (
+      <div className='flex justify-center items-center min-h-screen'>
+        <MutatingDots
+          visible={true}
+          height='100'
+          width='100'
+          color='#D54242'
+          secondaryColor='#D54242'
+          radius='12.5'
+          ariaLabel='mutating-dots-loading'
+        />
+      </div>
+    );
+  }
+
   if (!announcement) return <p>Announcement not found.</p>;
 
   // FORMAT TIME AGO
-  const getTimeAgo = (dateString: string) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
-
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
-    }
-
-    if (diffInMinutes < 1440) {
-      return `${Math.floor(diffInMinutes / 60)} ${Math.floor(diffInMinutes / 60) === 1 ? 'hour' : 'hours'} ago`;
-    }
-    return `${Math.floor(diffInMinutes / 1440)} ${Math.floor(diffInMinutes / 1440) === 1 ? 'day' : 'days'} ago`;
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
   };
 
   return (
@@ -55,7 +70,7 @@ export default function Announcement() {
         <h1 className='font-[Open_Sans] text-[40px] font-bold mb-4'>{announcement.title}</h1>
         <div className='flex items-center gap-3 mb-4'>
           <h3 className='font-[Open_Sans] text-[16px] font-normal leading-[150%] text-[#717171]'>
-            {getTimeAgo(announcement.createdAt)}
+            {formatDate(announcement.createdAt)}
           </h3>
           {announcement.tags && announcement.tags.length > 0 && (
             <>

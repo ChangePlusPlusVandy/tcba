@@ -239,7 +239,13 @@ const GoogleMap = ({
   }
 
   return (
-    <div ref={mapRef} className={`rounded-lg ${className}`} style={{ height, width: '100%' }} />
+    <div
+      ref={mapRef}
+      className={`rounded-lg ${className}`}
+      style={{ height, width: '100%' }}
+      aria-label='Interactive map showing member organization locations across Tennessee'
+      role='region'
+    />
   );
 };
 

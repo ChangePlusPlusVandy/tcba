@@ -98,15 +98,17 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
 
       <form onSubmit={handleSubmit} className='flex flex-col space-y-8 w-full mx-auto'>
         <div className='flex flex-col space-y-2'>
-          <label className='text-base font-semibold text-slate-900'>
+          <label htmlFor='email' className='text-base font-semibold text-slate-900'>
             Your Email <span className='text-red-500'>*</span>
           </label>
           <input
             type='email'
+            id='email'
             name='email'
             value={formData.email}
             onChange={handleInputChange}
             required
+            aria-required='true'
             disabled={loading}
             placeholder='Enter your email address'
             className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
@@ -114,15 +116,17 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
         </div>
 
         <div className='flex flex-col space-y-2'>
-          <label className='text-base font-semibold text-slate-900'>
+          <label htmlFor='title' className='text-base font-semibold text-slate-900'>
             Subject <span className='text-red-500'>*</span>
           </label>
           <input
             type='text'
+            id='title'
             name='title'
             value={formData.title}
             onChange={handleInputChange}
             required
+            aria-required='true'
             disabled={loading}
             placeholder='Enter the subject of your inquiry'
             className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
@@ -130,14 +134,16 @@ const ContactPage = ({ previewContent }: ContactPageProps = {}) => {
         </div>
 
         <div className='flex flex-col space-y-2'>
-          <label className='text-base font-semibold text-slate-900'>
+          <label htmlFor='message' className='text-base font-semibold text-slate-900'>
             Message <span className='text-red-500'>*</span>
           </label>
           <textarea
+            id='message'
             name='message'
             value={formData.message}
             onChange={handleInputChange}
             required
+            aria-required='true'
             disabled={loading}
             rows={8}
             placeholder='Enter your message here...'

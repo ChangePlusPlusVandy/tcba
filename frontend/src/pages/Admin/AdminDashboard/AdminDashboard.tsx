@@ -46,7 +46,7 @@ interface Stats {
 
 interface ActivityItem {
   id: string;
-  type: 'organization' | 'announcement' | 'survey' | 'surveyResponse';
+  type: 'organization' | 'announcement' | 'survey' | 'surveyResponse' | 'blog' | 'alert';
   title: string;
   description: string;
   createdAt: string;
@@ -302,6 +302,42 @@ const AdminDashboard = () => {
             </svg>
           </div>
         );
+      case 'blog':
+        return (
+          <div className='w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center'>
+            <svg
+              className='w-4 h-4 text-indigo-600'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z'
+              />
+            </svg>
+          </div>
+        );
+      case 'alert':
+        return (
+          <div className='w-8 h-8 rounded-full bg-red-100 flex items-center justify-center'>
+            <svg
+              className='w-4 h-4 text-red-600'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'
+              />
+            </svg>
+          </div>
+        );
       default:
         return null;
     }
@@ -318,7 +354,7 @@ const AdminDashboard = () => {
           id: response.id,
           type: 'surveyResponse',
           title: response.surveyTitle,
-          description: `Response from ${response.organizationName}`,
+          description: `Survey response from ${response.organizationName}`,
           createdAt: response.submittedDate,
         });
       });

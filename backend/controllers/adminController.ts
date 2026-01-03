@@ -207,6 +207,16 @@ export const getDashboardStats = async (req: AuthenticatedRequest, res: Response
           orderBy: { createdAt: 'desc' },
           select: { id: true, title: true, createdAt: true },
         }),
+        prisma.blog.findMany({
+          take: 5,
+          orderBy: { createdAt: 'desc' },
+          select: { id: true, title: true, createdAt: true },
+        }),
+        prisma.alert.findMany({
+          take: 5,
+          orderBy: { createdAt: 'desc' },
+          select: { id: true, title: true, createdAt: true },
+        }),
       ]),
 
       prisma.organization.findMany({
@@ -329,7 +339,8 @@ export const getDashboardStats = async (req: AuthenticatedRequest, res: Response
           : 0,
     }));
 
-    const [recentOrgs, recentAnnouncements, recentSurveys] = recentActivity;
+    const [recentOrgs, recentAnnouncements, recentSurveys, recentBlogs, recentAlerts] =
+      recentActivity;
     const formattedActivity = [
       ...recentOrgs.map((org: any) => ({
         id: org.id,
@@ -352,6 +363,20 @@ export const getDashboardStats = async (req: AuthenticatedRequest, res: Response
         title: survey.title,
         description: 'Survey created',
         createdAt: survey.createdAt,
+      })),
+      ...recentBlogs.map((blog: any) => ({
+        id: blog.id,
+        type: 'blog',
+        title: blog.title,
+        description: 'Blog post created',
+        createdAt: blog.createdAt,
+      })),
+      ...recentAlerts.map((alert: any) => ({
+        id: alert.id,
+        type: 'alert',
+        title: alert.title,
+        description: 'Alert created',
+        createdAt: alert.createdAt,
       })),
     ]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())

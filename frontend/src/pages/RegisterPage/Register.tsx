@@ -276,30 +276,34 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           className='flex flex-col space-y-8 w-full mx-auto'
         >
           <div className='flex flex-col space-y-2'>
-            <label>
+            <label htmlFor='name'>
               Organization Name <span className='text-red-500'>*</span>
             </label>
             <input
               type='text'
+              id='name'
               name='name'
               value={formData.name}
               onChange={handleInputChange}
               required
+              aria-required='true'
               disabled={loading}
               className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
             />
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>
+            <label htmlFor='address'>
               Street Address <span className='text-red-500'>*</span>
             </label>
             <input
               type='text'
+              id='address'
               name='address'
               value={formData.address}
               onChange={handleInputChange}
               required
+              aria-required='true'
               disabled={loading}
               className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
             />
@@ -307,30 +311,34 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
 
           <div className='grid grid-cols-3 gap-4'>
             <div className='flex flex-col space-y-2'>
-              <label>
+              <label htmlFor='city'>
                 City <span className='text-red-500'>*</span>
               </label>
               <input
                 type='text'
+                id='city'
                 name='city'
                 value={formData.city}
                 onChange={handleInputChange}
                 required
+                aria-required='true'
                 disabled={loading}
                 className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
               />
             </div>
 
             <div className='flex flex-col space-y-2'>
-              <label>
+              <label htmlFor='state'>
                 State <span className='text-red-500'>*</span>
               </label>
               <input
                 type='text'
+                id='state'
                 name='state'
                 value={formData.state}
                 onChange={handleInputChange}
                 required
+                aria-required='true'
                 disabled={loading}
                 placeholder='TN'
                 className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
@@ -338,15 +346,17 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
             </div>
 
             <div className='flex flex-col space-y-2'>
-              <label>
+              <label htmlFor='zipCode'>
                 Zip Code <span className='text-red-500'>*</span>
               </label>
               <input
                 type='text'
+                id='zipCode'
                 name='zipCode'
                 value={formData.zipCode}
                 onChange={handleInputChange}
                 required
+                aria-required='true'
                 disabled={loading}
                 className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
               />
@@ -354,69 +364,78 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>
+            <label htmlFor='email'>
               Organization Contact Email <span className='text-red-500'>*</span>
             </label>
             <input
               type='email'
+              id='email'
               name='email'
               value={formData.email}
               onChange={handleInputChange}
               required
+              aria-required='true'
               disabled={loading}
               className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
             />
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>
+            <label htmlFor='primaryContactName'>
               Primary Contact Name <span className='text-red-500'>*</span>
             </label>
             <input
               type='text'
+              id='primaryContactName'
               name='primaryContactName'
               value={formData.primaryContactName}
               onChange={handleInputChange}
               required
+              aria-required='true'
               disabled={loading}
               className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
             />
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>
+            <label htmlFor='primaryContactEmail'>
               Primary Contact Email <span className='text-red-500'>*</span>
             </label>
             <input
               type='email'
+              id='primaryContactEmail'
               name='primaryContactEmail'
               value={formData.primaryContactEmail}
               onChange={handleInputChange}
               required
+              aria-required='true'
               disabled={loading}
               className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
             />
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>
+            <label htmlFor='primaryContactPhone'>
               Primary Contact Phone Number <span className='text-red-500'>*</span>
             </label>
             <input
               type='tel'
+              id='primaryContactPhone'
               name='primaryContactPhone'
               value={formData.primaryContactPhone}
               onChange={handleInputChange}
               required
+              aria-required='true'
               disabled={loading}
               className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
             />
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>Secondary Contact Name</label>
+            <label htmlFor='secondaryContactName'>Secondary Contact Name</label>
             <input
               type='text'
+              id='secondaryContactName'
               name='secondaryContactName'
               value={formData.secondaryContactName}
               onChange={handleInputChange}
@@ -426,9 +445,10 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>Secondary Contact Email</label>
+            <label htmlFor='secondaryContactEmail'>Secondary Contact Email</label>
             <input
               type='email'
+              id='secondaryContactEmail'
               name='secondaryContactEmail'
               value={formData.secondaryContactEmail}
               onChange={handleInputChange}
@@ -438,9 +458,10 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>Website URL</label>
+            <label htmlFor='website'>Website URL</label>
             <input
               type='url'
+              id='website'
               name='website'
               value={formData.website}
               onChange={handleInputChange}
@@ -450,15 +471,17 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>
+            <label htmlFor='region'>
               Region <span className='text-red-500'>*</span>
             </label>
             <div className='relative inline-block'>
               <select
+                id='region'
                 name='region'
                 value={formData.region}
                 onChange={handleInputChange}
                 required
+                aria-required='true'
                 disabled={loading}
                 className='text-gray-900 appearance-none box-border w-full h-auto px-4 py-4 bg-white border-[1px] border-gray rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
               >
@@ -486,15 +509,17 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>
+            <label htmlFor='organizationType'>
               Organization Type <span className='text-red-500'>*</span>
             </label>
             <input
               type='text'
+              id='organizationType'
               name='organizationType'
               value={formData.organizationType}
               onChange={handleInputChange}
               required
+              aria-required='true'
               disabled={loading}
               placeholder='Non-profit, Government, Healthcare, etc.'
               className='box-border w-full h-12 px-4 py-4 bg-white border-[1px] border-gray-500 rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
@@ -502,15 +527,17 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
           </div>
 
           <div className='flex flex-col space-y-2'>
-            <label>
+            <label htmlFor='organizationSize'>
               Organization Size <span className='text-red-500'>*</span>
             </label>
             <div className='relative inline-block'>
               <select
+                id='organizationSize'
                 name='organizationSize'
                 value={formData.organizationSize}
                 onChange={handleInputChange}
                 required
+                aria-required='true'
                 disabled={loading}
                 className='text-gray-900 appearance-none box-border w-full h-auto px-4 py-4 bg-white border-[1px] border-gray rounded-[10px] disabled:bg-gray-100 disabled:cursor-not-allowed'
               >

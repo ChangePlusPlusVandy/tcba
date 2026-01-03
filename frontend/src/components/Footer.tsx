@@ -15,28 +15,19 @@ const Footer = () => {
               </h3>
               <Link
                 to='/about'
-                className='text-sm transition-colors duration-200'
-                style={{ color: '#3C3C3C' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+                className='relative text-sm text-[#3C3C3C] hover:text-[#88242C] transition-colors duration-200 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full w-fit'
               >
                 About Us
               </Link>
               <Link
                 to='/announcements'
-                className='text-sm transition-colors duration-200'
-                style={{ color: '#3C3C3C' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+                className='relative text-sm text-[#3C3C3C] hover:text-[#88242C] transition-colors duration-200 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full w-fit'
               >
                 Announcements
               </Link>
               <Link
                 to='/blog'
-                className='text-sm transition-colors duration-200'
-                style={{ color: '#3C3C3C' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+                className='relative text-sm text-[#3C3C3C] hover:text-[#88242C] transition-colors duration-200 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full w-fit'
               >
                 Blogs
               </Link>
@@ -48,28 +39,19 @@ const Footer = () => {
               </h3>
               <Link
                 to='/register'
-                className='text-sm transition-colors duration-200'
-                style={{ color: '#3C3C3C' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+                className='relative text-sm text-[#3C3C3C] hover:text-[#88242C] transition-colors duration-200 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full w-fit'
               >
                 Organization Signup
               </Link>
               <Link
                 to='/email-signup'
-                className='text-sm transition-colors duration-200'
-                style={{ color: '#3C3C3C' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+                className='relative text-sm text-[#3C3C3C] hover:text-[#88242C] transition-colors duration-200 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full w-fit'
               >
                 Email Signup
               </Link>
               <Link
                 to='/contact'
-                className='text-sm transition-colors duration-200'
-                style={{ color: '#3C3C3C' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+                className='relative text-sm text-[#3C3C3C] hover:text-[#88242C] transition-colors duration-200 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full w-fit'
               >
                 Contact Us
               </Link>

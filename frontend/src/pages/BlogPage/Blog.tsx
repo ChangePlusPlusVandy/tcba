@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
 import { API_BASE_URL } from '../../config/api';
 import PublicAttachmentList from '../../components/PublicAttachmentList';
+import { MutatingDots } from 'react-loader-spinner';
 import 'react-quill-new/dist/quill.snow.css';
 
 type Tag = {
@@ -31,36 +32,50 @@ type BlogType = {
 const Blog = () => {
   const { slug } = useParams<{ slug: string }>();
   const [blog, setBlog] = useState<BlogType | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchBlog = async () => {
+      setLoading(true);
       try {
         const response = await axios.get(`${API_BASE_URL}/api/blogs/slug/${slug}`);
         setBlog(response.data);
       } catch (error) {
         console.error('Error fetching blog:', error);
         setBlog(null);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchBlog();
   }, [slug]);
 
+  if (loading) {
+    return (
+      <div className='flex justify-center items-center min-h-screen'>
+        <MutatingDots
+          visible={true}
+          height='100'
+          width='100'
+          color='#D54242'
+          secondaryColor='#D54242'
+          radius='12.5'
+          ariaLabel='mutating-dots-loading'
+        />
+      </div>
+    );
+  }
+
   if (!blog) return <p>Blog not found.</p>;
 
-  const getTimeAgo = (dateString: string) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
-
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
-    }
-
-    if (diffInMinutes < 1440) {
-      return `${Math.floor(diffInMinutes / 60)} ${Math.floor(diffInMinutes / 60) === 1 ? 'hour' : 'hours'} ago`;
-    }
-    return `${Math.floor(diffInMinutes / 1440)} ${Math.floor(diffInMinutes / 1440) === 1 ? 'day' : 'days'} ago`;
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
   };
 
   return (
@@ -76,7 +91,7 @@ const Blog = () => {
         <h1 className='font-[Open_Sans] text-[40px] font-bold mb-4'>{blog.title}</h1>
         <div className='flex items-center gap-3 mb-4'>
           <h3 className='font-[Open_Sans] text-[16px] font-normal leading-[150%] text-[#717171]'>
-            By {blog.author} • {getTimeAgo(blog.createdAt)}
+            By {blog.author} • {formatDate(blog.createdAt)}
           </h3>
           {blog.tags && blog.tags.length > 0 && (
             <>

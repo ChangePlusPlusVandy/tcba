@@ -240,10 +240,10 @@ const AdminSurveys = () => {
 
       <div className='flex-1 p-8'>
         <h1 className='text-3xl font-bold text-gray-800 mb-6'>
-          {filter === 'ALL' && `All Surveys (${filteredSurveys.length})`}
-          {filter === 'ACTIVE' && `Active Surveys (${filteredSurveys.length})`}
-          {filter === 'INACTIVE' && `Inactive Surveys (${filteredSurveys.length})`}
-          {filter === 'DRAFTS' && `Draft Surveys (${filteredSurveys.length})`}
+          {filter === 'ALL' && `All Surveys (${filteredSurveys?.length || 0})`}
+          {filter === 'ACTIVE' && `Active Surveys (${filteredSurveys?.length || 0})`}
+          {filter === 'INACTIVE' && `Inactive Surveys (${filteredSurveys?.length || 0})`}
+          {filter === 'DRAFTS' && `Draft Surveys (${filteredSurveys?.length || 0})`}
         </h1>
 
         <div className='flex items-center gap-4 mb-6'>

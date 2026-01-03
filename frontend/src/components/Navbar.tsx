@@ -18,46 +18,31 @@ const Navbar = () => {
           <div className='hidden md:flex items-center space-x-8'>
             <Link
               to='/'
-              className={`transition-colors duration-200 ${location.pathname === '/' ? 'font-bold' : 'font-medium'}`}
-              style={{ color: '#3C3C3C' }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+              className={`relative text-[#3C3C3C] hover:text-[#88242C] transition-colors duration-200 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full ${location.pathname === '/' ? 'font-bold' : 'font-medium'}`}
             >
               Home
             </Link>
             <Link
               to='/about'
-              className={`transition-colors duration-200 ${location.pathname === '/about' ? 'font-bold' : 'font-medium'}`}
-              style={{ color: '#3C3C3C' }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+              className={`relative text-[#3C3C3C] hover:text-[#88242C] transition-colors duration-200 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full ${location.pathname === '/about' ? 'font-bold' : 'font-medium'}`}
             >
               About Us
             </Link>
             <Link
               to='/announcements'
-              className={`transition-colors duration-200 ${location.pathname === '/announcements' ? 'font-bold' : 'font-medium'}`}
-              style={{ color: '#3C3C3C' }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+              className={`relative text-[#3C3C3C] hover:text-[#88242C] transition-colors duration-200 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full ${location.pathname === '/announcements' ? 'font-bold' : 'font-medium'}`}
             >
               Announcements
             </Link>
             <Link
               to='/blogs'
-              className={`transition-colors duration-200 ${location.pathname === '/blogs' ? 'font-bold' : 'font-medium'}`}
-              style={{ color: '#3C3C3C' }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+              className={`relative text-[#3C3C3C] hover:text-[#88242C] transition-colors duration-200 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full ${location.pathname === '/blogs' ? 'font-bold' : 'font-medium'}`}
             >
               Blogs
             </Link>
             <Link
               to='/register'
-              className={`transition-colors duration-200 ${location.pathname === '/register' ? 'font-bold' : 'font-medium'}`}
-              style={{ color: '#3C3C3C' }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+              className={`relative text-[#3C3C3C] hover:text-[#88242C] transition-colors duration-200 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full ${location.pathname === '/register' ? 'font-bold' : 'font-medium'}`}
             >
               Get Involved
             </Link>
@@ -65,20 +50,14 @@ const Navbar = () => {
               {isAdmin ? (
                 <Link
                   to='/admin/dashboard'
-                  className={`transition-colors duration-200 ${location.pathname.startsWith('/admin') ? 'font-bold' : 'font-medium'}`}
-                  style={{ color: '#3C3C3C' }}
-                  onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
-                  onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+                  className={`relative text-[#3C3C3C] hover:text-[#88242C] transition-colors duration-200 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full ${location.pathname.startsWith('/admin') ? 'font-bold' : 'font-medium'}`}
                 >
                   Admin Panel
                 </Link>
               ) : (
                 <Link
                   to='/dashboard'
-                  className={`transition-colors duration-200 ${location.pathname === '/dashboard' ? 'font-bold' : 'font-medium'}`}
-                  style={{ color: '#3C3C3C' }}
-                  onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
-                  onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+                  className={`relative text-[#3C3C3C] hover:text-[#88242C] transition-colors duration-200 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full ${location.pathname === '/dashboard' ? 'font-bold' : 'font-medium'}`}
                 >
                   Organization Panel
                 </Link>
@@ -88,10 +67,7 @@ const Navbar = () => {
             <SignedOut>
               <Link
                 to='/login'
-                className='font-medium transition-colors duration-200 flex items-center gap-2'
-                style={{ color: '#3C3C3C' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#88242C')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#3C3C3C')}
+                className='relative text-[#3C3C3C] hover:text-[#88242C] font-medium transition-colors duration-200 flex items-center gap-2 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full'
               >
                 <IoPersonSharp className='text-xl' />
               </Link>

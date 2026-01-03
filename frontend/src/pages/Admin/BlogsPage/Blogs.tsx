@@ -499,9 +499,9 @@ const AdminBlogs = () => {
 
       <div className='flex-1 p-8'>
         <h1 className='text-3xl font-bold text-gray-800 mb-6'>
-          {filter === 'ALL' && `All Blogs (${blogsArray.length})`}
-          {filter === 'PUBLISHED' && `Published Blogs (${filteredBlogs.length})`}
-          {filter === 'DRAFTS' && `Draft Blogs (${filteredBlogs.length})`}
+          {filter === 'ALL' && `All Blogs (${blogsArray?.length || 0})`}
+          {filter === 'PUBLISHED' && `Published Blogs (${filteredBlogs?.length || 0})`}
+          {filter === 'DRAFTS' && `Draft Blogs (${filteredBlogs?.length || 0})`}
         </h1>
 
         <div className='flex items-center gap-4 mb-6'>

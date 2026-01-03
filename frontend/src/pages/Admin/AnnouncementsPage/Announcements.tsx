@@ -473,10 +473,10 @@ const AdminAnnouncements = () => {
 
   const currentFilterCount =
     filter === 'ALL'
-      ? announcements.length
+      ? announcements?.length || 0
       : filter === 'PUBLISHED'
-        ? published.length
-        : drafts.length;
+        ? published?.length || 0
+        : drafts?.length || 0;
 
   return (
     <div className='flex min-h-screen bg-gray-50'>
