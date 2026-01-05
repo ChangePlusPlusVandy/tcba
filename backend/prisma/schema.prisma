@@ -284,3 +284,84 @@ enum NotificationType {
   ALERT
   SURVEY
 }
+
+// ==================== ADD STRIPE MODELS ====================
+// Add these enums:
+//   - SubscriptionStatus: ACTIVE, PAST_DUE, CANCELED, INCOMPLETE, TRIALING
+//   - PaymentStatus: PENDING, SUCCEEDED, FAILED, REFUNDED
+//
+// Add Subscription model with fields:
+//   - organizationId (unique, relation to Organization)
+//   - stripeCustomerId, stripeSubscriptionId, stripePriceId
+//   - status, currentPeriodStart, currentPeriodEnd, cancelAtPeriodEnd
+//   - relations: payments[], invoices[]
+//
+// Add Payment model with fields:
+//   - subscriptionId (relation to Subscription)
+//   - stripePaymentIntentId, stripeInvoiceId
+//   - amount, currency, status, paymentMethod, receiptUrl
+//
+// Add Invoice model with fields:
+//   - subscriptionId (relation to Subscription)
+//   - stripeInvoiceId, amount, currency, status
+//   - invoicePdf, hostedInvoiceUrl, periodStart, periodEnd
+//
+// Update Organization model to add:
+//   - subscription Subscription?
+
+// ==================== ADD MESSAGING MODELS ====================
+// Add these enums:
+//   - MessageStatus: SENT, DELIVERED, READ
+//   - ConversationType: ORG_TO_ORG, ORG_TO_ADMIN, ADMIN_TO_ORG
+//
+// Add Conversation model with fields:
+//   - type (ConversationType)
+//   - organizationId?, adminId?, otherOrganizationId? (for different conversation types)
+//   - subject, lastMessageAt
+//   - relations: messages[]
+//   - indexes on organizationId, adminId, otherOrganizationId
+//
+// Add Message model with fields:
+//   - conversationId (relation to Conversation)
+//   - senderType, senderOrganizationId?, senderAdminId?
+//   - content (Text), attachments (String[])
+//   - status, readAt
+//   - indexes on conversationId, senderOrganizationId, senderAdminId
+//
+// Update Organization model to add:
+//   - conversations Conversation[]
+//   - sentMessages Message[]
+//   - otherConversations Conversation[] @relation("OrgToOrgConversations")
+//
+// Update AdminUser model to add:
+//   - conversations Conversation[]
+//   - sentMessages Message[]
+
+// ==================== ADD EVENTS & RSVP MODELS ====================
+// Add these enums:
+//   - EventStatus: DRAFT, PUBLISHED, CANCELLED, COMPLETED
+//   - RSVPStatus: GOING, NOT_GOING, MAYBE
+//
+// Add Event model with fields:
+//   - title, description (Text), location, zoomLink, meetingPassword
+//   - startTime, endTime, timezone (default: "America/Chicago")
+//   - status, maxAttendees (optional Int)
+//   - createdByAdminId (relation to AdminUser)
+//   - tags (String[]), attachments (String[])
+//   - relations: rsvps[]
+//   - indexes on createdByAdminId, startTime, status
+//
+// Add EventRSVP model with fields:
+//   - eventId (relation to Event), organizationId (relation to Organization)
+//   - status (RSVPStatus)
+//   - attendeeName?, attendeeEmail?, attendeePhone?
+//   - reminder3DaysSent, reminder1DaySent, reminder1HourSent (all Boolean, default: false)
+//   - notes (Text)
+//   - unique constraint on [eventId, organizationId]
+//   - indexes on eventId, organizationId, status
+//
+// Update Organization model to add:
+//   - eventRSVPs EventRSVP[]
+//
+// Update AdminUser model to add:
+//   - createdEvents Event[]
