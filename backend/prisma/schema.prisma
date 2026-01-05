@@ -114,6 +114,11 @@ model Organization {
   lastCheckedBlogsAt         DateTime?
   lastCheckedMessagesAt      DateTime?
   surveyResponses            SurveyResponse[]
+  subscription               Subscription?
+  conversations              Conversation[]          @relation("OrgConversations")
+  sentMessages               Message[]               @relation("SentMessages")
+  otherConversations         Conversation[]          @relation("OrgToOrgConversations")
+  eventRSVPs                 EventRSVP[]             @relation("EventRSVPs")
 
   @@map("organizations")
 }
@@ -150,12 +155,15 @@ model Survey {
 }
 
 model AdminUser {
-  id           String  @id @default(cuid())
-  clerkId      String  @unique
-  email        String
-  name         String
-  isSuperAdmin Boolean @default(false)
-  isActive     Boolean
+  id             String         @id @default(cuid())
+  clerkId        String         @unique
+  email          String
+  name           String
+  isSuperAdmin   Boolean        @default(false)
+  isActive       Boolean
+  conversations  Conversation[] @relation("AdminConversations")
+  sentMessages   Message[]      @relation("SentMessages")
+  createdEvents  Event[]        @relation("CreatedEvents")
 
   @@map("AdminUser")
 }
@@ -234,6 +242,161 @@ model PageContent {
   @@map("page_content")
 }
 
+model Subscription {
+  id                   String             @id @default(cuid())
+  organizationId       String             @unique
+  organization         Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String
+  stripeSubscriptionId String             @unique
+  stripePriceId        String
+  status               SubscriptionStatus
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean            @default(false)
+  payments             Payment[]
+  invoices             Invoice[]
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([organizationId])
+  @@index([stripeCustomerId])
+  @@map("subscriptions")
+}
+
+model Payment {
+  id                    String        @id @default(cuid())
+  subscriptionId        String
+  subscription          Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  stripePaymentIntentId String        @unique
+  stripeInvoiceId       String?
+  amount                Int           // Amount in cents
+  currency              String        @default("usd")
+  status                PaymentStatus
+  paymentMethod         String?
+  receiptUrl            String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  @@index([subscriptionId])
+  @@index([status])
+  @@map("payments")
+}
+
+model Invoice {
+  id               String       @id @default(cuid())
+  subscriptionId   String
+  subscription     Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  stripeInvoiceId  String       @unique
+  amount           Int          // Amount in cents
+  currency         String       @default("usd")
+  status           String
+  invoicePdf       String?
+  hostedInvoiceUrl String?
+  periodStart      DateTime
+  periodEnd        DateTime
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([subscriptionId])
+  @@index([status])
+  @@map("invoices")
+}
+
+model Conversation {
+  id                   String           @id @default(cuid())
+  type                 ConversationType
+  organizationId       String?
+  organization         Organization?    @relation("OrgConversations", fields: [organizationId], references: [id], onDelete: Cascade)
+  adminId              String?
+  admin                AdminUser?       @relation("AdminConversations", fields: [adminId], references: [id], onDelete: Cascade)
+  otherOrganizationId  String?
+  otherOrganization    Organization?    @relation("OrgToOrgConversations", fields: [otherOrganizationId], references: [id], onDelete: Cascade)
+  subject              String
+  lastMessageAt        DateTime         @default(now())
+  messages             Message[]
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  @@index([organizationId])
+  @@index([adminId])
+  @@index([otherOrganizationId])
+  @@index([lastMessageAt(sort: Desc)])
+  @@map("conversations")
+}
+
+model Message {
+  id                   String        @id @default(cuid())
+  conversationId       String
+  conversation         Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderType           String        // "ORG" or "ADMIN"
+  senderOrganizationId String?
+  senderOrganization   Organization? @relation("SentMessages", fields: [senderOrganizationId], references: [id], onDelete: Cascade)
+  senderAdminId        String?
+  senderAdmin          AdminUser?    @relation("SentMessages", fields: [senderAdminId], references: [id], onDelete: Cascade)
+  content              String        @db.Text
+  attachments          String[]
+  status               MessageStatus @default(SENT)
+  readAt               DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  @@index([conversationId])
+  @@index([senderOrganizationId])
+  @@index([senderAdminId])
+  @@index([createdAt(sort: Desc)])
+  @@map("messages")
+}
+
+model Event {
+  id               String      @id @default(cuid())
+  title            String
+  description      String      @db.Text
+  location         String?
+  link         String?
+  meetingPassword  String?
+  startTime        DateTime
+  endTime          DateTime
+  timezone         String      @default("America/Chicago")
+  status           EventStatus @default(DRAFT)
+  maxAttendees     Int?
+  createdByAdminId String
+  createdByAdmin   AdminUser   @relation("CreatedEvents", fields: [createdByAdminId], references: [id], onDelete: Cascade)
+  tags             String[]
+  attachments      String[]
+  rsvps            EventRSVP[]
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@index([createdByAdminId])
+  @@index([startTime])
+  @@index([status])
+  @@map("events")
+}
+
+model EventRSVP {
+  id                  String       @id @default(cuid())
+  eventId             String
+  event               Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organizationId      String
+  organization        Organization @relation("EventRSVPs", fields: [organizationId], references: [id], onDelete: Cascade)
+  status              RSVPStatus
+  attendeeName        String?
+  attendeeEmail       String?
+  attendeePhone       String?
+  reminder3DaysSent   Boolean      @default(false)
+  reminder1DaySent    Boolean      @default(false)
+  reminder1HourSent   Boolean      @default(false)
+  notes               String?      @db.Text
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  @@unique([eventId, organizationId])
+  @@index([eventId])
+  @@index([organizationId])
+  @@index([status])
+  @@map("event_rsvps")
+}
+
 enum EmailStatus {
   SCHEDULED
   SENT
@@ -285,83 +448,42 @@ enum NotificationType {
   SURVEY
 }
 
-// ==================== ADD STRIPE MODELS ====================
-// Add these enums:
-//   - SubscriptionStatus: ACTIVE, PAST_DUE, CANCELED, INCOMPLETE, TRIALING
-//   - PaymentStatus: PENDING, SUCCEEDED, FAILED, REFUNDED
-//
-// Add Subscription model with fields:
-//   - organizationId (unique, relation to Organization)
-//   - stripeCustomerId, stripeSubscriptionId, stripePriceId
-//   - status, currentPeriodStart, currentPeriodEnd, cancelAtPeriodEnd
-//   - relations: payments[], invoices[]
-//
-// Add Payment model with fields:
-//   - subscriptionId (relation to Subscription)
-//   - stripePaymentIntentId, stripeInvoiceId
-//   - amount, currency, status, paymentMethod, receiptUrl
-//
-// Add Invoice model with fields:
-//   - subscriptionId (relation to Subscription)
-//   - stripeInvoiceId, amount, currency, status
-//   - invoicePdf, hostedInvoiceUrl, periodStart, periodEnd
-//
-// Update Organization model to add:
-//   - subscription Subscription?
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  TRIALING
+}
 
-// ==================== ADD MESSAGING MODELS ====================
-// Add these enums:
-//   - MessageStatus: SENT, DELIVERED, READ
-//   - ConversationType: ORG_TO_ORG, ORG_TO_ADMIN, ADMIN_TO_ORG
-//
-// Add Conversation model with fields:
-//   - type (ConversationType)
-//   - organizationId?, adminId?, otherOrganizationId? (for different conversation types)
-//   - subject, lastMessageAt
-//   - relations: messages[]
-//   - indexes on organizationId, adminId, otherOrganizationId
-//
-// Add Message model with fields:
-//   - conversationId (relation to Conversation)
-//   - senderType, senderOrganizationId?, senderAdminId?
-//   - content (Text), attachments (String[])
-//   - status, readAt
-//   - indexes on conversationId, senderOrganizationId, senderAdminId
-//
-// Update Organization model to add:
-//   - conversations Conversation[]
-//   - sentMessages Message[]
-//   - otherConversations Conversation[] @relation("OrgToOrgConversations")
-//
-// Update AdminUser model to add:
-//   - conversations Conversation[]
-//   - sentMessages Message[]
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
 
-// ==================== ADD EVENTS & RSVP MODELS ====================
-// Add these enums:
-//   - EventStatus: DRAFT, PUBLISHED, CANCELLED, COMPLETED
-//   - RSVPStatus: GOING, NOT_GOING, MAYBE
-//
-// Add Event model with fields:
-//   - title, description (Text), location, zoomLink, meetingPassword
-//   - startTime, endTime, timezone (default: "America/Chicago")
-//   - status, maxAttendees (optional Int)
-//   - createdByAdminId (relation to AdminUser)
-//   - tags (String[]), attachments (String[])
-//   - relations: rsvps[]
-//   - indexes on createdByAdminId, startTime, status
-//
-// Add EventRSVP model with fields:
-//   - eventId (relation to Event), organizationId (relation to Organization)
-//   - status (RSVPStatus)
-//   - attendeeName?, attendeeEmail?, attendeePhone?
-//   - reminder3DaysSent, reminder1DaySent, reminder1HourSent (all Boolean, default: false)
-//   - notes (Text)
-//   - unique constraint on [eventId, organizationId]
-//   - indexes on eventId, organizationId, status
-//
-// Update Organization model to add:
-//   - eventRSVPs EventRSVP[]
-//
-// Update AdminUser model to add:
-//   - createdEvents Event[]
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+enum ConversationType {
+  ORG_TO_ORG
+  ORG_TO_ADMIN
+  ADMIN_TO_ORG
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum RSVPStatus {
+  GOING
+  NOT_GOING
+  MAYBE
+}
