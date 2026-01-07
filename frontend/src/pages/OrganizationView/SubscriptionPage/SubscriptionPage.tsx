@@ -18,12 +18,12 @@ export function SubscriptionPage() {
   // Handle cancel subscription with useCancelSubscription()
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Subscription Management</h1>
+    <div className='p-6'>
+      <h1 className='text-3xl font-bold mb-6'>Subscription Management</h1>
 
-      <div className="alert alert-info">
+      <div className='alert alert-info'>
         <span>Implement subscription page</span>
-        <ul className="list-disc ml-6 mt-2">
+        <ul className='list-disc ml-6 mt-2'>
           <li>Show current subscription status</li>
           <li>Display available pricing plans</li>
           <li>Handle subscription creation with Stripe</li>

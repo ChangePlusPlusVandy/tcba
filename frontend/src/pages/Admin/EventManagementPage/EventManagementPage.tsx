@@ -13,20 +13,20 @@ export function EventManagementPage() {
   // Handle delete event with useDeleteEvent()
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Event Management</h1>
+    <div className='p-6'>
+      <div className='flex justify-between items-center mb-6'>
+        <h1 className='text-3xl font-bold'>Event Management</h1>
         <button
           // onClick={() => setShowCreateModal(true)}
-          className="btn btn-primary"
+          className='btn btn-primary'
         >
           Create Event
         </button>
       </div>
 
-      <div className="alert alert-info">
+      <div className='alert alert-info'>
         <span>Implement event management page</span>
-        <ul className="list-disc ml-6 mt-2">
+        <ul className='list-disc ml-6 mt-2'>
           <li>Display all events with filters (draft, published, etc.)</li>
           <li>Create event form (title, description, date/time, location, zoom link)</li>
           <li>Edit existing events</li>

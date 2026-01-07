@@ -10,12 +10,12 @@ export function EventsPage() {
   // Handle RSVP submission with useRSVP()
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Upcoming Events</h1>
+    <div className='p-6'>
+      <h1 className='text-3xl font-bold mb-6'>Upcoming Events</h1>
 
-      <div className="alert alert-info">
+      <div className='alert alert-info'>
         <span>Implement events page</span>
-        <ul className="list-disc ml-6 mt-2">
+        <ul className='list-disc ml-6 mt-2'>
           <li>Display upcoming events in cards/list</li>
           <li>Show event details (title, date, location, zoom link)</li>
           <li>Display RSVP count and max attendees</li>

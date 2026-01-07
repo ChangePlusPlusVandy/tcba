@@ -44,7 +44,7 @@ export const initializeSocket = (httpServer: HTTPServer): SocketIOServer => {
     }
   });
 
-  io.on('connection', (socket) => {
+  io.on('connection', socket => {
     console.log(`User connected: ${socket.data.userId} (Socket: ${socket.id})`);
 
     socket.on('disconnect', () => {
@@ -110,16 +110,11 @@ export const getSocketIO = (): SocketIOServer => {
   return io;
 };
 
-export const emitToConversation = (
-  conversationId: string,
-  event: string,
-  data: any
-): void => {
+export const emitToConversation = (conversationId: string, event: string, data: any): void => {
   if (io) {
     io.to(`conversation:${conversationId}`).emit(event, data);
   }
 };
-
 
 export const emitToUser = (userId: string, event: string, data: any): void => {
   // Implement userId -> socketId mapping

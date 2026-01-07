@@ -144,16 +144,6 @@ export interface SocketData {
 
 import { Server, Socket } from 'socket.io';
 
-export type TypedServer = Server<
-  ClientToServerEvents,
-  ServerToClientEvents,
-  {},
-  SocketData
->;
+export type TypedServer = Server<ClientToServerEvents, ServerToClientEvents, {}, SocketData>;
 
-export type TypedSocket = Socket<
-  ClientToServerEvents,
-  ServerToClientEvents,
-  {},
-  SocketData
->;
+export type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents, {}, SocketData>;

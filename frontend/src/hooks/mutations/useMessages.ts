@@ -9,7 +9,11 @@ export function useSendMessage() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (_data: { conversationId: string; content: string; attachments?: string[] }) => {
+    mutationFn: async (_data: {
+      conversationId: string;
+      content: string;
+      attachments?: string[];
+    }) => {
       // Implement API call to POST /api/messages/messages
       throw new Error('Not implemented');
     },

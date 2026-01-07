@@ -30,15 +30,15 @@ export const initializeSocket = (token: string): TypedSocket => {
     console.log('Socket.IO connected:', socket?.id);
   });
 
-  socket.on('disconnect', (reason) => {
+  socket.on('disconnect', reason => {
     console.log('Socket.IO disconnected:', reason);
   });
 
-  socket.on('connect_error', (error) => {
+  socket.on('connect_error', error => {
     console.error('Socket.IO connection error:', error.message);
   });
 
-  socket.on('error', (data) => {
+  socket.on('error', data => {
     console.error('Socket.IO error:', data.message);
   });
 
@@ -69,7 +69,6 @@ export const disconnectSocket = (): void => {
 export const isSocketConnected = (): boolean => {
   return socket?.connected ?? false;
 };
-
 
 /**
  * Join a conversation room to receive real-time updates
@@ -114,10 +113,7 @@ export const markAsReadViaSocket = (conversationId: string): void => {
 /**
  * Send typing indicator
  */
-export const sendTypingIndicator = (
-  conversationId: string,
-  isTyping: boolean
-): void => {
+export const sendTypingIndicator = (conversationId: string, isTyping: boolean): void => {
   if (socket && socket.connected) {
     socket.emit('typing', { conversationId, isTyping });
   }

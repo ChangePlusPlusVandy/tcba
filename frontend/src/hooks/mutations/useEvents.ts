@@ -28,7 +28,7 @@ export function useUpdateEvent() {
 
   return useMutation({
     // add appropriate parameter to async
-    mutationFn: async ({  }: any) => {
+    mutationFn: async ({}: any) => {
       // Implement API call to PUT /api/events/:id
       throw new Error('Not implemented');
     },
@@ -84,7 +84,7 @@ export function useRSVP() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ }: any) => {
+    mutationFn: async ({}: any) => {
       // Implement API call to POST /api/events/:eventId/rsvp
       throw new Error('Not implemented');
     },
