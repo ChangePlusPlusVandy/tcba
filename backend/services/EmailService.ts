@@ -1,6 +1,3 @@
-// AWS SES email service
-// TODO: Implement SES integration
-
 interface AlertEmailParams {
   to: string;
   organizationName: string;
