@@ -125,26 +125,24 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
   const coalitionRows = [
     // Row 1
     [
+      {
+        name: 'West End Home Foundation',
+        logo: wehfLogo,
+        website: 'https://www.westendhomefoundation.org/',
+        featured: true,
+      },
+      { name: 'Tennessee Justice Center', logo: tnjcLogo, website: 'https://www.tnjustice.org' },
+      {
+        name: 'Tennessee Disability Coalition',
+        logo: tndcLogo,
+        website: 'https://www.tndisability.org',
+        featured: true,
+      },
       { name: 'AARP', logo: aarpLogo, website: 'https://states.aarp.org/tennessee/' },
-      { name: 'AgeWell', logo: agewellLogo, website: 'https://agewelltn.org/' },
-      {
-        name: 'Aging Commission of Mid South',
-        logo: agingcommissionLogo,
-        website: 'https://shelbycountytn.gov/3433/Aging-Commission-of-the-Mid-South',
-      },
-      {
-        name: "Alzheimer's Association",
-        logo: alzheimersassocLogo,
-        website: 'https://www.alz.org',
-      },
     ],
     // Row 2
     [
-      {
-        name: "Alzheimer's Tennessee",
-        logo: alzheimerstnLogo,
-        website: 'https://www.alztennessee.org',
-      },
+      { name: 'AgeWell', logo: agewellLogo, website: 'https://agewelltn.org/' },
       {
         name: 'Centennial Adultcare Center',
         logo: centennialadultLogo,
@@ -196,29 +194,33 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
         website: 'https://tncaregiver.org/',
       },
       {
-        name: 'Tennessee Disability Coalition',
-        logo: tndcLogo,
-        website: 'https://www.tndisability.org',
-      },
-      {
         name: 'Tennessee Federation for the Aging',
         logo: tnfdaLogo,
         website: 'http://www.tnfederationfortheaging.org/',
       },
-    ],
-    // Row 6
-    [
       {
         name: 'Tennessee Health Care Campaign',
         logo: tnhccLogo,
         website: 'https://www.tnhealthcarecampaign.org',
       },
-      { name: 'Tennessee Justice Center', logo: tnjcLogo, website: 'https://www.tnjustice.org' },
+    ],
+    // Row 6
+    [
       { name: 'Upper Cumberland DD', logo: ucddLogo, website: 'https://www.ucdd.org' },
       {
-        name: 'West End Home Foundation',
-        logo: wehfLogo,
-        website: 'https://www.westendhomefoundation.org/',
+        name: 'Aging Commission of Mid South',
+        logo: agingcommissionLogo,
+        website: 'https://shelbycountytn.gov/3433/Aging-Commission-of-the-Mid-South',
+      },
+      {
+        name: "Alzheimer's Association",
+        logo: alzheimersassocLogo,
+        website: 'https://www.alz.org',
+      },
+      {
+        name: "Alzheimer's Tennessee",
+        logo: alzheimerstnLogo,
+        website: 'https://www.alztennessee.org',
       },
     ],
     // Row 7
@@ -279,7 +281,7 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
         <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 text-center mb-12'>
           {content['priorities_title']?.value || 'Current Priorities'}
         </h2>
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 gap-12 mb-10 max-w-5xl mx-auto'>
           {[
             {
               num: 1,
@@ -307,15 +309,15 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
             const title = content[`priority${num}_title`]?.value || defaultTitle;
             const desc = content[`priority${num}_desc`]?.value || '';
             return (
-              <div key={num} className='flex flex-col items-center text-center space-y-4'>
-                <div className='w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center'>
-                  <Icon className='w-10 h-10 text-slate-700' />
+              <div key={num} className='flex flex-col items-center text-center space-y-6'>
+                <div className='w-32 h-32 bg-slate-100 rounded-full flex items-center justify-center'>
+                  <Icon className='w-16 h-16 text-slate-700' />
                 </div>
-                <div className='space-y-2'>
-                  <p className='text-sm font-semibold text-slate-800'>{title}</p>
+                <div className='space-y-3'>
+                  <p className='text-lg font-semibold text-slate-800'>{title}</p>
                   {desc && (
                     <div
-                      className='text-xs text-slate-600 leading-relaxed px-2'
+                      className='text-base text-slate-600 leading-relaxed px-2'
                       dangerouslySetInnerHTML={{ __html: desc }}
                     />
                   )}
@@ -373,7 +375,7 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
                     <img
                       src={partner.logo}
                       alt={partner.name}
-                      className='max-w-full max-h-16 object-contain'
+                      className={`max-w-full object-contain ${partner.featured ? 'max-h-24' : 'max-h-16'}`}
                     />
                   </a>
                 ))}
