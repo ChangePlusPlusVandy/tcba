@@ -327,12 +327,13 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
           })}
         </div>
         <div className='flex justify-center'>
-          <button
+          <Link
+            to='/advocacy'
             className='text-white px-8 py-3 rounded-full text-sm font-semibold shadow-md hover:opacity-90 transition'
             style={{ backgroundColor: '#D54242' }}
           >
             {content['priorities_button_text']?.value || 'Learn more about our advocacy'}
-          </button>
+          </Link>
         </div>
       </section>
 

@@ -6,6 +6,7 @@ import AdminRoute from '../components/AdminRoute';
 
 const HomePage = lazy(() => import('../pages/HomePage/Home'));
 const AboutPage = lazy(() => import('../pages/AboutPage/About'));
+const AdvocacyPage = lazy(() => import('../pages/AdvocacyPage/Advocacy'));
 const AnnouncementsPage = lazy(() => import('../pages/AnnouncementsPage/Announcements'));
 const ContactPage = lazy(() => import('../pages/ContactPage/Contact'));
 const LoginPage = lazy(() => import('../pages/LoginPage/Login'));
@@ -101,6 +102,14 @@ const AppRoutes = () => {
         element={
           <Suspense fallback={<PageLoader />}>
             <AboutPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path='/advocacy'
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <AdvocacyPage />
           </Suspense>
         }
       />
