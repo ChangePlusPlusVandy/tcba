@@ -1,5 +1,5 @@
 import AdminSidebar from '../../../components/AdminSidebar';
-import { type FormEvent, useState, useEffect } from 'react';
+// import { type FormEvent, useState, useEffect } from 'react';
 
 const mockSurveys = [
   // Sample data, will be replaced with database data in the future
