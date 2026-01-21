@@ -20,6 +20,10 @@ const LoginPage = () => {
     setError('');
 
     try {
+      if (clerk.session) {
+        await clerk.signOut();
+      }
+
       const result = await signIn.create({
         identifier: email,
         password,
@@ -33,7 +37,7 @@ const LoginPage = () => {
         console.log('User role after login:', userRole);
 
         if (userRole === 'ADMIN') {
-          navigate('/admin/organizations');
+          navigate('/admin/dashboard');
         } else {
           navigate('/dashboard');
         }

@@ -10,18 +10,19 @@ datasource db {
 
 model Announcements {
   id               String            @id @default(cuid())
-  slug             String            @unique
   title            String
-  content          String            @db.Text
+  content          String
   publishedDate    DateTime?
   isPublished      Boolean           @default(false)
   attachmentUrls   String[]
   createdByAdminId String
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
+  slug             String            @unique
   AnnouncementTag  AnnouncementTag[]
   tags             Tag[]             @relation("AnnouncementsToTag")
 
+  @@index([isPublished, createdAt(sort: Desc)])
   @@map("announcements")
 }
 
@@ -97,13 +98,27 @@ model Organization {
   membershipActive      Boolean            @default(false)
   membershipDate        DateTime?
   membershipRenewalDate DateTime?
-  organizationSize      OrganizationSize?
+  organizationSize      OrganizationSize
   role                  OrganizationRole   @default(MEMBER)
   status                OrganizationStatus @default(PENDING)
   tags                  String[]
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
-  surveyResponses       SurveyResponse[]
+  notifyAlerts               Boolean            @default(true)
+  notifyAnnouncements        Boolean            @default(true)
+  notifyBlogs                Boolean            @default(true)
+  notifySurveys              Boolean            @default(true)
+  visibleInDirectory         Boolean            @default(true)
+  lastCheckedAlertsAt        DateTime?
+  lastCheckedAnnouncementsAt DateTime?
+  lastCheckedBlogsAt         DateTime?
+  lastCheckedMessagesAt      DateTime?
+  surveyResponses            SurveyResponse[]
+  subscription               Subscription?
+  conversations              Conversation[]          @relation("OrgConversations")
+  sentMessages               Message[]               @relation("SentMessages")
+  otherConversations         Conversation[]          @relation("OrgToOrgConversations")
+  eventRSVPs                 EventRSVP[]             @relation("EventRSVPs")
 
   @@map("organizations")
 }
@@ -127,24 +142,28 @@ model Survey {
   id              String           @id @default(cuid())
   title           String
   description     String?
-  questions       Json?
-  createdDate     DateTime         @default(now())
+  questions       Json
   dueDate         DateTime?
-  isActive        Boolean
-  isPublished     Boolean
+  isActive        Boolean          @default(false)
+  isPublished     Boolean          @default(false)
   status          SurveyStatus     @default(DRAFT)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
   surveyResponses SurveyResponse[]
 
-  @@map("survey")
+  @@map("surveys")
 }
 
 model AdminUser {
-  id           String  @id @default(cuid())
-  clerkId      String  @unique
-  email        String
-  name         String
-  isSuperAdmin Boolean @default(false)
-  isActive     Boolean
+  id             String         @id @default(cuid())
+  clerkId        String         @unique
+  email          String
+  name           String
+  isSuperAdmin   Boolean        @default(false)
+  isActive       Boolean
+  conversations  Conversation[] @relation("AdminConversations")
+  sentMessages   Message[]      @relation("SentMessages")
+  createdEvents  Event[]        @relation("CreatedEvents")
 
   @@map("AdminUser")
 }
@@ -163,18 +182,20 @@ model EmailSubscription {
 
 model Blog {
   id               String    @id @default(cuid())
-  slug             String    @unique
   title            String
   content          String
   author           String
   featuredImageUrl String?
   isPublished      Boolean   @default(false)
   publishedDate    DateTime?
+  attachmentUrls   String[]
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+  slug             String    @unique
   BlogTag          BlogTag[]
   tags             Tag[]     @relation("BlogsToTag")
 
+  @@index([isPublished, publishedDate(sort: Desc)])
   @@map("blogs")
 }
 
@@ -187,6 +208,199 @@ model Notification {
   lastCheckedAt DateTime?
 
   @@map("notifications")
+}
+
+model EmailHistory {
+  id               String      @id @default(cuid())
+  subject          String
+  body             String
+  recipientEmails  String[]
+  recipientCount   Int
+  filters          Json?
+  scheduledFor     DateTime?
+  sentAt           DateTime?
+  status           EmailStatus @default(SCHEDULED)
+  createdByAdminId String
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@map("email_history")
+}
+
+model PageContent {
+  id           String   @id @default(cuid())
+  page         String
+  section      String
+  contentKey   String
+  contentValue String
+  contentType  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([page, section, contentKey])
+  @@index([page])
+  @@map("page_content")
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  organizationId       String             @unique
+  organization         Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String
+  stripeSubscriptionId String             @unique
+  stripePriceId        String
+  status               SubscriptionStatus
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean            @default(false)
+  payments             Payment[]
+  invoices             Invoice[]
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([organizationId])
+  @@index([stripeCustomerId])
+  @@map("subscriptions")
+}
+
+model Payment {
+  id                    String        @id @default(cuid())
+  subscriptionId        String
+  subscription          Subscription  @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  stripePaymentIntentId String        @unique
+  stripeInvoiceId       String?
+  amount                Int           // Amount in cents
+  currency              String        @default("usd")
+  status                PaymentStatus
+  paymentMethod         String?
+  receiptUrl            String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  @@index([subscriptionId])
+  @@index([status])
+  @@map("payments")
+}
+
+model Invoice {
+  id               String       @id @default(cuid())
+  subscriptionId   String
+  subscription     Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  stripeInvoiceId  String       @unique
+  amount           Int          // Amount in cents
+  currency         String       @default("usd")
+  status           String
+  invoicePdf       String?
+  hostedInvoiceUrl String?
+  periodStart      DateTime
+  periodEnd        DateTime
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([subscriptionId])
+  @@index([status])
+  @@map("invoices")
+}
+
+model Conversation {
+  id                   String           @id @default(cuid())
+  type                 ConversationType
+  organizationId       String?
+  organization         Organization?    @relation("OrgConversations", fields: [organizationId], references: [id], onDelete: Cascade)
+  adminId              String?
+  admin                AdminUser?       @relation("AdminConversations", fields: [adminId], references: [id], onDelete: Cascade)
+  otherOrganizationId  String?
+  otherOrganization    Organization?    @relation("OrgToOrgConversations", fields: [otherOrganizationId], references: [id], onDelete: Cascade)
+  subject              String
+  lastMessageAt        DateTime         @default(now())
+  messages             Message[]
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  @@index([organizationId])
+  @@index([adminId])
+  @@index([otherOrganizationId])
+  @@index([lastMessageAt(sort: Desc)])
+  @@map("conversations")
+}
+
+model Message {
+  id                   String        @id @default(cuid())
+  conversationId       String
+  conversation         Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderType           String        // "ORG" or "ADMIN"
+  senderOrganizationId String?
+  senderOrganization   Organization? @relation("SentMessages", fields: [senderOrganizationId], references: [id], onDelete: Cascade)
+  senderAdminId        String?
+  senderAdmin          AdminUser?    @relation("SentMessages", fields: [senderAdminId], references: [id], onDelete: Cascade)
+  content              String        @db.Text
+  attachments          String[]
+  status               MessageStatus @default(SENT)
+  readAt               DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  @@index([conversationId])
+  @@index([senderOrganizationId])
+  @@index([senderAdminId])
+  @@index([createdAt(sort: Desc)])
+  @@map("messages")
+}
+
+model Event {
+  id               String      @id @default(cuid())
+  title            String
+  description      String      @db.Text
+  location         String?
+  link         String?
+  meetingPassword  String?
+  startTime        DateTime
+  endTime          DateTime
+  timezone         String      @default("America/Chicago")
+  status           EventStatus @default(DRAFT)
+  maxAttendees     Int?
+  createdByAdminId String
+  createdByAdmin   AdminUser   @relation("CreatedEvents", fields: [createdByAdminId], references: [id], onDelete: Cascade)
+  tags             String[]
+  attachments      String[]
+  rsvps            EventRSVP[]
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@index([createdByAdminId])
+  @@index([startTime])
+  @@index([status])
+  @@map("events")
+}
+
+model EventRSVP {
+  id                  String       @id @default(cuid())
+  eventId             String
+  event               Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organizationId      String
+  organization        Organization @relation("EventRSVPs", fields: [organizationId], references: [id], onDelete: Cascade)
+  status              RSVPStatus
+  attendeeName        String?
+  attendeeEmail       String?
+  attendeePhone       String?
+  reminder3DaysSent   Boolean      @default(false)
+  reminder1DaySent    Boolean      @default(false)
+  reminder1HourSent   Boolean      @default(false)
+  notes               String?      @db.Text
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  @@unique([eventId, organizationId])
+  @@index([eventId])
+  @@index([organizationId])
+  @@index([status])
+  @@map("event_rsvps")
+}
+
+enum EmailStatus {
+  SCHEDULED
+  SENT
+  FAILED
 }
 
 enum OrganizationRole {
@@ -232,4 +446,44 @@ enum NotificationType {
   ANNOUNCEMENT
   ALERT
   SURVEY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  TRIALING
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+enum ConversationType {
+  ORG_TO_ORG
+  ORG_TO_ADMIN
+  ADMIN_TO_ORG
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum RSVPStatus {
+  GOING
+  NOT_GOING
+  MAYBE
 }

@@ -3,9 +3,7 @@ import { OrganizationRole } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import { prisma } from '../config/prisma.js';
 
-// Helper: Check if user is admin
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
-// Helper: Resolve target ID (profile or explicit ID)
 const resolveTargetId = (id: string, userId?: string) => (id === 'profile' ? userId : id);
 
 /**
@@ -57,15 +55,12 @@ export const registerSubscription = async (req: AuthenticatedRequest, res: Respo
     });
     if (existingSub)
       return res.status(400).json({ error: 'Subscription with this email already exists' });
-    // const currentTime = new Date();
     const newSub = await prisma.emailSubscription.create({
       data: {
         email,
         name,
         isActive,
         subscriptionTypes: subscriptionTypes || [],
-        // createdAt: currentTime,
-        // updatedAt: currentTime,
       },
     });
     res.status(201).json(newSub);
@@ -97,6 +92,33 @@ export const getSubscriptionById = async (req: AuthenticatedRequest, res: Respon
 };
 
 /**
+ * @desc    Get subscription by email
+ * @route   GET /api/subscriptions/by-email?email=
+ * @access  Public
+ */
+export const getSubscriptionByEmail = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { email } = req.query;
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const subscription = await prisma.emailSubscription.findFirst({
+      where: { email: email.toLowerCase() },
+    });
+
+    if (!subscription) {
+      return res.status(404).json({ error: 'Subscription not found' });
+    }
+
+    res.json(subscription);
+  } catch (error) {
+    console.error('Error fetching subscription by email:', error);
+    res.status(500).json({ error: 'Failed to fetch subscription' });
+  }
+};
+
+/**
  * @desc    Update subscription
  * @route   PUT /api/subscriptions/:id
  * @access  Public
@@ -120,7 +142,6 @@ export const updateSubscription = async (req: AuthenticatedRequest, res: Respons
       ...(name && { name }),
       ...(subscriptionTypes && { subscriptionTypes }),
       ...(isActive !== undefined && { isActive }),
-      //   updatedAt: new Date(),
     };
 
     const updatedSub = await prisma.emailSubscription.update({

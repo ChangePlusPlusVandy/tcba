@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { OrganizationRole } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import { prisma } from '../config/prisma.js';
+import { sendSurveyEmails } from '../services/emailNotificationService.js';
 import { createNotification } from './inAppNotificationController.js';
 
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
@@ -9,17 +10,31 @@ const resolveTargetId = (id: string, userId?: string) => (id === 'profile' ? use
 
 export const getAllSurveys = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { title, isActive, isPublished } = req.body;
-    const where: any = {
-      ...(title ? { title } : {}),
-      ...(isActive !== undefined ? { isActive } : {}),
-      ...(isPublished !== undefined ? { isPublished } : {}),
-    };
-    const surveys = await prisma.survey.findMany({ where, orderBy: { title: 'asc' } });
-    res.json(surveys);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const skip = (page - 1) * limit;
+
+    const [surveys, total] = await Promise.all([
+      prisma.survey.findMany({
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.survey.count(),
+    ]);
+
+    res.json({
+      data: surveys,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
-    console.error('Error fetching survey:', error);
-    res.status(500).json({ error: 'Failed to fetch survey' });
+    console.error('Error fetching surveys:', error);
+    res.status(500).json({ error: 'Failed to fetch surveys' });
   }
 };
 
@@ -41,15 +56,22 @@ export const createSurvey = async (req: AuthenticatedRequest, res: Response) => 
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
-    const { title, isActive, isPublished } = req.body;
-    if (!title || isActive === undefined || isPublished === undefined) {
+    const { title, description, questions, dueDate, isPublished = false } = req.body;
+    if (!title) {
       return res.status(400).json({
-        error: 'Title, isActive, and isPublished are required',
+        error: 'Title is required',
       });
     }
+
     const survey = await prisma.survey.create({
       data: {
-        ...req.body,
+        title,
+        description,
+        questions,
+        dueDate: dueDate ? new Date(dueDate) : null,
+        isPublished,
+        isActive: isPublished,
+        status: isPublished ? 'ACTIVE' : 'DRAFT',
       },
     });
 
@@ -110,8 +132,21 @@ export const updateSurvey = async (req: AuthenticatedRequest, res: Response) => 
     if (questions !== undefined) dataToUpdate.questions = questions;
     if (dueDate !== undefined) dataToUpdate.dueDate = dueDate ? new Date(dueDate) : null;
     if (isActive !== undefined) dataToUpdate.isActive = isActive;
-    if (isPublished !== undefined) dataToUpdate.isPublished = isPublished;
-    if (status !== undefined) dataToUpdate.status = status;
+    if (isPublished !== undefined) {
+      dataToUpdate.isPublished = isPublished;
+      // Automatically set isActive and status when isPublished changes
+      if (isPublished) {
+        dataToUpdate.isActive = true;
+        dataToUpdate.status = 'ACTIVE';
+      } else {
+        dataToUpdate.isActive = false;
+        dataToUpdate.status = 'DRAFT';
+      }
+    }
+    if (status !== undefined && isPublished === undefined) {
+      // Only set status if isPublished wasn't already handled above
+      dataToUpdate.status = status;
+    }
 
     if (Object.keys(dataToUpdate).length === 0) {
       return res.status(400).json({ error: 'No changes provided' });
@@ -148,11 +183,37 @@ export const updateSurvey = async (req: AuthenticatedRequest, res: Response) => 
 
 export const getActiveSurveys = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const surveys = await prisma.survey.findMany({
-      where: { isActive: true },
-      orderBy: { title: 'asc' },
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const skip = (page - 1) * limit;
+
+    const [surveys, total] = await Promise.all([
+      prisma.survey.findMany({
+        where: {
+          isActive: true,
+          isPublished: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.survey.count({
+        where: {
+          isActive: true,
+          isPublished: true,
+        },
+      }),
+    ]);
+
+    res.json({
+      data: surveys,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     });
-    res.json(surveys);
   } catch (error) {
     console.error('Error fetching active surveys:', error);
     res.status(500).json({ error: 'Failed to fetch active surveys' });
@@ -165,10 +226,20 @@ export const publishSurvey = async (req: AuthenticatedRequest, res: Response) =>
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
     const { id } = req.params;
+    const { targetTags, targetRegions } = req.body;
+
     const survey = await prisma.survey.update({
       where: { id },
       data: { status: 'ACTIVE', isPublished: true, isActive: true },
     });
+
+    try {
+      await sendSurveyEmails(survey.id, targetTags, targetRegions);
+      console.log('Survey notifications sent successfully');
+    } catch (emailError) {
+      console.error('Failed to send survey email notifications:', emailError);
+    }
+
     res.json(survey);
   } catch (error) {
     console.error('Error publishing survey:', error);

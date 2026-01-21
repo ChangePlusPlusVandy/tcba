@@ -5,14 +5,19 @@ import {
   sendSurveyNotification,
   sendBlogNotification,
   sendAlertNotification,
+  sendContactFormEmail,
+  getEmailHistory,
+  deleteScheduledEmail,
 } from '../controllers/notificationController.js';
-// import { authenticate } from '../middleware/auth.js'; *will be used once middleware completed*
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
 
-// router.use(authenticate); *will be used once middleware completed*
-
+router.post('/contact-form', sendContactFormEmail);
+router.use(authenticateToken);
 router.post('/send', sendCustomEmail);
+router.get('/history', getEmailHistory);
+router.delete('/scheduled/:id', deleteScheduledEmail);
 router.post('/announcement/:id', sendAnnouncementNotification);
 router.post('/survey/:id', sendSurveyNotification);
 router.post('/blog/:id', sendBlogNotification);

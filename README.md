@@ -1,4 +1,4 @@
-# TCBA - Tennessee Coalition for Better Aging
+# Tennessee Coalition for Better Aging (TCBA)
 
 ## Project Overview
 Repo for TCBA, a coalition management platform with:
@@ -82,10 +82,11 @@ npx prisma generate
 
 ## Notes
 
-Backend uses PostgreSQL/Supabase, Prisma ORM, Clerk Auth, Stripe, AWS SES, and AWS S3. Before each push, run `npm run format` on both frontend and backend directories for code consistency for all devs. Strapi will be implemented later for total customization on admin side of user content
+Backend uses PostgreSQL/Supabase, Prisma ORM, Clerk Auth, Stripe, AWS SES, and AWS S3. Before each push, run `npm run format` on both frontend and backend directories for code consistency for all devs.
 
 **Documentation Links For Reference:**
 - [PostgreSQL Docs](https://www.postgresql.org/docs/)
+- [Redis Docs](https://redis.io/docs/latest/)
 - [Prisma Docs](https://www.prisma.io/docs/)
 - [Supabase Docs](https://supabase.com/docs)
 - [AWS S3 Docs](https://docs.aws.amazon.com/s3/)
@@ -93,4 +94,5 @@ Backend uses PostgreSQL/Supabase, Prisma ORM, Clerk Auth, Stripe, AWS SES, and A
 - [AWS SES Docs](https://docs.aws.amazon.com/ses/)
 - [Stripe API Docs](https://stripe.com/docs/api)
 - [Docker Desktop Docs](https://docs.docker.com/desktop/)
-- [Strapi CMS Docs](https://docs.strapi.io/cms/quick-start)
+- [ReactQuill Docs](https://quilljs.com/docs/quickstart)
+ 

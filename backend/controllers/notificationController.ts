@@ -119,37 +119,252 @@ Tennessee Coalition for Better Aging
   await sesClient.send(command);
 };
 
-// Send custom email to organizations, if no tags/regions specified, sends to all orgs
+export const sendRejectionEmail = async (
+  organizationEmail: string,
+  organizationName: string,
+  reason?: string
+) => {
+  console.log('[sendRejectionEmail] Starting email send to:', organizationEmail);
+  console.log('[sendRejectionEmail] Organization name:', organizationName);
+  console.log('[sendRejectionEmail] Reason:', reason);
+
+  const htmlBody = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #D54242; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+        .reason-box { background-color: white; padding: 20px; border-left: 4px solid #D54242; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Application Status Update</h1>
+        </div>
+        <div class="content">
+          <p>Dear ${organizationName},</p>
+
+          <p>Thank you for your interest in joining the Tennessee Coalition for Better Aging.</p>
+
+          <p>After careful review, we regret to inform you that your application has not been approved at this time.</p>
+
+          ${reason ? `<div class="reason-box"><h3>Feedback:</h3><p>${reason.replace(/\n/g, '<br>')}</p></div>` : ''}
+
+          <p>If you have any questions or would like to discuss this decision, please feel free to contact us at ${sesConfig.replyToEmail}.</p>
+
+          <p>We appreciate your interest in our coalition and wish you the best in your endeavors.</p>
+
+          <p>Best regards,<br>The TCBA Team</p>
+        </div>
+        <div class="footer">
+          <p>Tennessee Coalition for Better Aging</p>
+          <p>This email was sent to ${organizationEmail}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const textBody = `
+Application Status Update
+
+Dear ${organizationName},
+
+Thank you for your interest in joining the Tennessee Coalition for Better Aging.
+
+After careful review, we regret to inform you that your application has not been approved at this time.
+
+${reason ? `Feedback:\n${reason}\n\n` : ''}
+
+If you have any questions or would like to discuss this decision, please feel free to contact us at ${sesConfig.replyToEmail}.
+
+We appreciate your interest in our coalition and wish you the best in your endeavors.
+
+Best regards,
+The TCBA Team
+
+Tennessee Coalition for Better Aging
+  `;
+
+  const command = new SendEmailCommand({
+    Source: `${sesConfig.fromEmail}`,
+    Destination: {
+      ToAddresses: [organizationEmail],
+    },
+    Message: {
+      Subject: {
+        Data: 'Application Status - Tennessee Coalition for Better Aging',
+        Charset: 'UTF-8',
+      },
+      Body: {
+        Html: {
+          Data: htmlBody,
+          Charset: 'UTF-8',
+        },
+        Text: {
+          Data: textBody,
+          Charset: 'UTF-8',
+        },
+      },
+    },
+    ReplyToAddresses: [sesConfig.replyToEmail],
+  });
+
+  console.log('[sendRejectionEmail] Sending email via AWS SES...');
+  const result = await sesClient.send(command);
+  console.log('[sendRejectionEmail] Email sent successfully! MessageId:', result.MessageId);
+};
+
+export const sendDeletionEmail = async (
+  organizationEmail: string,
+  organizationName: string,
+  reason?: string
+) => {
+  console.log('[sendDeletionEmail] Starting email send to:', organizationEmail);
+  console.log('[sendDeletionEmail] Organization name:', organizationName);
+  console.log('[sendDeletionEmail] Reason:', reason);
+
+  const htmlBody = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #D54242; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+        .reason-box { background-color: white; padding: 20px; border-left: 4px solid #D54242; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Account Status Update</h1>
+        </div>
+        <div class="content">
+          <p>Dear ${organizationName},</p>
+
+          <p>We are writing to inform you that your organization's membership with the Tennessee Coalition for Better Aging has been terminated.</p>
+
+          ${reason ? `<div class="reason-box"><h3>Reason:</h3><p>${reason.replace(/\n/g, '<br>')}</p></div>` : ''}
+
+          <p>Your account and all associated data have been removed from our system.</p>
+
+          <p>If you believe this was done in error or have any questions, please contact us at ${sesConfig.replyToEmail}.</p>
+
+          <p>Thank you for your time with the coalition.</p>
+
+          <p>Best regards,<br>The TCBA Team</p>
+        </div>
+        <div class="footer">
+          <p>Tennessee Coalition for Better Aging</p>
+          <p>This email was sent to ${organizationEmail}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const textBody = `
+Account Status Update
+
+Dear ${organizationName},
+
+We are writing to inform you that your organization's membership with the Tennessee Coalition for Better Aging has been terminated.
+
+${reason ? `Reason:\n${reason}\n\n` : ''}
+
+Your account and all associated data have been removed from our system.
+
+If you believe this was done in error or have any questions, please contact us at ${sesConfig.replyToEmail}.
+
+Thank you for your time with the coalition.
+
+Best regards,
+The TCBA Team
+
+Tennessee Coalition for Better Aging
+  `;
+
+  const command = new SendEmailCommand({
+    Source: `${sesConfig.fromEmail}`,
+    Destination: {
+      ToAddresses: [organizationEmail],
+    },
+    Message: {
+      Subject: {
+        Data: 'Account Status Update - Tennessee Coalition for Better Aging',
+        Charset: 'UTF-8',
+      },
+      Body: {
+        Html: {
+          Data: htmlBody,
+          Charset: 'UTF-8',
+        },
+        Text: {
+          Data: textBody,
+          Charset: 'UTF-8',
+        },
+      },
+    },
+    ReplyToAddresses: [sesConfig.replyToEmail],
+  });
+
+  console.log('[sendDeletionEmail] Sending email via AWS SES...');
+  const result = await sesClient.send(command);
+  console.log('[sendDeletionEmail] Email sent successfully! MessageId:', result.MessageId);
+};
+
 export const sendCustomEmail = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user || req.user.role !== 'ADMIN') {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    const { targetTags, targetRegions, subject, message, html } = req.body;
+    const {
+      targetTags,
+      targetRegions,
+      subject,
+      message,
+      html,
+      recipientEmails,
+      filters,
+      scheduledFor,
+    } = req.body;
 
     if (!subject || (!message && !html)) {
       return res.status(400).json({ error: 'Subject and message or html are required' });
     }
 
-    // Fetch organizations filtered by tags/regions, or all if none
-    const where: any = { status: 'ACTIVE' };
-    if (targetTags?.length) where.tags = { hasSome: targetTags };
-    if (targetRegions?.length) where.region = { in: targetRegions };
+    let emails: string[];
 
-    const orgs = await prisma.organization.findMany({
-      where,
-      select: { email: true, primaryContactEmail: true },
-    });
+    if (recipientEmails && Array.isArray(recipientEmails) && recipientEmails.length > 0) {
+      emails = Array.from(new Set(recipientEmails.map((e: string) => e.toLowerCase())));
+    } else {
+      const where: any = { status: 'ACTIVE' };
+      if (targetTags?.length) where.tags = { hasSome: targetTags };
+      if (targetRegions?.length) where.region = { in: targetRegions };
 
-    const emails = Array.from(
-      new Set(
-        orgs
-          .map(o => o.primaryContactEmail || o.email)
-          .filter(Boolean)
-          .map(e => e!.toLowerCase())
-      )
-    );
+      const orgs = await prisma.organization.findMany({
+        where,
+        select: { email: true, primaryContactEmail: true },
+      });
+
+      emails = Array.from(
+        new Set(
+          orgs
+            .map(o => o.primaryContactEmail || o.email)
+            .filter(Boolean)
+            .map(e => e!.toLowerCase())
+        )
+      );
+    }
 
     if (emails.length === 0) {
       return res.status(200).json({ message: 'No matching organizations found' });
@@ -167,7 +382,37 @@ export const sendCustomEmail = async (req: AuthenticatedRequest, res: Response) 
     `;
     const textBody = message ?? htmlBody.replace(/<[^>]+>/g, '');
 
-    const { SendEmailCommand } = await import('@aws-sdk/client-ses');
+    if (scheduledFor) {
+      console.log('[sendCustomEmail] Scheduling email for:', scheduledFor);
+      try {
+        const emailHistory = await prisma.emailHistory.create({
+          data: {
+            subject,
+            body: htmlBody,
+            recipientEmails: emails,
+            recipientCount: emails.length,
+            filters: filters || null,
+            scheduledFor: new Date(scheduledFor),
+            status: 'SCHEDULED',
+            createdByAdminId: req.user.id,
+          },
+        });
+
+        console.log('[sendCustomEmail] Email scheduled successfully:', emailHistory.id);
+        return res.status(200).json({
+          message: 'Email scheduled successfully',
+          total: emails.length,
+          scheduledFor,
+          emailHistoryId: emailHistory.id,
+        });
+      } catch (scheduleError) {
+        console.error('[sendCustomEmail] Failed to schedule email:', scheduleError);
+        throw scheduleError;
+      }
+    }
+
+    console.log('[sendCustomEmail] Sending email immediately to', emails.length, 'recipients');
+
     let sent = 0;
     const errors: any[] = [];
 
@@ -194,6 +439,25 @@ export const sendCustomEmail = async (req: AuthenticatedRequest, res: Response) 
       }
     }
 
+    const status = sent > 0 ? 'SENT' : 'FAILED';
+    try {
+      await prisma.emailHistory.create({
+        data: {
+          subject,
+          body: htmlBody,
+          recipientEmails: emails,
+          recipientCount: emails.length,
+          filters: filters || null,
+          sentAt: new Date(),
+          status,
+          createdByAdminId: req.user.id,
+        },
+      });
+      console.log('[sendCustomEmail] Email history saved successfully');
+    } catch (historyError) {
+      console.error('[sendCustomEmail] Failed to save email history:', historyError);
+    }
+
     return res.status(200).json({
       message: 'Custom email send complete',
       total: emails.length,
@@ -207,10 +471,58 @@ export const sendCustomEmail = async (req: AuthenticatedRequest, res: Response) 
   }
 };
 
-// Send announcement email to organizations matching tags/regions, if none specified, send to all, and all email subscribers
+export const getEmailHistory = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user || req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const emailHistory = await prisma.emailHistory.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return res.status(200).json(emailHistory);
+  } catch (error) {
+    console.error('Error fetching email history:', error);
+    return res.status(500).json({ error: 'Failed to fetch email history' });
+  }
+};
+
+export const deleteScheduledEmail = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user || req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+
+    const email = await prisma.emailHistory.findUnique({
+      where: { id },
+    });
+
+    if (!email) {
+      return res.status(404).json({ error: 'Email not found' });
+    }
+
+    if (email.status !== 'SCHEDULED') {
+      return res.status(400).json({ error: 'Can only delete scheduled emails' });
+    }
+
+    await prisma.emailHistory.delete({
+      where: { id },
+    });
+
+    return res.status(204).end();
+  } catch (error) {
+    console.error('Error deleting scheduled email:', error);
+    return res.status(500).json({ error: 'Failed to delete scheduled email' });
+  }
+};
+
 export const sendAnnouncementNotification = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // Only admins can send
     if (!req.user || req.user.role !== 'ADMIN') {
       return res.status(403).json({ error: 'Admin access required' });
     }
@@ -252,7 +564,6 @@ export const sendAnnouncementNotification = async (req: AuthenticatedRequest, re
       )
     );
 
-    // Get all active email subscribers
     const subscribers = await prisma.emailSubscription.findMany({
       where: { isActive: true },
       select: { email: true },
@@ -260,7 +571,6 @@ export const sendAnnouncementNotification = async (req: AuthenticatedRequest, re
 
     const subscriberEmails = subscribers.map(s => s.email.toLowerCase());
 
-    // Combine all recipients and remove duplicates
     const allRecipients = Array.from(new Set([...orgEmails, ...subscriberEmails]));
 
     if (allRecipients.length === 0) {
@@ -281,7 +591,6 @@ export const sendAnnouncementNotification = async (req: AuthenticatedRequest, re
     `;
     const textBody = `${announcement.title}\n\n${announcement.content}\n\nRead more: ${frontendUrl}/announcements/${announcement.slug}`;
 
-    const { SendEmailCommand } = await import('@aws-sdk/client-ses');
     let sent = 0;
     const errors: any[] = [];
 
@@ -321,7 +630,6 @@ export const sendAnnouncementNotification = async (req: AuthenticatedRequest, re
   }
 };
 
-// send survey invitation to organizations matching targetTags/targetRegions, if none specified, send to all
 export const sendSurveyNotification = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user || req.user.role !== 'ADMIN') {
@@ -382,7 +690,6 @@ export const sendSurveyNotification = async (req: AuthenticatedRequest, res: Res
     `;
     const textBody = `${survey.title}\n\n${survey.description ?? ''}\n\nTake the survey here: ${surveyUrl}`;
 
-    const { SendEmailCommand } = await import('@aws-sdk/client-ses');
     let sent = 0;
     const errors: any[] = [];
 
@@ -422,7 +729,6 @@ export const sendSurveyNotification = async (req: AuthenticatedRequest, res: Res
   }
 };
 
-// send blog notification to all email subscribers
 export const sendBlogNotification = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user || req.user.role !== 'ADMIN') {
@@ -476,7 +782,6 @@ export const sendBlogNotification = async (req: AuthenticatedRequest, res: Respo
 
     const textBody = `${blog.title}\nby ${blog.author}\n\n${blog.content.substring(0, 300)}...\n\nRead the full post: ${blogUrl}`;
 
-    const { SendEmailCommand } = await import('@aws-sdk/client-ses');
     let sent = 0;
     const errors: any[] = [];
 
@@ -516,7 +821,6 @@ export const sendBlogNotification = async (req: AuthenticatedRequest, res: Respo
   }
 };
 
-// send alerts notification to organizations matching targetTags/targetRegions, if none specified, send to all
 export const sendAlertNotification = async (req: AuthenticatedRequest, res: Response) => {
   try {
     // Only admins can send alerts
@@ -573,7 +877,6 @@ export const sendAlertNotification = async (req: AuthenticatedRequest, res: Resp
     `;
     const textBody = `${subject}\n\n${message}`;
 
-    const { SendEmailCommand } = await import('@aws-sdk/client-ses');
     let sent = 0;
     const errors: any[] = [];
 
@@ -622,11 +925,11 @@ export const sendAlertNotification = async (req: AuthenticatedRequest, res: Resp
 
 export const sendContactFormEmail = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { title, message } = req.body;
+    const { email, title, message } = req.body;
 
-    if (!title || !message) {
+    if (!email || !title || !message) {
       return res.status(400).json({
-        error: 'Title and message are required',
+        error: 'Email, title, and message are required',
       });
     }
 
@@ -639,6 +942,7 @@ export const sendContactFormEmail = async (req: AuthenticatedRequest, res: Respo
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
           .header { background-color: #D54242; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
           .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+          .email-box { background-color: white; padding: 15px; border-left: 4px solid #194B90; margin: 20px 0; }
           .message-box { background-color: white; padding: 20px; border-left: 4px solid #D54242; margin: 20px 0; }
           .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
         </style>
@@ -649,6 +953,9 @@ export const sendContactFormEmail = async (req: AuthenticatedRequest, res: Respo
             <h1>Contact Form Submission</h1>
           </div>
           <div class="content">
+            <div class="email-box">
+              <p style="margin: 0;"><strong>Reply to:</strong> ${email}</p>
+            </div>
             <h2>Subject: ${title}</h2>
             <div class="message-box">
               <p>${message.replace(/\n/g, '<br>')}</p>
@@ -662,6 +969,8 @@ export const sendContactFormEmail = async (req: AuthenticatedRequest, res: Respo
 
     const textBody = `
 Contact Form Submission
+
+Reply to: ${email}
 
 Subject: ${title}
 

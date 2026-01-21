@@ -3,14 +3,22 @@ import {
   getPresignedUploadUrl,
   getPresignedDownloadUrl,
   deleteDocument,
+  deletePageImage,
+  getPublicImageUrl,
+  getAuthenticatedDownloadUrl,
+  getPublicDownloadUrl,
 } from '../controllers/fileUploadController.js';
-// import { authenticate } from '../middleware/auth.js'; *will be used once middleware completed*
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
-// router.use(authenticate); *will be used once middleware completed*
 
-router.get('/presigned-upload-url', getPresignedUploadUrl);
-router.get('/presigned-download-url/:fileKey', getPresignedDownloadUrl);
-router.delete('/:fileKey', deleteDocument);
+router.get('/public-image/:fileKey', getPublicImageUrl);
+router.get('/public-download/:fileKey', getPublicDownloadUrl);
+router.use(authenticateToken);
+router.get('/presigned-upload', getPresignedUploadUrl);
+router.get('/presigned-download/:fileKey', getPresignedDownloadUrl);
+router.get('/authenticated-download/:fileKey', getAuthenticatedDownloadUrl);
+router.delete('/page-image/:fileKey', deletePageImage);
+router.delete('/document/:fileKey', deleteDocument);
 
 export default router;

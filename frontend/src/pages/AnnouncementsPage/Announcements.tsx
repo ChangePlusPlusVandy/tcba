@@ -1,7 +1,13 @@
-import axios from 'axios';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { IoFunnelOutline, IoSearchOutline } from 'react-icons/io5';
+import { Link } from 'react-router-dom';
+import { MutatingDots } from 'react-loader-spinner';
+import { IoFunnelOutline } from 'react-icons/io5';
+import 'react-quill-new/dist/quill.snow.css';
+import S3Image from '../../components/S3Image';
+import Pagination from '../../components/Pagination';
+import { useAnnouncements } from '../../hooks/queries/useAnnouncements';
+import { useTags } from '../../hooks/queries/useTags';
+import { usePageContent } from '../../hooks/queries/usePageContent';
 
 type Announcement = {
   id: string;
@@ -24,55 +30,50 @@ type Tag = {
   updatedAt: string;
 };
 
-const AnnouncementsPage = () => {
-  // ALL ANNOUNCEMENTS AND TAGS STATES
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
-  // LOADING AND ERROR STATES
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  // FILTER STATES
+interface PageContent {
+  [key: string]: { id: string; value: string; type: string };
+}
+
+interface AnnouncementsPageProps {
+  previewContent?: PageContent;
+}
+
+const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
+  const {
+    data: announcementsData,
+    isLoading: announcementsLoading,
+    error: announcementsError,
+  } = useAnnouncements(currentPage, itemsPerPage);
+  const { data: tags = [] } = useTags();
+  const tagsArray = tags as Tag[];
+  const { data: pageContentData } = usePageContent('announcements');
+
   const [timeFilter, setTimeFilter] = useState<'24h' | 'week' | 'month' | 'year' | null>(null);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const filterRef = useRef<HTMLDivElement>(null);
 
-  const navigate = useNavigate();
+  const MAX_LENGTH = 200;
 
-  const MAX_LENGTH = 200; // MAX POST LENGTH BEFORE TRUNCATION
+  const announcementsResponse = announcementsData || { data: [], total: 0 };
+  const announcements: Announcement[] = Array.isArray(
+    announcementsResponse.data || announcementsResponse
+  )
+    ? announcementsResponse.data || announcementsResponse
+    : [];
+  const totalAnnouncements =
+    announcementsResponse.total || announcementsResponse.pagination?.total || announcements.length;
+  const loading = announcementsLoading;
+  const error = announcementsError ? 'An unexpected error occurred' : null;
 
-  // GET ALL ANNOUNCEMENTS
-  const getAnnouncements = async () => {
-    try {
-      const response = await axios.get('http://localhost:8000/api/announcements');
-      console.log('API Response:', response.data);
-      setAnnouncements(response.data);
-      setError(null);
-    } catch (error) {
-      console.error('Error fetching announcements:', error);
-      setError('An unexpected error occurred');
-    }
-    setLoading(false);
-  };
-
-  // GET ALL TAGS
-  const getTags = async () => {
-    try {
-      const tags = await axios.get('http://localhost:8000/api/tags');
-      console.log('API Response:', tags.data);
-      setTags(tags.data);
-      setError(null);
-    } catch (error) {
-      console.error('Error fetching tags:', error);
-      setError('An unexpected error occurred');
-    }
-    setLoading(false);
-  };
+  const content = previewContent || pageContentData || {};
 
   useEffect(() => {
-    getAnnouncements();
-    getTags();
+    document.title = 'Announcements - Tennessee Coalition For Better Aging';
   }, []);
 
   useEffect(() => {
@@ -91,20 +92,13 @@ const AnnouncementsPage = () => {
     };
   }, [isFilterOpen]);
 
-  // FORMAT TIME AGO
-  const getTimeAgo = (dateString: string) => {
+  // FORMAT DATE
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
-
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
-    }
-
-    if (diffInMinutes < 1440) {
-      return `${Math.floor(diffInMinutes / 60)} ${Math.floor(diffInMinutes / 60) === 1 ? 'hour' : 'hours'} ago`;
-    }
-    return `${Math.floor(diffInMinutes / 1440)} ${Math.floor(diffInMinutes / 1440) === 1 ? 'day' : 'days'} ago`;
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
   };
 
   const filterAnnouncements = announcements.filter(a => {
@@ -141,35 +135,58 @@ const AnnouncementsPage = () => {
     return true;
   });
 
+  const headerImageSrc = content['header_image']?.value || '';
+
   return (
     <div className='mt-8'>
       <section>
-        <div className='grid grid-cols-2 gap-0'>
-          <div className='bg-white px-8 sm:px-12 py-20 flex items-center'>
-            <div className='p-8'>
-              <h2 className='font-[Open_Sans] text-[40px] font-bold leading-[100%] text-gray-800 mb-6'>
-                Announcements
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+          <div className='bg-white px-6 sm:px-8 lg:px-12 py-10 sm:py-16 lg:py-20 flex items-center'>
+            <div className='p-4 sm:p-6 lg:p-8'>
+              <h2 className='font-[Open_Sans] text-2xl sm:text-3xl lg:text-[40px] font-bold leading-[110%] text-gray-800 mb-4 sm:mb-6'>
+                {content['header_title']?.value || 'Announcements'}
               </h2>
-              <p className='font-[Open_Sans] text-[18px] font-normal leading-[150%] text-gray-800'>
-                The Tennessee Coalition for Better Aging exists to promote the general welfare of
-                older Tennesseans and their families through partnerships that mobilize resources to
-                educate and advocate for important policies and programs.
-              </p>
+              <div
+                className='font-[Open_Sans] text-base sm:text-lg font-normal leading-[150%] text-gray-800'
+                dangerouslySetInnerHTML={{
+                  __html:
+                    content['header_description']?.value ||
+                    'The Tennessee Coalition for Better Aging exists to promote the general welfare of older Tennesseans and their families through partnerships that mobilize resources to educate and advocate for important policies and programs.',
+                }}
+              />
             </div>
           </div>
-          <div className='min-h-[220px] bg-slate-200 mr-12' />
+          <div className='h-[300px] sm:h-[400px] bg-slate-200 lg:mr-12 rounded-lg overflow-hidden'>
+            {headerImageSrc && (
+              <S3Image
+                src={headerImageSrc}
+                alt='Announcements Header'
+                className='w-full h-full object-cover'
+              />
+            )}
+          </div>
         </div>
       </section>
       <section className='mt-8'>
-        <div className='bg-white px-20 py-4'>
-          <p className='font-[Open_Sans] text-[18px] font-bold text-gray-800 mb-4'>
+        <div className='bg-white px-4 sm:px-8 lg:px-20 py-4'>
+          <p className='font-[Open_Sans] text-base sm:text-lg font-bold text-gray-800 mb-4'>
             {filterAnnouncements.length}{' '}
             {filterAnnouncements.length === 1 ? 'Announcement' : 'Announcements'}
           </p>
-          <div className='flex items-center justify-between'>
-            <div className='flex gap-2 items-center'>
+          <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
+            <div className='flex gap-2 items-center overflow-x-auto w-full sm:w-auto'>
               <button
-                className={`px-8 py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap ${
+                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base ${
+                  timeFilter === null
+                    ? 'bg-[#EBF3FF] text-[#194B90]'
+                    : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
+                }`}
+                onClick={() => setTimeFilter(null)}
+              >
+                All
+              </button>
+              <button
+                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base ${
                   timeFilter === '24h'
                     ? 'bg-[#EBF3FF] text-[#194B90]'
                     : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
@@ -179,7 +196,7 @@ const AnnouncementsPage = () => {
                 Last Day
               </button>
               <button
-                className={`px-8 py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap ${
+                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base ${
                   timeFilter === 'week'
                     ? 'bg-[#EBF3FF] text-[#194B90]'
                     : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
@@ -189,7 +206,7 @@ const AnnouncementsPage = () => {
                 Last Week
               </button>
               <button
-                className={`px-8 py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap ${
+                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base ${
                   timeFilter === 'month'
                     ? 'bg-[#EBF3FF] text-[#194B90]'
                     : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
@@ -199,7 +216,7 @@ const AnnouncementsPage = () => {
                 Last Month
               </button>
               <button
-                className={`px-8 py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap ${
+                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base ${
                   timeFilter === 'year'
                     ? 'bg-[#EBF3FF] text-[#194B90]'
                     : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
@@ -208,68 +225,105 @@ const AnnouncementsPage = () => {
               >
                 Last Year
               </button>
-              <div className='relative' ref={filterRef}>
+              <div className='relative tag-dropdown-container' ref={filterRef}>
                 <button
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className={`px-6 py-3 ${isFilterOpen ? 'bg-[#C6D9F2]' : 'bg-[#EBF3FF]'} text-[#194B90] rounded-lg shadow-sm hover:bg-[#C6D9F2] transition-colors flex items-center gap-2`}
+                  className={`px-6 py-3 ${isFilterOpen ? 'bg-[#b53a3a]' : 'bg-[#D54242]'} text-white rounded-lg shadow-sm hover:bg-[#b53a3a] transition-colors flex items-center gap-2`}
                 >
                   Filter
                   <IoFunnelOutline className='w-5 h-5' />
                 </button>
+
                 {isFilterOpen && (
-                  <div
-                    className={`${selectedTags.length > 0 ? 'max-h-70' : 'max-h-60'} absolute overflow-y-auto left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-10`}
-                  >
-                    {tags.length === 0 && (
-                      <button className='w-full text-left px-4 py-2 hover:bg-[#EBF3FF] text-[#3C3C3C] font-[Open_Sans]'>
-                        No Tags Available
-                      </button>
+                  <div className='absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-[10px] shadow-lg z-50 min-w-[200px] max-h-[300px] overflow-y-auto'>
+                    {tagsArray.length === 0 ? (
+                      <div className='px-4 py-3 text-sm text-gray-500'>No tags available</div>
+                    ) : (
+                      <div className='py-2'>
+                        {tagsArray.map(tag => (
+                          <label
+                            key={tag.id}
+                            className='flex items-center px-4 py-2 hover:bg-gray-50 cursor-pointer'
+                          >
+                            <input
+                              type='checkbox'
+                              checked={selectedTags.some(t => t.id === tag.id)}
+                              onChange={e => {
+                                if (e.target.checked) {
+                                  setSelectedTags([...selectedTags, tag]);
+                                } else {
+                                  setSelectedTags(selectedTags.filter(t => t.id !== tag.id));
+                                }
+                              }}
+                              className='w-4 h-4 text-[#194B90] border-gray-300 rounded focus:ring-[#194B90]'
+                            />
+                            <span className='ml-2 text-sm text-gray-700'>{tag.name}</span>
+                          </label>
+                        ))}
+                      </div>
                     )}
                     {selectedTags.length > 0 && (
-                      <button
-                        onClick={() => setSelectedTags([])}
-                        className='w-full text-left px-4 py-2 border-b hover:bg-[#EBF3FF] text-[#3C3C3C] font-[Open_Sans]'
-                      >
-                        Clear All
-                      </button>
+                      <div className='border-t border-gray-200 px-4 py-2'>
+                        <button
+                          onClick={() => {
+                            setSelectedTags([]);
+                            setIsFilterOpen(false);
+                          }}
+                          className='text-sm text-[#D54242] hover:text-[#b53a3a] font-medium'
+                        >
+                          Clear All
+                        </button>
+                      </div>
                     )}
-                    {tags.map(tag => (
-                      <button
-                        key={tag.id}
-                        onClick={() => {
-                          setSelectedTags(prev =>
-                            prev.some(t => t.id === tag.id)
-                              ? prev.filter(t => t.id !== tag.id)
-                              : [...prev, tag]
-                          );
-                        }}
-                        className={`w-full text-left px-4 py-2 hover:bg-[#EBF3FF] text-[#3C3C3C] font-[Open_Sans] ${
-                          selectedTags.some(t => t.id === tag.id) && 'bg-[#EBF3FF] font-semibold'
-                        }`}
-                      >
-                        {tag.name}
-                      </button>
-                    ))}
                   </div>
                 )}
               </div>
             </div>
 
-            <div className='relative'>
+            <div className='relative flex-1 max-w-xl' style={{ marginLeft: '12px' }}>
+              <label htmlFor='search-announcements' className='sr-only'>
+                Search announcements
+              </label>
               <input
+                id='search-announcements'
                 type='text'
-                placeholder='Search...'
+                placeholder='Search announcements...'
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className='px-4 py-3 pl-10 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#194B90] focus:border-transparent'
+                aria-label='Search announcements'
+                className='w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[#194B90]'
               />
-              <IoSearchOutline className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5' />
+              <svg
+                className='absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
+                />
+              </svg>
             </div>
           </div>
         </div>
       </section>
       <div className='px-8 pb-8'>
-        {loading && <p>Loading announcements...</p>}
+        {loading && (
+          <div className='flex justify-center items-center py-12'>
+            <MutatingDots
+              visible={true}
+              height='100'
+              width='100'
+              color='#D54242'
+              secondaryColor='#D54242'
+              radius='12.5'
+              ariaLabel='mutating-dots-loading'
+            />
+          </div>
+        )}
 
         {error && <p>{error}</p>}
 
@@ -288,10 +342,10 @@ const AnnouncementsPage = () => {
                 : `${a.content.slice(0, MAX_LENGTH)}...`;
 
               return (
-                <div
+                <Link
                   key={a.id}
-                  onClick={() => navigate(`/announcement/${a.slug}`)}
-                  className='flex gap-0 p-6 border border-gray-200 rounded-2xl transition-shadow duration-300 hover:shadow-[0_4px_12px_10px_#EBF3FFE5] cursor-pointer m-4'
+                  to={`/announcement/${a.slug}`}
+                  className='flex gap-0 p-6 border border-gray-200 rounded-2xl transition-shadow duration-300 hover:shadow-[0_4px_12px_10px_#EBF3FFE5] block m-4 no-underline'
                 >
                   <div className='w-full'>
                     <h2 className='font-[Open_Sans] text-[24px] font-semibold leading-[150%] text-[#3C3C3C] mb-2'>
@@ -299,13 +353,13 @@ const AnnouncementsPage = () => {
                     </h2>
                     <div className='flex items-center gap-3 mb-4'>
                       <h3 className='font-[Open_Sans] text-[14px] font-normal leading-[150%] text-[#717171]'>
-                        {getTimeAgo(a.createdAt)}
+                        {formatDate(a.createdAt)}
                       </h3>
                       {a.tags.length > 0 && (
                         <>
                           <span className='text-[#717171]'>•</span>
                           <div className='flex gap-2 flex-wrap'>
-                            {a.tags.map(tag => (
+                            {a.tags.map((tag: Tag) => (
                               <span
                                 key={tag.id}
                                 className='px-3 py-1 bg-[#EBF3FF] text-[#194B90] rounded-full text-[12px] font-medium'
@@ -317,13 +371,26 @@ const AnnouncementsPage = () => {
                         </>
                       )}
                     </div>
-                    <p className='font-[Open_Sans] text-[14px] font-normal leading-[150%] text-[#3C3C3C] mb-2'>
-                      {displayedContent}
-                    </p>
+                    <div
+                      className='font-[Open_Sans] text-[14px] font-normal leading-[150%] text-[#3C3C3C] mb-2 ql-editor'
+                      dangerouslySetInnerHTML={{ __html: displayedContent }}
+                    />
                   </div>
-                </div>
+                </Link>
               );
             })}
+          </div>
+        )}
+
+        {!loading && !error && filterAnnouncements.length > 0 && (
+          <div className='mt-8'>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(totalAnnouncements / itemsPerPage)}
+              onPageChange={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              totalItems={totalAnnouncements}
+            />
           </div>
         )}
       </div>

@@ -1,0 +1,90 @@
+import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
+
+interface S3ImageProps {
+  src: string;
+  alt: string;
+  className?: string;
+  fallbackSrc?: string;
+}
+
+const S3Image = ({ src, alt, className, fallbackSrc }: S3ImageProps) => {
+  const [imageSrc, setImageSrc] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [, setError] = useState(false);
+
+  useEffect(() => {
+    const loadImage = async () => {
+      if (!src) {
+        setImageSrc(fallbackSrc || '');
+        setIsLoading(false);
+        return;
+      }
+
+      if (
+        src.startsWith('http://') ||
+        src.startsWith('https://') ||
+        src.startsWith('data:') ||
+        src.startsWith('/')
+      ) {
+        setImageSrc(src);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/files/public-image/${encodeURIComponent(src)}`
+        );
+
+        if (response.ok) {
+          const { url } = await response.json();
+          setImageSrc(url);
+        } else {
+          console.error('Failed to get presigned URL for image:', src);
+          if (fallbackSrc) {
+            setImageSrc(fallbackSrc);
+          }
+          setError(true);
+        }
+      } catch (err) {
+        console.error('Error loading image:', err);
+        if (fallbackSrc) {
+          setImageSrc(fallbackSrc);
+        }
+        setError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadImage();
+  }, [src, fallbackSrc]);
+
+  const handleError = () => {
+    console.error('Failed to load image:', imageSrc);
+    setError(true);
+    if (fallbackSrc && imageSrc !== fallbackSrc) {
+      setImageSrc(fallbackSrc);
+    }
+  };
+
+  if (isLoading) {
+    return <div className={className} style={{ backgroundColor: '#f3f4f6' }} />;
+  }
+
+  if (!imageSrc && !fallbackSrc) {
+    return null;
+  }
+
+  return (
+    <img
+      src={imageSrc || fallbackSrc || ''}
+      alt={alt}
+      className={className}
+      onError={handleError}
+    />
+  );
+};
+
+export default S3Image;
