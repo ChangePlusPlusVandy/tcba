@@ -8,7 +8,32 @@ export class StripeService {
    */
   static async createCustomer(organizationId: string) {
     // Implement customer creation
-    throw new Error('Not implemented');
+    const existingSubscription = await prisma.subscription.findFirst({
+      where: { organizationId },
+    });
+
+    if (existingSubscription) {
+      return existingSubscription.stripeCustomerId;
+    }
+
+    const organization = await prisma.organization.findUnique({
+      where: { id: organizationId },
+    });
+
+    if (!organization) {
+      throw new Error('Organization not found');
+    }
+
+    const customer = await stripe.customers.create({
+      email: organization.email,
+      name: organization.name,
+      metadata: {
+        organizationId: organization.id,
+        clerkId: organization.clerkId,
+      },
+    });
+
+    return customer.id;
   }
 
   /**

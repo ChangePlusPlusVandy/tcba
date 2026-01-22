@@ -17,6 +17,8 @@ import contactRoutes from './routes/contactRoutes.js';
 import fileUploadRoutes from './routes/fileUploadRoutes.js';
 import pageContentRoutes from './routes/pageContentRoutes.js';
 import mapRoutes from './routes/mapRoutes.js';
+import stripeRoutes from './routes/stripeRoutes.js';
+import stripeWebhookRoutes from './routes/stripeWebhookRoutes.js';
 import { clerkMiddleware } from '@clerk/express';
 import { connectRedis } from './config/redis.js';
 import { warmCache } from './utils/cacheWarmer.js';
@@ -48,6 +50,7 @@ app.use(
     credentials: true,
   })
 );
+app.use('/api/stripe/webhook', stripeWebhookRoutes);
 
 app.use(express.json());
 
@@ -73,11 +76,11 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/files', fileUploadRoutes);
 app.use('/api/page-content', pageContentRoutes);
 app.use('/api/map', mapRoutes);
+app.use('/api/stripe', stripeRoutes);
 
 // Add new route imports and register new routes
 
 // For Stripe webhook (MUST be before express.json() middleware):
 // Add this line BEFORE app.use(express.json()):
-// app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }), stripeRoutes);
 
 export default app;
