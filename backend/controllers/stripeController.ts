@@ -37,7 +37,13 @@ export const stripeController = {
     try {
       // Get organizationId from req.user
       // Call StripeService.getSubscription
-      res.status(501).json({ error: 'Not implemented' });
+      if (!req.user?.id) {
+        return res.status(401).json({ error: 'User is not authenticated or lacks an organization' });
+      }
+      const organizationId = req.user?.id;
+
+      const subscription = StripeService.getSubscription(organizationId);
+      res.status(201).json(subscription);
     } catch (error: any) {
       console.error('Error getting subscription:', error);
       res.status(500).json({ error: error.message });
