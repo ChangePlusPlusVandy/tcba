@@ -10,20 +10,20 @@ export const stripeController = {
    */
   createSubscription: async (req: AuthenticatedRequest, res: Response) => {
     try {
-
       // Get priceId from request body
       // Get organizationId from req.user
       // Call StripeService.createSubscription
       // Return subscription details with clientSecret
       if (!req.user?.id) {
-        return res.status(401).json({ error: 'User is not authenticated or lacks an organization' });
+        return res
+          .status(401)
+          .json({ error: 'User is not authenticated or lacks an organization' });
       }
       const organizationId = req.user.id;
-      const {priceId} = req.body;
+      const { priceId } = req.body;
 
       const subscription = StripeService.createSubscription(organizationId, priceId);
-      res.status(201).json(subscription)
-    
+      res.status(201).json(subscription);
     } catch (error: any) {
       console.error('Error creating subscription:', error);
       res.status(500).json({ error: error.message });
@@ -38,7 +38,9 @@ export const stripeController = {
       // Get organizationId from req.user
       // Call StripeService.getSubscription
       if (!req.user?.id) {
-        return res.status(401).json({ error: 'User is not authenticated or lacks an organization' });
+        return res
+          .status(401)
+          .json({ error: 'User is not authenticated or lacks an organization' });
       }
       const organizationId = req.user?.id;
 
