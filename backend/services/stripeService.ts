@@ -15,19 +15,14 @@ export class StripeService {
         where: {
           id: organizationId,
         },
-        select: {
-          email: true,
-          name: true,
-          primaryContactPhone: true,
-        },
       });
+
       const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
       const customer = await stripe.customer.create({
         email: organization?.email,
         name: organization?.name,
         phone: organization?.primaryContactPhone,
       });
-      
     } catch (error: any) {
       console.error('Create customer error: ', error.message);
     }
