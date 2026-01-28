@@ -389,7 +389,7 @@ const AboutPage = ({ previewContent }: AboutPageProps = {}) => {
         <div className='flex justify-center'>
           <button
             onClick={() => setShowAllPartners(!showAllPartners)}
-            className='text-slate-700 px-6 py-2 rounded-full text-sm font-medium border border-slate-300 hover:bg-slate-50 transition flex items-center gap-2'
+            className='text-slate-700 px-6 py-2 rounded-full text-sm font-medium border border-slate-300 hover:bg-slate-50 transition flex items-center gap-2 cursor-pointer'
           >
             {showAllPartners ? 'View less' : 'View more'}
             <svg

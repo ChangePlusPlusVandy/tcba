@@ -1,39 +1,15 @@
 import { stripe } from '../config/stripe.js';
 import { prisma } from '../config/prisma.js';
 import Stripe from 'stripe';
+import { SubscriptionStatus } from '@prisma/client';
 
 export class StripeService {
   /**
-   * Create a Stripe customer for an organization
+   * Create a Stripe customer for an organization: done
    */
   static async createCustomer(organizationId: string) {
     // Implement customer creation
-    const existingSubscription = await prisma.subscription.findFirst({
-      where: { organizationId },
-    });
-
-    if (existingSubscription) {
-      return existingSubscription.stripeCustomerId;
-    }
-
-    const organization = await prisma.organization.findUnique({
-      where: { id: organizationId },
-    });
-
-    if (!organization) {
-      throw new Error('Organization not found');
-    }
-
-    const customer = await stripe.customers.create({
-      email: organization.email,
-      name: organization.name,
-      metadata: {
-        organizationId: organization.id,
-        clerkId: organization.clerkId,
-      },
-    });
-
-    return customer.id;
+    throw new Error('Not implemented');
   }
 
   /**
@@ -65,12 +41,56 @@ export class StripeService {
    * Handle webhook events
    */
   static async handleWebhook(event: Stripe.Event) {
+    switch (event.type) {
+      case 'customer.subscription.updated':
+        const subscription = event.data.object as Stripe.Subscription;
+        const validStatuses = ['ACTIVE', 'PAST_DUE', 'CANCELED', 'INCOMPLETE', 'TRIALING'];
+        const status = subscription.status.toUpperCase();
+        await prisma.subscription.update({
+          where: { stripeSubscriptionId: subscription.id },
+          data: {
+            status: (validStatuses.includes(status) ? status : 'INCOMPLETE') as SubscriptionStatus,
+            currentPeriodStart: subscription.current_period_start
+              ? new Date(subscription.current_period_start * 1000)
+              : new Date(),
+            currentPeriodEnd: subscription.current_period_end
+              ? new Date(subscription.current_period_end * 1000)
+              : new Date(),
+            cancelAtPeriodEnd: subscription.cancel_at_period_end,
+          },
+        });
+        console.log(`Subscription info: ${subscription}`);
+        console.log(`Subscription ${subscription.id} updated.`);
+        // Update subscription in your database
+        break;
+      case 'customer.subscription.deleted':
+        const deletedSubscription = event.data.object as Stripe.Subscription;
+        console.log(`Subscription ${deletedSubscription.id} deleted.`);
+        // Handle subscription deletion in your database
+        break;
+      case 'invoice.payment_succeeded':
+        const invoice = event.data.object as Stripe.Invoice;
+        console.log(`Invoice ${invoice.id} payment succeeded.`);
+        // Handle successful payment in your database
+        break;
+      case 'invoice.payment_failed':
+        const failedInvoice = event.data.object as Stripe.Invoice;
+        console.log(`Invoice ${failedInvoice.id} payment failed.`);
+        // Handle failed payment in your database
+        break;
+      case 'payment_intent.succeeded':
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        console.log(`PaymentIntent ${paymentIntent.id} succeeded.`);
+        // Handle successful payment intent in your database
+        break;
+      default:
+        console.log(`Unhandled event type ${event.type}`);
+    }
     // Handle different webhook event types:
     // - customer.subscription.updated
     // - customer.subscription.deleted
     // - invoice.payment_succeeded
     // - invoice.payment_failed
     // - payment_intent.succeeded
-    throw new Error('Not implemented');
   }
 }

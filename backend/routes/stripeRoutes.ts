@@ -11,11 +11,7 @@ router.get('/subscription', authenticateToken, stripeController.getSubscription)
 router.post('/subscription', authenticateToken, stripeController.createSubscription);
 router.post('/subscription/cancel', authenticateToken, stripeController.cancelSubscription);
 
-// Webhook route
-router.post('/webhook', express.raw({ type: 'application/json' }), stripeController.handleWebhook);
-
 // Public routes
-
 router.post('/customer', StripeService.createCustomer);
 
 export default router;

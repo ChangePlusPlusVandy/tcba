@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
-// import { StripeService } from '../services/stripeService.js';
-// import { stripe } from '../config/stripe.js';
-// import { STRIPE_WEBHOOK_SECRET } from '../config/stripe.js';
+import Stripe from 'stripe';
+import { StripeService } from '../services/stripeService.js';
+import { stripe, STRIPE_WEBHOOK_SECRET } from '../config/stripe.js';
 
 export const stripeController = {
   /**
-   * Create subscription
+   * Create subscription: done
    */
   createSubscription: async (req: Request, res: Response) => {
     try {
@@ -21,7 +21,7 @@ export const stripeController = {
   },
 
   /**
-   * Get subscription status
+   * Get subscription status: done
    */
   getSubscription: async (req: Request, res: Response) => {
     try {
@@ -53,13 +53,23 @@ export const stripeController = {
    * Stripe webhook handler
    */
   handleWebhook: async (req: Request, res: Response) => {
+    let event: Stripe.Event;
     try {
-      // Verify webhook signature
-      // Call StripeService.handleWebhook
-      res.status(501).json({ error: 'Not implemented' });
-    } catch (error: any) {
-      console.error('Webhook error:', error);
-      res.status(400).json({ error: error.message });
+      const sig = req.headers['stripe-signature'] as string;
+      event = stripe.webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET);
+    } catch (error) {
+      console.error('Error handling webhook:', error);
+      return res
+        .sendStatus(400)
+        .send(`Webhook Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    try {
+      await StripeService.handleWebhook(event);
+      res.status(200).json({ received: true });
+    } catch (error) {
+      console.error('Error handling webhook event:', error);
+      return res.json({ received: true });
     }
   },
 
