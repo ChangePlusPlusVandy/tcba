@@ -2,6 +2,8 @@ import { stripe } from '../config/stripe.js';
 import { prisma } from '../config/prisma.js';
 import Stripe from 'stripe';
 import { env } from 'process';
+import { connect } from 'http2';
+import { SubscriptionStatus } from '@prisma/client';
 
 export class StripeService {
   baseUrl = 'https://api.stripe.com/v1/';
@@ -9,67 +11,92 @@ export class StripeService {
   /**
    * Create a Stripe customer for an organization
    */
-  static async createCustomer(organizationId: string) {
-    try {
-      const organization = await prisma.organization.findUnique({
-        where: {
-          id: organizationId,
-        },
-      });
+    static async createCustomer(organizationId: string) {
+      try {
+        const organization = await prisma.organization.findUnique({
+          where: {
+            id: organizationId,
+          },
+        });
 
-      if (!organization) {
-        throw new Error('Organization not found');
-      }
-      const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-      const customer = await stripe.customer.create({
-        email: organization?.email,
-        name: organization?.name,
-        phone: organization?.primaryContactPhone,
-      });
-
-      return customer;
-    } catch (error: any) {
-      console.error('Create customer error: ', error.message);
-    }
-  }
-
-  /**
-   * Create or update subscription
-   * If an organization doesn't have a stripeId than guide them to createCustomer
-   */
-  static async createSubscription(organizationId: string, priceId: string) {
-    // Implement subscription creation
-    // Handle payment intent and client secret
-    try {
-      const subscription = await prisma.subscription.findUnique({
-        where: {
-          organizationId: organizationId,
-        },
-        select: {
-          stripeCustomerId: true,
-          stripePriceId: true,
-        },
-      });
-      if (subscription) {
-        const stripeID = subscription?.stripeCustomerId;
-        if (subscription.stripePriceId === priceId) {
-          return { error: 'AlreadySubscribed', message: 'You already have this plan!' };
+        if (!organization) {
+          throw new Error('Organization not found');
         }
         const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+        const customer = await stripe.customer.create({
+          email: organization?.email,
+          name: organization?.name,
+          phone: organization?.primaryContactPhone,
+        });
+
+        return customer;
+      } catch (error: any) {
+        console.error('Create customer error: ', error.message);
+      }
+    }
+
+    /**
+     * Create or update subscription
+     * If an organization doesn't have a stripeId than guide them to createCustomer
+     */
+    static async createSubscription(organizationId: string, priceId: string) {
+      // Implement subscription creation
+      // Handle payment intent and client secret
+      try {
+
+        const organization = await prisma.organization.findUnique({
+          where: {
+            id: organizationId
+          },
+          include: {
+            subscription: true,
+          }
+        })
+
+
+        if(!organization){
+          throw new Error("Organization id not found");
+        }
+
+        if(!organization.subscription){
+          throw new Error("Organization already has a subscription")
+        }
+
+        const customerInfo = await this.createCustomer(organizationId);
+
+        const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
         const newSubscription = await stripe.subscriptions.create({
-          customer: stripeID,
+          customer: customerInfo.id,
           items: [
             {
               price: priceId,
             },
           ],
         });
-      } else {
+
+
+
+        const result = await prisma.subscription.create({
+          data: {
+            organizationId : organizationId,
+            organization: {
+              connect: {id: organizationId},
+            },
+            stripeCustomerId: customerInfo.id,
+            stripeSubscriptionId: newSubscription.id,
+            stripePriceId: priceId,
+            status: SubscriptionStatus.ACTIVE,
+            currentPeriodStart: new Date(newSubscription.currentPeriodStart * 1000),
+            currentPeriodEnd: new Date(newSubscription.currentPeriodEnd * 1000),
+            canelAtPeriodEnd: 
+          },
+        })
+
+      } catch (error: any) {
+        console.error('Create subscription failed: ', error.message);
       }
-    } catch (error: any) {
-      console.error('Create subscription failed: ', error.message);
     }
-  }
 
   /**
    * Cancel subscription
