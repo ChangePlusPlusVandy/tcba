@@ -17,12 +17,17 @@ export class StripeService {
         },
       });
 
+      if (!organization) {
+        throw new Error('Organization not found');
+      }
       const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
       const customer = await stripe.customer.create({
         email: organization?.email,
         name: organization?.name,
         phone: organization?.primaryContactPhone,
       });
+
+      return customer;
     } catch (error: any) {
       console.error('Create customer error: ', error.message);
     }
@@ -35,7 +40,35 @@ export class StripeService {
   static async createSubscription(organizationId: string, priceId: string) {
     // Implement subscription creation
     // Handle payment intent and client secret
-    throw new Error('Not implemented');
+    try {
+      const subscription = await prisma.subscription.findUnique({
+        where: {
+          organizationId: organizationId,
+        },
+        select: {
+          stripeCustomerId: true,
+          stripePriceId: true,
+        },
+      });
+      if (subscription) {
+        const stripeID = subscription?.stripeCustomerId;
+        if (subscription.stripePriceId === priceId) {
+          return { error: 'AlreadySubscribed', message: 'You already have this plan!' };
+        }
+        const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+        const newSubscription = await stripe.subscriptions.create({
+          customer: stripeID,
+          items: [
+            {
+              price: priceId,
+            },
+          ],
+        });
+      } else {
+      }
+    } catch (error: any) {
+      console.error('Create subscription failed: ', error.message);
+    }
   }
 
   /**
