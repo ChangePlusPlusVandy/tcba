@@ -5,6 +5,8 @@ import Toast from '../../../components/Toast';
 import Pagination from '../../../components/Pagination';
 import PublicAttachmentList from '../../../components/PublicAttachmentList';
 import { useOrgAlerts } from '../../../hooks/queries/useOrgAlerts';
+import { useUser } from '@clerk/clerk-react';
+import { useAlertResponseMutations } from '../../../hooks/mutations/useAlertResponseMutations';
 
 type AlertPriority = 'URGENT' | 'LOW' | 'MEDIUM';
 
@@ -20,7 +22,19 @@ type Alert = {
   createdByAdminId: string;
   createdAt: string;
   updatedAt: string;
+  questions?: Question[];
 };
+
+type QuestionType = 'multipleChoice' | 'text';
+
+interface Question {
+  id: string;
+  type: QuestionType;
+  text: string;
+  required: boolean;
+  options?: string[];
+  textType?: 'short' | 'long';
+}
 
 type PriorityFilter = 'ALL' | 'URGENT' | 'MEDIUM' | 'LOW';
 
@@ -38,6 +52,13 @@ const AlertsPage = () => {
 
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
+
+  const [isResponseModalOpen, setIsResponseModalOpen] = useState(false);
+  const [currentResponses, setCurrentResponses] = useState<Record<string, any>>({});
+  const { submitResponse } = useAlertResponseMutations();
+
+  const { user } = useUser();
+  const organizationId = user?.publicMetadata?.organizationId as string | undefined;
 
   const [toast, setToast] = useState<{
     message: string;
@@ -62,6 +83,16 @@ const AlertsPage = () => {
   const closeDetailModal = () => {
     setIsDetailModalOpen(false);
     setSelectedAlert(null);
+  };
+
+  const openResponseModal = () => {
+    setIsResponseModalOpen(true);
+    setIsDetailModalOpen(false);
+  };
+
+  const closeResponseModal = () => {
+    setIsResponseModalOpen(false);
+    setIsDetailModalOpen(true);
   };
 
   const filteredAlerts = alerts.filter(alert => {
@@ -159,6 +190,43 @@ const AlertsPage = () => {
         return 'bg-blue-100 text-blue-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const handleResponseChange = (questionId: string, value: any) => {
+    setCurrentResponses(prev => ({ ...prev, [questionId]: value }));
+  };
+
+  const handleSubmitResponse = async () => {
+    if (!selectedAlert || !organizationId || !selectedAlert.questions) return;
+
+    const missingRequired = selectedAlert.questions.filter(q => {
+      if (!q.required) return false;
+      const response = currentResponses[q.id];
+      if (response === undefined || response === null || response === '') return true;
+      if (Array.isArray(response) && response.length === 0) return true;
+      return false;
+    });
+
+    if (missingRequired.length > 0) {
+      setToast({
+        message: `Please answer all required questions`,
+        type: 'error',
+      });
+      return;
+    }
+
+    try {
+      await submitResponse.mutateAsync({
+        alertId: selectedAlert.id,
+        organizationId,
+        responses: currentResponses,
+      });
+
+      setToast({ message: 'Survey response submitted successfully!', type: 'success' });
+      closeResponseModal();
+    } catch (err: any) {
+      setToast({ message: err.message || 'Failed to submit response', type: 'error' });
     }
   };
 
@@ -418,6 +486,12 @@ const AlertsPage = () => {
 
               <div className='modal-action'>
                 <button
+                  onClick={openResponseModal}
+                  className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
+                >
+                  Respond
+                </button>
+                <button
                   onClick={closeDetailModal}
                   className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
                 >
@@ -426,6 +500,112 @@ const AlertsPage = () => {
               </div>
             </div>
             <div className='modal-backdrop bg-black/30' onClick={closeDetailModal}></div>
+          </div>
+        </>
+      )}
+
+      {isResponseModalOpen && selectedAlert && selectedAlert.questions && (
+        <>
+          <input type='checkbox' checked readOnly className='modal-toggle' />
+          <div className='modal modal-open'>
+            <div className='modal-box max-w-3xl w-full max-h-[90vh] bg-white overflow-y-auto p-0'>
+              <div className='sticky top-0 bg-white border-b border-gray-200 p-6 z-10'>
+                <div className='flex justify-between items-start'>
+                  <div>
+                    <h2 className='text-2xl font-bold text-gray-800'>{selectedAlert.title}</h2>
+                    {selectedAlert.content && (
+                      <p className='text-gray-600 mt-2'>{selectedAlert.content}</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={closeResponseModal}
+                    className='text-gray-400 hover:text-gray-600'
+                    disabled={submitResponse.isPending}
+                  >
+                    <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M6 18L18 6M6 6l12 12'
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div className='p-6 space-y-6'>
+                {selectedAlert.questions.map((question, index) => (
+                  <div key={question.id} className='border-b border-gray-200 pb-6 last:border-b-0'>
+                    <label className='block text-lg font-semibold text-gray-800 mb-3'>
+                      {index + 1}. {question.text}
+                      {question.required && <span className='text-red-500 ml-1'>*</span>}
+                    </label>
+
+                    {question.type === 'multipleChoice' && (
+                      <div className='space-y-2'>
+                        {question.options?.map(option => (
+                          <label
+                            key={option}
+                            className='flex items-center space-x-3 cursor-pointer'
+                          >
+                            <input
+                              type='radio'
+                              name={question.id}
+                              value={option}
+                              checked={currentResponses[question.id] === option}
+                              //TOOD: uncomment when func is ready
+                              // onChange={e => handleResponseChange(question.id, e.target.value)}
+                              className='w-4 h-4 text-[#D54242] focus:ring-[#D54242]'
+                            />
+                            <span className='text-gray-700'>{option}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+
+                    {question.type === 'text' && (
+                      <>
+                        {question.textType === 'short' ? (
+                          <input
+                            type='text'
+                            value={currentResponses[question.id] || ''}
+                            onChange={e => handleResponseChange(question.id, e.target.value)}
+                            className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                            placeholder='Your answer'
+                          />
+                        ) : (
+                          <textarea
+                            value={currentResponses[question.id] || ''}
+                            onChange={e => handleResponseChange(question.id, e.target.value)}
+                            rows={4}
+                            className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                            placeholder='Your answer'
+                          />
+                        )}
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className='sticky bottom-0 bg-white border-t border-gray-200 p-6 flex justify-end gap-3'>
+                <button
+                  onClick={closeResponseModal}
+                  disabled={submitResponse.isPending}
+                  className='px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed'
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitResponse}
+                  disabled={submitResponse.isPending}
+                  className='px-6 py-2 bg-[#D54242] hover:bg-[#b53a3a] disabled:bg-[#e88888] text-white rounded-lg disabled:cursor-not-allowed'
+                >
+                  {submitResponse.isPending ? 'Submitting...' : 'Submit Response'}
+                </button>
+              </div>
+            </div>
           </div>
         </>
       )}

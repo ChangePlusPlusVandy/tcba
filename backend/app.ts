@@ -20,6 +20,7 @@ import mapRoutes from './routes/mapRoutes.js';
 import { clerkMiddleware } from '@clerk/express';
 import { connectRedis } from './config/redis.js';
 import { warmCache } from './utils/cacheWarmer.js';
+import alertResponseRoutes from './routes/alertResponseRoutes.js';
 
 const app = express();
 
@@ -66,6 +67,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/surveys', surveyRoutes);
 app.use('/api/survey-responses', surveyResponseRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/alert-responses', alertResponseRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/notifications', inAppNotificationRoutes);
 app.use('/api/email-notifications', notificationRoutes);
