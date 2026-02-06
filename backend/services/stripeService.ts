@@ -3,7 +3,7 @@ import { prisma } from '../config/prisma.js';
 import Stripe from 'stripe';
 import { env } from 'process';
 import { connect } from 'http2';
-import { SubscriptionStatus } from '@prisma/client';
+import { SubscriptionStatus, PaymentStatus } from '@prisma/client';
 
 export class StripeService {
   baseUrl = 'https://api.stripe.com/v1/';
@@ -58,7 +58,7 @@ export class StripeService {
           throw new Error("Organization id not found");
         }
 
-        if(!organization.subscription){
+        if(organization.subscription){
           throw new Error("Organization already has a subscription")
         }
 
@@ -73,23 +73,64 @@ export class StripeService {
               price: priceId,
             },
           ],
+          payment_behavior: "default_incomplete",
+          expand: ["latest_invoice.payment_intent"],
         });
 
+        const stripeInvoice = newSubscription.latest_invoice;
+        if (!stripeInvoice || typeof stripeInvoice === "string") {
+          throw new Error("Stripe latest_invoice was not expanded");
+        }
+
+        const paymentIntent = stripeInvoice.payment_intent;
+        if (!paymentIntent || typeof paymentIntent === "string") {
+          throw new Error("Stripe payment_intent was not expanded");
+        }
 
 
         const result = await prisma.subscription.create({
           data: {
             organizationId : organizationId,
-            organization: {
-              connect: {id: organizationId},
-            },
             stripeCustomerId: customerInfo.id,
             stripeSubscriptionId: newSubscription.id,
             stripePriceId: priceId,
             status: SubscriptionStatus.ACTIVE,
             currentPeriodStart: new Date(newSubscription.currentPeriodStart * 1000),
             currentPeriodEnd: new Date(newSubscription.currentPeriodEnd * 1000),
-            canelAtPeriodEnd: 
+            cancelAtPeriodEnd: newSubscription.cancel_at_period_end,
+            payments: {
+                create: {
+                stripePaymentIntentId: paymentIntent.id,
+                stripeInvoiceId: stripeInvoice.id,
+                amount: paymentIntent.amount,
+                currency: paymentIntent.currency,
+                status: PaymentStatus.PENDING,
+              }
+            },
+            invoices: {
+              create: {
+                stripeInvoiceId: stripeInvoice.id,
+                amount:
+                  stripeInvoice.amount_due ??
+                  stripeInvoice.amount_paid ??
+                  stripeInvoice.amount_remaining ??
+                  0,
+                currency: stripeInvoice.currency ?? "usd",
+                status: stripeInvoice.status ?? "draft",
+                invoicePdf: stripeInvoice.invoice_pdf ?? null,
+                hostedInvoiceUrl: stripeInvoice.hosted_invoice_url ?? null,
+
+                periodStart: new Date(
+                  ((stripeInvoice.period_start ?? stripeInvoice.created) as number) * 1000
+                ),
+                periodEnd: new Date(
+                  ((stripeInvoice.period_end ?? stripeInvoice.created) as number) * 1000
+                ),
+            },
+
+              },
+            createdAt: new Date(newSubscription.created * 1000),
+            updatedAt: new Date(newSubscription.created * 1000),
           },
         })
 
