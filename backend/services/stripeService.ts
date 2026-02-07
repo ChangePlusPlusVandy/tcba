@@ -59,27 +59,66 @@ export class StripeService {
             cancelAtPeriodEnd: subscription.cancel_at_period_end,
           },
         });
-        console.log(`Subscription info: ${subscription}`);
+        console.log(`Subscription info: ${JSON.stringify(subscription)}`);
         console.log(`Subscription ${subscription.id} updated.`);
         // Update subscription in your database
         break;
       case 'customer.subscription.deleted':
         const deletedSubscription = event.data.object as Stripe.Subscription;
+        await prisma.subscription.update({
+          where: { stripeSubscriptionId: deletedSubscription.id },
+          data: {
+            status: 'CANCELED' as SubscriptionStatus,
+            cancelAtPeriodEnd: false,
+          },
+        });
         console.log(`Subscription ${deletedSubscription.id} deleted.`);
         // Handle subscription deletion in your database
         break;
+
       case 'invoice.payment_succeeded':
         const invoice = event.data.object as Stripe.Invoice;
         console.log(`Invoice ${invoice.id} payment succeeded.`);
+
+        // await prisma.invoice.create({
+        //   data: {
+        //     stripeInvoiceId: invoice.id,
+        //     amountPaid: invoice.amount_paid,
+        //     currency: invoice.currency,
+        //     status: invoice.status.toUpperCase(),
+        //     subscription: {
+        //       connect: { stripeSubscriptionId: invoice.subscription as string },
+        //     },
+        //   },
+        // });
         // Handle successful payment in your database
         break;
       case 'invoice.payment_failed':
         const failedInvoice = event.data.object as Stripe.Invoice;
+        // await prisma.invoice.create({
+        //   data: {
+        //     stripeInvoiceId: failedInvoice.id,
+        //     amountPaid: failedInvoice.amount_paid,
+        //     currency: failedInvoice.currency,
+        //     status: failedInvoice.status.toUpperCase(),
+        //     subscription: {
+        //       connect: { stripeSubscriptionId: failedInvoice.subscription as string },
+        //     },
+        //   },
+        // });
         console.log(`Invoice ${failedInvoice.id} payment failed.`);
         // Handle failed payment in your database
         break;
       case 'payment_intent.succeeded':
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        // await prisma.paymentIntent.create({
+        //   data: {
+        //     stripePaymentIntentId: paymentIntent.id,
+        //     amount: paymentIntent.amount,
+        //     currency: paymentIntent.currency,
+        //     status: paymentIntent.status.toUpperCase(),
+        //   },
+        // });
         console.log(`PaymentIntent ${paymentIntent.id} succeeded.`);
         // Handle successful payment intent in your database
         break;
