@@ -44,7 +44,11 @@ const AdvocacyPage = ({ previewContent }: AdvocacyPageProps = {}) => {
           </div>
           <div className='h-[300px] sm:h-[400px] bg-slate-200 lg:mr-12 rounded-lg overflow-hidden'>
             {headerImageSrc && (
-              <S3Image src={headerImageSrc} alt='Advocacy Header' className='w-full h-full object-cover' />
+              <S3Image
+                src={headerImageSrc}
+                alt='Advocacy Header'
+                className='w-full h-full object-cover'
+              />
             )}
           </div>
         </div>
@@ -67,7 +71,11 @@ const AdvocacyPage = ({ previewContent }: AdvocacyPageProps = {}) => {
           </div>
           <div className='h-[260px] sm:h-[320px] bg-slate-200 rounded-lg overflow-hidden'>
             {focusImageSrc && (
-              <S3Image src={focusImageSrc} alt='Advocacy Focus' className='w-full h-full object-cover' />
+              <S3Image
+                src={focusImageSrc}
+                alt='Advocacy Focus'
+                className='w-full h-full object-cover'
+              />
             )}
           </div>
         </div>
