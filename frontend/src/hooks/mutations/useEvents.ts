@@ -1,4 +1,7 @@
+import { useAuth } from '@clerk/clerk-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { API_BASE_URL } from '../../config/api';
+
 // import { useApi } from '../useApi';
 
 /**
@@ -6,12 +9,28 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
  */
 export function useCreateEvent() {
   // const api = useApi();
+  const { getToken } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (_data: any) => {
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/api/events`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(_data),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to create event');
+      }
+      return response.json();
+
       // Implement API call to POST /api/events
-      throw new Error('Not implemented');
+      // throw new Error('Not implemented');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
