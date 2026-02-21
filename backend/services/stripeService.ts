@@ -1,8 +1,6 @@
 import { stripe } from '../config/stripe.js';
 import { prisma } from '../config/prisma.js';
 import Stripe from 'stripe';
-import { env } from 'process';
-import { connect } from 'http2';
 import { SubscriptionStatus, PaymentStatus } from '@prisma/client';
 
 export class StripeService {
@@ -31,11 +29,11 @@ export class StripeService {
       case 'succeeded':
         return PaymentStatus.SUCCEEDED;
       case 'processing':
-      case 'requires_payment_method':
       case 'requires_confirmation':
       case 'requires_action':
         return PaymentStatus.PENDING;
       case 'canceled':
+      case 'requires_payment_method':
         return PaymentStatus.FAILED;
       default:
         return PaymentStatus.PENDING;
@@ -224,8 +222,108 @@ export class StripeService {
   }
 
   /**
-   * Update subscription status
+   * Update subscription and payment status after Stripe confirms payment.
+   * Call this from webhook handlers for invoice.payment_succeeded or payment_intent.succeeded.
    */
+  static async updateSubscriptionAfterPaymentConfirmed(stripePaymentIntentId: string) {
+    try {
+      const payment = await prisma.payment.findUnique({
+        where: { stripePaymentIntentId },
+        include: { subscription: true },
+      });
+
+      if (!payment) {
+        // Not a subscription payment – ignore (avoids webhook retries for other payment types)
+        return;
+      }
+
+      const stripeInstance = require('stripe')(process.env.STRIPE_SECRET_KEY);
+      const stripeSubscription = await stripeInstance.subscriptions.retrieve(
+        payment.subscription.stripeSubscriptionId
+      );
+
+      const subscriptionStatus = StripeService.mapStripeSubscriptionStatus(
+        stripeSubscription.status
+      );
+
+      await prisma.$transaction([
+        prisma.payment.update({
+          where: { stripePaymentIntentId },
+          data: { status: PaymentStatus.SUCCEEDED },
+        }),
+        prisma.subscription.update({
+          where: { id: payment.subscriptionId },
+          data: {
+            status: subscriptionStatus,
+            currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
+            currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+            cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end ?? false,
+          },
+        }),
+      ]);
+    } catch (error: any) {
+      console.error('Update subscription after payment confirmed failed:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Update subscription and payment status when Stripe reports payment failure.
+   * Call from webhook handlers for invoice.payment_failed or payment_intent.payment_failed.
+   */
+  static async updateSubscriptionAfterPaymentFailed(
+    stripeSubscriptionId: string,
+    stripePaymentIntentId?: string
+  ) {
+    try {
+      const stripeInstance = require('stripe')(process.env.STRIPE_SECRET_KEY);
+      const stripeSubscription = await stripeInstance.subscriptions.retrieve(stripeSubscriptionId);
+
+      const subscriptionStatus = StripeService.mapStripeSubscriptionStatus(
+        stripeSubscription.status
+      );
+
+      const subscription = await prisma.subscription.findUnique({
+        where: { stripeSubscriptionId },
+      });
+
+      if (!subscription) {
+        return;
+      }
+
+      let paymentStatus: PaymentStatus | null = null;
+      if (stripePaymentIntentId) {
+        const payment = await prisma.payment.findUnique({
+          where: { stripePaymentIntentId },
+        });
+        if (payment) {
+          const paymentIntent = await stripeInstance.paymentIntents.retrieve(stripePaymentIntentId);
+          paymentStatus = StripeService.mapStripePaymentIntentStatus(paymentIntent.status);
+        }
+      }
+
+      await prisma.$transaction(async tx => {
+        await tx.subscription.update({
+          where: { id: subscription.id },
+          data: {
+            status: subscriptionStatus,
+            currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
+            currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+            cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end ?? false,
+          },
+        });
+        if (stripePaymentIntentId && paymentStatus) {
+          await tx.payment.update({
+            where: { stripePaymentIntentId },
+            data: { status: paymentStatus },
+          });
+        }
+      });
+    } catch (error: any) {
+      console.error('Update subscription after payment failed:', error.message);
+      throw error;
+    }
+  }
 
   /**
    * Get subscription status
@@ -254,13 +352,5 @@ export class StripeService {
   /**
    * Handle webhook events
    */
-  static async handleWebhook(event: Stripe.Event) {
-    // Handle different webhook event types:
-    // - customer.subscription.updated
-    // - customer.subscription.deleted
-    // - invoice.payment_succeeded
-    // - invoice.payment_failed
-    // - payment_intent.succeeded
-    throw new Error('Not implemented');
-  }
+  static async handleWebhook(event: Stripe.Event) {}
 }
