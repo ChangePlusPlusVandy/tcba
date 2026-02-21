@@ -6,7 +6,41 @@ import { connect } from 'http2';
 import { SubscriptionStatus, PaymentStatus } from '@prisma/client';
 
 export class StripeService {
-
+  private static mapStripeSubscriptionStatus(s: string): SubscriptionStatus {
+    switch (s) {
+      case 'active':
+        return SubscriptionStatus.ACTIVE;
+      case 'trialing':
+        return SubscriptionStatus.TRIALING;
+      case 'incomplete':
+        return SubscriptionStatus.INCOMPLETE;
+      case 'past_due':
+        return SubscriptionStatus.PAST_DUE;
+      case 'unpaid':
+        return SubscriptionStatus.PAST_DUE;
+      case 'canceled':
+        return SubscriptionStatus.CANCELED;
+      case 'incomplete_expired':
+        return SubscriptionStatus.CANCELED; // or INCOMPLETE if you prefer
+      default:
+        return SubscriptionStatus.INCOMPLETE;
+    }
+  }
+  private static mapStripePaymentIntentStatus(piStatus: string): PaymentStatus {
+    switch (piStatus) {
+      case 'succeeded':
+        return PaymentStatus.SUCCEEDED;
+      case 'processing':
+      case 'requires_payment_method':
+      case 'requires_confirmation':
+      case 'requires_action':
+        return PaymentStatus.PENDING;
+      case 'canceled':
+        return PaymentStatus.FAILED;
+      default:
+        return PaymentStatus.PENDING;
+    }
+  }
   /**
    * Create a Stripe customer for an organization
    */
@@ -42,7 +76,7 @@ export class StripeService {
   static async createSubscription(organizationId: string, priceId: string) {
     // Implement subscription creation
     // Handle payment intent and client secret
-    // ToDo: Handle issues with paymentIntent and the cases that come with that 
+    // ToDo: Handle issues with paymentIntent and the cases that come with that
     try {
       const organization = await prisma.organization.findUnique({
         where: {
@@ -76,15 +110,19 @@ export class StripeService {
         expand: ['latest_invoice.payment_intent'],
       });
 
+      const subscriptionStatus = StripeService.mapStripeSubscriptionStatus(newSubscription.status);
+
       const stripeInvoice = newSubscription.latest_invoice;
       if (!stripeInvoice || typeof stripeInvoice === 'string') {
         throw new Error('Stripe latest_invoice was not expanded');
       }
 
       const paymentIntent = stripeInvoice.payment_intent;
-      if (!paymentIntent || typeof paymentIntent === 'string') {
-        throw new Error('Stripe payment_intent was not expanded');
-      }
+
+      const paymentStatus =
+        paymentIntent && typeof paymentIntent !== 'string'
+          ? StripeService.mapStripePaymentIntentStatus(paymentIntent.status)
+          : PaymentStatus.PENDING;
 
       const result = await prisma.subscription.create({
         data: {
@@ -92,7 +130,7 @@ export class StripeService {
           stripeCustomerId: customerInfo.id,
           stripeSubscriptionId: newSubscription.id,
           stripePriceId: priceId,
-          status: SubscriptionStatus.ACTIVE,
+          status: subscriptionStatus,
           currentPeriodStart: new Date(newSubscription.current_period_start * 1000),
           currentPeriodEnd: new Date(newSubscription.current_period_end * 1000),
           cancelAtPeriodEnd: newSubscription.cancel_at_period_end,
@@ -102,7 +140,7 @@ export class StripeService {
               stripeInvoiceId: stripeInvoice.id,
               amount: paymentIntent.amount,
               currency: paymentIntent.currency,
-              status: PaymentStatus.PENDING,
+              status: paymentStatus,
             },
           },
           invoices: {
@@ -130,6 +168,13 @@ export class StripeService {
           updatedAt: new Date(newSubscription.created * 1000),
         },
       });
+      return {
+        subscription: result,
+        clientSecret: paymentIntent.client_secret,
+        stripeSubscriptionId: newSubscription.id,
+        stripeInvoiceId: stripeInvoice.id,
+        stripePaymentIntentId: paymentIntent.id,
+      };
     } catch (error: any) {
       console.error('Create subscription failed: ', error.message);
       throw error;
@@ -179,29 +224,31 @@ export class StripeService {
   }
 
   /**
+   * Update subscription status
+   */
+
+  /**
    * Get subscription status
    */
   static async getSubscription(organizationId: string) {
-    try{
-    const subscription = await prisma.subscription.findUnique({
-      where: {
-        organizationId: organizationId,
-      },
-      select: {
-        status : true,
+    try {
+      const subscription = await prisma.subscription.findUnique({
+        where: {
+          organizationId: organizationId,
+        },
+        select: {
+          status: true,
+        },
+      });
+
+      if (!subscription) {
+        throw new Error("Organization doesn't have subscription");
       }
-    });
 
-    if(!subscription){
-      throw new Error("Organization doesn't have subscription");
+      return subscription.status;
+    } catch (error: any) {
+      console.error(`Error getting subscription status for ${organizationId}: `, error);
     }
-
-    return subscription.status;
-
-  }
-  catch(error: any){
-    console.error(`Error getting subscription status for ${organizationId}: `, error)
-  }
   }
 
   /**
