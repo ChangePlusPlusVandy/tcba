@@ -37,6 +37,7 @@ const OrganizationManagement = lazy(
   () => import('../pages/Admin/OrganizationManagementPage/OrganizationManagement')
 );
 const AdminAnnouncements = lazy(() => import('../pages/Admin/AnnouncementsPage/Announcements'));
+const AdminEvents = lazy(() => import('../pages/Admin/EventManagementPage/EventManagementPage'));
 const AdminBlogs = lazy(() => import('../pages/Admin/BlogsPage/Blogs'));
 const AdminAlerts = lazy(() => import('../pages/Admin/AlertsPage/Alerts'));
 const AdminSurveys = lazy(() => import('../pages/Admin/SurveysPage/Surveys'));
@@ -320,6 +321,26 @@ const AppRoutes = () => {
           <AdminRoute>
             <Suspense fallback={<PageLoader />}>
               <AdminAnnouncements />
+            </Suspense>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/announcements'
+        element={
+          <AdminRoute>
+            <Suspense fallback={<PageLoader />}>
+              <AdminAnnouncements />
+            </Suspense>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/events'
+        element={
+          <AdminRoute>
+            <Suspense fallback={<PageLoader />}>
+              <AdminEvents />
             </Suspense>
           </AdminRoute>
         }
