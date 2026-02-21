@@ -43,13 +43,28 @@ export function useCreateEvent() {
  */
 export function useUpdateEvent() {
   // const api = useApi();
+  const { getToken } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     // add appropriate parameter to async
-    mutationFn: async ({}: any) => {
+    mutationFn: async ({ id, data }: any) => {
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/api/events/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update event');
+      }
+      return response.json();
       // Implement API call to PUT /api/events/:id
-      throw new Error('Not implemented');
+      // throw new Error('Not implemented');
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['event', variables.id] });
@@ -63,12 +78,25 @@ export function useUpdateEvent() {
  */
 export function usePublishEvent() {
   // const api = useApi();
+  const { getToken } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (_eventId: string) => {
       // Implement API call to POST /api/events/:id/publish
-      throw new Error('Not implemented');
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/api/events/${_eventId}/publish`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to publish event');
+      }
+      return response.json();
+      // throw new Error('Not implemented');
     },
     onSuccess: (_, eventId) => {
       queryClient.invalidateQueries({ queryKey: ['event', eventId] });
@@ -82,12 +110,25 @@ export function usePublishEvent() {
  */
 export function useDeleteEvent() {
   // const api = useApi();
+  const { getToken } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (_eventId: string) => {
       // Implement API call to DELETE /api/events/:id
-      throw new Error('Not implemented');
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/api/events/${_eventId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to delete event');
+      }
+      return response.json();
+      // throw new Error('Not implemented');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
@@ -100,12 +141,25 @@ export function useDeleteEvent() {
  */
 export function useRSVP() {
   // const api = useApi();
+  const { getToken } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({}: any) => {
+    mutationFn: async ({ eventId }: any) => {
       // Implement API call to POST /api/events/:eventId/rsvp
-      throw new Error('Not implemented');
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/api/events/${eventId}/rsvp`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to RSVP to event');
+      }
+      return response.json();
+      // throw new Error('Not implemented');
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['event', variables.eventId] });
