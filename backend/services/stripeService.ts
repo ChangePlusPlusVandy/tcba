@@ -19,7 +19,7 @@ export class StripeService {
       case 'canceled':
         return SubscriptionStatus.CANCELED;
       case 'incomplete_expired':
-        return SubscriptionStatus.CANCELED; // or INCOMPLETE if you prefer
+        return SubscriptionStatus.CANCELED;
       default:
         return SubscriptionStatus.INCOMPLETE;
     }
