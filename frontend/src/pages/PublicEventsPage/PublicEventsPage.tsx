@@ -19,20 +19,27 @@ export function PublicEventsPage() {
   const { data: events = [], isLoading, refetch } = usePublicEvents(upcomingOnly);
   const rsvpMutation = usePublicRSVP();
 
-  const handleRSVP = async (data: { email: string; name?: string; phone?: string; notes?: string }) => {
+  const handleRSVP = async (data: {
+    email: string;
+    name?: string;
+    phone?: string;
+    notes?: string;
+  }) => {
     if (!selectedEvent) return;
     try {
       await rsvpMutation.mutateAsync({ eventId: selectedEvent.id, data });
       setShowRSVPModal(false);
       setSelectedEvent(null);
       refetch();
-      alert('RSVP successful! You will receive a confirmation email and reminders before the event.');
+      alert(
+        'RSVP successful! You will receive a confirmation email and reminders before the event.'
+      );
     } catch (error: any) {
       alert(error.message || 'Failed to RSVP');
     }
   };
 
-  const calendarEvents = events.map((event) => ({
+  const calendarEvents = events.map(event => ({
     id: event.id,
     title: event.title,
     start: new Date(event.startTime),
@@ -41,14 +48,14 @@ export function PublicEventsPage() {
   }));
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-4xl font-bold">Upcoming Events</h1>
+    <div className='min-h-screen bg-gray-50'>
+      <div className='max-w-7xl mx-auto p-6'>
+        <div className='flex justify-between items-center mb-6'>
+          <h1 className='text-4xl font-bold'>Upcoming Events</h1>
         </div>
 
-        <div className="flex gap-2 mb-6 justify-between items-center">
-          <div className="flex gap-2">
+        <div className='flex gap-2 mb-6 justify-between items-center'>
+          <div className='flex gap-2'>
             <button
               onClick={() => setView('list')}
               className={`px-4 py-2 rounded ${view === 'list' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
@@ -62,40 +69,40 @@ export function PublicEventsPage() {
               Calendar View
             </button>
           </div>
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 cursor-pointer">
+          <div className='flex items-center gap-2'>
+            <label className='flex items-center gap-2 cursor-pointer'>
               <input
-                type="checkbox"
+                type='checkbox'
                 checked={upcomingOnly}
-                onChange={(e) => setUpcomingOnly(e.target.checked)}
-                className="w-4 h-4"
+                onChange={e => setUpcomingOnly(e.target.checked)}
+                className='w-4 h-4'
               />
-              <span className="text-sm text-gray-700">Upcoming events only</span>
+              <span className='text-sm text-gray-700'>Upcoming events only</span>
             </label>
           </div>
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <span className="loading loading-spinner loading-lg"></span>
+          <div className='flex justify-center items-center h-64'>
+            <span className='loading loading-spinner loading-lg'></span>
           </div>
         ) : view === 'list' ? (
           <PublicEventListView
             events={events}
-            onRSVP={(event) => {
+            onRSVP={event => {
               setSelectedEvent(event);
               setShowRSVPModal(true);
             }}
           />
         ) : (
-          <div className="bg-white p-4 rounded-lg shadow" style={{ height: '700px' }}>
+          <div className='bg-white p-4 rounded-lg shadow' style={{ height: '700px' }}>
             <Calendar
               localizer={localizer}
               events={calendarEvents}
-              startAccessor="start"
-              endAccessor="end"
+              startAccessor='start'
+              endAccessor='end'
               style={{ height: '100%' }}
-              onSelectEvent={(event) => {
+              onSelectEvent={event => {
                 setSelectedEvent(event.resource);
                 setShowRSVPModal(true);
               }}

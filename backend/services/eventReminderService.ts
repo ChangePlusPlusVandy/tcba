@@ -65,7 +65,8 @@ async function send1DayReminders() {
     // Send to organizations
     for (const rsvp of orgRsvps) {
       const email = rsvp.attendeeEmail || rsvp.organization.email;
-      const name = rsvp.attendeeName || rsvp.organization.primaryContactName || rsvp.organization.name;
+      const name =
+        rsvp.attendeeName || rsvp.organization.primaryContactName || rsvp.organization.name;
 
       const success = await sendEventReminderEmail(email, name, rsvp.event, '1_DAY');
 
@@ -91,7 +92,9 @@ async function send1DayReminders() {
       }
     }
 
-    console.log(`[EventReminder] Sent ${sent} 1-day reminders (${orgRsvps.length} org + ${publicRsvps.length} public)`);
+    console.log(
+      `[EventReminder] Sent ${sent} 1-day reminders (${orgRsvps.length} org + ${publicRsvps.length} public)`
+    );
   } catch (error) {
     console.error('[EventReminder] Error sending 1-day reminders:', error);
   }
@@ -160,7 +163,8 @@ async function send1HourReminders() {
     // Send to organizations
     for (const rsvp of orgRsvps) {
       const email = rsvp.attendeeEmail || rsvp.organization.email;
-      const name = rsvp.attendeeName || rsvp.organization.primaryContactName || rsvp.organization.name;
+      const name =
+        rsvp.attendeeName || rsvp.organization.primaryContactName || rsvp.organization.name;
 
       const success = await sendEventReminderEmail(email, name, rsvp.event, '1_HOUR');
 
@@ -186,7 +190,9 @@ async function send1HourReminders() {
       }
     }
 
-    console.log(`[EventReminder] Sent ${sent} 1-hour reminders (${orgRsvps.length} org + ${publicRsvps.length} public)`);
+    console.log(
+      `[EventReminder] Sent ${sent} 1-hour reminders (${orgRsvps.length} org + ${publicRsvps.length} public)`
+    );
   } catch (error) {
     console.error('[EventReminder] Error sending 1-hour reminders:', error);
   }

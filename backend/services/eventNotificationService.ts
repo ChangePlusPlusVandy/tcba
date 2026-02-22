@@ -139,21 +139,33 @@ export async function sendEventNotificationEmails(eventId: string) {
                 <div class="detail-row">
                   <span class="detail-label">📅 When:</span> ${formattedStartTime}
                 </div>
-                ${event.location ? `
+                ${
+                  event.location
+                    ? `
                 <div class="detail-row">
                   <span class="detail-label">📍 Location:</span> ${event.location}
                 </div>
-                ` : ''}
-                ${event.zoomLink ? `
+                `
+                    : ''
+                }
+                ${
+                  event.zoomLink
+                    ? `
                 <div class="detail-row">
                   <span class="detail-label">💻 Virtual Meeting:</span> Available
                 </div>
-                ` : ''}
-                ${event.maxAttendees ? `
+                `
+                    : ''
+                }
+                ${
+                  event.maxAttendees
+                    ? `
                 <div class="detail-row">
                   <span class="detail-label">👥 Capacity:</span> ${event.maxAttendees} attendees
                 </div>
-                ` : ''}
+                `
+                    : ''
+                }
               </div>
 
               <p style="text-align: center;">
@@ -190,7 +202,9 @@ Manage preferences: ${frontendUrl}/settings
       `,
     };
 
-    console.log(`[EventNotification] Sending event notification emails to ${recipients.length} recipients`);
+    console.log(
+      `[EventNotification] Sending event notification emails to ${recipients.length} recipients`
+    );
     return await sendEmails(recipients, emailContent);
   } catch (error) {
     console.error('[EventNotification] Error sending event notification emails:', error);
@@ -261,17 +275,25 @@ export async function sendEventReminderEmail(
                 <div class="detail-row">
                   <span class="detail-label">📅 When:</span> ${formattedStartTime}
                 </div>
-                ${event.location ? `
+                ${
+                  event.location
+                    ? `
                 <div class="detail-row">
                   <span class="detail-label">📍 Location:</span> ${event.location}
                 </div>
-                ` : ''}
-                ${event.zoomLink ? `
+                `
+                    : ''
+                }
+                ${
+                  event.zoomLink
+                    ? `
                 <div class="detail-row">
                   <span class="detail-label">💻 Join Meeting:</span> <a href="${event.zoomLink}">${event.zoomLink}</a>
                   ${event.meetingPassword ? `<br><span class="detail-label">Password:</span> ${event.meetingPassword}` : ''}
                 </div>
-                ` : ''}
+                `
+                    : ''
+                }
               </div>
 
               <p>We look forward to seeing you there!</p>
@@ -324,7 +346,9 @@ Tennessee Coalition for Better Aging
     });
 
     await sesClient.send(command);
-    console.log(`[EventReminder] Reminder sent to ${email} for event ${event.title} (${timeFrame})`);
+    console.log(
+      `[EventReminder] Reminder sent to ${email} for event ${event.title} (${timeFrame})`
+    );
     return true;
   } catch (error) {
     console.error(`[EventReminder] Error sending reminder to ${email}:`, error);

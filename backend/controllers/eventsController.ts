@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/prisma.js';
-import { sendEventNotificationEmails, sendEventReminderEmail } from '../services/eventNotificationService.js';
+import {
+  sendEventNotificationEmails,
+  sendEventReminderEmail,
+} from '../services/eventNotificationService.js';
 
 export const eventsController = {
   /**

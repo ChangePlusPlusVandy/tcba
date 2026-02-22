@@ -62,7 +62,7 @@ export class CalendlyService {
         throw new Error(`Failed to exchange code for token: ${response.statusText}`);
       }
 
-      const data = await response.json() as CalendlyTokenResponse;
+      const data = (await response.json()) as CalendlyTokenResponse;
       this.accessToken = data.access_token;
       this.refreshToken = data.refresh_token;
       this.tokenExpiry = new Date(Date.now() + data.expires_in * 1000);
@@ -100,7 +100,7 @@ export class CalendlyService {
         throw new Error(`Failed to refresh token: ${response.statusText}`);
       }
 
-      const data = await response.json() as CalendlyTokenResponse;
+      const data = (await response.json()) as CalendlyTokenResponse;
       this.accessToken = data.access_token;
       this.refreshToken = data.refresh_token;
       this.tokenExpiry = new Date(Date.now() + data.expires_in * 1000);
@@ -141,7 +141,7 @@ export class CalendlyService {
     const options: RequestInit = {
       method,
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     };
@@ -203,7 +203,10 @@ export class CalendlyService {
   /**
    * Update an event type
    */
-  static async updateEventType(eventTypeUri: string, updates: Partial<CalendlyEvent>): Promise<any> {
+  static async updateEventType(
+    eventTypeUri: string,
+    updates: Partial<CalendlyEvent>
+  ): Promise<any> {
     const eventTypeId = eventTypeUri.split('/').pop();
     return await this.apiRequest(`/event_types/${eventTypeId}`, 'PATCH', updates);
   }
@@ -266,10 +269,7 @@ export class CalendlyService {
         .digest('hex');
 
       // Constant-time comparison to prevent timing attacks
-      return crypto.timingSafeEqual(
-        Buffer.from(signature),
-        Buffer.from(expectedSignature)
-      );
+      return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
     } catch (error) {
       console.error('[CalendlyService] Error verifying webhook signature:', error);
       return false;

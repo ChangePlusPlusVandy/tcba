@@ -9,10 +9,14 @@ router.use(clerkMiddleware());
 
 // Public routes (no auth required)
 // Add middleware to inject isPublic=true for public routes
-router.get('/public', (req, res, next) => {
-  req.query.isPublic = 'true';
-  next();
-}, eventsController.getAll); // Get public events only
+router.get(
+  '/public',
+  (req, res, next) => {
+    req.query.isPublic = 'true';
+    next();
+  },
+  eventsController.getAll
+); // Get public events only
 router.get('/public/:id', eventsController.getById); // Get single public event
 router.post('/public/:id/rsvp', eventsController.publicRsvp); // Public RSVP (email required)
 

@@ -15,7 +15,11 @@ export function EventsPage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showRSVPModal, setShowRSVPModal] = useState(false);
 
-  const { data: events = [], isLoading, refetch } = useEvents({ status: 'PUBLISHED', upcoming: true });
+  const {
+    data: events = [],
+    isLoading,
+    refetch,
+  } = useEvents({ status: 'PUBLISHED', upcoming: true });
   const rsvpMutation = useRSVP();
   const cancelRSVP = useCancelRSVP();
 
@@ -43,7 +47,7 @@ export function EventsPage() {
     }
   };
 
-  const calendarEvents = events.map((event) => ({
+  const calendarEvents = events.map(event => ({
     id: event.id,
     title: event.title,
     start: new Date(event.startTime),
@@ -52,12 +56,12 @@ export function EventsPage() {
   }));
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Events</h1>
+    <div className='p-6'>
+      <div className='flex justify-between items-center mb-6'>
+        <h1 className='text-3xl font-bold'>Events</h1>
       </div>
 
-      <div className="flex gap-2 mb-6">
+      <div className='flex gap-2 mb-6'>
         <button
           onClick={() => setView('list')}
           className={`px-4 py-2 rounded ${view === 'list' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
@@ -73,27 +77,27 @@ export function EventsPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <span className="loading loading-spinner loading-lg"></span>
+        <div className='flex justify-center items-center h-64'>
+          <span className='loading loading-spinner loading-lg'></span>
         </div>
       ) : view === 'list' ? (
         <OrgEventListView
           events={events}
-          onRSVP={(event) => {
+          onRSVP={event => {
             setSelectedEvent(event);
             setShowRSVPModal(true);
           }}
           onCancelRSVP={handleCancelRSVP}
         />
       ) : (
-        <div className="bg-white p-4 rounded-lg shadow" style={{ height: '700px' }}>
+        <div className='bg-white p-4 rounded-lg shadow' style={{ height: '700px' }}>
           <Calendar
             localizer={localizer}
             events={calendarEvents}
-            startAccessor="start"
-            endAccessor="end"
+            startAccessor='start'
+            endAccessor='end'
             style={{ height: '100%' }}
-            onSelectEvent={(event) => {
+            onSelectEvent={event => {
               setSelectedEvent(event.resource);
               setShowRSVPModal(true);
             }}
