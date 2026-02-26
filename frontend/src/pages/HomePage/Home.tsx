@@ -299,12 +299,6 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
             >
               {content['hero_button_text']?.value || 'Stay Connected'}
             </Link>
-            <Link
-              to='/events'
-              className='bg-white text-slate-900 px-6 py-3 rounded-[18px] text-sm sm:text-base font-semibold shadow-lg hover:bg-gray-100 transition inline-block border border-white/20'
-            >
-              Upcoming Events
-            </Link>
           </div>
         </div>
       </section>

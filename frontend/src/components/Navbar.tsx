@@ -39,10 +39,10 @@ const Navbar = () => {
               About Us
             </Link>
             <Link
-              to='/advocacy'
-              className={`relative text-[#3C3C3C] hover:text-[#88242C] transition-colors duration-200 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full ${location.pathname === '/advocacy' ? 'font-bold' : 'font-medium'}`}
+              to='/events'
+              className={`relative text-[#3C3C3C] hover:text-[#88242C] transition-colors duration-200 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full ${location.pathname === '/events' ? 'font-bold' : 'font-medium'}`}
             >
-              Advocacy
+              Events
             </Link>
             <Link
               to='/announcements'
@@ -61,6 +61,12 @@ const Navbar = () => {
               className={`relative text-[#3C3C3C] hover:text-[#88242C] transition-colors duration-200 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full ${location.pathname === '/register' ? 'font-bold' : 'font-medium'}`}
             >
               Get Involved
+            </Link>
+            <Link
+              to='/advocacy'
+              className={`relative text-[#3C3C3C] hover:text-[#88242C] transition-colors duration-200 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full ${location.pathname === '/advocacy' ? 'font-bold' : 'font-medium'}`}
+            >
+              Advocacy
             </Link>
             <SignedIn>
               {isAdmin ? (
@@ -151,12 +157,12 @@ const Navbar = () => {
               About Us
             </Link>
             <Link
-              to='/advocacy'
+              to='/events'
               onClick={closeMobileMenu}
-              className={`block px-3 py-2 rounded-md text-base ${location.pathname === '/advocacy' ? 'font-bold text-[#88242C] bg-red-50' : 'font-medium text-[#3C3C3C] hover:text-[#88242C] hover:bg-gray-50'}`}
+              className={`block px-3 py-2 rounded-md text-base ${location.pathname === '/events' ? 'font-bold text-[#88242C] bg-red-50' : 'font-medium text-[#3C3C3C] hover:text-[#88242C] hover:bg-gray-50'}`}
               role='menuitem'
             >
-              Advocacy
+              Events
             </Link>
             <Link
               to='/announcements'
@@ -181,6 +187,14 @@ const Navbar = () => {
               role='menuitem'
             >
               Get Involved
+            </Link>
+            <Link
+              to='/advocacy'
+              onClick={closeMobileMenu}
+              className={`block px-3 py-2 rounded-md text-base ${location.pathname === '/advocacy' ? 'font-bold text-[#88242C] bg-red-50' : 'font-medium text-[#3C3C3C] hover:text-[#88242C] hover:bg-gray-50'}`}
+              role='menuitem'
+            >
+              Advocacy
             </Link>
 
             <SignedIn>

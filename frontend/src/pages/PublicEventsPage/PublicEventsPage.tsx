@@ -7,6 +7,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { PublicEventListView } from './PublicEventListView';
 import { PublicRSVPModal } from './PublicRSVPModal';
 import type { Event } from '../../hooks/queries/useEvents';
+import { MutatingDots } from 'react-loader-spinner';
 
 const localizer = momentLocalizer(moment);
 
@@ -54,37 +55,49 @@ export function PublicEventsPage() {
           <h1 className='text-4xl font-bold'>Upcoming Events</h1>
         </div>
 
-        <div className='flex gap-2 mb-6 justify-between items-center'>
-          <div className='flex gap-2'>
+        <div className='flex gap-2 mb-6 items-center'>
+          <button
+            onClick={() => setView('list')}
+            className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border transition-colors whitespace-nowrap text-sm sm:text-base ${view === 'list' ? 'bg-[#D54242] text-white border-[#D54242]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+          >
+            List View
+          </button>
+          <button
+            onClick={() => setView('calendar')}
+            className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border transition-colors whitespace-nowrap text-sm sm:text-base ${view === 'calendar' ? 'bg-[#D54242] text-white border-[#D54242]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+          >
+            Calendar View
+          </button>
+          <div className='flex items-center gap-2 ml-2'>
+            <span className={`text-sm font-medium transition-colors ${!upcomingOnly ? 'text-gray-600' : 'text-gray-400'}`}>
+              All
+            </span>
             <button
-              onClick={() => setView('list')}
-              className={`px-4 py-2 rounded ${view === 'list' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+              onClick={() => setUpcomingOnly(!upcomingOnly)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${upcomingOnly ? 'bg-[#D54242]' : 'bg-gray-300'}`}
+              aria-label='Toggle upcoming events filter'
             >
-              List View
-            </button>
-            <button
-              onClick={() => setView('calendar')}
-              className={`px-4 py-2 rounded ${view === 'calendar' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-            >
-              Calendar View
-            </button>
-          </div>
-          <div className='flex items-center gap-2'>
-            <label className='flex items-center gap-2 cursor-pointer'>
-              <input
-                type='checkbox'
-                checked={upcomingOnly}
-                onChange={e => setUpcomingOnly(e.target.checked)}
-                className='w-4 h-4'
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${upcomingOnly ? 'translate-x-6' : 'translate-x-1'}`}
               />
-              <span className='text-sm text-gray-700'>Upcoming events only</span>
-            </label>
+            </button>
+            <span className={`text-sm font-medium transition-colors ${upcomingOnly ? 'text-gray-600' : 'text-gray-400'}`}>
+              Upcoming
+            </span>
           </div>
         </div>
 
         {isLoading ? (
-          <div className='flex justify-center items-center h-64'>
-            <span className='loading loading-spinner loading-lg'></span>
+          <div className='flex justify-center items-center py-12'>
+            <MutatingDots
+              visible={true}
+              height='100'
+              width='100'
+              color='#D54242'
+              secondaryColor='#D54242'
+              radius='12.5'
+              ariaLabel='mutating-dots-loading'
+            />
           </div>
         ) : view === 'list' ? (
           <PublicEventListView
@@ -108,7 +121,9 @@ export function PublicEventsPage() {
               }}
               eventPropGetter={() => ({
                 style: {
-                  backgroundColor: '#3b82f6',
+                  backgroundColor: '#f5c2c7',
+                  color: '#88242C',
+                  fontWeight: '500',
                 },
               })}
             />

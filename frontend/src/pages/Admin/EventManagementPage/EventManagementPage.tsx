@@ -14,6 +14,7 @@ import { EventListView } from './EventListView';
 import { EventFormModal } from './EventFormModal';
 import type { Event } from '../../../hooks/queries/useEvents';
 import AdminSidebar from '../../../components/AdminSidebar';
+import { MutatingDots } from 'react-loader-spinner';
 
 const localizer = momentLocalizer(moment);
 
@@ -243,8 +244,16 @@ export function EventManagementPage() {
 
           {/* Content */}
           {isLoading ? (
-            <div className='flex justify-center items-center h-64'>
-              <span className='loading loading-spinner loading-lg'></span>
+            <div className='flex justify-center items-center py-12'>
+              <MutatingDots
+                visible={true}
+                height='100'
+                width='100'
+                color='#D54242'
+                secondaryColor='#D54242'
+                radius='12.5'
+                ariaLabel='mutating-dots-loading'
+              />
             </div>
           ) : view === 'create' ? (
             <EventFormModal

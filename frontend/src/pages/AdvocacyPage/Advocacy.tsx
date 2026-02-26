@@ -56,6 +56,15 @@ const AdvocacyPage = ({ previewContent }: AdvocacyPageProps = {}) => {
 
       <section className='mt-8 bg-white px-6 sm:px-8 lg:px-20 py-12 lg:py-16'>
         <div className='max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-center'>
+          <div className='h-[260px] sm:h-[320px] bg-slate-200 rounded-lg overflow-hidden'>
+            {focusImageSrc && (
+              <S3Image
+                src={focusImageSrc}
+                alt='Advocacy Focus'
+                className='w-full h-full object-cover'
+              />
+            )}
+          </div>
           <div>
             <h3 className='font-[Open_Sans] text-2xl sm:text-3xl font-bold text-gray-800 mb-4'>
               {content['focus_title']?.value || 'Our Advocacy Focus'}
@@ -69,32 +78,23 @@ const AdvocacyPage = ({ previewContent }: AdvocacyPageProps = {}) => {
               }}
             />
           </div>
-          <div className='h-[260px] sm:h-[320px] bg-slate-200 rounded-lg overflow-hidden'>
-            {focusImageSrc && (
-              <S3Image
-                src={focusImageSrc}
-                alt='Advocacy Focus'
-                className='w-full h-full object-cover'
-              />
-            )}
-          </div>
         </div>
 
         <div className='mt-12 grid grid-cols-1 md:grid-cols-3 gap-6'>
           <div className='bg-slate-50 rounded-xl p-6 text-center'>
-            <FaGavel className='w-10 h-10 text-[#194B90] mx-auto mb-3' />
+            <FaGavel className='w-10 h-10 text-slate-700 mx-auto mb-3' />
             <p className='font-semibold text-slate-800'>
               {content['cards_policy_title']?.value || 'Policy Development'}
             </p>
           </div>
           <div className='bg-slate-50 rounded-xl p-6 text-center'>
-            <FaUsers className='w-10 h-10 text-[#194B90] mx-auto mb-3' />
+            <FaUsers className='w-10 h-10 text-slate-700 mx-auto mb-3' />
             <p className='font-semibold text-slate-800'>
               {content['cards_coalition_title']?.value || 'Coalition Mobilization'}
             </p>
           </div>
           <div className='bg-slate-50 rounded-xl p-6 text-center'>
-            <FaBullhorn className='w-10 h-10 text-[#194B90] mx-auto mb-3' />
+            <FaBullhorn className='w-10 h-10 text-slate-700 mx-auto mb-3' />
             <p className='font-semibold text-slate-800'>
               {content['cards_public_title']?.value || 'Public Awareness'}
             </p>
@@ -102,13 +102,13 @@ const AdvocacyPage = ({ previewContent }: AdvocacyPageProps = {}) => {
         </div>
       </section>
 
-      <section className='mt-8 bg-[#194B90] text-white px-6 sm:px-8 lg:px-20 py-12'>
+      <section className='mt-8 bg-white px-6 sm:px-8 lg:px-20 py-12'>
         <div className='max-w-4xl mx-auto text-center'>
-          <h3 className='font-[Open_Sans] text-2xl sm:text-3xl font-bold mb-4'>
+          <h3 className='font-[Open_Sans] text-2xl sm:text-3xl font-bold mb-4 text-gray-800'>
             {content['cta_title']?.value || 'Join Our Advocacy Efforts'}
           </h3>
           <div
-            className='font-[Open_Sans] text-base sm:text-lg leading-[160%] opacity-95'
+            className='font-[Open_Sans] text-base sm:text-lg leading-[160%] text-gray-700'
             dangerouslySetInnerHTML={{
               __html:
                 content['cta_description']?.value ||
@@ -117,7 +117,7 @@ const AdvocacyPage = ({ previewContent }: AdvocacyPageProps = {}) => {
           />
           <Link
             to='/register'
-            className='inline-block mt-6 bg-white text-[#194B90] font-semibold px-8 py-3 rounded-full hover:opacity-90 transition'
+            className='inline-block mt-6 bg-[#cc4444] text-white font-semibold px-8 py-3 rounded-full hover:bg-[#b53a3a] transition'
           >
             {content['cta_button_text']?.value || 'Get Involved'}
           </Link>

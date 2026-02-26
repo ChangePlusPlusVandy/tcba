@@ -7,6 +7,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { OrgEventListView } from './OrgEventListView';
 import { RSVPModal } from './RSVPModal';
 import type { Event } from '../../../hooks/queries/useEvents';
+import { MutatingDots } from 'react-loader-spinner';
 
 const localizer = momentLocalizer(moment);
 
@@ -64,21 +65,29 @@ export function EventsPage() {
       <div className='flex gap-2 mb-6'>
         <button
           onClick={() => setView('list')}
-          className={`px-4 py-2 rounded ${view === 'list' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border transition-colors whitespace-nowrap text-sm sm:text-base ${view === 'list' ? 'bg-[#D54242] text-white border-[#D54242]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
         >
           List View
         </button>
         <button
           onClick={() => setView('calendar')}
-          className={`px-4 py-2 rounded ${view === 'calendar' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+          className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border transition-colors whitespace-nowrap text-sm sm:text-base ${view === 'calendar' ? 'bg-[#D54242] text-white border-[#D54242]' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
         >
           Calendar View
         </button>
       </div>
 
       {isLoading ? (
-        <div className='flex justify-center items-center h-64'>
-          <span className='loading loading-spinner loading-lg'></span>
+        <div className='flex justify-center items-center py-12'>
+          <MutatingDots
+            visible={true}
+            height='100'
+            width='100'
+            color='#D54242'
+            secondaryColor='#D54242'
+            radius='12.5'
+            ariaLabel='mutating-dots-loading'
+          />
         </div>
       ) : view === 'list' ? (
         <OrgEventListView
@@ -103,7 +112,9 @@ export function EventsPage() {
             }}
             eventPropGetter={() => ({
               style: {
-                backgroundColor: '#3b82f6',
+                backgroundColor: '#f5c2c7',
+                color: '#88242C',
+                fontWeight: '500',
               },
             })}
           />
