@@ -26,6 +26,7 @@ export type Event = {
   rsvpCount: number;
   orgRsvpCount: number;
   publicRsvpCount: number;
+  hasUserRSVPd?: boolean;
   createdAt: string;
   updatedAt: string;
 };

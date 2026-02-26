@@ -33,9 +33,9 @@ export function EventManagementPage() {
     return event.status === filter.toUpperCase();
   });
 
-  const handleCreateEvent = async (data: EventData) => {
+  const handleCreateEvent = async (data: EventData | Partial<EventData>) => {
     try {
-      await createEvent.mutateAsync(data);
+      await createEvent.mutateAsync(data as EventData);
       setView('list');
       refetch();
     } catch (error) {
@@ -44,9 +44,9 @@ export function EventManagementPage() {
     }
   };
 
-  const handleCreateAndPublishEvent = async (data: EventData) => {
+  const handleCreateAndPublishEvent = async (data: EventData | Partial<EventData>) => {
     try {
-      const newEvent = await createEvent.mutateAsync(data);
+      const newEvent = await createEvent.mutateAsync(data as EventData);
       // Immediately publish the newly created event
       await publishEvent.mutateAsync(newEvent.id);
       setView('list');
@@ -286,11 +286,11 @@ export function EventManagementPage() {
                 startAccessor='start'
                 endAccessor='end'
                 style={{ height: '100%' }}
-                onSelectEvent={event => {
+                onSelectEvent={(event: { resource: Event }) => {
                   setEditingEvent(event.resource);
                   setView('edit');
                 }}
-                eventPropGetter={event => {
+                eventPropGetter={(event: { resource: Event }) => {
                   const bgColor =
                     event.resource.status === 'PUBLISHED'
                       ? '#10b981'

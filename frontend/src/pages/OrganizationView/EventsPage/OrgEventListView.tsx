@@ -68,9 +68,18 @@ export function OrgEventListView({ events, onRSVP, onCancelRSVP }: OrgEventListV
               </div>
 
               <div className='flex flex-col gap-2'>
-                <button onClick={() => onRSVP(event)} className='btn btn-primary'>
-                  RSVP
-                </button>
+                {event.hasUserRSVPd ? (
+                  <button
+                    onClick={() => onCancelRSVP(event.id)}
+                    className='btn btn-error btn-outline'
+                  >
+                    Cancel RSVP
+                  </button>
+                ) : (
+                  <button onClick={() => onRSVP(event)} className='btn btn-primary'>
+                    RSVP
+                  </button>
+                )}
               </div>
             </div>
           </div>

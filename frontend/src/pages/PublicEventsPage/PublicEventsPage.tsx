@@ -102,7 +102,7 @@ export function PublicEventsPage() {
               startAccessor='start'
               endAccessor='end'
               style={{ height: '100%' }}
-              onSelectEvent={event => {
+              onSelectEvent={(event: { resource: Event }) => {
                 setSelectedEvent(event.resource);
                 setShowRSVPModal(true);
               }}

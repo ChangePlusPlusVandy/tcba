@@ -5,8 +5,8 @@ import type { EventData } from '../../../hooks/mutations/useEvents';
 interface EventFormModalProps {
   event: Event | null;
   onClose: () => void;
-  onSubmit: (data: EventData | Partial<EventData>) => void;
-  onPublish?: (data: EventData | Partial<EventData>) => void;
+  onSubmit: (data: EventData | Partial<EventData>) => void | Promise<void>;
+  onPublish?: (data: EventData | Partial<EventData>) => void | Promise<void>;
 }
 
 export function EventFormModal({ event, onClose, onSubmit, onPublish }: EventFormModalProps) {

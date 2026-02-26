@@ -21,7 +21,7 @@ export function EventsPage() {
     refetch,
   } = useEvents({ status: 'PUBLISHED', upcoming: true });
   const rsvpMutation = useRSVP();
-  const cancelRSVP = useCancelRSVP();
+  const cancelRSVPMutation = useCancelRSVP();
 
   const handleRSVP = async (data: any) => {
     if (!selectedEvent) return;
@@ -39,7 +39,7 @@ export function EventsPage() {
   const handleCancelRSVP = async (eventId: string) => {
     if (!confirm('Are you sure you want to cancel your RSVP?')) return;
     try {
-      await cancelRSVP.mutateAsync(eventId);
+      await cancelRSVPMutation.mutateAsync(eventId);
       refetch();
       alert('RSVP cancelled successfully');
     } catch (error: any) {
@@ -97,7 +97,7 @@ export function EventsPage() {
             startAccessor='start'
             endAccessor='end'
             style={{ height: '100%' }}
-            onSelectEvent={event => {
+            onSelectEvent={(event: { resource: Event }) => {
               setSelectedEvent(event.resource);
               setShowRSVPModal(true);
             }}
