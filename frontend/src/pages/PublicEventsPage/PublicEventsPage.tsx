@@ -69,7 +69,9 @@ export function PublicEventsPage() {
             Calendar View
           </button>
           <div className='flex items-center gap-2 ml-2'>
-            <span className={`text-sm font-medium transition-colors ${!upcomingOnly ? 'text-gray-600' : 'text-gray-400'}`}>
+            <span
+              className={`text-sm font-medium transition-colors ${!upcomingOnly ? 'text-gray-600' : 'text-gray-400'}`}
+            >
               All
             </span>
             <button
@@ -81,7 +83,9 @@ export function PublicEventsPage() {
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${upcomingOnly ? 'translate-x-6' : 'translate-x-1'}`}
               />
             </button>
-            <span className={`text-sm font-medium transition-colors ${upcomingOnly ? 'text-gray-600' : 'text-gray-400'}`}>
+            <span
+              className={`text-sm font-medium transition-colors ${upcomingOnly ? 'text-gray-600' : 'text-gray-400'}`}
+            >
               Upcoming
             </span>
           </div>
