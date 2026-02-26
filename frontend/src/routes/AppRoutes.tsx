@@ -58,6 +58,9 @@ const AnnouncementsPageEdit = lazy(
   () => import('../pages/Admin/PageEditPages/AnnouncementsPage/AnnouncementsPageEdit')
 );
 const BlogsPageEdit = lazy(() => import('../pages/Admin/PageEditPages/BlogsPage/BlogsPageEdit'));
+const AdvocacyPageEdit = lazy(
+  () => import('../pages/Admin/PageEditPages/AdvocacyPage/AdvocacyPageEdit')
+);
 const CustomEmail = lazy(() => import('../pages/Admin/CustomEmailPage/CustomEmail'));
 const AdminMessages = lazy(() => import('../pages/Admin/MessagesPage/Messages'));
 const Tags = lazy(() => import('../pages/Admin/TagsPage/Tags'));
@@ -440,6 +443,16 @@ const AppRoutes = () => {
           <AdminRoute>
             <Suspense fallback={<PageLoader />}>
               <AboutPageEdit />
+            </Suspense>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/page-edit/advocacy'
+        element={
+          <AdminRoute>
+            <Suspense fallback={<PageLoader />}>
+              <AdvocacyPageEdit />
             </Suspense>
           </AdminRoute>
         }

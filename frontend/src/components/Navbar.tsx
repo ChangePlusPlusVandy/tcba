@@ -39,6 +39,12 @@ const Navbar = () => {
               About Us
             </Link>
             <Link
+              to='/advocacy'
+              className={`relative text-[#3C3C3C] hover:text-[#88242C] transition-colors duration-200 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full ${location.pathname === '/advocacy' ? 'font-bold' : 'font-medium'}`}
+            >
+              Advocacy
+            </Link>
+            <Link
               to='/announcements'
               className={`relative text-[#3C3C3C] hover:text-[#88242C] transition-colors duration-200 before:absolute before:bottom-0 before:left-0 before:w-0 before:h-0.5 before:bg-[#88242C] before:transition-all before:duration-300 hover:before:w-full ${location.pathname === '/announcements' ? 'font-bold' : 'font-medium'}`}
             >
@@ -143,6 +149,14 @@ const Navbar = () => {
               role='menuitem'
             >
               About Us
+            </Link>
+            <Link
+              to='/advocacy'
+              onClick={closeMobileMenu}
+              className={`block px-3 py-2 rounded-md text-base ${location.pathname === '/advocacy' ? 'font-bold text-[#88242C] bg-red-50' : 'font-medium text-[#3C3C3C] hover:text-[#88242C] hover:bg-gray-50'}`}
+              role='menuitem'
+            >
+              Advocacy
             </Link>
             <Link
               to='/announcements'

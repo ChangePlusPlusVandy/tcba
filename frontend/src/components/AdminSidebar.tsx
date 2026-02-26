@@ -144,6 +144,7 @@ const AdminSidebar = () => {
   const pageEditItems = [
     { name: 'Home', path: '/admin/page-edit/home' },
     { name: 'About', path: '/admin/page-edit/about' },
+    { name: 'Advocacy', path: '/admin/page-edit/advocacy' },
     { name: 'Announcements', path: '/admin/page-edit/announcements' },
     { name: 'Blogs', path: '/admin/page-edit/blogs' },
     { name: 'Get Involved', path: '/admin/page-edit/register' },
