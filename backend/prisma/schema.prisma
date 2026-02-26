@@ -348,53 +348,77 @@ model Message {
 }
 
 model Event {
-  id               String      @id @default(cuid())
+  id               String            @id @default(cuid())
   title            String
-  description      String      @db.Text
+  description      String            @db.Text
   location         String?
-  link         String?
+  zoomLink         String?
   meetingPassword  String?
   startTime        DateTime
   endTime          DateTime
-  timezone         String      @default("America/Chicago")
-  status           EventStatus @default(DRAFT)
+  timezone         String            @default("America/Chicago")
+  status           EventStatus       @default(DRAFT)
+  isPublic         Boolean           @default(false)
   maxAttendees     Int?
   createdByAdminId String
-  createdByAdmin   AdminUser   @relation("CreatedEvents", fields: [createdByAdminId], references: [id], onDelete: Cascade)
+  createdByAdmin   AdminUser         @relation("CreatedEvents", fields: [createdByAdminId], references: [id], onDelete: Cascade)
   tags             String[]
   attachments      String[]
   rsvps            EventRSVP[]
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  publicRsvps      PublicEventRSVP[]
+  calendlyEventId  String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
   @@index([createdByAdminId])
   @@index([startTime])
   @@index([status])
+  @@index([isPublic])
   @@map("events")
 }
 
 model EventRSVP {
-  id                  String       @id @default(cuid())
-  eventId             String
-  event               Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  organizationId      String
-  organization        Organization @relation("EventRSVPs", fields: [organizationId], references: [id], onDelete: Cascade)
-  status              RSVPStatus
-  attendeeName        String?
-  attendeeEmail       String?
-  attendeePhone       String?
-  reminder3DaysSent   Boolean      @default(false)
-  reminder1DaySent    Boolean      @default(false)
-  reminder1HourSent   Boolean      @default(false)
-  notes               String?      @db.Text
-  createdAt           DateTime     @default(now())
-  updatedAt           DateTime     @updatedAt
+  id                String       @id @default(cuid())
+  eventId           String
+  event             Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  organizationId    String
+  organization      Organization @relation("EventRSVPs", fields: [organizationId], references: [id], onDelete: Cascade)
+  status            RSVPStatus
+  attendeeName      String?
+  attendeeEmail     String?
+  attendeePhone     String?
+  reminder1DaySent  Boolean      @default(false)
+  reminder1HourSent Boolean      @default(false)
+  notes             String?      @db.Text
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
 
   @@unique([eventId, organizationId])
   @@index([eventId])
   @@index([organizationId])
   @@index([status])
   @@map("event_rsvps")
+}
+
+model PublicEventRSVP {
+  id                String     @id @default(cuid())
+  eventId           String
+  event             Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  email             String
+  name              String?
+  phone             String?
+  status            RSVPStatus @default(GOING)
+  reminder1DaySent  Boolean    @default(false)
+  reminder1HourSent Boolean    @default(false)
+  notes             String?    @db.Text
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  @@unique([eventId, email])
+  @@index([eventId])
+  @@index([email])
+  @@index([status])
+  @@map("public_event_rsvps")
 }
 
 enum EmailStatus {

@@ -292,12 +292,20 @@ const HomePage = ({ previewContent }: HomePageProps = {}) => {
                 'The Tennessee Coalition for Better Aging (TCBA) exists to promote the general welfare of older Tennesseans and their families; through partnerships that mobilize resources to educate and advocate for important policies and programs.',
             }}
           />
-          <Link
-            to='/register'
-            className='bg-[#cc4444] text-white px-6 py-3 rounded-[18px] text-sm sm:text-base font-semibold shadow-lg hover:bg-[#b53a3a] transition inline-block mt-6'
-          >
-            {content['hero_button_text']?.value || 'Stay Connected'}
-          </Link>
+          <div className='flex flex-wrap gap-4 mt-6'>
+            <Link
+              to='/register'
+              className='bg-[#cc4444] text-white px-6 py-3 rounded-[18px] text-sm sm:text-base font-semibold shadow-lg hover:bg-[#b53a3a] transition inline-block'
+            >
+              {content['hero_button_text']?.value || 'Stay Connected'}
+            </Link>
+            <Link
+              to='/events'
+              className='bg-white text-slate-900 px-6 py-3 rounded-[18px] text-sm sm:text-base font-semibold shadow-lg hover:bg-gray-100 transition inline-block border border-white/20'
+            >
+              Upcoming Events
+            </Link>
+          </div>
         </div>
       </section>
 
