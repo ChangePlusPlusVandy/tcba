@@ -68,11 +68,29 @@ model Alert {
   isPublished      Boolean       @default(false)
   attachmentUrls   String[]
   tags             String[]
+  questions        Json @default("[]")
+  responses        AlertResponse[]
   createdByAdminId String
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
   @@map("alerts")
+}
+
+model AlertResponse {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  responses      Json?
+  alertId    String
+  alert      Alert    @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  submittedDate  DateTime?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([alertId, organizationId])
+  
+  @@map("alert_responses")
 }
 
 model Organization {
@@ -119,6 +137,7 @@ model Organization {
   sentMessages               Message[]               @relation("SentMessages")
   otherConversations         Conversation[]          @relation("OrgToOrgConversations")
   eventRSVPs                 EventRSVP[]             @relation("EventRSVPs")
+  AlertResponse               AlertResponse[]
 
   @@map("organizations")
 }
