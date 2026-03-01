@@ -12,8 +12,20 @@ import Pagination from '../../../components/Pagination';
 import { useAdminAlerts } from '../../../hooks/queries/useAdminAlerts';
 import { useAlertMutations } from '../../../hooks/mutations/useAlertMutations';
 import { API_BASE_URL } from '../../../config/api';
+import { useNavigate } from 'react-router-dom';
 
 type AlertPriority = 'URGENT' | 'LOW' | 'MEDIUM';
+
+type QuestionType = 'multipleChoice' | 'text';
+
+interface Question {
+  id: string;
+  type: QuestionType;
+  text: string;
+  required: boolean;
+  options?: string[];
+  textType?: 'short' | 'long';
+}
 
 type Alert = {
   id: string;
@@ -27,6 +39,7 @@ type Alert = {
   createdByAdminId: string;
   createdAt: string;
   updatedAt: string;
+  questions: Question[];
 };
 
 type Filter = 'ALL' | 'PUBLISHED' | 'DRAFTS';
@@ -41,6 +54,8 @@ const AdminAlerts = () => {
   const [priorityDropdownOpen, setPriorityDropdownOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
+
+  const navigate = useNavigate();
 
   const {
     data: alertsData,
@@ -83,6 +98,7 @@ const AdminAlerts = () => {
     priority: 'MEDIUM' as AlertPriority,
     isPublished: false,
     attachmentUrls: [] as string[],
+    questions: [] as Question[],
   });
 
   const [isPriorityDropdownOpen, setIsPriorityDropdownOpen] = useState(false);
@@ -100,6 +116,66 @@ const AdminAlerts = () => {
     confirmText: string;
     onConfirm: () => void;
   } | null>(null);
+
+  const [questions, setQuestions] = useState<Question[]>([]);
+
+  const addQuestion = () => {
+    const newQuestion: Question = {
+      id: generateQuestionId(),
+      type: 'multipleChoice',
+      text: '',
+      required: false,
+      options: ['Option 1', 'Option 2'],
+    };
+    setQuestions([...questions, newQuestion]);
+  };
+
+  const updateQuestion = (id: string, updatedFields: Partial<Question>) => {
+    setQuestions(questions.map(q => (q.id === id ? { ...q, ...updatedFields } : q)));
+  };
+
+  const deleteQuestion = (id: string) => {
+    setQuestions(questions.filter(q => q.id !== id));
+  };
+
+  const addOption = (id: string) => {
+    setQuestions(
+      questions.map(q => {
+        if (q.id === id && q.options) {
+          return { ...q, options: [...q.options, `Option ${q.options.length + 1}`] };
+        }
+        return q;
+      })
+    );
+  };
+
+  const deleteOption = (questionId: string, optionIndex: number) => {
+    setQuestions(
+      questions.map(q => {
+        if (q.id === questionId && q.options) {
+          return { ...q, options: q.options.filter((_, idx) => idx !== optionIndex) };
+        }
+        return q;
+      })
+    );
+  };
+
+  const updateOption = (questionId: string, optionIndex: number, newValue: string) => {
+    const quest = questions.find(q => q.id == questionId);
+    if (quest && quest.options) {
+      const ops = [...quest.options];
+      ops[optionIndex] = newValue;
+      updateQuestion(questionId, { options: ops });
+    }
+  };
+
+  const changeQuestionType = (questionId: string, questType: QuestionType) => {
+    updateQuestion(questionId, { type: questType });
+  };
+
+  const generateQuestionId = () => {
+    return `q-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -129,12 +205,25 @@ const AdminAlerts = () => {
       return;
     }
 
+    for (let i = 0; i < questions.length; i++) {
+      const q = questions[i];
+      if (!q.text.trim()) {
+        setToast({ message: `Question ${i + 1} text is required`, type: 'error' });
+        return;
+      }
+      if (q.type === 'multipleChoice' && (!q.options || q.options.length < 2)) {
+        setToast({ message: `Question ${i + 1} must have at least 2 options`, type: 'error' });
+        return;
+      }
+    }
+
     try {
       setIsSubmitting(true);
       const alertData = {
         ...newAlert,
         isPublished: publish,
         publishedDate: publish ? new Date().toISOString() : null,
+        questions,
       };
 
       await createAlert.mutateAsync(alertData);
@@ -146,6 +235,7 @@ const AdminAlerts = () => {
         priority: 'MEDIUM',
         isPublished: false,
         attachmentUrls: [],
+        questions: [],
       });
 
       const successMessage = publish ? 'Alert created successfully' : 'Alert saved successfully';
@@ -823,6 +913,182 @@ const AdminAlerts = () => {
                   onFilesChange={files => setNewAlert({ ...newAlert, attachmentUrls: files })}
                 />
 
+                <div className='space-y-4 mb-6'>
+                  {questions.map((question, index) => (
+                    <div
+                      key={question.id}
+                      className='bg-white rounded-lg border border-gray-200 p-6'
+                    >
+                      <div className='flex items-start justify-between mb-4'>
+                        <h3 className='text-lg font-semibold text-gray-800'>
+                          Question {index + 1}
+                        </h3>
+                        <button
+                          onClick={() => deleteQuestion(question.id)}
+                          className='text-red-600 hover:text-red-800'
+                        >
+                          <svg
+                            className='w-5 h-5'
+                            fill='none'
+                            stroke='currentColor'
+                            viewBox='0 0 24 24'
+                          >
+                            <path
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                              strokeWidth={2}
+                              d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
+                            />
+                          </svg>
+                        </button>
+                      </div>
+
+                      <div className='space-y-4'>
+                        <div>
+                          <label className='block text-sm font-semibold text-gray-700 mb-1'>
+                            Question Text <span className='text-red-500'>*</span>
+                          </label>
+                          <input
+                            type='text'
+                            value={question.text}
+                            onChange={e => updateQuestion(question.id, { text: e.target.value })}
+                            className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                            placeholder='Enter your question'
+                          />
+                        </div>
+
+                        <div>
+                          <label className='block text-sm font-semibold text-gray-700 mb-2'>
+                            Question Type
+                          </label>
+                          <div className='flex gap-2'>
+                            {[
+                              { type: 'multipleChoice', label: 'Multiple Choice' },
+                              { type: 'text', label: 'Text' },
+                            ].map(({ type, label }) => (
+                              <button
+                                key={type}
+                                onClick={() =>
+                                  changeQuestionType(question.id, type as QuestionType)
+                                }
+                                className={`px-4 py-2 rounded-lg font-medium transition ${
+                                  question.type === type
+                                    ? 'bg-[#D54242] text-white'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {question.type === 'multipleChoice' && (
+                          <div>
+                            <label className='block text-sm font-semibold text-gray-700 mb-2'>
+                              Options
+                            </label>
+                            <div className='space-y-2'>
+                              {question.options?.map((option, optionIndex) => (
+                                <div key={optionIndex} className='flex items-center gap-2'>
+                                  <input
+                                    type='text'
+                                    value={option}
+                                    onChange={e =>
+                                      updateOption(question.id, optionIndex, e.target.value)
+                                    }
+                                    className='flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                                    placeholder={`Option ${optionIndex + 1}`}
+                                  />
+                                  {question.options && question.options.length > 2 && (
+                                    <button
+                                      onClick={() => deleteOption(question.id, optionIndex)}
+                                      className='text-red-600 hover:text-red-800'
+                                    >
+                                      <svg
+                                        className='w-5 h-5'
+                                        fill='none'
+                                        stroke='currentColor'
+                                        viewBox='0 0 24 24'
+                                      >
+                                        <path
+                                          strokeLinecap='round'
+                                          strokeLinejoin='round'
+                                          strokeWidth={2}
+                                          d='M6 18L18 6M6 6l12 12'
+                                        />
+                                      </svg>
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                              <button
+                                onClick={() => addOption(question.id)}
+                                className='text-sm text-[#194B90] hover:text-[#0f3464] font-medium'
+                              >
+                                + Add Option
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {question.type === 'text' && (
+                          <div>
+                            <label className='block text-sm font-semibold text-gray-700 mb-2'>
+                              Response Type
+                            </label>
+                            <select
+                              value={question.textType || 'short'}
+                              onChange={e =>
+                                updateQuestion(question.id, {
+                                  textType: e.target.value as 'short' | 'long',
+                                })
+                              }
+                              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#194B90]'
+                            >
+                              <option value='short'>Short Response</option>
+                              <option value='long'>Long Response</option>
+                            </select>
+                          </div>
+                        )}
+
+                        <div className='flex items-center'>
+                          <input
+                            type='checkbox'
+                            id={`required-${question.id}`}
+                            checked={question.required}
+                            onChange={e =>
+                              updateQuestion(question.id, { required: e.target.checked })
+                            }
+                            className='w-4 h-4 text-[#D54242] border-gray-300 rounded focus:ring-[#D54242]'
+                          />
+                          <label
+                            htmlFor={`required-${question.id}`}
+                            className='ml-2 text-sm font-medium text-gray-700'
+                          >
+                            Make required
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className='flex justify-center mb-8'>
+                  <button
+                    onClick={addQuestion}
+                    className='flex items-center justify-center w-12 h-12 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-full shadow-lg transition'
+                  >
+                    <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M12 4v16m8-8H4'
+                      />
+                    </svg>
+                  </button>
+                </div>
+
                 <div className='flex gap-3 pt-4'>
                   <button
                     type='button'
@@ -850,6 +1116,7 @@ const AdminAlerts = () => {
                         priority: 'MEDIUM',
                         isPublished: false,
                         attachmentUrls: [],
+                        questions: [],
                       });
                     }}
                     className='px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium'
@@ -869,6 +1136,7 @@ const AdminAlerts = () => {
                   priority: 'MEDIUM',
                   isPublished: false,
                   attachmentUrls: [],
+                  questions: [],
                 });
               }}
             ></div>
@@ -1097,6 +1365,17 @@ const AdminAlerts = () => {
                         Edit
                       </button>
                     </>
+                  )}
+                  {selectedAlert.questions.length != 0 && (
+                    <button
+                      onClick={() => {
+                        closeDetailModal();
+                        navigate(`/admin/alerts/${selectedAlert.id}/responses`);
+                      }}
+                      className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
+                    >
+                      View Responses
+                    </button>
                   )}
                   <button
                     onClick={closeDetailModal}

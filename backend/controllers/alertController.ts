@@ -223,7 +223,16 @@ export const createAlert = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    const { title, content, priority, publishedDate, isPublished, attachmentUrls, tags } = req.body;
+    const {
+      title,
+      content,
+      priority,
+      publishedDate,
+      isPublished,
+      attachmentUrls,
+      tags,
+      questions,
+    } = req.body;
 
     if (!title || !content) {
       return res.status(400).json({ error: 'Title and content are required' });
@@ -239,6 +248,7 @@ export const createAlert = async (req: AuthenticatedRequest, res: Response) => {
         attachmentUrls: attachmentUrls || [],
         tags: tags || [],
         createdByAdminId: req.user?.id || 'system',
+        questions: questions || [],
       },
     });
 

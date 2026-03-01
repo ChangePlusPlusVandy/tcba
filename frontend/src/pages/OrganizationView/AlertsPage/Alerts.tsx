@@ -22,7 +22,7 @@ type Alert = {
   createdByAdminId: string;
   createdAt: string;
   updatedAt: string;
-  questions?: Question[];
+  questions: Question[];
 };
 
 type QuestionType = 'multipleChoice' | 'text';
@@ -58,7 +58,9 @@ const AlertsPage = () => {
   const { submitResponse } = useAlertResponseMutations();
 
   const { user } = useUser();
-  const organizationId = user?.publicMetadata?.organizationId as string | undefined;
+  const organizationId = user?.publicMetadata?.organizationId as
+    | string
+    | 'cmkrh942j000vu0okm0i63ixn'; //TODO: change back to undefined
 
   const [toast, setToast] = useState<{
     message: string;
@@ -77,6 +79,7 @@ const AlertsPage = () => {
 
   const openDetailModal = (alert: Alert) => {
     setSelectedAlert(alert);
+    console.log('questions value:', alert.questions);
     setIsDetailModalOpen(true);
   };
 
@@ -85,14 +88,15 @@ const AlertsPage = () => {
     setSelectedAlert(null);
   };
 
-  const openResponseModal = () => {
+  const openResponseModal = (alert: Alert) => {
+    setSelectedAlert(alert);
     setIsResponseModalOpen(true);
     setIsDetailModalOpen(false);
   };
 
   const closeResponseModal = () => {
     setIsResponseModalOpen(false);
-    setIsDetailModalOpen(true);
+    openDetailModal(selectedAlert!);
   };
 
   const filteredAlerts = alerts.filter(alert => {
@@ -198,7 +202,7 @@ const AlertsPage = () => {
   };
 
   const handleSubmitResponse = async () => {
-    if (!selectedAlert || !organizationId || !selectedAlert.questions) return;
+    if (!selectedAlert || !selectedAlert.questions) return; //add orgid
 
     const missingRequired = selectedAlert.questions.filter(q => {
       if (!q.required) return false;
@@ -223,7 +227,7 @@ const AlertsPage = () => {
         responses: currentResponses,
       });
 
-      setToast({ message: 'Survey response submitted successfully!', type: 'success' });
+      setToast({ message: 'Alert response submitted successfully!', type: 'success' });
       closeResponseModal();
     } catch (err: any) {
       setToast({ message: err.message || 'Failed to submit response', type: 'error' });
@@ -485,12 +489,14 @@ const AlertsPage = () => {
               </div>
 
               <div className='modal-action'>
-                <button
-                  onClick={openResponseModal}
-                  className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
-                >
-                  Respond
-                </button>
+                {selectedAlert.questions.length > 0 && (
+                  <button
+                    onClick={() => openResponseModal(selectedAlert)}
+                    className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
+                  >
+                    Respond
+                  </button>
+                )}
                 <button
                   onClick={closeDetailModal}
                   className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'
@@ -504,7 +510,7 @@ const AlertsPage = () => {
         </>
       )}
 
-      {isResponseModalOpen && selectedAlert && selectedAlert.questions && (
+      {isResponseModalOpen && selectedAlert && selectedAlert.questions.length > 0 && (
         <>
           <input type='checkbox' checked readOnly className='modal-toggle' />
           <div className='modal modal-open'>
@@ -554,8 +560,7 @@ const AlertsPage = () => {
                               name={question.id}
                               value={option}
                               checked={currentResponses[question.id] === option}
-                              //TOOD: uncomment when func is ready
-                              // onChange={e => handleResponseChange(question.id, e.target.value)}
+                              onChange={e => handleResponseChange(question.id, e.target.value)}
                               className='w-4 h-4 text-[#D54242] focus:ring-[#D54242]'
                             />
                             <span className='text-gray-700'>{option}</span>

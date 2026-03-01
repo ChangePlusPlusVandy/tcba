@@ -68,7 +68,7 @@ model Alert {
   isPublished      Boolean       @default(false)
   attachmentUrls   String[]
   tags             String[]
-  questions        Json?
+  questions        Json @default("[]")
   responses        AlertResponse[]
   createdByAdminId String
   createdAt        DateTime      @default(now())
