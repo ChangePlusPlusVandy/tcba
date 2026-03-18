@@ -58,9 +58,15 @@ const AnnouncementsPageEdit = lazy(
   () => import('../pages/Admin/PageEditPages/AnnouncementsPage/AnnouncementsPageEdit')
 );
 const BlogsPageEdit = lazy(() => import('../pages/Admin/PageEditPages/BlogsPage/BlogsPageEdit'));
+const AdvocacyPageEdit = lazy(
+  () => import('../pages/Admin/PageEditPages/AdvocacyPage/AdvocacyPageEdit')
+);
 const CustomEmail = lazy(() => import('../pages/Admin/CustomEmailPage/CustomEmail'));
 const AdminMessages = lazy(() => import('../pages/Admin/MessagesPage/Messages'));
 const Tags = lazy(() => import('../pages/Admin/TagsPage/Tags'));
+const EventManagementPage = lazy(() => import('../pages/Admin/EventManagementPage'));
+const OrgEventsPage = lazy(() => import('../pages/OrganizationView/EventsPage'));
+const PublicEventsPage = lazy(() => import('../pages/PublicEventsPage'));
 
 const PageLoader = () => {
   return (
@@ -193,6 +199,14 @@ const AppRoutes = () => {
           </Suspense>
         }
       />
+      <Route
+        path='/events'
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <PublicEventsPage />
+          </Suspense>
+        }
+      />
 
       <Route
         path='/dashboard'
@@ -280,6 +294,16 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <Suspense fallback={<PageLoader />}>
               <OrganizationMessages />
+            </Suspense>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path='/org-events'
+        element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoader />}>
+              <OrgEventsPage />
             </Suspense>
           </ProtectedRoute>
         }
@@ -445,6 +469,16 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path='/admin/page-edit/advocacy'
+        element={
+          <AdminRoute>
+            <Suspense fallback={<PageLoader />}>
+              <AdvocacyPageEdit />
+            </Suspense>
+          </AdminRoute>
+        }
+      />
+      <Route
         path='/admin/page-edit/register'
         element={
           <AdminRoute>
@@ -490,6 +524,16 @@ const AppRoutes = () => {
           <AdminRoute>
             <Suspense fallback={<PageLoader />}>
               <BlogsPageEdit />
+            </Suspense>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/events'
+        element={
+          <AdminRoute>
+            <Suspense fallback={<PageLoader />}>
+              <EventManagementPage />
             </Suspense>
           </AdminRoute>
         }

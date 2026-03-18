@@ -124,5 +124,8 @@ uploads/
 # Seed data (contains sensitive organization info)
 backend/prisma/seedOrganizationLocations.ts
 
+# Backend scripts (temporary/utility scripts)
+backend/scripts/
+
 # Deployment information
 DEPLOYMENT.md

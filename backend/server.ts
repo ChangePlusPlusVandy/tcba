@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import app from './app.js';
 import { clerkMiddleware } from '@clerk/express';
 import { startScheduledEmailService } from './services/scheduledEmailService.js';
-// import { initializeEventReminders } from './services/eventReminderService.js';
+import { initializeEventReminders } from './services/eventReminderService.js';
 
 dotenv.config();
 const PORT = 8000;
@@ -16,7 +16,7 @@ app.listen(PORT, () => {
   startScheduledEmailService();
 
   // Initialize event reminder cron jobs
-  // initializeEventReminders();
+  initializeEventReminders();
 });
 
 export default app;
