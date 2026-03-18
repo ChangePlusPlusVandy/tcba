@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import Stripe from 'stripe';
+import { AuthenticatedRequest } from '../types/index.js';
 import { StripeService } from '../services/stripeService.js';
 import { stripe, STRIPE_WEBHOOK_SECRET } from '../config/stripe.js';
 
@@ -7,13 +8,22 @@ export const stripeController = {
   /**
    * Create subscription: done
    */
-  createSubscription: async (req: Request, res: Response) => {
+  createSubscription: async (req: AuthenticatedRequest, res: Response) => {
     try {
       // Get priceId from request body
       // Get organizationId from req.user
       // Call StripeService.createSubscription
       // Return subscription details with clientSecret
-      res.status(501).json({ error: 'Not implemented' });
+      if (!req.user?.id) {
+        return res
+          .status(401)
+          .json({ error: 'User is not authenticated or lacks an organization' });
+      }
+      const organizationId = req.user.id;
+      const { priceId } = req.body;
+
+      const subscription = StripeService.createSubscription(organizationId, priceId);
+      res.status(201).json(subscription);
     } catch (error: any) {
       console.error('Error creating subscription:', error);
       res.status(500).json({ error: error.message });
@@ -23,11 +33,19 @@ export const stripeController = {
   /**
    * Get subscription status: done
    */
-  getSubscription: async (req: Request, res: Response) => {
+  getSubscription: async (req: AuthenticatedRequest, res: Response) => {
     try {
       // Get organizationId from req.user
       // Call StripeService.getSubscription
-      res.status(501).json({ error: 'Not implemented' });
+      if (!req.user?.id) {
+        return res
+          .status(401)
+          .json({ error: 'User is not authenticated or lacks an organization' });
+      }
+      const organizationId = req.user?.id;
+
+      const subscription = StripeService.getSubscription(organizationId);
+      res.status(201).json(subscription);
     } catch (error: any) {
       console.error('Error getting subscription:', error);
       res.status(500).json({ error: error.message });
@@ -37,7 +55,7 @@ export const stripeController = {
   /**
    * Cancel subscription
    */
-  cancelSubscription: async (req: Request, res: Response) => {
+  cancelSubscription: async (req: AuthenticatedRequest, res: Response) => {
     try {
       // Get immediate flag from request body
       // Get organizationId from req.user
@@ -76,7 +94,7 @@ export const stripeController = {
   /**
    * Get available pricing plans
    */
-  getPrices: async (req: Request, res: Response) => {
+  getPrices: async (req: AuthenticatedRequest, res: Response) => {
     try {
       // Fetch active prices from Stripe
       res.status(501).json({ error: 'Not implemented' });
