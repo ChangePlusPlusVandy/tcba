@@ -1,15 +1,8 @@
-import { useState } from 'react';
 import AdminSidebar from '../../../components/AdminSidebar';
 import 'react-quill-new/dist/quill.snow.css';
 import QuillEditor from '../../../components/QuillEditor';
 
 const CreateAlert = () => {
-  const [value, setValue] = useState<string>('');
-
-  const handleChange = (content: string) => {
-    setValue(content);
-  };
-
   const tags: string[] = ['Tag1', 'Tag2', 'Tag3']; // TODO: add preset tags later
   return (
     <div className='flex min-h-screen bg-gray-50'>

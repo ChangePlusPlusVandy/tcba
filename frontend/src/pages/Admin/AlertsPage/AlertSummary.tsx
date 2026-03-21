@@ -273,65 +273,6 @@ const SurveySummary = () => {
     );
   };
 
-  const renderBarChart = (
-    questionId: string,
-    statsData: ResponseStats['questionStats'][string]['stats'],
-    colors: string[]
-  ) => {
-    const sortedEntries = Object.entries(statsData).sort((a, b) => Number(a[0]) - Number(b[0]));
-    const maxCount = Math.max(...sortedEntries.map(([, data]) => data.count));
-
-    return (
-      <div className='space-y-3'>
-        {sortedEntries.map(([answer, data], index: number) => {
-          const percentage = maxCount > 0 ? (data.count / maxCount) * 100 : 0;
-          const isHovered =
-            hoveredSegment?.questionId === questionId && hoveredSegment?.answer === answer;
-
-          return (
-            <div
-              key={answer}
-              className='space-y-1 relative'
-              onMouseEnter={() => setHoveredSegment({ questionId, answer })}
-              onMouseLeave={() => setHoveredSegment(null)}
-            >
-              <div className='flex justify-between text-sm'>
-                <span className='font-medium text-gray-700'>Rating {answer}</span>
-                <span className='text-gray-600'>
-                  {data.count} response{data.count !== 1 ? 's' : ''}
-                </span>
-              </div>
-              <div className='w-full bg-gray-200 rounded-full h-6 overflow-hidden relative'>
-                <div
-                  className='h-full rounded-full flex items-center justify-end px-2 text-white text-xs font-medium transition-all duration-500 cursor-pointer'
-                  style={{
-                    width: `${percentage}%`,
-                    backgroundColor: colors[index % colors.length],
-                  }}
-                >
-                  {percentage > 15 && `${percentage.toFixed(0)}%`}
-                </div>
-              </div>
-
-              {isHovered && data.organizations.length > 0 && (
-                <div className='absolute left-0 top-full mt-2 bg-white border-2 border-gray-300 rounded-lg shadow-xl p-3 max-w-xs z-10'>
-                  <p className='text-xs font-semibold text-gray-700 mb-1'>
-                    Organizations ({data.count}):
-                  </p>
-                  <ul className='text-xs text-gray-600 space-y-1 max-h-32 overflow-y-auto'>
-                    {data.organizations.map((org, idx) => (
-                      <li key={idx}>• {org}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
   return (
     <div className='flex min-h-screen bg-gray-50'>
       <AdminSidebar />

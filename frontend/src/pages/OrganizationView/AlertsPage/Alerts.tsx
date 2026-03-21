@@ -199,7 +199,7 @@ const AlertsPage = () => {
   };
 
   const handleSubmitResponse = async () => {
-    if (!selectedAlert || !selectedAlert.questions) return; //add orgid
+    if (!selectedAlert || !selectedAlert.questions || !organizationId) return;
 
     const missingRequired = selectedAlert.questions.filter(q => {
       if (!q.required) return false;

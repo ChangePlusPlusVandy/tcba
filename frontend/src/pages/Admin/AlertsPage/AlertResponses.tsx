@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminSidebar from '../../../components/AdminSidebar';
 import Toast from '../../../components/Toast';
@@ -81,7 +81,7 @@ const AlertResponses = () => {
     return response.organization.name.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  const getAnswerDisplay = (question: Question, answer: any) => {
+  const getAnswerDisplay = (_question: Question, answer: any) => {
     if (answer === undefined || answer === null || answer === '') {
       return <span className='text-gray-400 italic'>No answer</span>;
     }
