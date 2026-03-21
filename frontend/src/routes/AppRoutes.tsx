@@ -3,6 +3,8 @@ import { Routes, Route } from 'react-router-dom';
 import { MutatingDots } from 'react-loader-spinner';
 import ProtectedRoute from '../components/ProtectedRoute';
 import AdminRoute from '../components/AdminRoute';
+import AlertResponses from '../pages/Admin/AlertsPage/AlertResponses';
+import AlertSummary from '../pages/Admin/AlertsPage/AlertSummary';
 
 const HomePage = lazy(() => import('../pages/HomePage/Home'));
 const AboutPage = lazy(() => import('../pages/AboutPage/About'));
@@ -364,6 +366,26 @@ const AppRoutes = () => {
           <AdminRoute>
             <Suspense fallback={<PageLoader />}>
               <AdminAlerts />
+            </Suspense>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/alerts/:alertId/responses'
+        element={
+          <AdminRoute>
+            <Suspense fallback={<PageLoader />}>
+              <AlertResponses />
+            </Suspense>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path='/admin/alerts/:alertId/responses/summary'
+        element={
+          <AdminRoute>
+            <Suspense fallback={<PageLoader />}>
+              <AlertSummary />
             </Suspense>
           </AdminRoute>
         }
