@@ -176,7 +176,7 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
           <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
             <div className='flex gap-2 items-center overflow-x-auto w-full sm:w-auto'>
               <button
-                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base ${
+                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base cursor-pointer ${
                   timeFilter === null
                     ? 'bg-[#EBF3FF] text-[#194B90]'
                     : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
@@ -186,7 +186,7 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
                 All
               </button>
               <button
-                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base ${
+                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base cursor-pointer ${
                   timeFilter === '24h'
                     ? 'bg-[#EBF3FF] text-[#194B90]'
                     : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
@@ -196,7 +196,7 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
                 Last Day
               </button>
               <button
-                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base ${
+                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base cursor-pointer ${
                   timeFilter === 'week'
                     ? 'bg-[#EBF3FF] text-[#194B90]'
                     : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
@@ -206,7 +206,7 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
                 Last Week
               </button>
               <button
-                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base ${
+                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base cursor-pointer ${
                   timeFilter === 'month'
                     ? 'bg-[#EBF3FF] text-[#194B90]'
                     : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
@@ -216,7 +216,7 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
                 Last Month
               </button>
               <button
-                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base ${
+                className={`px-4 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-lg shadow-sm border border-gray-200 transition-colors whitespace-nowrap text-sm sm:text-base cursor-pointer ${
                   timeFilter === 'year'
                     ? 'bg-[#EBF3FF] text-[#194B90]'
                     : 'bg-white text-[#3C3C3C] hover:bg-gray-200'
@@ -228,7 +228,7 @@ const AnnouncementsPage = ({ previewContent }: AnnouncementsPageProps = {}) => {
               <div className='relative tag-dropdown-container' ref={filterRef}>
                 <button
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className={`px-6 py-3 ${isFilterOpen ? 'bg-[#b53a3a]' : 'bg-[#D54242]'} text-white rounded-lg shadow-sm hover:bg-[#b53a3a] transition-colors flex items-center gap-2`}
+                  className={`px-6 py-3 ${isFilterOpen ? 'bg-[#b53a3a]' : 'bg-[#D54242]'} text-white rounded-lg shadow-sm hover:bg-[#b53a3a] transition-colors flex items-center gap-2 cursor-pointer`}
                 >
                   Filter
                   <IoFunnelOutline className='w-5 h-5' />

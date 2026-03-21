@@ -178,19 +178,19 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
               <div className='flex flex-col sm:flex-row gap-4 mt-8'>
                 <button
                   onClick={scrollToMembershipSection}
-                  className='bg-[#D54242] text-white px-6 py-3 rounded-[18px] text-sm font-semibold shadow-lg hover:bg-[#b53a3a] transition'
+                  className='bg-[#D54242] text-white px-6 py-3 rounded-[18px] text-sm font-semibold shadow-lg hover:bg-[#b53a3a] transition cursor-pointer'
                 >
                   {content['hero_join_button']?.value || 'Join the Coalition'}
                 </button>
                 <button
                   onClick={handleEmailSignup}
-                  className='bg-[#D54242] text-white px-6 py-3 rounded-[18px] text-sm font-semibold shadow-lg hover:bg-[#b53a3a] transition'
+                  className='bg-[#D54242] text-white px-6 py-3 rounded-[18px] text-sm font-semibold shadow-lg hover:bg-[#b53a3a] transition cursor-pointer'
                 >
                   {content['hero_subscribe_button']?.value || 'Subscribe to Emails'}
                 </button>
                 <button
                   onClick={handleContactInquiry}
-                  className='bg-[#D54242] text-white px-6 py-3 rounded-[18px] text-sm font-semibold shadow-lg hover:bg-[#b53a3a] transition'
+                  className='bg-[#D54242] text-white px-6 py-3 rounded-[18px] text-sm font-semibold shadow-lg hover:bg-[#b53a3a] transition cursor-pointer'
                 >
                   {content['hero_contact_button']?.value || 'Contact Us'}
                 </button>
@@ -580,7 +580,7 @@ const RegisterForm = ({ previewContent }: RegisterFormProps = {}) => {
             <button
               type='submit'
               disabled={loading}
-              className='w-[110px] h-[50px] rounded-[15px] bg-[#D54242] text-white hover:bg-[#b53a3a] transition disabled:bg-gray-400 disabled:cursor-not-allowed'
+              className='w-[110px] h-[50px] rounded-[15px] bg-[#D54242] text-white hover:bg-[#b53a3a] transition disabled:bg-gray-400 disabled:cursor-not-allowed cursor-pointer'
             >
               {loading ? 'Submitting...' : 'Submit'}
             </button>
