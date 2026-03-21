@@ -434,16 +434,6 @@ const OrganizationManagement = () => {
 
   const combinedTags = Array.from(new Set([...availableTags, ...allTags]));
 
-  useEffect(() => {
-    if (regionFilter !== 'all') {
-      console.log('Region Filter Active:', regionFilter);
-      console.log(
-        'Organizations with regions:',
-        organizationsArray.map(o => ({ name: o.name, region: o.region }))
-      );
-    }
-  }, [regionFilter, organizationsArray]);
-
   const filteredOrganizations = organizationsArray.filter(org => {
     if (filter === 'PENDING' && org.status !== 'PENDING') return false;
     if (filter === 'ACTIVE' && org.status !== 'ACTIVE') return false;

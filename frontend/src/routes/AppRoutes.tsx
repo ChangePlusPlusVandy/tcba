@@ -32,7 +32,6 @@ const OrgSettingsPage = lazy(() => import('../pages/OrganizationView/SettingsPag
 const OrganizationsList = lazy(
   () => import('../pages/OrganizationView/OrganizationsListPage/OrganizationsList')
 );
-const OrganizationMessages = lazy(() => import('../pages/OrganizationView/MessagesPage/Messages'));
 
 const AdminDashboard = lazy(() => import('../pages/Admin/AdminDashboard/AdminDashboard'));
 const OrganizationManagement = lazy(
@@ -64,7 +63,6 @@ const AdvocacyPageEdit = lazy(
   () => import('../pages/Admin/PageEditPages/AdvocacyPage/AdvocacyPageEdit')
 );
 const CustomEmail = lazy(() => import('../pages/Admin/CustomEmailPage/CustomEmail'));
-const AdminMessages = lazy(() => import('../pages/Admin/MessagesPage/Messages'));
 const Tags = lazy(() => import('../pages/Admin/TagsPage/Tags'));
 const EventManagementPage = lazy(() => import('../pages/Admin/EventManagementPage'));
 const OrgEventsPage = lazy(() => import('../pages/OrganizationView/EventsPage'));
@@ -291,16 +289,6 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path='/messages'
-        element={
-          <ProtectedRoute>
-            <Suspense fallback={<PageLoader />}>
-              <OrganizationMessages />
-            </Suspense>
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path='/org-events'
         element={
           <ProtectedRoute>
@@ -461,16 +449,6 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path='/admin/messages'
-        element={
-          <AdminRoute>
-            <Suspense fallback={<PageLoader />}>
-              <AdminMessages />
-            </Suspense>
-          </AdminRoute>
-        }
-      />
-      <Route
         path='/admin/page-edit/home'
         element={
           <AdminRoute>
@@ -558,6 +536,18 @@ const AppRoutes = () => {
               <EventManagementPage />
             </Suspense>
           </AdminRoute>
+        }
+      />
+      <Route
+        path='*'
+        element={
+          <div className='flex flex-col items-center justify-center min-h-screen bg-gray-50'>
+            <h1 className='text-4xl font-bold text-gray-800 mb-4'>404</h1>
+            <p className='text-gray-600 mb-6'>Page not found</p>
+            <a href='/' className='text-[#D54242] hover:text-[#b53a3a] font-medium'>
+              Return Home
+            </a>
+          </div>
         }
       />
     </Routes>

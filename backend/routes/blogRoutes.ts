@@ -17,7 +17,7 @@ const router = Router();
 router.get('/', getAllBlogs);
 router.get('/tags', getBlogTags);
 router.get('/slug/:slug', getBlogBySlug);
-router.get('/:id', getBlogById);
+router.get('/:id', authenticateToken, requireAdmin, getBlogById);
 router.post('/', authenticateToken, requireAdmin, createBlog);
 router.put('/:id', authenticateToken, requireAdmin, updateBlog);
 router.delete('/:id', authenticateToken, requireAdmin, deleteBlog);

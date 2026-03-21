@@ -58,9 +58,7 @@ const AlertsPage = () => {
   const { submitResponse } = useAlertResponseMutations();
 
   const { user } = useUser();
-  const organizationId = user?.publicMetadata?.organizationId as
-    | string
-    | 'cmkrh942j000vu0okm0i63ixn'; //TODO: change back to undefined
+  const organizationId = user?.publicMetadata?.organizationId as string | undefined;
 
   const [toast, setToast] = useState<{
     message: string;
@@ -79,7 +77,6 @@ const AlertsPage = () => {
 
   const openDetailModal = (alert: Alert) => {
     setSelectedAlert(alert);
-    console.log('questions value:', alert.questions);
     setIsDetailModalOpen(true);
   };
 
@@ -489,7 +486,7 @@ const AlertsPage = () => {
               </div>
 
               <div className='modal-action'>
-                {selectedAlert.questions.length > 0 && (
+                {selectedAlert.questions?.length > 0 && (
                   <button
                     onClick={() => openResponseModal(selectedAlert)}
                     className='px-6 py-2.5 bg-[#D54242] hover:bg-[#b53a3a] text-white rounded-xl font-medium transition'

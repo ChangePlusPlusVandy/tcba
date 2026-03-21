@@ -27,7 +27,7 @@ router.put('/:id/approve', authenticateToken, approveOrganization);
 router.put('/:id/decline', authenticateToken, declineOrganization);
 router.put('/:id/archive', authenticateToken, archiveOrganization);
 router.put('/:id/unarchive', authenticateToken, unarchiveOrganization);
-router.delete('/:id', authenticateToken, deleteOrganization);
 router.delete('/profile/deactivate', authenticateToken, deactivateAccount);
+router.delete('/:id', authenticateToken, deleteOrganization);
 
 export default router;

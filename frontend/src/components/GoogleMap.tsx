@@ -39,10 +39,7 @@ const GoogleMap = ({
 
   // Load Google Maps script
   useEffect(() => {
-    console.log('GoogleMap component mounted, checking for Google Maps API...');
-
     if (window.google?.maps) {
-      console.log('✓ Google Maps already loaded');
       setIsLoaded(true);
       return;
     }
@@ -51,11 +48,9 @@ const GoogleMap = ({
     const existingScript = document.querySelector(`script[src*="maps.googleapis.com/maps/api/js"]`);
 
     if (existingScript) {
-      console.log('✓ Google Maps script already in DOM, polling for API...');
       // Poll for Google Maps to be available (script might still be loading)
       const pollInterval = setInterval(() => {
         if (window.google?.maps) {
-          console.log('✓ Google Maps API now available');
           clearInterval(pollInterval);
           setIsLoaded(true);
         }
@@ -66,22 +61,19 @@ const GoogleMap = ({
     }
 
     if (!apiKey) {
-      console.error('✗ Google Maps API key is missing');
       setError('Google Maps API key is not configured');
       return;
     }
 
-    console.log('Loading Google Maps API with key:', apiKey.substring(0, 10) + '...');
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
     script.async = true;
     script.defer = true;
     script.onload = () => {
-      console.log('✓ Google Maps API loaded successfully');
       setIsLoaded(true);
     };
     script.onerror = () => {
-      console.error('✗ Failed to load Google Maps API');
+      console.error('Failed to load Google Maps API');
       setError('Failed to load Google Maps');
     };
     document.head.appendChild(script);
@@ -91,22 +83,12 @@ const GoogleMap = ({
 
   // Initialize map
   useEffect(() => {
-    console.log('Map initialization effect:', {
-      isLoaded,
-      hasMapRef: !!mapRef.current,
-      hasMapInstance: !!mapInstanceRef.current,
-    });
-
     if (!isLoaded || !mapRef.current) return;
 
     // Don't recreate map if it already exists
-    if (mapInstanceRef.current) {
-      console.log('✓ Map instance already exists, skipping recreation');
-      return;
-    }
+    if (mapInstanceRef.current) return;
 
     try {
-      console.log('Creating Google Maps instance...');
       const map = new google.maps.Map(mapRef.current, {
         center,
         zoom,
@@ -117,33 +99,15 @@ const GoogleMap = ({
 
       mapInstanceRef.current = map;
       infoWindowRef.current = new google.maps.InfoWindow();
-      console.log('✓ Map initialized successfully at center:', center, 'zoom:', zoom);
     } catch (err) {
       setError('Failed to initialize map');
-      console.error('✗ Map initialization error:', err);
+      console.error('Map initialization error:', err);
     }
   }, [isLoaded, center, zoom]);
 
   // Add markers
   useEffect(() => {
-    console.log('Markers effect triggered:', {
-      hasMap: !!mapInstanceRef.current,
-      isLoaded,
-      markersCount: markers.length,
-      markers: markers.map(m => ({
-        name: m.name,
-        hasLogo: !!m.logo,
-        lat: m.latitude,
-        lng: m.longitude,
-      })),
-    });
-
-    if (!mapInstanceRef.current || !isLoaded) {
-      console.log('Map not ready - skipping marker creation');
-      return;
-    }
-
-    console.log('✓ Map is ready! Adding', markers.length, 'markers...');
+    if (!mapInstanceRef.current || !isLoaded) return;
 
     // Clear existing markers
     markersRef.current.forEach(marker => marker.setMap(null));
@@ -174,14 +138,6 @@ const GoogleMap = ({
           strokeWeight: 2,
         },
       });
-
-      console.log(
-        'Created marker for:',
-        markerData.name,
-        'at',
-        markerData.latitude,
-        markerData.longitude
-      );
 
       // Create info window content - only name and website link
       const infoContent = `

@@ -113,6 +113,9 @@ export const getPresignedDownloadUrl = async (req: AuthenticatedRequest, res: Re
     }
 
     const bucketName = process.env.AWS_S3_BUCKET_NAME;
+    if (!bucketName) {
+      return res.status(500).json({ error: 'S3 bucket not configured' });
+    }
 
     const params = {
       Bucket: bucketName,
@@ -145,6 +148,9 @@ export const getPublicImageUrl = async (req: Request, res: Response) => {
     }
 
     const bucketName = process.env.AWS_S3_BUCKET_NAME;
+    if (!bucketName) {
+      return res.status(500).json({ error: 'S3 bucket not configured' });
+    }
 
     const params = {
       Bucket: bucketName,
@@ -176,6 +182,9 @@ export const getAuthenticatedDownloadUrl = async (req: AuthenticatedRequest, res
     }
 
     const bucketName = process.env.AWS_S3_BUCKET_NAME;
+    if (!bucketName) {
+      return res.status(500).json({ error: 'S3 bucket not configured' });
+    }
 
     const params = {
       Bucket: bucketName,
@@ -200,6 +209,9 @@ export const getPublicDownloadUrl = async (req: Request, res: Response) => {
     }
 
     const bucketName = process.env.AWS_S3_BUCKET_NAME;
+    if (!bucketName) {
+      return res.status(500).json({ error: 'S3 bucket not configured' });
+    }
 
     const params = {
       Bucket: bucketName,

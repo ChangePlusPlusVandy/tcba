@@ -25,9 +25,9 @@ router.post('/clear-cache', async (req, res) => {
     res.status(500).json({ error: 'Failed to clear cache' });
   }
 });
+router.post('/promote', promoteToAdmin);
 router.get('/:id', getAdminById);
 router.post('/', createAdmin);
-router.post('/promote', promoteToAdmin);
 router.put('/:id', updateAdmin);
 router.delete('/:id', deleteAdmin);
 

@@ -18,7 +18,6 @@ function App() {
           skipCache: true,
           template: 'jwt-template-tcba',
         });
-        console.log('Token refreshed in background');
       } catch (error) {
         console.error('Failed to refresh token:', error);
       }

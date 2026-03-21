@@ -77,14 +77,12 @@ export const getAlertReponseById = async (req: AuthenticatedRequest, res: Respon
 export const createAlertResponse = async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
-    if (!isAdmin(req.user.role))
-      return res.status(403).json({ error: 'Access denied - Admin only' });
 
     let { responses, alertId, organizationId } = req.body;
 
-    // if (!alertId || !organizationId) {
-    //   return res.status(400).json({ error: 'alertid and organizationId are required' });
-    // }
+    if (!alertId || !organizationId) {
+      return res.status(400).json({ error: 'alertId and organizationId are required' });
+    }
     if (responses == null) {
       return res.status(400).json({ error: 'responses is required' });
     }
@@ -176,19 +174,19 @@ export const deleteAlertResponse = async (req: AuthenticatedRequest, res: Respon
       return res.status(403).json({ error: 'Access denied - Admin only' });
 
     const responseToDelete = await prisma.alertResponse.findUnique({ where: { id } });
-    if (!responseToDelete) return res.status(404).json({ error: 'Survey response not found' });
+    if (!responseToDelete) return res.status(404).json({ error: 'Alert response not found' });
 
-    await prisma.surveyResponse.delete({ where: { id } });
+    await prisma.alertResponse.delete({ where: { id } });
     res.json({ message: 'Alert response deleted successfully' });
   } catch (error) {
-    console.error('Error deleting survey response:', error);
-    res.status(500).json({ error: 'Failed to delete survey response' });
+    console.error('Error deleting alert response:', error);
+    res.status(500).json({ error: 'Failed to delete alert response' });
   }
 };
 
 export const getResponsesByAlertId = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { alertId } = req.params;
+    const alertId = req.params.id;
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
     if (!isAdmin(req.user.role))
       return res.status(403).json({ error: 'Access denied - Admin only' });
@@ -197,7 +195,7 @@ export const getResponsesByAlertId = async (req: AuthenticatedRequest, res: Resp
       where: { alertId },
       orderBy: { submittedDate: 'desc' },
       include: {
-        organization: { select: { name: true, email: true } },
+        organization: { select: { name: true, email: true, tags: true } },
       },
     });
 
@@ -223,6 +221,8 @@ export const getResponsesByOrgId = async (req: AuthenticatedRequest, res: Respon
       prisma.alertResponse.findMany({
         where: { organizationId: id },
         orderBy: { submittedDate: 'desc' },
+        skip,
+        take: limit,
         include: {
           alert: { select: { title: true, content: true } },
         },

@@ -41,10 +41,9 @@ export const getAnnouncements = async (req: AuthenticatedRequest, res: Response)
 
         if (adminUser) {
           isAuthenticatedAdmin = true;
-          console.log('Admin authenticated in getAnnouncements');
         }
       } catch (error) {
-        console.log('Auth failed in getAnnouncements, treating as public');
+        // Auth failed — treat as public request
       }
     }
 
@@ -56,7 +55,6 @@ export const getAnnouncements = async (req: AuthenticatedRequest, res: Response)
     const cachedData = await CacheService.get<any>(cacheKey);
 
     if (cachedData) {
-      console.log(`Returning cached announcements (admin: ${isAuthenticatedAdmin})`);
       res.set('Cache-Control', 'public, max-age=0, s-maxage=300, must-revalidate');
       return res.status(200).json(cachedData);
     }
@@ -87,7 +85,6 @@ export const getAnnouncements = async (req: AuthenticatedRequest, res: Response)
 
     await CacheService.set(cacheKey, response, CacheTTL.ANNOUNCEMENTS_LIST);
 
-    console.log(`Returning ${announcements.length} announcements (admin: ${isAuthenticatedAdmin})`);
     res.set('Cache-Control', 'public, max-age=0, s-maxage=300, must-revalidate');
     res.status(200).json(response);
   } catch (error) {
@@ -197,15 +194,11 @@ export const getAnnouncementsByPublishedDate = async (req: Request, res: Respons
  */
 export const createAnnouncement = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    console.log('createAnnouncement called');
-    console.log('req.user:', req.user);
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
     const { title, content, publishedDate, isPublished, attachmentUrls, tagIds, createdByAdminId } =
       req.body;
-
-    console.log('Creating announcement with data:', { title, isPublished, tagIds });
 
     const tempAnnouncement = await prisma.announcements.create({
       data: {
@@ -218,10 +211,8 @@ export const createAnnouncement = async (req: AuthenticatedRequest, res: Respons
         createdByAdminId: createdByAdminId ?? 'system',
       },
     });
-    console.log('Temp announcement created:', tempAnnouncement.id);
 
     const slug = await generateSlug(title, tempAnnouncement.id);
-    console.log('Generated slug:', slug);
 
     const updateData: any = { slug };
     if (tagIds && Array.isArray(tagIds) && tagIds.length > 0) {
@@ -229,14 +220,12 @@ export const createAnnouncement = async (req: AuthenticatedRequest, res: Respons
         connect: tagIds.map((id: string) => ({ id })),
       };
     }
-    console.log('Update data:', updateData);
 
     const newAnnouncement = await prisma.announcements.update({
       where: { id: tempAnnouncement.id },
       data: updateData,
       include: { tags: true },
     });
-    console.log('Announcement updated successfully:', newAnnouncement.id);
 
     await CacheService.deletePattern(CacheKeys.announcementsAll());
 
@@ -245,15 +234,12 @@ export const createAnnouncement = async (req: AuthenticatedRequest, res: Respons
         await createNotification('ANNOUNCEMENT', newAnnouncement.title, newAnnouncement.slug);
 
         await sendAnnouncementEmails(newAnnouncement.id);
-        console.log('Announcement notifications sent successfully');
       } catch (notifError) {
         console.error('Failed to create notification:', notifError);
       }
     }
 
-    console.log('Sending response...');
     res.status(201).json(newAnnouncement);
-    console.log('Response sent');
   } catch (error) {
     console.error('Error creating announcement:', error);
     res.status(500).json({ error: 'Failed to create announcement', details: error });
@@ -271,8 +257,14 @@ export const updateAnnouncement = async (req: AuthenticatedRequest, res: Respons
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
-    const { tagIds, ...otherData } = req.body;
+    const existing = await prisma.announcements.findUnique({ where: { id } });
+    if (!existing) return res.status(404).json({ error: 'Announcement not found' });
+
+    const { tagIds, publishedDate, ...otherData } = req.body;
     const updateData: any = { ...otherData };
+    if (publishedDate !== undefined) {
+      updateData.publishedDate = publishedDate ? new Date(publishedDate) : null;
+    }
     if (tagIds !== undefined) {
       if (tagIds.length === 0) {
         updateData.tags = { set: [] };
@@ -312,9 +304,8 @@ export const deleteAnnouncement = async (req: AuthenticatedRequest, res: Respons
     await prisma.announcements.delete({ where: { id } });
     await prisma.tag.deleteMany({
       where: {
-        announcements: {
-          none: {},
-        },
+        announcements: { none: {} },
+        blogs: { none: {} },
       },
     });
 
@@ -361,7 +352,6 @@ export const publishAnnouncement = async (req: AuthenticatedRequest, res: Respon
       );
 
       await sendAnnouncementEmails(publishedAnnouncement.id);
-      console.log('Announcement notifications sent successfully');
     } catch (notifError) {
       console.error('Failed to create notification or send emails:', notifError);
     }

@@ -125,8 +125,6 @@ const ImageUploader = ({
 
       setProgress(100);
 
-      console.log('Upload successful! S3 Key:', key);
-
       // Keep the local preview (data URL) until we can load from S3
       // The parent component will store the key, and we'll use presigned URLs to display
       onChange(key);
@@ -189,7 +187,6 @@ const ImageUploader = ({
             src={preview}
             alt='Preview'
             className='w-full h-48 object-cover rounded-md border border-gray-300'
-            onLoad={() => console.log('Image loaded successfully:', preview)}
             onError={e => {
               console.error('Image failed to load:', preview);
               console.error('Error event:', e);

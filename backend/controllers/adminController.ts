@@ -105,11 +105,15 @@ export const updateAdmin = async (req: AuthenticatedRequest, res: Response) => {
     }
 
     const { id } = req.params;
-    const { email, name } = req.body;
+    const { email, name, isActive } = req.body;
 
     const updatedAdmin = await (prisma as any).adminUser.update({
       where: { id },
-      data: { email, name, isActive: true },
+      data: {
+        ...(email !== undefined && { email }),
+        ...(name !== undefined && { name }),
+        ...(isActive !== undefined && { isActive }),
+      },
     });
 
     res.json(updatedAdmin);
@@ -136,7 +140,7 @@ export const deleteAdmin = async (req: AuthenticatedRequest, res: Response) => {
       where: { id },
     });
 
-    res.json({ message: 'Admin deleted successfully' });
+    res.status(204).end();
   } catch (error) {
     console.error('Error deleting admin:', error);
     res.status(500).json({ error: 'Failed to delete admin' });

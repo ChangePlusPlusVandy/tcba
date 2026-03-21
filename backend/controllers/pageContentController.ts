@@ -1,8 +1,6 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../config/prisma.js';
 import { CacheService, CacheKeys, CacheTTL } from '../utils/cache.js';
-
-const prisma = new PrismaClient();
 
 export const getAllPageContent = async (req: Request, res: Response): Promise<void> => {
   try {

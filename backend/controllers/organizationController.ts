@@ -26,37 +26,56 @@ const resolveTargetId = (id: string, userId?: string) => (id === 'profile' ? use
  */
 export const getDirectoryOrganizations = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const organizations = await prisma.organization.findMany({
-      where: {
-        status: 'ACTIVE',
-        visibleInDirectory: true,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        description: true,
-        website: true,
-        address: true,
-        city: true,
-        state: true,
-        zipCode: true,
-        primaryContactName: true,
-        primaryContactEmail: true,
-        primaryContactPhone: true,
-        secondaryContactName: true,
-        secondaryContactEmail: true,
-        region: true,
-        organizationType: true,
-        organizationSize: true,
-        status: true,
-        tags: true,
-        createdAt: true,
-      },
-      orderBy: { name: 'asc' },
-    });
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const skip = (page - 1) * limit;
 
-    res.json(organizations);
+    const where = {
+      status: 'ACTIVE' as OrganizationStatus,
+      visibleInDirectory: true,
+    };
+
+    const [organizations, total] = await Promise.all([
+      prisma.organization.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          description: true,
+          website: true,
+          address: true,
+          city: true,
+          state: true,
+          zipCode: true,
+          primaryContactName: true,
+          primaryContactEmail: true,
+          primaryContactPhone: true,
+          secondaryContactName: true,
+          secondaryContactEmail: true,
+          region: true,
+          organizationType: true,
+          organizationSize: true,
+          status: true,
+          tags: true,
+          createdAt: true,
+        },
+        orderBy: { name: 'asc' },
+        skip,
+        take: limit,
+      }),
+      prisma.organization.count({ where }),
+    ]);
+
+    res.json({
+      data: organizations,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.error('Error fetching directory organizations:', error);
     res.status(500).json({ error: 'Failed to fetch directory organizations' });
@@ -82,6 +101,11 @@ export const getAllOrganizations = async (req: AuthenticatedRequest, res: Respon
       organizationType,
       organizationSize,
     } = req.query;
+
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const skip = (page - 1) * limit;
+
     const where: any = {
       ...(status && { status: status as OrganizationStatus }),
       ...(role && { role: role as OrganizationRole }),
@@ -106,8 +130,21 @@ export const getAllOrganizations = async (req: AuthenticatedRequest, res: Respon
       }),
       ...(tags && { tags: { hasSome: (tags as string).split(',').map(tag => tag.trim()) } }),
     };
-    const organizations = await prisma.organization.findMany({ where, orderBy: { name: 'asc' } });
-    res.json(organizations);
+
+    const [organizations, total] = await Promise.all([
+      prisma.organization.findMany({ where, orderBy: { name: 'asc' }, skip, take: limit }),
+      prisma.organization.count({ where }),
+    ]);
+
+    res.json({
+      data: organizations,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.error('Error fetching organizations:', error);
     res.status(500).json({ error: 'Failed to fetch organizations' });
@@ -323,10 +360,14 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
       updateData.organizationSize = updateData.organizationSize.toUpperCase().replace(/ /g, '_');
     }
 
-    if (updateFields.address || updateFields.city || updateFields.zipCode) {
-      const currentOrg = await prisma.organization.findUnique({ where: { id: targetId } });
+    // Fetch the current org once if we need it for address geocoding or email change
+    let currentOrg: Awaited<ReturnType<typeof prisma.organization.findUnique>> | null = null;
+    if (updateFields.address || updateFields.city || updateFields.zipCode || email) {
+      currentOrg = await prisma.organization.findUnique({ where: { id: targetId } });
       if (!currentOrg) return res.status(404).json({ error: 'Organization not found' });
+    }
 
+    if ((updateFields.address || updateFields.city || updateFields.zipCode) && currentOrg) {
       const newAddress = updateFields.address ?? currentOrg.address;
       const newCity = updateFields.city ?? currentOrg.city;
       const newZipCode = updateFields.zipCode ?? currentOrg.zipCode;
@@ -359,10 +400,7 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
       }
     }
 
-    if (email) {
-      const currentOrg = await prisma.organization.findUnique({ where: { id: targetId } });
-      if (!currentOrg) return res.status(404).json({ error: 'Organization not found' });
-
+    if (email && currentOrg) {
       if (email !== currentOrg.email) {
         const existingOrg = await prisma.organization.findFirst({
           where: { email, NOT: { id: targetId } },
@@ -370,18 +408,16 @@ export const updateOrganization = async (req: AuthenticatedRequest, res: Respons
         if (existingOrg)
           return res.status(400).json({ error: 'Email is already in use by another organization' });
 
-        try {
-          await clerkClient.users.updateUser(currentOrg.clerkId, { externalId: email });
-        } catch (clerkError: any) {
-          console.error('Clerk email update failed:', clerkError);
-          return res.status(400).json({
-            error: 'Failed to update email in authentication system',
-            details: clerkError.message,
-          });
-        }
         updateData.email = email;
       }
     }
+
+    // If the org wasn't fetched above (no address/email fields), verify it exists now
+    if (!currentOrg) {
+      const orgCheck = await prisma.organization.findUnique({ where: { id: targetId } });
+      if (!orgCheck) return res.status(404).json({ error: 'Organization not found' });
+    }
+
     const updatedOrg = await prisma.organization.update({
       where: { id: targetId },
       data: updateData,
@@ -570,17 +606,18 @@ export const declineOrganization = async (req: AuthenticatedRequest, res: Respon
 
     if (emailsToSend.size > 0) {
       console.log('[DECLINE] Attempting to send rejection emails to:', Array.from(emailsToSend));
-      for (const email of emailsToSend) {
-        try {
-          await sendRejectionEmail(email, org.name, reason);
-          console.log(`[DECLINE] SUCCESS - Sent rejection notification to ${email}`);
-        } catch (emailError) {
-          console.error(
-            `[DECLINE] ERROR - Failed to send rejection email to ${email}:`,
-            emailError
-          );
-        }
-      }
+      await Promise.all(
+        Array.from(emailsToSend).map(email =>
+          sendRejectionEmail(email, org.name, reason)
+            .then(() => console.log(`[DECLINE] SUCCESS - Sent rejection notification to ${email}`))
+            .catch(emailError =>
+              console.error(
+                `[DECLINE] ERROR - Failed to send rejection email to ${email}:`,
+                emailError
+              )
+            )
+        )
+      );
     } else {
       console.log('[DECLINE] No email addresses found, skipping email notification');
     }
@@ -711,14 +748,18 @@ export const deleteOrganization = async (req: AuthenticatedRequest, res: Respons
 
     if (emailsToSend.size > 0) {
       console.log('[DELETE] Attempting to send deletion emails to:', Array.from(emailsToSend));
-      for (const email of emailsToSend) {
-        try {
-          await sendDeletionEmail(email, orgToDelete.name, reason);
-          console.log(`[DELETE] SUCCESS - Sent deletion notification to ${email}`);
-        } catch (emailError) {
-          console.error(`[DELETE] ERROR - Failed to send deletion email to ${email}:`, emailError);
-        }
-      }
+      await Promise.all(
+        Array.from(emailsToSend).map(email =>
+          sendDeletionEmail(email, orgToDelete.name, reason)
+            .then(() => console.log(`[DELETE] SUCCESS - Sent deletion notification to ${email}`))
+            .catch(emailError =>
+              console.error(
+                `[DELETE] ERROR - Failed to send deletion email to ${email}:`,
+                emailError
+              )
+            )
+        )
+      );
     } else {
       console.log('[DELETE] No email addresses found, skipping email notification');
     }
@@ -726,7 +767,6 @@ export const deleteOrganization = async (req: AuthenticatedRequest, res: Respons
     const admins = await prisma.organization.findMany({
       where: {
         role: 'ADMIN',
-        id: { not: req.user?.id },
       },
       select: { email: true },
     });

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useEvents } from '../../../hooks/queries/useEvents';
 import { useRSVP, useCancelRSVP } from '../../../hooks/mutations/useEvents';
+import Toast from '../../../components/Toast';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -15,6 +16,7 @@ export function EventsPage() {
   const [view, setView] = useState<'list' | 'calendar'>('list');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showRSVPModal, setShowRSVPModal] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   const {
     data: events = [],
@@ -31,9 +33,9 @@ export function EventsPage() {
       setShowRSVPModal(false);
       setSelectedEvent(null);
       refetch();
-      alert('RSVP successful! You will receive email reminders before the event.');
+      setToast({ message: 'RSVP successful! You will receive email reminders before the event.', type: 'success' });
     } catch (error: any) {
-      alert(error.message || 'Failed to RSVP');
+      setToast({ message: error.message || 'Failed to RSVP', type: 'error' });
     }
   };
 
@@ -42,9 +44,9 @@ export function EventsPage() {
     try {
       await cancelRSVPMutation.mutateAsync(eventId);
       refetch();
-      alert('RSVP cancelled successfully');
+      setToast({ message: 'RSVP cancelled successfully', type: 'success' });
     } catch (error: any) {
-      alert(error.message || 'Failed to cancel RSVP');
+      setToast({ message: error.message || 'Failed to cancel RSVP', type: 'error' });
     }
   };
 
@@ -58,6 +60,7 @@ export function EventsPage() {
 
   return (
     <div className='p-6'>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       <div className='flex justify-between items-center mb-6'>
         <h1 className='text-3xl font-bold'>Events</h1>
       </div>

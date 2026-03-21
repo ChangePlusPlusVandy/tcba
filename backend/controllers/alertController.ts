@@ -174,6 +174,10 @@ export const getAlertsByPriority = async (req: AuthenticatedRequest, res: Respon
       return res.status(400).json({ error: 'Invalid priority. Must be URGENT, MEDIUM, or LOW' });
     }
 
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
     let userOrganization;
     if (!userIsAdmin) {
       userOrganization = await prisma.organization.findUnique({
@@ -182,12 +186,13 @@ export const getAlertsByPriority = async (req: AuthenticatedRequest, res: Respon
       });
     }
 
-    let alerts = await prisma.alert.findMany({
-      where: {
-        priority: priority.toUpperCase() as AlertPriority,
+    const baseWhere = {
+      priority: priority.toUpperCase() as AlertPriority,
+      ...(!userIsAdmin && { isPublished: true }),
+    };
 
-        ...(!userIsAdmin && { isPublished: true }),
-      },
+    let alerts = await prisma.alert.findMany({
+      where: baseWhere,
       orderBy: { createdAt: 'desc' },
     });
 
@@ -197,11 +202,22 @@ export const getAlertsByPriority = async (req: AuthenticatedRequest, res: Respon
           return true;
         }
 
-        return alert.tags.some(alertTag => userOrganization.tags.includes(alertTag));
+        return alert.tags.some(alertTag => userOrganization!.tags.includes(alertTag));
       });
     }
 
-    res.status(200).json(alerts);
+    const total = alerts.length;
+    const paginated = alerts.slice(skip, skip + limit);
+
+    res.status(200).json({
+      data: paginated,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.error('Error fetching alerts by priority:', error);
     res.status(500).json({ error: 'Failed to fetch alerts by priority' });
@@ -438,22 +454,21 @@ async function sendAlertEmails(alert: any): Promise<void> {
           : ' (broadcast to all)')
     );
 
-    // Send email to each targeted organization
-    for (const org of targetOrganizations) {
-      try {
-        await EmailService.sendAlertEmail({
+    // Send emails to all targeted organizations in parallel
+    await Promise.all(
+      targetOrganizations.map(org =>
+        EmailService.sendAlertEmail({
           to: org.primaryContactEmail,
           organizationName: org.name,
           alertTitle: alert.title,
           alertContent: alert.content,
           alertPriority: alert.priority,
           attachmentUrls: alert.attachmentUrls,
-        });
-      } catch (emailError) {
-        console.error(`Failed to send alert email to ${org.name}:`, emailError);
-        // Continue sending to other organizations even if one fails
-      }
-    }
+        }).catch(emailError =>
+          console.error(`Failed to send alert email to ${org.name}:`, emailError)
+        )
+      )
+    );
   } catch (error) {
     console.error('Error sending alert emails:', error);
   }

@@ -36,10 +36,9 @@ export const getAllBlogs = async (req: AuthenticatedRequest, res: Response) => {
 
         if (adminUser) {
           isAuthenticatedAdmin = true;
-          console.log('Admin authenticated in getAllBlogs');
         }
       } catch (error) {
-        console.log('Auth failed in getAllBlogs, treating as public');
+        // Auth failed — treat as public request
       }
     }
 
@@ -85,7 +84,6 @@ export const getAllBlogs = async (req: AuthenticatedRequest, res: Response) => {
       const cachedData = await CacheService.get<any>(cacheKey);
 
       if (cachedData) {
-        console.log('Returning cached blogs');
         res.set('Cache-Control', 'public, max-age=0, s-maxage=300, must-revalidate');
         return res.json(cachedData);
       }
@@ -160,7 +158,7 @@ export const getBlogBySlug = async (req: AuthenticatedRequest, res: Response) =>
       include: { tags: true },
     });
 
-    if (!blog) return res.status(404).json({ error: 'Blog not found' });
+    if (!blog || !blog.isPublished) return res.status(404).json({ error: 'Blog not found' });
 
     await CacheService.set(cacheKey, blog, CacheTTL.BLOG_DETAIL);
 
@@ -217,15 +215,6 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
       attachmentUrls,
     } = req.body;
 
-    console.log('createBlog - Received data:', {
-      title,
-      author,
-      tags,
-      tagIds,
-      isPublished,
-      attachmentUrls,
-    });
-
     if (!title || !content || !author) {
       return res.status(400).json({ error: 'title, content, and author are required' });
     }
@@ -246,9 +235,7 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
     const slug = await generateSlug(title, tempBlog.id);
 
     const tagIdsToUse = tagIds || tags || [];
-    console.log('createBlog - Tag IDs to use:', tagIdsToUse);
     const tagConnections = tagIdsToUse.map((id: string) => ({ id }));
-    console.log('createBlog - Tag connections:', tagConnections);
 
     const blog = await prisma.blog.update({
       where: { id: tempBlog.id },
@@ -266,7 +253,6 @@ export const createBlog = async (req: AuthenticatedRequest, res: Response) => {
       try {
         await createNotification('BLOG', blog.title, blog.slug || blog.id);
         await sendBlogEmails(blog.id);
-        console.log('Blog notifications sent successfully');
       } catch (notifError) {
         console.error('Failed to create notification or send emails:', notifError);
       }
@@ -337,7 +323,11 @@ export const deleteBlog = async (req: AuthenticatedRequest, res: Response) => {
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
-    const blogToDelete = await prisma.blog.findUnique({ where: { id } });
+    // Select only slug — the rest of the blog content is not needed here
+    const blogToDelete = await prisma.blog.findUnique({
+      where: { id },
+      select: { id: true, slug: true },
+    });
     if (!blogToDelete) return res.status(404).json({ error: 'Blog not found' });
 
     await prisma.blog.delete({ where: { id } });
@@ -359,16 +349,19 @@ export const publishBlog = async (req: AuthenticatedRequest, res: Response) => {
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
-    const blog = await prisma.blog.findUnique({ where: { id } });
-    if (!blog) return res.status(404).json({ error: 'Blog not found' });
-
-    const publishedBlog = await prisma.blog.update({
-      where: { id },
-      data: {
-        isPublished: true,
-        publishedDate: new Date(),
-      },
-    });
+    let publishedBlog;
+    try {
+      publishedBlog = await prisma.blog.update({
+        where: { id },
+        data: {
+          isPublished: true,
+          publishedDate: new Date(),
+        },
+      });
+    } catch (err: any) {
+      if (err?.code === 'P2025') return res.status(404).json({ error: 'Blog not found' });
+      throw err;
+    }
 
     await CacheService.deletePattern(CacheKeys.blogsAll());
     await CacheService.delete(CacheKeys.blogBySlug(publishedBlog.slug));
@@ -376,7 +369,6 @@ export const publishBlog = async (req: AuthenticatedRequest, res: Response) => {
     try {
       await createNotification('BLOG', publishedBlog.title, publishedBlog.slug || publishedBlog.id);
       await sendBlogEmails(publishedBlog.id);
-      console.log('Blog notifications sent successfully');
     } catch (notifError) {
       console.error('Failed to create notification or send emails:', notifError);
     }
@@ -394,15 +386,18 @@ export const unpublishBlog = async (req: AuthenticatedRequest, res: Response) =>
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
-    const blog = await prisma.blog.findUnique({ where: { id } });
-    if (!blog) return res.status(404).json({ error: 'Blog not found' });
-
-    const unpublishedBlog = await prisma.blog.update({
-      where: { id },
-      data: {
-        isPublished: false,
-      },
-    });
+    let unpublishedBlog;
+    try {
+      unpublishedBlog = await prisma.blog.update({
+        where: { id },
+        data: {
+          isPublished: false,
+        },
+      });
+    } catch (err: any) {
+      if (err?.code === 'P2025') return res.status(404).json({ error: 'Blog not found' });
+      throw err;
+    }
 
     await CacheService.deletePattern(CacheKeys.blogsAll());
     await CacheService.delete(CacheKeys.blogBySlug(unpublishedBlog.slug));

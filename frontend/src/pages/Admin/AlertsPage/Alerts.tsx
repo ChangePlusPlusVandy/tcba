@@ -1366,7 +1366,7 @@ const AdminAlerts = () => {
                       </button>
                     </>
                   )}
-                  {selectedAlert.questions.length != 0 && (
+                  {selectedAlert.questions?.length != 0 && (
                     <button
                       onClick={() => {
                         closeDetailModal();

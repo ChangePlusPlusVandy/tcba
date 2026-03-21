@@ -34,7 +34,6 @@ const LoginPage = () => {
         await clerk.user?.reload();
 
         const userRole = clerk.user?.publicMetadata?.role as string | undefined;
-        console.log('User role after login:', userRole);
 
         if (userRole === 'ADMIN') {
           navigate('/admin/dashboard');
@@ -42,7 +41,6 @@ const LoginPage = () => {
           navigate('/dashboard');
         }
       } else {
-        console.log('Sign in status:', result.status);
         setError('Additional authentication required');
       }
     } catch (err: any) {

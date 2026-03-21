@@ -1,18 +1,16 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-// import { useApi } from '../useApi';
+import { useApi } from '../useApi';
 
 /**
  * Create subscription mutation
  */
 export function useCreateSubscription() {
-  // const api = useApi();
+  const api = useApi();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (_priceId: string) => {
-      // Implement API call to POST /api/stripe/subscription
-      throw new Error('Not implemented');
-    },
+    mutationFn: (priceId: string) =>
+      api.post('/api/stripe/subscription', { priceId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription'] });
     },
@@ -23,14 +21,12 @@ export function useCreateSubscription() {
  * Cancel subscription mutation
  */
 export function useCancelSubscription() {
-  // const api = useApi();
+  const api = useApi();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (_immediate: boolean = false) => {
-      // Implement API call to POST /api/stripe/subscription/cancel
-      throw new Error('Not implemented');
-    },
+    mutationFn: (immediate: boolean = false) =>
+      api.post('/api/stripe/subscription/cancel', { immediate }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription'] });
     },

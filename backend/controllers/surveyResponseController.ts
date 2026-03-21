@@ -5,8 +5,6 @@ import { prisma } from '../config/prisma.js';
 
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 
-const resolveTargetId = (id: string, userId?: string) => (id === 'profile' ? userId : id);
-
 /**
  * @desc    Get all survey responses (admin only)
  * @route   GET /api/survey-responses
@@ -176,7 +174,7 @@ export const updateResponse = async (req: AuthenticatedRequest, res: Response) =
     const updatedSurveyResponse = await prisma.surveyResponse.update({
       where: { id },
       data: {
-        ...(responses && { responses }),
+        ...(responses !== undefined && { responses }),
         submittedDate: new Date(),
       },
       include: {
@@ -208,7 +206,7 @@ export const deleteResponse = async (req: AuthenticatedRequest, res: Response) =
       return res.status(404).json({ error: 'Survey response not found' });
 
     await prisma.surveyResponse.delete({ where: { id } });
-    res.json({ message: 'Survey response deleted successfully' });
+    res.status(204).send();
   } catch (error) {
     console.error('Error deleting survey response:', error);
     res.status(500).json({ error: 'Failed to delete survey response' });
@@ -231,6 +229,7 @@ export const getResponsesBySurvey = async (req: AuthenticatedRequest, res: Respo
       where: { surveyId },
       orderBy: { submittedDate: 'desc' },
       include: {
+        survey: { select: { title: true, description: true } },
         organization: { select: { name: true, email: true, tags: true } },
       },
     });

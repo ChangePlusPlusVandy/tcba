@@ -1,11 +1,9 @@
-import React, { forwardRef, useEffect, useRef, useLayoutEffect, useState } from 'react';
+import { useState } from 'react';
 import AdminSidebar from '../../../components/AdminSidebar';
-import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import QuillEditor from '../../../components/QuillEditor';
 
 const CreateAlert = () => {
-  const [loading, setLoading] = useState(false); //TODO: handle loading in the form submission
   const [value, setValue] = useState<string>('');
 
   const handleChange = (content: string) => {

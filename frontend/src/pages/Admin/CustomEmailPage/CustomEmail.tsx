@@ -255,15 +255,6 @@ const CustomEmail = () => {
       })
       .map(org => org.id);
 
-    console.log('Total orgs:', organizationsArray.length);
-    console.log('Recipient emails:', email.recipientEmails);
-    console.log('Excluded org count:', excludedOrgIds.length);
-    console.log(
-      'Should select:',
-      organizationsArray.length - excludedOrgIds.length,
-      'organizations'
-    );
-
     setSelectedTags([]);
     setSelectedRegion('');
     setSelectedOrgSize('');

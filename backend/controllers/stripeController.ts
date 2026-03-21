@@ -22,11 +22,11 @@ export const stripeController = {
       const organizationId = req.user.id;
       const { priceId } = req.body;
 
-      const subscription = StripeService.createSubscription(organizationId, priceId);
+      const subscription = await StripeService.createSubscription(organizationId, priceId);
       res.status(201).json(subscription);
     } catch (error: any) {
       console.error('Error creating subscription:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: 'Failed to create subscription' });
     }
   },
 
@@ -44,11 +44,11 @@ export const stripeController = {
       }
       const organizationId = req.user?.id;
 
-      const subscription = StripeService.getSubscription(organizationId);
-      res.status(201).json(subscription);
+      const subscription = await StripeService.getSubscription(organizationId);
+      res.status(200).json(subscription);
     } catch (error: any) {
       console.error('Error getting subscription:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: 'Failed to get subscription' });
     }
   },
 
@@ -57,13 +57,19 @@ export const stripeController = {
    */
   cancelSubscription: async (req: AuthenticatedRequest, res: Response) => {
     try {
-      // Get immediate flag from request body
-      // Get organizationId from req.user
-      // Call StripeService.cancelSubscription
-      res.status(501).json({ error: 'Not implemented' });
+      if (!req.user?.id) {
+        return res
+          .status(401)
+          .json({ error: 'User is not authenticated or lacks an organization' });
+      }
+      const organizationId = req.user.id;
+      const { immediate = false } = req.body;
+
+      await StripeService.cancelSubscription(organizationId, Boolean(immediate));
+      res.status(200).json({ message: 'Subscription cancelled successfully' });
     } catch (error: any) {
       console.error('Error canceling subscription:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: 'Failed to cancel subscription' });
     }
   },
 
@@ -78,7 +84,7 @@ export const stripeController = {
     } catch (error) {
       console.error('Error handling webhook:', error);
       return res
-        .sendStatus(400)
+        .status(400)
         .send(`Webhook Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
@@ -87,20 +93,23 @@ export const stripeController = {
       res.status(200).json({ received: true });
     } catch (error) {
       console.error('Error handling webhook event:', error);
-      return res.json({ received: true });
+      return res.status(500).json({ error: 'Webhook processing failed' });
     }
   },
 
   /**
    * Get available pricing plans
    */
-  getPrices: async (req: AuthenticatedRequest, res: Response) => {
+  getPrices: async (_req: Request, res: Response) => {
     try {
-      // Fetch active prices from Stripe
-      res.status(501).json({ error: 'Not implemented' });
+      const prices = await stripe.prices.list({
+        active: true,
+        expand: ['data.product'],
+      });
+      res.status(200).json(prices.data);
     } catch (error: any) {
       console.error('Error getting prices:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: 'Failed to get prices' });
     }
   },
 };

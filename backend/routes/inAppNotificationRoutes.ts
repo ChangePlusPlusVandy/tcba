@@ -4,11 +4,12 @@ import {
   getUnreadCount,
   markAsRead,
 } from '../controllers/inAppNotificationController.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
 
-router.get('/', getNotifications);
-router.get('/unread-count', getUnreadCount);
-router.post('/mark-read', markAsRead);
+router.get('/', authenticateToken, getNotifications);
+router.get('/unread-count', authenticateToken, getUnreadCount);
+router.post('/mark-read', authenticateToken, markAsRead);
 
 export default router;

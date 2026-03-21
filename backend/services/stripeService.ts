@@ -1,6 +1,7 @@
 import { prisma } from '../config/prisma.js';
 import Stripe from 'stripe';
 import { SubscriptionStatus, PaymentStatus } from '@prisma/client';
+import { stripe } from '../config/stripe.js';
 
 export class StripeService {
   private static mapStripeSubscriptionStatus(s: string): SubscriptionStatus {
@@ -52,8 +53,7 @@ export class StripeService {
       if (!organization) {
         throw new Error('Organization not found');
       }
-      const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-      const customer = await stripe.customer.create({
+      const customer = await stripe.customers.create({
         email: organization?.email,
         name: organization?.name,
         phone: organization?.primaryContactPhone,
@@ -94,8 +94,6 @@ export class StripeService {
 
       const customerInfo = await this.createCustomer(organizationId);
 
-      const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-
       const newSubscription = await stripe.subscriptions.create({
         customer: customerInfo.id,
         items: [
@@ -115,11 +113,12 @@ export class StripeService {
       }
 
       const paymentIntent = stripeInvoice.payment_intent;
+      const resolvedPaymentIntent =
+        paymentIntent && typeof paymentIntent !== 'string' ? paymentIntent : null;
 
-      const paymentStatus =
-        paymentIntent && typeof paymentIntent !== 'string'
-          ? StripeService.mapStripePaymentIntentStatus(paymentIntent.status)
-          : PaymentStatus.PENDING;
+      const paymentStatus = resolvedPaymentIntent
+        ? StripeService.mapStripePaymentIntentStatus(resolvedPaymentIntent.status)
+        : PaymentStatus.PENDING;
 
       const result = await prisma.subscription.create({
         data: {
@@ -131,15 +130,17 @@ export class StripeService {
           currentPeriodStart: new Date(newSubscription.current_period_start * 1000),
           currentPeriodEnd: new Date(newSubscription.current_period_end * 1000),
           cancelAtPeriodEnd: newSubscription.cancel_at_period_end,
-          payments: {
-            create: {
-              stripePaymentIntentId: paymentIntent.id,
-              stripeInvoiceId: stripeInvoice.id,
-              amount: paymentIntent.amount,
-              currency: paymentIntent.currency,
-              status: paymentStatus,
+          ...(resolvedPaymentIntent && {
+            payments: {
+              create: {
+                stripePaymentIntentId: resolvedPaymentIntent.id,
+                stripeInvoiceId: stripeInvoice.id,
+                amount: resolvedPaymentIntent.amount,
+                currency: resolvedPaymentIntent.currency,
+                status: paymentStatus,
+              },
             },
-          },
+          }),
           invoices: {
             create: {
               stripeInvoiceId: stripeInvoice.id,
@@ -167,10 +168,10 @@ export class StripeService {
       });
       return {
         subscription: result,
-        clientSecret: paymentIntent.client_secret,
+        clientSecret: resolvedPaymentIntent?.client_secret ?? null,
         stripeSubscriptionId: newSubscription.id,
         stripeInvoiceId: stripeInvoice.id,
-        stripePaymentIntentId: paymentIntent.id,
+        stripePaymentIntentId: resolvedPaymentIntent?.id ?? null,
       };
     } catch (error: any) {
       console.error('Create subscription failed: ', error.message);
@@ -183,8 +184,6 @@ export class StripeService {
    */
   static async cancelSubscription(organizationId: string, immediate = false) {
     try {
-      const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-
       const subscriptionID = await prisma.subscription.findUnique({
         where: {
           organizationId: organizationId,
@@ -236,8 +235,7 @@ export class StripeService {
         return;
       }
 
-      const stripeInstance = require('stripe')(process.env.STRIPE_SECRET_KEY);
-      const stripeSubscription = await stripeInstance.subscriptions.retrieve(
+      const stripeSubscription = await stripe.subscriptions.retrieve(
         payment.subscription.stripeSubscriptionId
       );
 
@@ -275,8 +273,7 @@ export class StripeService {
     stripePaymentIntentId?: string
   ) {
     try {
-      const stripeInstance = require('stripe')(process.env.STRIPE_SECRET_KEY);
-      const stripeSubscription = await stripeInstance.subscriptions.retrieve(stripeSubscriptionId);
+      const stripeSubscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
 
       const subscriptionStatus = StripeService.mapStripeSubscriptionStatus(
         stripeSubscription.status
@@ -296,7 +293,7 @@ export class StripeService {
           where: { stripePaymentIntentId },
         });
         if (payment) {
-          const paymentIntent = await stripeInstance.paymentIntents.retrieve(stripePaymentIntentId);
+          const paymentIntent = await stripe.paymentIntents.retrieve(stripePaymentIntentId);
           paymentStatus = StripeService.mapStripePaymentIntentStatus(paymentIntent.status);
         }
       }
@@ -345,6 +342,7 @@ export class StripeService {
       return subscription.status;
     } catch (error: any) {
       console.error(`Error getting subscription status for ${organizationId}: `, error);
+      throw error;
     }
   }
 
@@ -353,46 +351,72 @@ export class StripeService {
    */
   static async handleWebhook(event: Stripe.Event) {
     switch (event.type) {
-      case 'customer.subscription.updated':
+      case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
-        const validStatuses = ['ACTIVE', 'PAST_DUE', 'CANCELED', 'INCOMPLETE', 'TRIALING'];
-        const status = subscription.status.toUpperCase();
-        await prisma.subscription.update({
-          where: { stripeSubscriptionId: subscription.id },
-          data: {
-            status: (validStatuses.includes(status) ? status : 'INCOMPLETE') as SubscriptionStatus,
-            currentPeriodStart: subscription.current_period_start
-              ? new Date(subscription.current_period_start * 1000)
-              : new Date(),
-            currentPeriodEnd: subscription.current_period_end
-              ? new Date(subscription.current_period_end * 1000)
-              : new Date(),
-            cancelAtPeriodEnd: subscription.cancel_at_period_end,
-          },
-        });
-        console.log(`Subscription info: ${JSON.stringify(subscription)}`);
-        console.log(`Subscription ${subscription.id} updated.`);
+        try {
+          await prisma.subscription.update({
+            where: { stripeSubscriptionId: subscription.id },
+            data: {
+              status: StripeService.mapStripeSubscriptionStatus(subscription.status),
+              currentPeriodStart: subscription.current_period_start
+                ? new Date(subscription.current_period_start * 1000)
+                : new Date(),
+              currentPeriodEnd: subscription.current_period_end
+                ? new Date(subscription.current_period_end * 1000)
+                : new Date(),
+              cancelAtPeriodEnd: subscription.cancel_at_period_end,
+            },
+          });
+          console.log(`Subscription ${subscription.id} updated.`);
+        } catch (err: any) {
+          if (err?.code !== 'P2025') throw err;
+          console.warn(`[Stripe] subscription.updated for unknown subscription ${subscription.id} — skipping`);
+        }
         break;
-      case 'customer.subscription.deleted':
+      }
+      case 'customer.subscription.deleted': {
         const deletedSubscription = event.data.object as Stripe.Subscription;
-        await prisma.subscription.update({
-          where: { stripeSubscriptionId: deletedSubscription.id },
-          data: {
-            status: 'CANCELED' as SubscriptionStatus,
-            cancelAtPeriodEnd: false,
-          },
-        });
-        console.log(`Subscription ${deletedSubscription.id} deleted.`);
+        try {
+          await prisma.subscription.update({
+            where: { stripeSubscriptionId: deletedSubscription.id },
+            data: {
+              status: SubscriptionStatus.CANCELED,
+              cancelAtPeriodEnd: false,
+            },
+          });
+          console.log(`Subscription ${deletedSubscription.id} deleted.`);
+        } catch (err: any) {
+          if (err?.code !== 'P2025') throw err;
+          console.warn(`[Stripe] subscription.deleted for unknown subscription ${deletedSubscription.id} — skipping`);
+        }
         break;
+      }
 
-      case 'customer.subscription.created':
+      case 'customer.subscription.created': {
         const createdSubscription = event.data.object as Stripe.Subscription;
-        await prisma.subscription.create({
-          data: {
+        if (!createdSubscription.metadata?.organizationId) {
+          console.warn(
+            `[Stripe] subscription.created event for ${createdSubscription.id} is missing metadata.organizationId — skipping DB upsert`
+          );
+          break;
+        }
+        await prisma.subscription.upsert({
+          where: { stripeSubscriptionId: createdSubscription.id },
+          update: {
+            status: StripeService.mapStripeSubscriptionStatus(createdSubscription.status),
+            currentPeriodStart: createdSubscription.current_period_start
+              ? new Date(createdSubscription.current_period_start * 1000)
+              : new Date(),
+            currentPeriodEnd: createdSubscription.current_period_end
+              ? new Date(createdSubscription.current_period_end * 1000)
+              : new Date(),
+            cancelAtPeriodEnd: createdSubscription.cancel_at_period_end,
+          },
+          create: {
             stripeSubscriptionId: createdSubscription.id,
             stripeCustomerId: createdSubscription.customer as string,
             stripePriceId: createdSubscription.items.data[0].price.id,
-            status: createdSubscription.status.toUpperCase() as SubscriptionStatus,
+            status: StripeService.mapStripeSubscriptionStatus(createdSubscription.status),
             currentPeriodStart: createdSubscription.current_period_start
               ? new Date(createdSubscription.current_period_start * 1000)
               : new Date(),
@@ -405,17 +429,25 @@ export class StripeService {
             },
           },
         });
-        console.log(`Subscription ${createdSubscription.id} created.`);
+        console.log(`Subscription ${createdSubscription.id} created/updated.`);
         break;
+      }
 
-      case 'invoice.payment_succeeded':
+      case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice;
         if (!invoice.subscription) {
           console.log(`Invoice ${invoice.id} has no subscription, skipping.`);
           break;
         }
-        await prisma.invoice.create({
-          data: {
+        await prisma.invoice.upsert({
+          where: { stripeInvoiceId: invoice.id },
+          update: {
+            amount: invoice.amount_paid,
+            status: (invoice.status ?? 'unknown').toUpperCase(),
+            invoicePdf: invoice.invoice_pdf ?? null,
+            hostedInvoiceUrl: invoice.hosted_invoice_url ?? null,
+          },
+          create: {
             stripeInvoiceId: invoice.id,
             amount: invoice.amount_paid,
             currency: invoice.currency,
@@ -431,14 +463,22 @@ export class StripeService {
         });
         console.log(`Invoice ${invoice.id} payment succeeded.`);
         break;
-      case 'invoice.payment_failed':
+      }
+      case 'invoice.payment_failed': {
         const failedInvoice = event.data.object as Stripe.Invoice;
         if (!failedInvoice.subscription) {
           console.log(`Invoice ${failedInvoice.id} has no subscription, skipping.`);
           break;
         }
-        await prisma.invoice.create({
-          data: {
+        await prisma.invoice.upsert({
+          where: { stripeInvoiceId: failedInvoice.id },
+          update: {
+            amount: failedInvoice.amount_due,
+            status: (failedInvoice.status ?? 'unknown').toUpperCase(),
+            invoicePdf: failedInvoice.invoice_pdf ?? null,
+            hostedInvoiceUrl: failedInvoice.hosted_invoice_url ?? null,
+          },
+          create: {
             stripeInvoiceId: failedInvoice.id,
             amount: failedInvoice.amount_due,
             currency: failedInvoice.currency,
@@ -458,6 +498,7 @@ export class StripeService {
         });
         console.log(`Invoice ${failedInvoice.id} payment failed.`);
         break;
+      }
       case 'payment_intent.succeeded':
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         await StripeService.updateSubscriptionAfterPaymentConfirmed(paymentIntent.id);

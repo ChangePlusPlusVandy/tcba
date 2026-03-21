@@ -30,27 +30,36 @@ export const eventsController = {
         };
       }
 
-      const events = await prisma.event.findMany({
-        where,
-        include: {
-          createdByAdmin: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const skip = (page - 1) * limit;
+
+      const [events, total] = await Promise.all([
+        prisma.event.findMany({
+          where,
+          include: {
+            createdByAdmin: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+            _count: {
+              select: {
+                rsvps: true,
+                publicRsvps: true,
+              },
             },
           },
-          _count: {
-            select: {
-              rsvps: true,
-              publicRsvps: true,
-            },
+          orderBy: {
+            startTime: 'asc',
           },
-        },
-        orderBy: {
-          startTime: 'asc',
-        },
-      });
+          skip,
+          take: limit,
+        }),
+        prisma.event.count({ where }),
+      ]);
 
       // Calculate RSVP counts
       const eventsWithCounts = events.map(event => ({
@@ -60,10 +69,18 @@ export const eventsController = {
         publicRsvpCount: event._count.publicRsvps,
       }));
 
-      res.json(eventsWithCounts);
+      res.json({
+        data: eventsWithCounts,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      });
     } catch (error: any) {
       console.error('Error getting events:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: 'Failed to get events' });
     }
   },
 
@@ -119,7 +136,7 @@ export const eventsController = {
       res.json(eventWithCount);
     } catch (error: any) {
       console.error('Error getting event:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: 'Failed to get event' });
     }
   },
 
@@ -196,7 +213,7 @@ export const eventsController = {
       res.status(201).json(event);
     } catch (error: any) {
       console.error('Error creating event:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: 'Failed to create event' });
     }
   },
 
@@ -253,6 +270,11 @@ export const eventsController = {
       if (attachments !== undefined) updateData.attachments = attachments;
       if (status !== undefined) updateData.status = status;
 
+      const existingEvent = await prisma.event.findUnique({ where: { id } });
+      if (!existingEvent) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+
       const event = await prisma.event.update({
         where: { id },
         data: updateData,
@@ -270,7 +292,7 @@ export const eventsController = {
       res.json(event);
     } catch (error: any) {
       console.error('Error updating event:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: 'Failed to update event' });
     }
   },
 
@@ -295,6 +317,11 @@ export const eventsController = {
         return res.status(403).json({ error: 'Admin access required' });
       }
 
+      const eventToPublish = await prisma.event.findUnique({ where: { id } });
+      if (!eventToPublish) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+
       const event = await prisma.event.update({
         where: { id },
         data: { status: 'PUBLISHED' },
@@ -317,7 +344,7 @@ export const eventsController = {
       res.json({ ...event, message: 'Event published and notifications queued' });
     } catch (error: any) {
       console.error('Error publishing event:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: 'Failed to publish event' });
     }
   },
 
@@ -381,7 +408,7 @@ export const eventsController = {
       }
     } catch (error: any) {
       console.error('Error deleting event:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: 'Failed to delete event' });
     }
   },
 
@@ -483,7 +510,7 @@ export const eventsController = {
       res.json(rsvp);
     } catch (error: any) {
       console.error('Error creating RSVP:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: 'Failed to create RSVP' });
     }
   },
 
@@ -570,7 +597,7 @@ export const eventsController = {
       res.json(rsvp);
     } catch (error: any) {
       console.error('Error creating public RSVP:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: 'Failed to create public RSVP' });
     }
   },
 
@@ -620,7 +647,7 @@ export const eventsController = {
       res.json(rsvps);
     } catch (error: any) {
       console.error('Error getting RSVPs:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: 'Failed to get RSVPs' });
     }
   },
 
@@ -644,6 +671,19 @@ export const eventsController = {
         return res.status(404).json({ error: 'Organization not found' });
       }
 
+      const existingRsvp = await prisma.eventRSVP.findUnique({
+        where: {
+          eventId_organizationId: {
+            eventId,
+            organizationId: org.id,
+          },
+        },
+      });
+
+      if (!existingRsvp) {
+        return res.status(404).json({ error: 'RSVP not found' });
+      }
+
       await prisma.eventRSVP.update({
         where: {
           eventId_organizationId: {
@@ -659,7 +699,7 @@ export const eventsController = {
       res.json({ message: 'RSVP cancelled successfully' });
     } catch (error: any) {
       console.error('Error cancelling RSVP:', error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: 'Failed to cancel RSVP' });
     }
   },
 };

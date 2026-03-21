@@ -6,7 +6,6 @@ import { sendSurveyEmails } from '../services/emailNotificationService.js';
 import { createNotification } from './inAppNotificationController.js';
 
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
-const resolveTargetId = (id: string, userId?: string) => (id === 'profile' ? userId : id);
 
 export const getAllSurveys = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -40,9 +39,8 @@ export const getAllSurveys = async (req: AuthenticatedRequest, res: Response) =>
 
 export const getSurveyById = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const targetId = resolveTargetId(req.params.id, req.user?.id);
-    if (!targetId) return res.status(401).json({ error: 'Organization not authenticated' });
-    const survey = await prisma.survey.findUnique({ where: { id: targetId } });
+    const { id } = req.params;
+    const survey = await prisma.survey.findUnique({ where: { id } });
     if (!survey) return res.status(404).json({ error: 'Survey not found' });
     res.json(survey);
   } catch (error) {
@@ -228,14 +226,19 @@ export const publishSurvey = async (req: AuthenticatedRequest, res: Response) =>
     const { id } = req.params;
     const { targetTags, targetRegions } = req.body;
 
-    const survey = await prisma.survey.update({
-      where: { id },
-      data: { status: 'ACTIVE', isPublished: true, isActive: true },
-    });
+    let survey;
+    try {
+      survey = await prisma.survey.update({
+        where: { id },
+        data: { status: 'ACTIVE', isPublished: true, isActive: true },
+      });
+    } catch (err: any) {
+      if (err?.code === 'P2025') return res.status(404).json({ error: 'Survey not found' });
+      throw err;
+    }
 
     try {
       await sendSurveyEmails(survey.id, targetTags, targetRegions);
-      console.log('Survey notifications sent successfully');
     } catch (emailError) {
       console.error('Failed to send survey email notifications:', emailError);
     }
@@ -253,10 +256,18 @@ export const closeSurvey = async (req: AuthenticatedRequest, res: Response) => {
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
     const { id } = req.params;
-    const survey = await prisma.survey.update({
-      where: { id },
-      data: { status: 'CLOSED', isActive: false },
-    });
+
+    let survey;
+    try {
+      survey = await prisma.survey.update({
+        where: { id },
+        data: { status: 'CLOSED', isActive: false },
+      });
+    } catch (err: any) {
+      if (err?.code === 'P2025') return res.status(404).json({ error: 'Survey not found' });
+      throw err;
+    }
+
     res.json(survey);
   } catch (error) {
     console.error('Error closing survey:', error);
@@ -269,11 +280,15 @@ export const deleteSurvey = async (req: AuthenticatedRequest, res: Response) => 
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
     if (!isAdmin(req.user.role)) return res.status(403).json({ error: 'Admin only' });
 
-    const targetId = resolveTargetId(req.params.id, req.user?.id);
-    if (!targetId) return res.status(401).json({ error: 'Survey not authenticated' });
-    const survey = await prisma.survey.findUnique({ where: { id: targetId } });
-    if (!survey) return res.status(404).json({ error: 'Survey not found' });
-    await prisma.survey.delete({ where: { id: targetId } });
+    const { id } = req.params;
+
+    try {
+      await prisma.survey.delete({ where: { id } });
+    } catch (err: any) {
+      if (err?.code === 'P2025') return res.status(404).json({ error: 'Survey not found' });
+      throw err;
+    }
+
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting survey:', error);

@@ -24,23 +24,11 @@ export const authenticateToken = async (
       clockSkewInMs: 5000,
     });
 
-    console.log('Token verification result:', {
-      userId: verifiedToken.sub,
-      sessionId: verifiedToken.sid,
-      path: req.path,
-      method: req.method,
-    });
-
     const adminUser = await prisma.adminUser.findUnique({
       where: { clerkId: verifiedToken.sub },
     });
 
     if (adminUser) {
-      console.log('Admin user lookup:', {
-        clerkId: verifiedToken.sub,
-        found: true,
-      });
-
       req.user = {
         id: adminUser.id,
         clerkId: adminUser.clerkId,
@@ -53,12 +41,6 @@ export const authenticateToken = async (
         where: { clerkId: verifiedToken.sub },
       });
 
-      console.log('Organization lookup:', {
-        clerkId: verifiedToken.sub,
-        found: !!organization,
-        role: organization?.role,
-      });
-
       if (organization) {
         req.user = {
           id: organization.id,
@@ -67,6 +49,9 @@ export const authenticateToken = async (
           email: organization.email,
           name: organization.name,
         };
+      } else {
+        res.status(401).json({ error: 'No account associated with this token' });
+        return;
       }
     }
     next();

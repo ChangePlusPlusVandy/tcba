@@ -13,8 +13,8 @@ import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 const router = Router();
 
 router.get('/', getAlerts);
-router.get('/priority/:priority', getAlertsByPriority);
-router.get('/:id', getAlertById);
+router.get('/priority/:priority', authenticateToken, getAlertsByPriority);
+router.get('/:id', authenticateToken, getAlertById);
 router.post('/', authenticateToken, requireAdmin, createAlert);
 router.put('/:id', authenticateToken, requireAdmin, updateAlert);
 router.delete('/:id', authenticateToken, requireAdmin, deleteAlert);

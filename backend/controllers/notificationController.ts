@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { OrganizationRole } from '@prisma/client';
 import { AuthenticatedRequest } from '../types/index.js';
 import { prisma } from '../config/prisma.js';
@@ -923,7 +923,7 @@ export const sendAlertNotification = async (req: AuthenticatedRequest, res: Resp
   }
 };
 
-export const sendContactFormEmail = async (req: AuthenticatedRequest, res: Response) => {
+export const sendContactFormEmail = async (req: Request, res: Response) => {
   try {
     const { email, title, message } = req.body;
 

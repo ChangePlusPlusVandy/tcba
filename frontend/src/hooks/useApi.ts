@@ -1,8 +1,9 @@
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth, useClerk } from '@clerk/clerk-react';
 import { API_BASE_URL } from '../config/api';
 
 export const useApi = () => {
   const { getToken } = useAuth();
+  const { signOut } = useClerk();
 
   const request = async (url: string, options: RequestInit = {}) => {
     const token = await getToken();
@@ -16,6 +17,11 @@ export const useApi = () => {
         'Content-Type': 'application/json',
       },
     });
+
+    if (response.status === 401) {
+      await signOut();
+      throw new Error('Session expired. Please log in again.');
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

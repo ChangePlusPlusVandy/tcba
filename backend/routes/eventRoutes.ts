@@ -25,12 +25,12 @@ router.use(requireAuth());
 
 // Event listing and details
 router.get('/', eventsController.getAll); // Get all events (with filters)
+router.get('/my/rsvps', eventsController.getMyRSVPs); // Get user's RSVPs
 router.get('/:id', eventsController.getById); // Get single event
 
 // RSVP management (Organization users)
 router.post('/:id/rsvp', eventsController.rsvp); // RSVP to event
 router.delete('/:id/rsvp', eventsController.cancelRsvp); // Cancel RSVP
-router.get('/my/rsvps', eventsController.getMyRSVPs); // Get user's RSVPs
 
 // Admin-only routes (event management)
 router.post('/', eventsController.create); // Create event

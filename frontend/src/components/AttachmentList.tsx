@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { API_BASE_URL } from '../config/api';
+import Toast from './Toast';
 
 interface AttachmentListProps {
   attachmentUrls: string[];
@@ -10,6 +11,7 @@ interface AttachmentListProps {
 const AttachmentList = ({ attachmentUrls, className = '' }: AttachmentListProps) => {
   const { getToken } = useAuth();
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   const getFileName = (fileKey: string) => {
     const parts = fileKey.split('/');
@@ -110,7 +112,7 @@ const AttachmentList = ({ attachmentUrls, className = '' }: AttachmentListProps)
       window.open(downloadUrl, '_blank');
     } catch (error) {
       console.error('Error downloading file:', error);
-      alert('Failed to download file. Please try again.');
+      setToast({ message: 'Failed to download file. Please try again.', type: 'error' });
     } finally {
       setDownloading(null);
     }
@@ -122,6 +124,7 @@ const AttachmentList = ({ attachmentUrls, className = '' }: AttachmentListProps)
 
   return (
     <div className={className}>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       <h4 className='font-semibold text-base text-gray-800 mb-2'>Attachments</h4>
       <div className='space-y-2'>
         {attachmentUrls.map((fileKey, index) => (

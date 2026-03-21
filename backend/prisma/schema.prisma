@@ -74,6 +74,8 @@ model Alert {
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
+  @@index([isPublished, createdAt(sort: Desc)])
+  @@index([priority, isPublished])
   @@map("alerts")
 }
 
@@ -139,6 +141,10 @@ model Organization {
   eventRSVPs                 EventRSVP[]             @relation("EventRSVPs")
   AlertResponse               AlertResponse[]
 
+  @@index([status])
+  @@index([role])
+  @@index([status, visibleInDirectory])
+  @@index([membershipActive, status])
   @@map("organizations")
 }
 
@@ -170,6 +176,7 @@ model Survey {
   updatedAt       DateTime         @updatedAt
   surveyResponses SurveyResponse[]
 
+  @@index([isActive, isPublished, createdAt(sort: Desc)])
   @@map("surveys")
 }
 
