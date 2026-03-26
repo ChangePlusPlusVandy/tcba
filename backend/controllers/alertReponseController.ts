@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { OrganizationRole, Prisma } from '@prisma/client';
-import { AuthenticatedRequest } from '../types';
-import { prisma } from '../config/prisma';
+import { AuthenticatedRequest } from '../types/index.js';
+import { prisma } from '../config/prisma.js';
 
 const isAdmin = (role?: OrganizationRole) => role === 'ADMIN';
 
